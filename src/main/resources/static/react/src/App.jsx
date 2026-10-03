@@ -36,12 +36,17 @@ import { LancamentoContabil } from './components/financeiro/LancamentoContabil';
 import { PlanoContas } from './components/financeiro/PlanoContas';
 import { TipoPagamento } from './components/financeiro/TipoPagamento';
 import { Titulo } from './components/financeiro/Titulo';
+import { Renegociacao } from './components/financeiro/Renegociacao';
+import { Orcamento } from './components/financeiro/Orcamento';
+import { Emprestimos } from './components/financeiro/Emprestimos';
 import AprovacoesTitulos from './components/financeiro/AprovacoesTitulos';
 import Caixa from './components/Caixa';
 import { Workflow } from "./components/workflow/Workflow";
 import { Contabilidade } from "./components/contabil/Contabilidade";
 import { CRM } from "./components/crm/CRM";
 import { WMS } from "./components/wms/WMS";
+import { Projetos } from "./components/projetos/Projetos";
+import { DMS } from "./components/dms/DMS";
 import { Portais } from "./components/portais/Portais";
 import { PortalPublico } from "./components/portais/PortalPublico";
 import { Boletos } from './components/financeiro/Boletos';
@@ -58,6 +63,8 @@ import { CertificadoDigital } from './components/fiscal/CertificadoDigital';
 import { SefazConsulta } from './components/fiscal/SefazConsulta';
 import { Impostos } from './components/fiscal/Impostos';
 import { SpedEfd } from './components/fiscal/SpedEfd';
+import { CteMdfe } from './components/fiscal/CteMdfe';
+import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
 import { RH } from './components/rh/RH';
@@ -142,6 +149,8 @@ function App() {
                     <Route path="contabilidade" element={<Contabilidade />} />
                     <Route path="crm" element={<CRM />} />
                     <Route path="wms" element={<WMS />} />
+                    <Route path="projetos" element={<Projetos />} />
+                    <Route path="dms" element={<DMS />} />
                     <Route path="portais" element={<Portais />} />
                     <Route path="admin/usuarios" element={<Usuarios />} />
                     <Route path="admin/configuracoes" element={<Configuracoes />} />
@@ -189,6 +198,9 @@ function App() {
                     <Route path="financeiro" element={<FinanceiroHub />} />
                     <Route path="financeiro/lancamentos" element={<Titulo />} />
                     <Route path="financeiro/titulos" element={<Titulo />} />
+                    <Route path="financeiro/renegociacao" element={<Renegociacao />} />
+                    <Route path="financeiro/orcamento" element={<Orcamento />} />
+                    <Route path="financeiro/emprestimos" element={<Emprestimos />} />
                     <Route path="financeiro/aprovacoes-titulos" element={<AprovacoesTitulos />} />
                     <Route path="financeiro/comissoes" element={<Comissoes />} />
                     <Route path="financeiro/extrato" element={<Extrato />} />
@@ -216,6 +228,8 @@ function App() {
                     <Route path="fiscal/impostos" element={<Impostos />} />
                     <Route path="fiscal/sefaz" element={<SefazConsulta />} />
                     <Route path="fiscal/sped" element={<SpedEfd />} />
+                    <Route path="fiscal/cte-mdfe" element={<CteMdfe />} />
+                    <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />
                     <Route path="rh/*" element={<RH />} />

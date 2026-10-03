@@ -175,7 +175,12 @@
     "bi": "Business Intelligence",
     "kpis": "KPI",
     "biReports": "Rapports BI",
-    "scheduledReports": "Rapports planifiés"
+    "scheduledReports": "Rapports planifiés",
+    "cteMdfe": "CT-e / MDF-e",
+    "renegotiation": "Renégociation",
+    "budget": "Budget vs Réel",
+    "loans": "Emprunts",
+    "buscaFiscal": "Recherche fiscale"
   },
   "stock": {
     "default": "Standard",
