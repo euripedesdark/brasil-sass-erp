@@ -89,7 +89,8 @@ export default function OrdemServico() {
             const response = await apiFetch(`${ApiConfig.BASE_URL}/api/cadastro/clientes?size=20`);
             if (response.ok) {
                 const data = await response.json();
-                const lista = Array.isArray(data) ? data : (data.content || []);
+                const page = data?.data ?? data;
+                const lista = Array.isArray(page) ? page : (page?.content || []);
                 setClientesSugestoes(lista.map(c => ({
                     nome: c.nome || c.razaoSocial || `Cliente ${c.id}`,
                     id: c.id
@@ -151,10 +152,23 @@ export default function OrdemServico() {
 
     const abrirEdicao = async (os) => {
         try {
-            const response = await apiFetch(`${ApiConfig.BASE_URL}/api/servicos/os/${os.id}/itens`);
-            const itens = response.ok ? await response.json() : [];
+            const [itensResponse, clienteResponse] = await Promise.all([
+                apiFetch(`${ApiConfig.BASE_URL}/api/servicos/os/${os.id}/itens`),
+                os.clienteId ? apiFetch(`${ApiConfig.BASE_URL}/api/cadastro/clientes/${os.clienteId}`) : Promise.resolve(null)
+            ]);
+            const itens = itensResponse?.ok ? await itensResponse.json() : [];
+            let cliente = null;
+            if (clienteResponse?.ok) {
+                const body = await clienteResponse.json();
+                const data = body?.data ?? body;
+                cliente = {
+                    id: data?.id,
+                    nome: data?.nome || data?.razaoSocial || ('Cliente ' + os.clienteId)
+                };
+            }
             setOsSelecionada({
                 ...os,
+                cliente,
                 dataMov: os.dataMov ? new Date(os.dataMov) : (os.aberturaAt ? new Date(os.aberturaAt) : new Date()),
                 itens: Array.isArray(itens) ? itens.map(item => ({
                     ...item,
@@ -674,33 +688,34 @@ export default function OrdemServico() {
                                 )}
                                 style={{ width: '40%' }}
                             />
-                            <Column 
-                                field="quantidade" 
-                                header="Qtd" 
-                                style={{ width: '80px' }}
-                                editor={(options) => (
+                            <Column
+                                field="quantidade"
+                                header="Qtd"
+                                body={(row, options) => (
                                     <InputNumber
-                                        value={options.value}
-                                        onValueChange={(e) => options.editorCallback(e.value)}
+                                        value={row.quantidade ?? 1}
+                                        onValueChange={(e) => atualizarItem(options.rowIndex, 'quantidade', e.value ?? 0)}
                                         min={0}
+                                        minFractionDigits={0}
+                                        maxFractionDigits={4}
                                     />
                                 )}
+                                style={{ width: '100px' }}
                             />
-                            <Column 
-                                field="valorUnitario" 
-                                header="Vl. Unitário" 
-                                body={(row) => formatarMoeda(row.valorUnitario)}
-                                style={{ width: '120px' }}
-                                editor={(options) => (
+                            <Column
+                                field="valorUnitario"
+                                header="Vl. Unitário"
+                                body={(row, options) => (
                                     <InputNumber
-                                        value={options.value}
-                                        onValueChange={(e) => options.editorCallback(e.value)}
+                                        value={row.valorUnitario ?? 0}
+                                        onValueChange={(e) => atualizarItem(options.rowIndex, 'valorUnitario', e.value ?? 0)}
                                         mode="currency"
                                         currency="BRL"
                                         locale="pt-BR"
                                         min={0}
                                     />
                                 )}
+                                style={{ width: '140px' }}
                             />
                             <Column 
                                 field="totalItem" 
