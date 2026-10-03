@@ -45,16 +45,18 @@ public class ProdutoController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('cadastro:produto:escrita')")
     @Operation(summary = "Atualizar produto")
-    public ResponseEntity<ApiResponse<ProdutoResponse>> atualizar(@PathVariable Long id, @Valid @RequestBody ProdutoRequest request) {
-        ProdutoResponse response = produtoService.atualizar(id, request);
+    public ResponseEntity<ApiResponse<ProdutoResponse>> atualizar(@PathVariable Long id, @Valid @RequestBody ProdutoRequest request,
+            @AuthenticationPrincipal AuthenticatedUser usuario) {
+        ProdutoResponse response = produtoService.atualizar(usuario.getEmpresaId(), id, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('cadastro:produto:leitura')")
     @Operation(summary = "Buscar produto por ID")
-    public ResponseEntity<ApiResponse<ProdutoResponse>> buscarPorId(@PathVariable Long id) {
-        ProdutoResponse response = produtoService.buscarPorId(id);
+    public ResponseEntity<ApiResponse<ProdutoResponse>> buscarPorId(@PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser usuario) {
+        ProdutoResponse response = produtoService.buscarPorId(usuario.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -67,16 +69,18 @@ public class ProdutoController {
             @RequestParam(required = false) Long categoriaId,
             @RequestParam(required = false) Long marcaId,
             @RequestParam(required = false) Boolean ativo,
-            Pageable pageable) {
-        PageResponse<ProdutoResponse> response = produtoService.listar(nome, codigo, categoriaId, marcaId, ativo, pageable);
+            Pageable pageable,
+            @AuthenticationPrincipal AuthenticatedUser usuario) {
+        PageResponse<ProdutoResponse> response = produtoService.listar(usuario.getEmpresaId(), nome, codigo, categoriaId, marcaId, ativo, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('cadastro:produto:escrita')")
     @Operation(summary = "Excluir produto (soft delete)")
-    public ResponseEntity<ApiResponse<Void>> excluir(@PathVariable Long id) {
-        produtoService.excluir(id);
+    public ResponseEntity<ApiResponse<Void>> excluir(@PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser usuario) {
+        produtoService.excluir(usuario.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
