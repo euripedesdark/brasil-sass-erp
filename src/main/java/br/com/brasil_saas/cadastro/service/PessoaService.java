@@ -7,8 +7,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface PessoaService {
     PessoaResponse criar(PessoaRequest request, Long empresaId);
-    PessoaResponse atualizar(Long id, PessoaRequest request);
-    PessoaResponse buscarPorId(Long id);
-    PageResponse<PessoaResponse> listar(String nome, String documento, Pageable pageable);
-    void excluir(Long id);
+    PessoaResponse atualizar(Long empresaId, Long id, PessoaRequest request);
+    PessoaResponse buscarPorId(Long empresaId, Long id);
+    PageResponse<PessoaResponse> listar(Long empresaId, String nome, String documento, Pageable pageable);
+    void excluir(Long empresaId, Long id);
 }
