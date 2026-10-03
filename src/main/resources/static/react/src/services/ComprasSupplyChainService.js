@@ -15,6 +15,7 @@ export default {
         `${BASE}/solicitacoes`, body,
         { params: solicitanteId ? { solicitanteId } : {} }),
     aprovar: (id) => axios.post(`${BASE}/solicitacoes/${id}/aprovar`),
+    rejeitar: (id) => axios.post(`${BASE}/solicitacoes/${id}/rejeitar`),
     criarCotacao: (solicitacaoId, body) => axios.post(
         `${BASE}/cotacoes`, body, { params: { solicitacaoId } }),
     mapa: (id) => axios.get(`${BASE}/cotacoes/${id}/mapa`),

@@ -21,6 +21,9 @@ public class CrmController {
     public ResponseEntity<CrmLead> salvar(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody CrmLead l) { return ResponseEntity.status(HttpStatus.CREATED).body(svc.salvar(u.getEmpresaId(), l)); }
     @PostMapping("/leads/{id}/etapa") @PreAuthorize("hasAuthority('crm:escrita')")
     public CrmLead mover(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody EtapaReq r) { return svc.moverEtapa(u.getEmpresaId(), id, r.etapa()); }
+    public record GerarPedidoReq(Long clienteId) {}
+    @PostMapping("/leads/{id}/gerar-pedido") @PreAuthorize("hasAuthority('crm:escrita') and hasAuthority('vendas:pedido:escrita')")
+    public Map<String, Object> gerarPedido(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody GerarPedidoReq r) { return svc.gerarPedido(u.getEmpresaId(), id, r.clienteId()); }
     @DeleteMapping("/leads/{id}") @PreAuthorize("hasAuthority('crm:escrita')")
     public ResponseEntity<Void> excluir(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) { svc.excluirLead(u.getEmpresaId(), id); return ResponseEntity.noContent().build(); }
     @GetMapping("/pipeline") @PreAuthorize("hasAuthority('crm:leitura')")

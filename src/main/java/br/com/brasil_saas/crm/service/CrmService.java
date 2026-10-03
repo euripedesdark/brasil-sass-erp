@@ -12,4 +12,5 @@ public interface CrmService {
     CrmAtividade salvarAtividade(Long empresaId, CrmAtividade a);
     CrmAtividade concluir(Long empresaId, Long id);
     void excluirLead(Long empresaId, Long id);
+    java.util.Map<String, Object> gerarPedido(Long empresaId, Long leadId, Long clienteId);
 }

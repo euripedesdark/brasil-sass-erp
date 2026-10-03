@@ -50,6 +50,17 @@ export const CRM = () => {
         setDlgLead(false); setFLead({}); carregar();
     };
     const mover = async (id, etapa) => { await apiFetch(BASE + '/leads/' + id + '/etapa', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ etapa }) }); carregar(); };
+    const [dlgPed, setDlgPed] = useState(false);
+    const [pedLead, setPedLead] = useState(null);
+    const [cliId, setCliId] = useState('');
+    const gerarPedido = async () => {
+        if (!cliId) return;
+        const r = await apiFetch(BASE + '/leads/' + pedLead + '/gerar-pedido', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clienteId: Number(cliId) }) });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha ao gerar pedido', life: 4000 }); return; }
+        toast.current?.show({ severity: 'success', summary: 'Pedido criado', detail: '#' + (j.pedidoId ?? ''), life: 3500 });
+        setDlgPed(false); setCliId(''); carregar();
+    };
     const excluirLead = async (id) => { await apiFetch(BASE + '/leads/' + id, { method: 'DELETE' }); carregar(); };
     const salvarAtiv = async () => {
         if (!fAtiv.assunto?.trim()) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Assunto obrigatório', life: 3000 }); return; }
@@ -72,7 +83,7 @@ export const CRM = () => {
                         <Column field='empresaNome' header='Empresa' />
                         <Column field='etapa' header='Etapa' style={{ width: '9rem' }} />
                         <Column header='Valor' body={(r) => fmt(r.valorEstimado)} style={{ width: '9rem' }} />
-                        <Column header='Avançar' body={(r) => { const i = ETAPAS.indexOf(r.etapa); return i >= 0 && i < ETAPAS.length - 1 ? (<Button label={ETAPAS[i + 1]} size='small' outlined onClick={() => mover(r.id, ETAPAS[i + 1])} />) : (<Tag value={r.status} severity='success' />); }} style={{ width: '11rem' }} />
+                        <Column header='Avançar' body={(r) => { const i = ETAPAS.indexOf(r.etapa); return i >= 0 && i < ETAPAS.length - 1 ? (<Button label={ETAPAS[i + 1]} size='small' outlined onClick={() => mover(r.id, ETAPAS[i + 1])} />) : (<><Button label='Pedido' size='small' severity='help' onClick={() => { setPedLead(r.id); setDlgPed(true); }} /></>); }} style={{ width: '11rem' }} />
                         <Column header='' body={(r) => (<Button icon='pi pi-trash' rounded text severity='danger' tooltip='Excluir' onClick={() => excluirLead(r.id)} />)} style={{ width: '4rem' }} />
                     </DataTable>
                 </TabPanel>
@@ -106,6 +117,12 @@ export const CRM = () => {
                     <div className='bc-form-col-12'><label className='bc-label'>Observação</label><InputTextarea rows={2} value={fLead.observacao || ''} onChange={(e) => setFLead({ ...fLead, observacao: e.target.value })} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgLead(false)} /><Button label='Salvar' icon='pi pi-check' onClick={salvarLead} /></div>
+            </Dialog>
+            <Dialog visible={dlgPed} onHide={() => setDlgPed(false)} header='Gerar pedido de venda' modal style={{ width: 'min(96vw, 420px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>Cliente ID *</label><InputText value={cliId} onChange={(e) => setCliId(e.target.value)} keyfilter='int' /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgPed(false)} /><Button label='Gerar' icon='pi pi-check' onClick={gerarPedido} /></div>
             </Dialog>
             <Dialog visible={dlgAtiv} onHide={() => setDlgAtiv(false)} header='Nova atividade' modal style={{ width: 'min(96vw, 520px)' }}>
                 <div className='grid p-fluid'>

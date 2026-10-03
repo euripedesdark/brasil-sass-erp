@@ -81,6 +81,9 @@ public class WorkflowServiceImpl implements WorkflowService {
         exigir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId), "Instancia inexistente");
         return tasks.findByInstanceIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId);
     }
+    @Override public java.util.Optional<WkfInstance> instanciaPara(Long empresaId, String entidadeTipo, Long entidadeId) {
+        return instances.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream().filter(x -> entidadeTipo.equals(x.getEntidadeTipo()) && entidadeId.equals(x.getEntidadeId())).max(java.util.Comparator.comparing(WkfInstance::getId));
+    }
     @Override public List<WkfTask> pendentes(Long empresaId) {
         return tasks.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, "PENDENTE");
     }

@@ -10,6 +10,7 @@ public interface WorkflowService {
     List<WkfInstance> instances(Long empresaId, String status);
     List<WkfTask> tasks(Long empresaId, Long instanceId);
     List<WkfTask> pendentes(Long empresaId);
+    java.util.Optional<WkfInstance> instanciaPara(Long empresaId, String entidadeTipo, Long entidadeId);
     WkfTask decidir(Long empresaId, Long userId, Long taskId, boolean aprovar, String comentario);
     void inativarDefinition(Long empresaId, Long id);
 }
