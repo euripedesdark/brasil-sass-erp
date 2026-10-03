@@ -159,6 +159,32 @@ public class PessoaServiceImpl implements PessoaService {
             pessoa.setJuridica(juridica);
         }
 
+        // Endereços também fazem parte do cadastro operacional. Na edição,
+        // substituímos o conjunto enviado pela tela dentro da mesma transação,
+        // preservando o vínculo com a Pessoa e o tenant.
+        if (request.enderecos() != null) {
+            pessoa.getEnderecos().clear();
+            for (EnderecoRequest er : request.enderecos()) {
+                Endereco e = new Endereco();
+                e.setPessoa(pessoa);
+                e.setEmpresaId(empresaId);
+                e.setTipo(er.tipo() != null ? er.tipo() : "PRINCIPAL");
+                e.setLogradouro(er.logradouro());
+                e.setNumero(er.numero());
+                e.setComplemento(er.complemento());
+                e.setBairro(er.bairro());
+                e.setCep(er.cep());
+                e.setUf(er.uf());
+                e.setLatitude(er.latitude());
+                e.setLongitude(er.longitude());
+                e.setPrincipal(er.principal() != null ? er.principal() : false);
+                if (er.municipioId() != null) {
+                    municipioRepository.findById(er.municipioId()).ifPresent(e::setMunicipio);
+                }
+                pessoa.getEnderecos().add(e);
+            }
+        }
+
         Pessoa saved = pessoaRepository.save(pessoa);
         return PessoaResponse.from(saved);
     }
