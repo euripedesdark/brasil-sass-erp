@@ -78,6 +78,8 @@ import ExpedicoesEstoque from './components/estoque/ExpedicoesEstoque';
 import { Servicos } from './components/servicos/Servicos';
 import OrdemServico from './components/OrdemServico';
 import { Producao } from './components/producao/Producao';
+import Qualidade from './components/qualidade/Qualidade';
+import Ativos from './components/ativos/Ativos';
 import { RomaneioProducao } from './components/producao/RomaneioProducao';
 import { ApontamentosProducao } from './components/producao/ApontamentosProducao';
 import { EstruturaProduto } from './components/producao/EstruturaProduto';
@@ -210,6 +212,8 @@ function App() {
                     <Route path="producao/romaneios" element={<RomaneioProducao />} />
                     <Route path="producao/apontamentos" element={<ApontamentosProducao />} />
                     <Route path="producao/estrutura" element={<EstruturaProduto />} />
+                    <Route path="qualidade" element={<Qualidade />} />
+                    <Route path="ativos" element={<Ativos />} />
 
                     <Route path="bi" element={<BI />} />
                     <Route path="bi/kpis" element={<Kpis />} />
