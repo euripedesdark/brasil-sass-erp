@@ -1,0 +1,110 @@
+-- Projetos: WBS, custos/receitas, riscos, mudancas e faturamento por marco.
+CREATE TABLE IF NOT EXISTS brasil_saas.bc_prj_projeto (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    empresa_id bigint NOT NULL,
+    codigo varchar(60) NOT NULL,
+    nome varchar(200) NOT NULL,
+    descricao text,
+    status varchar(20) NOT NULL DEFAULT 'PLANEJADO',
+    gerente varchar(200),
+    data_inicio date,
+    data_fim_prevista date,
+    data_fim_real date,
+    orcamento_total numeric(15,2) NOT NULL DEFAULT 0,
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp,
+    created_by bigint,
+    updated_by bigint,
+    deleted_at timestamp,
+    CONSTRAINT uk_prj_projeto UNIQUE (empresa_id, codigo)
+);
+CREATE TABLE IF NOT EXISTS brasil_saas.bc_prj_etapa (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    empresa_id bigint NOT NULL,
+    projeto_id bigint NOT NULL REFERENCES brasil_saas.bc_prj_projeto(id),
+    pai_id bigint REFERENCES brasil_saas.bc_prj_etapa(id),
+    codigo_wbs varchar(60) NOT NULL,
+    nome varchar(200) NOT NULL,
+    ordem integer NOT NULL DEFAULT 1,
+    responsavel varchar(200),
+    data_inicio date,
+    data_fim date,
+    pct_concluido integer NOT NULL DEFAULT 0,
+    status varchar(20) NOT NULL DEFAULT 'NAO_INICIADA',
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp,
+    created_by bigint,
+    updated_by bigint,
+    deleted_at timestamp
+);
+CREATE TABLE IF NOT EXISTS brasil_saas.bc_prj_movimento (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    empresa_id bigint NOT NULL,
+    projeto_id bigint NOT NULL REFERENCES brasil_saas.bc_prj_projeto(id),
+    etapa_id bigint REFERENCES brasil_saas.bc_prj_etapa(id),
+    tipo varchar(10) NOT NULL,
+    descricao varchar(500) NOT NULL,
+    valor numeric(15,2) NOT NULL,
+    data date NOT NULL,
+    origem_tipo varchar(60),
+    origem_id bigint,
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp,
+    created_by bigint,
+    updated_by bigint,
+    deleted_at timestamp,
+    CONSTRAINT ck_prj_mov_tipo CHECK (tipo IN ('CUSTO','RECEITA'))
+);
+CREATE TABLE IF NOT EXISTS brasil_saas.bc_prj_risco (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    empresa_id bigint NOT NULL,
+    projeto_id bigint NOT NULL REFERENCES brasil_saas.bc_prj_projeto(id),
+    descricao varchar(500) NOT NULL,
+    probabilidade integer NOT NULL DEFAULT 50,
+    impacto varchar(20) NOT NULL DEFAULT 'MEDIO',
+    status varchar(20) NOT NULL DEFAULT 'ABERTO',
+    mitigacao text,
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp,
+    created_by bigint,
+    updated_by bigint,
+    deleted_at timestamp
+);
+CREATE TABLE IF NOT EXISTS brasil_saas.bc_prj_mudanca (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    empresa_id bigint NOT NULL,
+    projeto_id bigint NOT NULL REFERENCES brasil_saas.bc_prj_projeto(id),
+    descricao varchar(500) NOT NULL,
+    status varchar(20) NOT NULL DEFAULT 'SOLICITADA',
+    impacto_valor numeric(15,2) NOT NULL DEFAULT 0,
+    decidida_por bigint,
+    decidida_em timestamp,
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp,
+    created_by bigint,
+    updated_by bigint,
+    deleted_at timestamp
+);
+CREATE TABLE IF NOT EXISTS brasil_saas.bc_prj_faturamento (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid uuid NOT NULL DEFAULT gen_random_uuid() UNIQUE,
+    empresa_id bigint NOT NULL,
+    projeto_id bigint NOT NULL REFERENCES brasil_saas.bc_prj_projeto(id),
+    descricao varchar(500) NOT NULL,
+    valor numeric(15,2) NOT NULL,
+    data_prevista date,
+    data_faturado date,
+    status varchar(20) NOT NULL DEFAULT 'PREVISTO',
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp,
+    created_by bigint,
+    updated_by bigint,
+    deleted_at timestamp
+);
+CREATE INDEX IF NOT EXISTS ix_prj_etapa_proj ON brasil_saas.bc_prj_etapa (projeto_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS ix_prj_mov_proj ON brasil_saas.bc_prj_movimento (projeto_id) WHERE deleted_at IS NULL;

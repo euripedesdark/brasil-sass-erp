@@ -1,0 +1,228 @@
+package br.com.brasil_saas.contabilidade.service.impl;
+import br.com.brasil_saas.contabilidade.model.*;
+import br.com.brasil_saas.contabilidade.repository.*;
+import br.com.brasil_saas.contabilidade.service.ContabilidadeService;
+import br.com.brasil_saas.financeiro.model.PlanoContas;
+import br.com.brasil_saas.financeiro.model.Titulo;
+import br.com.brasil_saas.financeiro.repository.PlanoContasRepository;
+import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+@Service @RequiredArgsConstructor
+public class ContabilidadeServiceImpl implements ContabilidadeService {
+    private final CtbLancamentoRepository lancamentos;
+    private final CtbPartidaRepository partidas;
+    private final CtbFechamentoRepository fechamentos;
+    private final PlanoContasRepository contas;
+    private final TituloRepository titulos;
+    private <T> T exigir(Optional<T> o, String msg) {
+        return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
+    private String periodoDe(LocalDate d) { return String.format("%04d-%02d", d.getYear(), d.getMonthValue()); }
+    private void exigirAberto(Long empresaId, String periodo) {
+        boolean fechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
+            .anyMatch(f -> periodo.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
+        if (fechado) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo fechado: " + periodo);
+    }
+    private String nomeConta(Long empresaId, Long contaId) {
+        return contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaId, empresaId).map(c -> c.getCodigo() + " - " + c.getDescricao()).orElse("Conta " + contaId);
+    }
+    @Override public List<CtbLancamento> lancamentos(Long empresaId, String periodo, String status) {
+        if (periodo != null && !periodo.isBlank()) return lancamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNullOrderByDataDescIdDesc(empresaId, periodo);
+        if (status != null && !status.isBlank()) return lancamentos.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, status);
+        return lancamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
+    }
+    @Override @Transactional public CtbLancamento salvar(Long empresaId, CtbLancamento l) {
+        l.setId(null);
+        if (l.getData() == null) l.setData(LocalDate.now());
+        l.setPeriodo(periodoDe(l.getData()));
+        exigirAberto(empresaId, l.getPeriodo());
+        l.setStatus("RASCUNHO");
+        return lancamentos.save(l);
+    }
+    private CtbLancamento exigirRascunho(Long empresaId, Long id) {
+        CtbLancamento l = exigir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Lancamento inexistente");
+        if (!"RASCUNHO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente rascunho pode ser alterado");
+        exigirAberto(empresaId, l.getPeriodo());
+        return l;
+    }
+    @Override @Transactional public CtbPartida addPartida(Long empresaId, Long lancamentoId, CtbPartida p) {
+        exigirRascunho(empresaId, lancamentoId);
+        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(p.getContaId(), empresaId), "Conta inexistente");
+        BigDecimal d = p.getDebito() == null ? BigDecimal.ZERO : p.getDebito();
+        BigDecimal c = p.getCredito() == null ? BigDecimal.ZERO : p.getCredito();
+        if (!(d.signum() > 0 ^ c.signum() > 0)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Partida deve ter debito OU credito");
+        p.setId(null);
+        p.setLancamentoId(lancamentoId);
+        p.setDebito(d);
+        p.setCredito(c);
+        return partidas.save(p);
+    }
+    @Override public List<CtbPartida> partidas(Long empresaId, Long lancamentoId) {
+        exigir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(lancamentoId, empresaId), "Lancamento inexistente");
+        return partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(lancamentoId, empresaId);
+    }
+    @Override @Transactional public void removerPartida(Long empresaId, Long lancamentoId, Long partidaId) {
+        exigirRascunho(empresaId, lancamentoId);
+        CtbPartida p = exigir(partidas.findByIdAndEmpresaIdAndDeletedAtIsNull(partidaId, empresaId), "Partida inexistente");
+        if (!lancamentoId.equals(p.getLancamentoId())) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida de outro lancamento");
+        partidas.delete(p);
+    }
+    @Override public BigDecimal[] totais(Long empresaId, Long lancamentoId) {
+        List<CtbPartida> ps = partidas(empresaId, lancamentoId);
+        BigDecimal d = ps.stream().map(CtbPartida::getDebito).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal c = ps.stream().map(CtbPartida::getCredito).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new BigDecimal[]{d, c};
+    }
+    @Override @Transactional public CtbLancamento lancar(Long empresaId, Long id) {
+        CtbLancamento l = exigirRascunho(empresaId, id);
+        BigDecimal[] t = totais(empresaId, id);
+        if (t[0].signum() <= 0 || t[0].compareTo(t[1]) != 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Lancamento desbalanceado");
+        l.setStatus("LANCADO");
+        return lancamentos.save(l);
+    }
+    @Override @Transactional public CtbLancamento estornar(Long empresaId, Long id, String motivo) {
+        CtbLancamento l = exigir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Lancamento inexistente");
+        if (!"LANCADO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente lancado pode ser estornado");
+        exigirAberto(empresaId, l.getPeriodo());
+        CtbLancamento e = new CtbLancamento();
+        e.setData(LocalDate.now());
+        e.setPeriodo(periodoDe(e.getData()));
+        e.setHistorico("Estorno de #" + l.getId() + (motivo == null ? "" : " - " + motivo));
+        e.setOrigemTipo(l.getOrigemTipo());
+        e.setOrigemId(l.getOrigemId());
+        e.setStatus("LANCADO");
+        e = lancamentos.save(e);
+        for (CtbPartida p : partidas(empresaId, id)) {
+            CtbPartida r = new CtbPartida();
+            r.setLancamentoId(e.getId());
+            r.setContaId(p.getContaId());
+            r.setCentroCustoId(p.getCentroCustoId());
+            r.setDebito(p.getCredito());
+            r.setCredito(p.getDebito());
+            r.setHistorico(p.getHistorico());
+            partidas.save(r);
+        }
+        l.setStatus("ESTORNADO");
+        lancamentos.save(l);
+        return e;
+    }
+    private List<CtbLancamento> lancadosNoPeriodo(Long empresaId, LocalDate de, LocalDate ate) {
+        return lancamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
+            .filter(l -> "LANCADO".equals(l.getStatus()) && !l.getData().isBefore(de) && !l.getData().isAfter(ate))
+            .toList();
+    }
+    @Override public List<Map<String, Object>> razao(Long empresaId, Long contaId, LocalDate de, LocalDate ate) {
+        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaId, empresaId), "Conta inexistente");
+        Set<Long> ids = new HashSet<>();
+        for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate)) ids.add(l.getId());
+        List<Map<String, Object>> out = new ArrayList<>();
+        BigDecimal saldo = BigDecimal.ZERO;
+        for (CtbPartida p : partidas.findByEmpresaIdAndContaIdAndDeletedAtIsNull(empresaId, contaId)) {
+            if (!ids.contains(p.getLancamentoId())) continue;
+            saldo = saldo.add(p.getDebito()).subtract(p.getCredito());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("lancamentoId", p.getLancamentoId());
+            m.put("debito", p.getDebito());
+            m.put("credito", p.getCredito());
+            m.put("saldo", saldo);
+            m.put("historico", p.getHistorico());
+            out.add(m);
+        }
+        return out;
+    }
+    @Override public List<Map<String, Object>> balancete(Long empresaId, LocalDate de, LocalDate ate) {
+        Set<Long> ids = new HashSet<>();
+        for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate)) ids.add(l.getId());
+        Map<Long, BigDecimal[]> acc = new LinkedHashMap<>();
+        for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate))
+            for (CtbPartida p : partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(l.getId(), empresaId)) {
+                BigDecimal[] v = acc.computeIfAbsent(p.getContaId(), k -> new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
+                v[0] = v[0].add(p.getDebito());
+                v[1] = v[1].add(p.getCredito());
+            }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map.Entry<Long, BigDecimal[]> e : acc.entrySet()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("contaId", e.getKey());
+            m.put("conta", nomeConta(empresaId, e.getKey()));
+            m.put("debito", e.getValue()[0]);
+            m.put("credito", e.getValue()[1]);
+            m.put("saldo", e.getValue()[0].subtract(e.getValue()[1]));
+            out.add(m);
+        }
+        return out;
+    }
+    @Override public Map<String, Object> balanco(Long empresaId, int exercicio) {
+        LocalDate de = LocalDate.of(exercicio, 1, 1);
+        LocalDate ate = LocalDate.of(exercicio, 12, 31);
+        Map<String, BigDecimal> grupo = new LinkedHashMap<>();
+        grupo.put("ATIVO", BigDecimal.ZERO);
+        grupo.put("PASSIVO", BigDecimal.ZERO);
+        grupo.put("RESULTADO", BigDecimal.ZERO);
+        for (Map<String, Object> linha : balancete(empresaId, de, ate)) {
+            Long contaId = (Long) linha.get("contaId");
+            BigDecimal saldo = (BigDecimal) linha.get("saldo");
+            String codigo = contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaId, empresaId).map(PlanoContas::getCodigo).orElse("");
+            String g = codigo.startsWith("1") ? "ATIVO" : codigo.startsWith("2") ? "PASSIVO" : "RESULTADO";
+            grupo.put(g, grupo.get(g).add(saldo));
+        }
+        return new LinkedHashMap<>(grupo);
+    }
+    @Override @Transactional public CtbLancamento gerarDeTitulo(Long empresaId, Long userId, Long tituloId, Long contaDebitoId, Long contaCreditoId) {
+        Titulo t = exigir(titulos.findByIdAndEmpresaIdAndDeletedAtIsNull(tituloId, empresaId), "Titulo inexistente");
+        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaDebitoId, empresaId), "Conta debito inexistente");
+        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaCreditoId, empresaId), "Conta credito inexistente");
+        BigDecimal valor = t.getValorSaldo() == null || t.getValorSaldo().signum() <= 0 ? t.getValorOriginal() : t.getValorSaldo();
+        CtbLancamento l = new CtbLancamento();
+        l.setData(t.getDataEmissao() == null ? LocalDate.now() : t.getDataEmissao());
+        l.setPeriodo(periodoDe(l.getData()));
+        exigirAberto(empresaId, l.getPeriodo());
+        l.setHistorico("Titulo #" + t.getId() + " - " + t.getDescricao());
+        l.setOrigemTipo("TITULO");
+        l.setOrigemId(t.getId());
+        l.setStatus("RASCUNHO");
+        l = lancamentos.save(l);
+        CtbPartida d = new CtbPartida();
+        d.setLancamentoId(l.getId());
+        d.setContaId(contaDebitoId);
+        d.setDebito(valor);
+        d.setCredito(BigDecimal.ZERO);
+        partidas.save(d);
+        CtbPartida c = new CtbPartida();
+        c.setLancamentoId(l.getId());
+        c.setContaId(contaCreditoId);
+        c.setDebito(BigDecimal.ZERO);
+        c.setCredito(valor);
+        partidas.save(c);
+        return lancar(empresaId, l.getId());
+    }
+    @Override public List<CtbFechamento> fechamentos(Long empresaId) {
+        return fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
+    }
+    @Override @Transactional public CtbFechamento fechar(Long empresaId, Long userId, String periodo) {
+        Optional<CtbFechamento> atual = fechamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo);
+        if (atual.isPresent()) {
+            CtbFechamento f = atual.get();
+            f.setStatus("FECHADO");
+            return fechamentos.save(f);
+        }
+        CtbFechamento f = new CtbFechamento();
+        f.setPeriodo(periodo);
+        f.setStatus("FECHADO");
+        f.setFechadoPor(userId);
+        f.setFechadoEm(java.time.LocalDateTime.now());
+        return fechamentos.save(f);
+    }
+    @Override @Transactional public void reabrir(Long empresaId, String periodo) {
+        CtbFechamento f = exigir(fechamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo), "Fechamento inexistente");
+        f.setStatus("ABERTO");
+        fechamentos.save(f);
+    }
+}

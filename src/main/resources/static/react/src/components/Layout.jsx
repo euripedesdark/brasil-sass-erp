@@ -320,6 +320,31 @@ export const Layout = () => {
             icon: 'pi pi-heart-fill',
             command: () => handleNavigation('/doacoes')
         });
+        items.push({
+            label: t('nav.workflow', { defaultValue: 'Workflow' }),
+            icon: 'pi pi-sitemap',
+            command: () => handleNavigation('/workflow')
+        });
+        items.push({
+            label: t('nav.contabilidade', { defaultValue: 'Contabilidade' }),
+            icon: 'pi pi-book',
+            command: () => handleNavigation('/contabilidade')
+        });
+        items.push({
+            label: t('nav.crm', { defaultValue: 'CRM' }),
+            icon: 'pi pi-users',
+            command: () => handleNavigation('/crm')
+        });
+        items.push({
+            label: t('nav.wms', { defaultValue: 'WMS' }),
+            icon: 'pi pi-box',
+            command: () => handleNavigation('/wms')
+        });
+        items.push({
+            label: t('nav.portais', { defaultValue: 'Portais' }),
+            icon: 'pi pi-globe',
+            command: () => handleNavigation('/portais')
+        });
 
         return items;
     }, [handleNavigation, t, user?.isAdmin, user?.isDiretoria, isSuperuser, temModulo]);

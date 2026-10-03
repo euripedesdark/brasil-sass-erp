@@ -85,6 +85,10 @@ const UI_HINTS = [
     { prefix: '/api/ia', route: '/ia', label: 'IA (hub)' },
     { prefix: '/api/auth', route: '/login', label: 'Login/Auth' },
     { prefix: '/api/relatorios', route: '/relatorios', label: 'Relatórios' },
+    { prefix: '/api/workflow', route: '/workflow', label: 'Workflow' },
+    { prefix: '/api/contabilidade', route: '/contabilidade', label: 'Contabilidade' },
+    { prefix: '/api/crm', route: '/crm', label: 'CRM' },
+    { prefix: '/api/wms', route: '/wms', label: 'WMS' },
 ];
 
 const METHOD_SEVERITY = { GET: 'info', POST: 'success', PUT: 'warning', PATCH: 'warning', DELETE: 'danger' };
