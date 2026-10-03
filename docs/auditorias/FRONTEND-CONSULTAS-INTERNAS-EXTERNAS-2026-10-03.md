@@ -14,8 +14,8 @@ Inventário do tree atual:
 
 | Indicador | Estado |
 |---|---:|
-| Arquivos em `static/react` | 222 |
-| JSX | 108 |
+| Arquivos em `static/react` | 223 |
+| JSX | 109 |
 | JS | 62 |
 | CSS | 45 |
 | Serviços JS | 59 |
@@ -75,6 +75,15 @@ Fontes externas não devem substituir o cadastro interno. Exemplo: o ViaCEP pree
 - Operações de Pessoa passaram a receber o `empresaId` da sessão.
 - Listagem, busca, edição e exclusão ficaram explicitamente tenant-aware.
 
+### PCP / Produção
+
+- Criados roteiros de fabricação versionados.
+- Criados centros de trabalho com capacidade diária.
+- Operações de roteiro agora possuem sequência, tempos de setup/máquina/homem, centro de trabalho e instruções.
+- A tela `/producao/roteiros` administra roteiros, operações e centros de trabalho.
+- O produto do roteiro é selecionado pelo cadastro interno; não há digitação de ID para o fluxo normal.
+- Apontamentos de produção passaram a consultar funcionários pelo cadastro interno em vez de exigir ID digitado.
+
 ### RH
 
 - Funcionário agora seleciona uma Pessoa do cadastro interno.
@@ -107,6 +116,7 @@ Corrigido:
 
 ### Fiscal / SEFAZ
 
+- PDF de NFS-e deixou de usar `window.open()`: o download agora passa pelo cliente autenticado e preserva Bearer/X-Empresa-Id.
 - Chave de NF-e é normalizada e validada com 44 dígitos.
 - CNPJ da distribuição é normalizado e validado com 14 dígitos.
 - Respostas HTTP 503 da SEFAZ agora preservam a mensagem do backend.
