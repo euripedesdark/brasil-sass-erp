@@ -9,6 +9,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Tag } from 'primereact/tag';
 import { useConfirmation } from 'primereact/confirmdialog';
 import ApiConfig, { apiFetch } from '../services/ApiConfig';
+import { downloadAuthenticated } from '../services/downloadService';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationService } from '../services/NotificationService';
 import { useTranslation } from 'react-i18next';
@@ -104,13 +105,29 @@ export const Fiscal = () => {
         return <Tag value={rowData.status} severity={severity} />;
     };
 
+    const baixarPdf = async (id) => {
+        try {
+            await downloadAuthenticated(
+                `${ApiConfig.BASE_URL}/api/fiscal/nfse/${id}/pdf`,
+                `nfse-${id}.pdf`
+            );
+        } catch (e) {
+            toast.current?.show({
+                severity: 'error',
+                summary: t('errors.title'),
+                detail: e.message || 'Não foi possível baixar o PDF da NFS-e.',
+                life: 5000
+            });
+        }
+    };
+
     const actionTemplate = (rowData) => {
         return (
             <div className="flex gap-2">
                 <Button
                     icon="pi pi-file-pdf"
                     className="p-button-text"
-                    onClick={() => window.open(`${ApiConfig.BASE_URL}/api/fiscal/nfse/${rowData.id}/pdf`, '_blank')}
+                    onClick={() => baixarPdf(rowData.id)}
                 />
                 <Button
                     icon="pi pi-times"
