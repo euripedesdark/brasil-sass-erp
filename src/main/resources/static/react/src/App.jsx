@@ -84,6 +84,7 @@ import { RomaneioProducao } from './components/producao/RomaneioProducao';
 import { ApontamentosProducao } from './components/producao/ApontamentosProducao';
 import { EstruturaProduto } from './components/producao/EstruturaProduto';
 import Mrp from './components/producao/Mrp';
+import Capacidade from './components/producao/Capacidade';
 import Roteiros from './components/producao/Roteiros';
 
 import { Relatorios } from './components/Relatorios';
@@ -216,6 +217,7 @@ function App() {
                     <Route path="producao/estrutura" element={<EstruturaProduto />} />
                     <Route path="producao/roteiros" element={<Roteiros />} />
                     <Route path="producao/mrp" element={<Mrp />} />
+                    <Route path="producao/capacidade" element={<Capacidade />} />
                     <Route path="qualidade" element={<Qualidade />} />
                     <Route path="ativos" element={<Ativos />} />
 
