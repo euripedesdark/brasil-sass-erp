@@ -184,7 +184,15 @@ export const CadastroPessoas = () => {
         try {
             // só manda o bloco que pertence ao tipo escolhido: mandar os dois
             // confuse a validação do backend, que valida um ou outro
-            const corpo = { ...form, documento: (form.documento || '').replace(/\D/g, '') };
+            const corpo = {
+                ...form,
+                documento: (form.documento || '').replace(/\D/g, ''),
+                enderecos: (form.enderecos || []).map((e) => ({
+                    ...e,
+                    cep: (e.cep || '').replace(/\D/g, ''),
+                    uf: (e.uf || '').toUpperCase()
+                }))
+            };
             if (corpo.tipo === 'FISICA') delete corpo.juridica; else delete corpo.fisica;
             if (!corpo.documento) delete corpo.documento;
 
