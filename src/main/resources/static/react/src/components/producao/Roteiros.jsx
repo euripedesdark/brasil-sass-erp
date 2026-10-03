@@ -24,6 +24,7 @@ export default function Roteiros(){
  const [roteiros,setRoteiros]=useState([]),[centros,setCentros]=useState([]),[produtos,setProdutos]=useState([]);
  const [produtoSug,setProdutoSug]=useState([]),[loading,setLoading]=useState(false),[erro,setErro]=useState('');
  const [roteiro,setRoteiro]=useState(vazioRoteiro()),[dialog,setDialog]=useState(false);
+ const [centro,setCentro]=useState({codigo:'',nome:'',capacidadeHorasDia:8,ativo:true}),[centroDialog,setCentroDialog]=useState(false);
  const [operacoes,setOperacoes]=useState([]),[op,setOp]=useState(vazioOperacao()),[opDialog,setOpDialog]=useState(false),[roteiroAtivo,setRoteiroAtivo]=useState(null);
 
  const carregar=async()=>{setLoading(true);try{
@@ -45,6 +46,13 @@ export default function Roteiros(){
    if(!r.ok){setErro(await r.text()||'Falha ao salvar roteiro.');return} setDialog(false);carregar();toast.current?.show({severity:'success',summary:'Roteiro salvo',life:2500});
  };
  const excluir=async(r)=>{const x=await apiFetch('/api/producao/roteiros/'+r.id,{method:'DELETE'});if(!x.ok){setErro(await x.text());return}carregar()};
+ const novoCentro=()=>{setCentro({codigo:'',nome:'',capacidadeHorasDia:8,ativo:true});setCentroDialog(true)};
+ const editarCentro=(c)=>{setCentro({...c});setCentroDialog(true)};
+ const salvarCentro=async()=>{if(!centro.codigo||!centro.nome){setErro('Código e nome do centro de trabalho são obrigatórios.');return}
+   const id=centro.id;const x=await apiFetch(id?'/api/producao/centros-trabalho/'+id:'/api/producao/centros-trabalho',{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(centro)});
+   if(!x.ok){setErro(await x.text()||'Falha ao salvar centro.');return}setCentroDialog(false);carregar();
+ };
+ const excluirCentro=async(c)=>{const x=await apiFetch('/api/producao/centros-trabalho/'+c.id,{method:'DELETE'});if(x.ok)carregar();else setErro(await x.text())};
  const abrirOps=async(r)=>{setRoteiroAtivo(r);setOp(vazioOperacao());const x=await apiFetch('/api/producao/roteiros/'+r.id+'/operacoes');setOperacoes(x.ok?await lista(x):[]);setOpDialog(true)};
  const salvarOp=async()=>{if(!op.codigo||!op.nome||!op.sequencia){setErro('Sequência, código e nome da operação são obrigatórios.');return}
    const id=op.id;const x=await apiFetch(id?`/api/producao/roteiros/operacoes/${id}`:`/api/producao/roteiros/${roteiroAtivo.id}/operacoes`,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(op)});
@@ -66,6 +74,23 @@ export default function Roteiros(){
     <Column header="Ações" body={r=><div className="flex gap-1"><Button icon="pi pi-list" text tooltip="Operações" onClick={()=>abrirOps(r)}/><Button icon="pi pi-pencil" text onClick={()=>editar(r)}/><Button icon="pi pi-trash" text severity="danger" onClick={()=>excluir(r)}/></div>}/>
    </DataTable>
   </Card>
+
+  <Card title="Centros de trabalho" subTitle="Capacidade disponível usada no planejamento e nos roteiros" className="mt-3">
+   <div className="flex justify-content-end mb-3"><Button label="Novo centro" icon="pi pi-plus" outlined onClick={novoCentro}/></div>
+   <DataTable value={centros} paginator rows={10} emptyMessage="Nenhum centro de trabalho cadastrado.">
+    <Column field="codigo" header="Código"/><Column field="nome" header="Nome"/><Column field="capacidadeHorasDia" header="Horas/dia"/>
+    <Column field="ativo" header="Ativo" body={c=>c.ativo?'Sim':'Não'}/>
+    <Column header="Ações" body={c=><div className="flex gap-1"><Button icon="pi pi-pencil" text onClick={()=>editarCentro(c)}/><Button icon="pi pi-trash" text severity="danger" onClick={()=>excluirCentro(c)}/></div>}/>
+   </DataTable>
+  </Card>
+
+  <Dialog header="Centro de trabalho" visible={centroDialog} style={{width:'600px'}} onHide={()=>setCentroDialog(false)} footer={<Button label="Salvar" icon="pi pi-check" onClick={salvarCentro}/>}>
+   <div className="grid">
+    <div className="col-12 md:col-4 field"><label>Código *</label><InputText value={centro.codigo} onChange={e=>setCentro({...centro,codigo:e.target.value})}/></div>
+    <div className="col-12 md:col-5 field"><label>Nome *</label><InputText value={centro.nome} onChange={e=>setCentro({...centro,nome:e.target.value})}/></div>
+    <div className="col-12 md:col-3 field"><label>Horas/dia</label><InputNumber value={centro.capacidadeHorasDia} min={0.1} minFractionDigits={2} onValueChange={e=>setCentro({...centro,capacidadeHorasDia:e.value})}/></div>
+   </div>
+  </Dialog>
 
   <Dialog header="Roteiro de fabricação" visible={dialog} style={{width:'760px'}} onHide={()=>setDialog(false)} footer={<Button label="Salvar" icon="pi pi-check" onClick={salvar}/>}>
    <div className="grid">
