@@ -5,6 +5,9 @@ import br.com.brasil_saas.producao.repository.*;
 import br.com.brasil_saas.producao.service.ProducaoService;
 import br.com.brasil_saas.producao.service.ProducaoRequest;
 import br.com.brasil_saas.producao.service.ItemRequest;
+import br.com.brasil_saas.producao.service.CustoProducaoService;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import java.math.RoundingMode;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
 import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
@@ -29,6 +32,8 @@ public class ProducaoServiceImpl implements ProducaoService {
     private final SaldoEstoqueRepository saldoEstoqueRepository;
     private final DepositoRepository depositoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
+    private final CustoProducaoService custoService;
+    private final ProdutoRepository produtoRepository;
 
     @Override
     @Transactional
@@ -70,17 +75,54 @@ public class ProducaoServiceImpl implements ProducaoService {
             throw new BusinessException("Ordem não pode ser finalizada no estado atual");
         }
 
+        // custeio antes de mexer no estoque: usa os apontamentos e o custo vigente dos insumos
+        var custo = custoService.calcular(empresaId, producaoId);
+
         // 1. Consumir estoque de insumos
         for (ItemProducao item : p.getItens()) {
             baixarEstoque(empresaId, item.getProdutoId(), item.getQuantidade(), p.getId());
         }
 
-        // 2. Adicionar produto final ao estoque
-        adicionarEstoque(empresaId, p.getProdutoFinalId(), p.getQuantidadePlanejada(), p.getId());
+        // 2. Adicionar produto final ao estoque: so as unidades boas (apontado - refugo);
+        //    sem apontamento de producao, a quantidade boa e a planejada (comportamento anterior)
+        BigDecimal entrada = custo.quantidadeBoa();
+        if (entrada != null && entrada.signum() > 0) {
+            atualizarCustoMedio(empresaId, p.getProdutoFinalId(), entrada, custo.custoUnitario());
+            adicionarEstoque(empresaId, p.getProdutoFinalId(), entrada, p.getId());
+        }
+
+        // 3. Gravar o custo na OP e nos itens
+        p.setCustoTotal(custo.custoTotal().setScale(2, RoundingMode.HALF_UP));
+        for (ItemProducao item : p.getItens()) {
+            var linha = custo.materiais().stream()
+                    .filter(m -> item.getProdutoId().equals(m.get("produtoId"))).findFirst().orElse(null);
+            if (linha != null) {
+                item.setCustoUnitario(((BigDecimal) linha.get("custoUnitario")).setScale(2, RoundingMode.HALF_UP));
+                item.setCustoTotal(((BigDecimal) linha.get("custoTotal")).setScale(2, RoundingMode.HALF_UP));
+            }
+        }
 
         p.setStatus("FINALIZADO");
         p.setDataFim(LocalDateTime.now());
         return producaoRepository.save(p);
+    }
+
+    /**
+     * Custo medio ponderado do produto final: (saldo atual x custo atual + entrada x custo da OP)
+     * / (saldo atual + entrada). Sem custo unitario calculado, nao altera o cadastro.
+     */
+    private void atualizarCustoMedio(Long empresaId, Long produtoId, BigDecimal entrada, BigDecimal custoUnitarioOp) {
+        if (custoUnitarioOp == null || custoUnitarioOp.signum() <= 0) return;
+        var produto = produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(produtoId, empresaId).orElse(null);
+        if (produto == null) return;
+        BigDecimal saldoAtual = saldoEstoqueRepository.findByEmpresaIdAndProdutoId(empresaId, produtoId)
+                .map(SaldoEstoque::getQuantidade).orElse(BigDecimal.ZERO).max(BigDecimal.ZERO);
+        BigDecimal custoAtual = produto.getPrecoCusto() == null ? BigDecimal.ZERO : produto.getPrecoCusto();
+        BigDecimal base = saldoAtual.add(entrada);
+        BigDecimal novo = saldoAtual.multiply(custoAtual).add(entrada.multiply(custoUnitarioOp))
+                .divide(base, 4, RoundingMode.HALF_UP);
+        produto.setPrecoCusto(novo);
+        produtoRepository.save(produto);
     }
 
     private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long origemId) {
