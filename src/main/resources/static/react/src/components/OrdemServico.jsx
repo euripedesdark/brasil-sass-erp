@@ -25,6 +25,8 @@ export default function OrdemServico() {
     
     const [filtroCliente, setFiltroCliente] = useState('');
     const [clientesSugestoes, setClientesSugestoes] = useState([]);
+    const [produtosSugestoes, setProdutosSugestoes] = useState([]);
+    const [servicosSugestoes, setServicosSugestoes] = useState([]);
     const [dialogVisible, setDialogVisible] = useState(false);
     const [osSelecionada, setOsSelecionada] = useState(null);
     const [emitirNota, setEmitirNota] = useState(false);
@@ -103,54 +105,117 @@ export default function OrdemServico() {
         }
     };
 
+    const buscarProdutos = async (event) => {
+        try {
+            const termo = event.query || '';
+            const response = await apiFetch(
+                `${ApiConfig.BASE_URL}/api/cadastro/produtos?nome=${encodeURIComponent(termo)}&ativo=true&size=20`
+            );
+            if (!response.ok) return setProdutosSugestoes([]);
+            const data = await response.json();
+            const page = data?.data ?? data;
+            setProdutosSugestoes(Array.isArray(page) ? page : (page?.content || []));
+        } catch {
+            setProdutosSugestoes([]);
+        }
+    };
+
+    const buscarServicos = async (event) => {
+        try {
+            const termo = event.query || '';
+            const response = await apiFetch(
+                `${ApiConfig.BASE_URL}/api/cadastro/servicos?nome=${encodeURIComponent(termo)}&ativo=true&size=20`
+            );
+            if (!response.ok) return setServicosSugestoes([]);
+            const data = await response.json();
+            const page = data?.data ?? data;
+            setServicosSugestoes(Array.isArray(page) ? page : (page?.content || []));
+        } catch {
+            setServicosSugestoes([]);
+        }
+    };
+
     const abrirNovaOS = () => {
         setOsSelecionada({
             dataMov: new Date(),
-            baixaMov: 'N',
+            status: 'ABERTA',
+            clienteId: null,
+            cliente: null,
+            equipamento: '',
+            descricao: '',
             itens: []
         });
         setEmitirNota(false);
         setDialogVisible(true);
     };
 
-    const abrirEdicao = (os) => {
-        setOsSelecionada({
-            ...os,
-            dataMov: os.dataMov ? new Date(os.dataMov) : new Date()
-        });
+    const abrirEdicao = async (os) => {
+        try {
+            const response = await apiFetch(`${ApiConfig.BASE_URL}/api/servicos/os/${os.id}/itens`);
+            const itens = response.ok ? await response.json() : [];
+            setOsSelecionada({
+                ...os,
+                dataMov: os.dataMov ? new Date(os.dataMov) : (os.aberturaAt ? new Date(os.aberturaAt) : new Date()),
+                itens: Array.isArray(itens) ? itens.map(item => ({
+                    ...item,
+                    totalItem: item.valorTotal ?? ((item.quantidade || 0) * (item.valorUnitario || 0))
+                })) : []
+            });
+        } catch {
+            setOsSelecionada({ ...os, itens: [] });
+        }
         setDialogVisible(true);
     };
 
     const salvarOS = async () => {
         try {
-            const isEdicao = !!(osSelecionada && osSelecionada.id);
-            let payload;
-            let url;
-            let method;
-
-            if (isEdicao) {
-                // Adicionar itens via POST /{id}/itens
-                url = `${ApiConfig.BASE_URL}/api/servicos/os/${osSelecionada.id}/itens`;
-                method = 'POST';
-                payload = null;
-            } else {
-                url = `${ApiConfig.BASE_URL}/api/servicos/os`;
-                method = 'POST';
-                payload = {
-                    clienteId: osSelecionada.clienteId || null,
-                    equipamento: osSelecionada.equipamento || null,
-                    descricao: osSelecionada.descricao || null,
-                    previsaoAt: osSelecionada.dataMov ? new Date(osSelecionada.dataMov).toISOString() : new Date().toISOString()
-                };
+            if (!osSelecionada?.clienteId) {
+                toast.current?.show({ severity: 'warn', summary: 'Cliente', detail: 'Selecione um cliente cadastrado.', life: 4000 });
+                return;
             }
 
+            const isEdicao = !!osSelecionada.id;
+            const payload = {
+                clienteId: osSelecionada.clienteId,
+                equipamento: osSelecionada.equipamento || null,
+                descricao: osSelecionada.descricao || null,
+                previsaoAt: osSelecionada.dataMov ? new Date(osSelecionada.dataMov).toISOString() : new Date().toISOString()
+            };
+            const url = isEdicao
+                ? `${ApiConfig.BASE_URL}/api/servicos/os/${osSelecionada.id}`
+                : `${ApiConfig.BASE_URL}/api/servicos/os`;
+
             const response = await apiFetch(url, {
-                method,
+                method: isEdicao ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: payload ? JSON.stringify(payload) : undefined
+                body: JSON.stringify(payload)
             });
 
             if (response.ok) {
+                const body = await response.json().catch(() => null);
+                const criada = body?.data ?? body;
+                const osId = criada?.id ?? osSelecionada.id;
+                const novosItens = (osSelecionada.itens || []).filter(item => !item.id);
+
+                for (const item of novosItens) {
+                    if (!item.produtoId && !item.servicoId) {
+                        throw new Error('Cada item precisa apontar para um produto ou serviço do cadastro.');
+                    }
+                    const itemResponse = await apiFetch(`${ApiConfig.BASE_URL}/api/servicos/os/${osId}/itens`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            produtoId: item.produtoId || null,
+                            servicoId: item.servicoId || null,
+                            quantidade: item.quantidade || 1,
+                            valorUnitario: item.valorUnitario || 0
+                        })
+                    });
+                    if (!itemResponse.ok) {
+                        const errorBody = await itemResponse.text();
+                        throw new Error(errorBody || 'Não foi possível gravar um item da OS.');
+                    }
+                }
                 toast.current.show({
                     severity: 'success',
                     summary: t('messages.success'),
@@ -158,8 +223,12 @@ export default function OrdemServico() {
                 });
 
                 if (emitirNota) {
-                    // Redirecionar para tela de emissão de nota em nova aba
-                    window.open(`/notas-fiscais?os=${osSelecionada.idMov || osSelecionada.id}`, '_blank');
+                    toast.current?.show({
+                        severity: 'info',
+                        summary: 'Emissão fiscal',
+                        detail: 'A OS foi salva. A emissão fiscal deve continuar pelo módulo Fiscal, pois a rota de NF-e ainda não está exposta nesta tela.',
+                        life: 6000
+                    });
                 }
 
                 setDialogVisible(false);
@@ -183,6 +252,10 @@ export default function OrdemServico() {
 
     const adicionarItem = () => {
         const novoItem = {
+            produtoId: null,
+            servicoId: null,
+            produto: null,
+            servico: null,
             descricao: '',
             quantidade: 1,
             valorUnitario: 0,
@@ -228,9 +301,10 @@ export default function OrdemServico() {
     };
 
     const statusTemplate = (rowData) => {
-        const statusClass = rowData.baixaMov === 'S' ? 'status-baixado' : 'status-aberto';
-        const statusLabel = rowData.baixaMov === 'S' ? 'Baixado' : 'Aberto';
-        return <span className={`status-badge ${statusClass}`}>{statusLabel}</span>;
+        const status = rowData.status || 'ABERTA';
+        const fechado = status === 'FECHADA' || status === 'CANCELADA';
+        const statusLabel = status === 'FECHADA' ? 'Fechada' : status === 'CANCELADA' ? 'Cancelada' : 'Aberta';
+        return <span className={`status-badge ${fechado ? 'status-baixado' : 'status-aberto'}`}>{statusLabel}</span>;
     };
 
     const fecharOS = async (os) => {
@@ -315,7 +389,7 @@ export default function OrdemServico() {
                     onClick={() => abrirEdicao(rowData)}
                     tooltip="Visualizar/Editar"
                 />
-                {rowData.baixaMov === 'N' && (
+                {rowData.status !== 'FECHADA' && rowData.status !== 'CANCELADA' && (
                     <>
                         <Button 
                             icon="pi pi-file-pdf" 
@@ -357,7 +431,7 @@ export default function OrdemServico() {
         <div>
             <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={() => setDialogVisible(false)} />
             <Button label="Salvar e Imprimir OS" icon="pi pi-check" className="p-button-success" onClick={salvarOS} />
-            {osSelecionada?.baixaMov === 'N' && (
+            {osSelecionada?.status !== 'FECHADA' && osSelecionada?.status !== 'CANCELADA' && (
                 <div className="mt-3">
                     <div className="p-checkbox">
                         <input 
@@ -465,7 +539,14 @@ export default function OrdemServico() {
                                     suggestions={clientesSugestoes}
                                     completeMethod={buscarClientes}
                                     field="nome"
-                                    onChange={(e) => setOsSelecionada({...osSelecionada, cliente: e.value})}
+                                    onChange={(e) => {
+                                        const cliente = e.value;
+                                        setOsSelecionada({
+                                            ...osSelecionada,
+                                            cliente,
+                                            clienteId: cliente?.id ?? null
+                                        });
+                                    }}
                                     placeholder="Busque pelo cliente"
                                     dropdown
                                     required
@@ -488,11 +569,20 @@ export default function OrdemServico() {
                     </div>
                     
                     <div className="p-field">
-                        <label htmlFor="observacao">Observações</label>
+                        <label htmlFor="equipamento">Equipamento</label>
+                        <InputText
+                            id="equipamento"
+                            value={osSelecionada?.equipamento || ''}
+                            onChange={(e) => setOsSelecionada({...osSelecionada, equipamento: e.target.value})}
+                            placeholder="Equipamento/ativo atendido"
+                        />
+                    </div>
+                    <div className="p-field">
+                        <label htmlFor="observacao">Descrição</label>
                         <InputTextarea 
                             id="observacao"
-                            value={osSelecionada?.observacao || ''}
-                            onChange={(e) => setOsSelecionada({...osSelecionada, observacao: e.target.value})}
+                            value={osSelecionada?.descricao || ''}
+                            onChange={(e) => setOsSelecionada({...osSelecionada, descricao: e.target.value})}
                             rows={3}
                         />
                     </div>
@@ -513,9 +603,68 @@ export default function OrdemServico() {
                             editableRows
                             emptyMessage="Nenhum item adicionado"
                         >
-                            <Column 
-                                field="descricao" 
-                                header="Descrição" 
+                            <Column
+                                header="Produto"
+                                body={(row, options) => (
+                                    <AutoComplete
+                                        value={row.produto || null}
+                                        suggestions={produtosSugestoes}
+                                        completeMethod={buscarProdutos}
+                                        field="nome"
+                                        dropdown
+                                        onChange={(e) => {
+                                            const p = e.value;
+                                            const itens = [...osSelecionada.itens];
+                                            itens[options.rowIndex] = {
+                                                ...itens[options.rowIndex],
+                                                produto: p,
+                                                produtoId: p?.id ?? null,
+                                                servico: null,
+                                                servicoId: null,
+                                                descricao: p?.nome || itens[options.rowIndex].descricao || '',
+                                                valorUnitario: p?.precoVenda ?? itens[options.rowIndex].valorUnitario ?? 0
+                                            };
+                                            setOsSelecionada({...osSelecionada, itens});
+                                        }}
+                                        placeholder="Produto"
+                                        className="w-full"
+                                    />
+                                )}
+                                style={{ width: '28%' }}
+                            />
+                            <Column
+                                header="Serviço"
+                                body={(row, options) => (
+                                    <AutoComplete
+                                        value={row.servico || null}
+                                        suggestions={servicosSugestoes}
+                                        completeMethod={buscarServicos}
+                                        field="nome"
+                                        dropdown
+                                        onChange={(e) => {
+                                            const servico = e.value;
+                                            const itens = [...osSelecionada.itens];
+                                            itens[options.rowIndex] = {
+                                                ...itens[options.rowIndex],
+                                                servico,
+                                                servicoId: servico?.id ?? null,
+                                                produto: null,
+                                                produtoId: null,
+                                                descricao: servico?.nome || itens[options.rowIndex].descricao || '',
+                                                valorUnitario: servico?.preco ?? servico?.valor ?? itens[options.rowIndex].valorUnitario ?? 0
+                                            };
+                                            setOsSelecionada({...osSelecionada, itens});
+                                        }}
+                                        placeholder="Serviço"
+                                        className="w-full"
+                                    />
+                                )}
+                                style={{ width: '28%' }}
+                            />
+                            <Column
+                                field="descricao"
+                                header="Descrição"
+                                body={(row) => row.descricao || '—'} 
                                 editor={(options) => (
                                     <InputText 
                                         value={options.value} 
