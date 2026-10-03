@@ -83,6 +83,7 @@ import Ativos from './components/ativos/Ativos';
 import { RomaneioProducao } from './components/producao/RomaneioProducao';
 import { ApontamentosProducao } from './components/producao/ApontamentosProducao';
 import { EstruturaProduto } from './components/producao/EstruturaProduto';
+import Mrp from './components/producao/Mrp';
 
 import { Relatorios } from './components/Relatorios';
 import { BI } from './components/bi/BI';
@@ -212,6 +213,7 @@ function App() {
                     <Route path="producao/romaneios" element={<RomaneioProducao />} />
                     <Route path="producao/apontamentos" element={<ApontamentosProducao />} />
                     <Route path="producao/estrutura" element={<EstruturaProduto />} />
+                    <Route path="producao/mrp" element={<Mrp />} />
                     <Route path="qualidade" element={<Qualidade />} />
                     <Route path="ativos" element={<Ativos />} />
 
