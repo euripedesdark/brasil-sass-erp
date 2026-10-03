@@ -20,4 +20,5 @@ public interface ContabilidadeService {
     CtbFechamento fechar(Long empresaId, Long userId, String periodo);
     void reabrir(Long empresaId, String periodo);
     BigDecimal[] totais(Long empresaId, Long lancamentoId);
+    java.util.List<java.util.Map<String, Object>> dre(Long empresaId, int exercicio);
 }
