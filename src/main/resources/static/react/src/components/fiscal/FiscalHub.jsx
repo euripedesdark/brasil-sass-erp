@@ -4,6 +4,8 @@ import { Button } from 'primereact/button';
 import { Tag } from 'primereact/tag';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { InputText } from 'primereact/inputtext';
+import { Message } from 'primereact/message';
 import { apiFetch } from '../../services/ApiConfig';
 import BuscaFiscal from './BuscaFiscal';
 
@@ -27,6 +29,10 @@ export default function FiscalHub(){
  const { t } = useTranslation();
  const [status, setStatus] = useState({ cte: null, mdfe: null });
  const [loading, setLoading] = useState(false);
+ const [recibo, setRecibo] = useState('');
+ const [reciboResultado, setReciboResultado] = useState(null);
+ const [reciboLoading, setReciboLoading] = useState(false);
+ const [reciboErro, setReciboErro] = useState('');
  const consultarStatus = async () => {
   setLoading(true);
   try {
@@ -37,6 +43,27 @@ export default function FiscalHub(){
    setStatus({ cte, mdfe });
   } finally {
    setLoading(false);
+  }
+ };
+ const consultarRecibo = async (event) => {
+  event?.preventDefault();
+  if (!recibo.trim()) {
+   setReciboErro('Informe o número do recibo do MDF-e.');
+   setReciboResultado(null);
+   return;
+  }
+  setReciboLoading(true);
+  setReciboErro('');
+  try {
+   const response = await apiFetch('/api/fiscal/mdfe/recibo?numero=' + encodeURIComponent(recibo.trim()));
+   const body = await response.json().catch(() => ({}));
+   if (!response.ok) throw new Error(body.message || body.erro || 'Não foi possível consultar o recibo.');
+   setReciboResultado(body?.data ?? body);
+  } catch (error) {
+   setReciboResultado(null);
+   setReciboErro(error.message || 'Falha ao consultar o recibo.');
+  } finally {
+   setReciboLoading(false);
   }
  };
  const statusLabel = (value) => value?.status || value?.situacao || (value ? t('common.available') : t('common.notChecked'));
@@ -52,6 +79,17 @@ export default function FiscalHub(){
 	<div className="col-12 md:col-6"><span className="mr-2">CT-e</span><Tag value={statusLabel(status.cte)} severity={status.cte ? 'success' : 'secondary'} /></div>
 	<div className="col-12 md:col-6"><span className="mr-2">MDF-e</span><Tag value={statusLabel(status.mdfe)} severity={status.mdfe ? 'success' : 'secondary'} /></div>
    </div>
+  </Card>
+  <Card title="Consulta de recibo MDF-e" className="mb-3">
+   <form onSubmit={consultarRecibo} className="flex align-items-end gap-2 flex-wrap">
+    <div className="flex-1 min-w-0">
+     <label htmlFor="mdfe-recibo" className="block mb-2">Número do recibo</label>
+     <InputText id="mdfe-recibo" value={recibo} onChange={(e) => setRecibo(e.target.value)} className="w-full" placeholder="Ex.: 123456789" />
+    </div>
+    <Button type="submit" label="Consultar recibo" icon="pi pi-search" loading={reciboLoading} />
+   </form>
+   {reciboErro && <Message severity="error" text={reciboErro} className="w-full mt-2" />}
+   {reciboResultado && <pre className="mt-3 mb-0 p-3 surface-ground border-round overflow-auto" style={{ maxHeight: '18rem' }}>{JSON.stringify(reciboResultado, null, 2)}</pre>}
   </Card>
    <BuscaFiscal />
    <div className="grid">{items.map(([titleKey,descKey,i,p])=><div className="col-12 md:col-6 xl:col-4" key={p}><Card className="h-full"><i className={i} style={{fontSize:'1.8rem'}}/><h3>{t(titleKey)}</h3><p className="text-color-secondary">{t(descKey)}</p><Button label={t('common.open')} icon="pi pi-arrow-right" outlined onClick={()=>navigate(p)}/></Card></div>)}</div>
