@@ -2,6 +2,8 @@ package br.com.brasil_saas.rh.controller;
 
 import br.com.brasil_saas.rh.model.Funcionario;
 import br.com.brasil_saas.rh.repository.FuncionarioRepository;
+import br.com.brasil_saas.cadastro.repository.PessoaRepository;
+import org.springframework.data.domain.PageRequest;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,11 +23,28 @@ import java.util.List;
 public class FuncionarioController {
 
     private final FuncionarioRepository repo;
+    private final PessoaRepository pessoaRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('rh:funcionario:leitura')")
     public List<Funcionario> listar(@AuthenticationPrincipal AuthenticatedUser u) {
         return repo.listarAtivosOrdenados(u.getEmpresaId());
+    }
+
+    /**
+     * Lookup interno para vincular o colaborador a uma Pessoa já cadastrada.
+     * Retorna apenas os campos necessários para a seleção e sempre usa o tenant
+     * do usuário autenticado; não é uma consulta externa.
+     */
+    @GetMapping("/pessoas")
+    @PreAuthorize("hasAuthority('rh:funcionario:leitura')")
+    public List<PessoaLookup> pessoas(@RequestParam(required = false) String busca,
+                                      @AuthenticationPrincipal AuthenticatedUser u) {
+        String termo = busca == null || busca.isBlank() ? null : busca.trim();
+        return pessoaRepository.buscar(u.getEmpresaId(), termo, null, PageRequest.of(0, 50))
+                .getContent().stream()
+                .map(p -> new PessoaLookup(p.getId(), p.getNome(), p.getDocumento()))
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -104,4 +123,5 @@ public class FuncionarioController {
             repo.save(existente);
         }
     }
+    public record PessoaLookup(Long id, String nome, String documento) {}
 }
