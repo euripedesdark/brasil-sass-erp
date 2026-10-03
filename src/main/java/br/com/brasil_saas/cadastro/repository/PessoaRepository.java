@@ -15,9 +15,6 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
 
     Page<Pessoa> findByEmpresaIdAndDeletedAtIsNull(Long empresaId, Pageable pageable);
 
-    @Query("SELECT p FROM Pessoa p WHERE p.deletedAt IS NULL AND " +
-           "(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS String), '%'))) AND " +
-           "(:documento IS NULL OR p.documento = :documento)")
     @Query("SELECT p FROM Pessoa p WHERE p.empresaId = :empresaId AND p.deletedAt IS NULL AND " +
            "(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS String), '%'))) AND " +
            "(:documento IS NULL OR p.documento = :documento)")
