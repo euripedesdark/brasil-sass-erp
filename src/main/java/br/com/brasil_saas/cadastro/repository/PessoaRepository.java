@@ -11,16 +11,20 @@ import java.util.UUID;
 
 public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
 
-    Optional<Pessoa> findByUuidAndDeletedAtIsNull(UUID uuid);
+    Optional<Pessoa> findByUuidAndEmpresaIdAndDeletedAtIsNull(UUID uuid, Long empresaId);
 
-    Page<Pessoa> findByDeletedAtIsNull(Pageable pageable);
+    Page<Pessoa> findByEmpresaIdAndDeletedAtIsNull(Long empresaId, Pageable pageable);
 
     @Query("SELECT p FROM Pessoa p WHERE p.deletedAt IS NULL AND " +
            "(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS String), '%'))) AND " +
            "(:documento IS NULL OR p.documento = :documento)")
-    Page<Pessoa> buscar(@Param("nome") String nome, @Param("documento") String documento, Pageable pageable);
+    @Query("SELECT p FROM Pessoa p WHERE p.empresaId = :empresaId AND p.deletedAt IS NULL AND " +
+           "(:nome IS NULL OR LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:nome AS String), '%'))) AND " +
+           "(:documento IS NULL OR p.documento = :documento)")
+    Page<Pessoa> buscar(@Param("empresaId") Long empresaId, @Param("nome") String nome,
+                        @Param("documento") String documento, Pageable pageable);
 
-    boolean existsByDocumentoAndDeletedAtIsNull(String documento);
+    boolean existsByEmpresaIdAndDocumentoAndDeletedAtIsNull(Long empresaId, String documento);
 
     /**
      * Acha a pessoa pelo CNPJ/CPF, para casar o emitente da nota com um
@@ -32,7 +36,7 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
      * juridica com CNPJ; o destinatario pode ser CPF, por isso a nota de
      * compra tem fornecedor e a de venda tem cliente.
      */
-    Optional<Pessoa> findByDocumentoAndDeletedAtIsNull(String documento);
+    Optional<Pessoa> findByEmpresaIdAndDocumentoAndDeletedAtIsNull(Long empresaId, String documento);
 
-    boolean existsByDocumentoAndIdNotAndDeletedAtIsNull(String documento, Long id);
+    boolean existsByEmpresaIdAndDocumentoAndIdNotAndDeletedAtIsNull(Long empresaId, String documento, Long id);
 }
