@@ -1,0 +1,159 @@
+package br.com.brasil_saas.projetos.service.impl;
+import br.com.brasil_saas.projetos.model.*;
+import br.com.brasil_saas.projetos.repository.*;
+import br.com.brasil_saas.projetos.service.ProjetoService;
+import br.com.brasil_saas.financeiro.model.Titulo;
+import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import java.math.BigDecimal;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+@Service @RequiredArgsConstructor
+public class ProjetoServiceImpl implements ProjetoService {
+    private final PrjProjetoRepository projetos;
+    private final PrjEtapaRepository etapas;
+    private final PrjMovimentoRepository movimentos;
+    private final PrjRiscoRepository riscos;
+    private final PrjMudancaRepository mudancas;
+    private final PrjFaturamentoRepository faturamentos;
+    private final TituloRepository titulos;
+    private <T> T exigir(Optional<T> o, String msg) {
+        return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
+    private PrjProjeto exigirProjeto(Long empresaId, Long id) {
+        return exigir(projetos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Projeto inexistente");
+    }
+    @Override public List<PrjProjeto> projetos(Long empresaId, String status) {
+        List<PrjProjeto> base = projetos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
+        if (status == null || status.isBlank()) return base;
+        return base.stream().filter(p -> status.equals(p.getStatus())).toList();
+    }
+    @Override @Transactional public PrjProjeto salvar(Long empresaId, PrjProjeto p) {
+        p.setId(null);
+        if (p.getStatus() == null) p.setStatus("PLANEJADO");
+        return projetos.save(p);
+    }
+    @Override public List<PrjEtapa> etapas(Long empresaId, Long projetoId) {
+        exigirProjeto(empresaId, projetoId);
+        return etapas.findByProjetoIdAndEmpresaIdAndDeletedAtIsNullOrderByOrdem(projetoId, empresaId);
+    }
+    @Override @Transactional public PrjEtapa salvarEtapa(Long empresaId, Long projetoId, PrjEtapa e) {
+        exigirProjeto(empresaId, projetoId);
+        if (e.getPaiId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(e.getPaiId(), empresaId), "Etapa pai inexistente");
+        e.setId(null);
+        e.setProjetoId(projetoId);
+        if (e.getStatus() == null) e.setStatus("NAO_INICIADA");
+        return etapas.save(e);
+    }
+    @Override @Transactional public PrjEtapa avancarEtapa(Long empresaId, Long projetoId, Long etapaId, Integer pct) {
+        exigirProjeto(empresaId, projetoId);
+        PrjEtapa e = exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(etapaId, empresaId), "Etapa inexistente");
+        if (e.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Etapa de outro projeto");
+        int p = Math.min(100, Math.max(0, pct == null ? 0 : pct));
+        e.setPctConcluido(p);
+        e.setStatus(p <= 0 ? "NAO_INICIADA" : p >= 100 ? "CONCLUIDA" : "EM_ANDAMENTO");
+        return etapas.save(e);
+    }
+    @Override public List<PrjMovimento> movimentos(Long empresaId, Long projetoId, String tipo) {
+        exigirProjeto(empresaId, projetoId);
+        List<PrjMovimento> base = movimentos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId);
+        if (tipo == null || tipo.isBlank()) return base;
+        return base.stream().filter(m -> tipo.equals(m.getTipo())).toList();
+    }
+    @Override @Transactional public PrjMovimento lancarMovimento(Long empresaId, Long projetoId, PrjMovimento m) {
+        exigirProjeto(empresaId, projetoId);
+        if ("CUSTO".equals(m.getTipo()) == false && "RECEITA".equals(m.getTipo()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo deve ser CUSTO ou RECEITA");
+        if (m.getEtapaId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(m.getEtapaId(), empresaId), "Etapa inexistente");
+        m.setId(null);
+        m.setProjetoId(projetoId);
+        if (m.getData() == null) m.setData(LocalDate.now());
+        return movimentos.save(m);
+    }
+    @Override public List<PrjRisco> riscos(Long empresaId, Long projetoId) {
+        exigirProjeto(empresaId, projetoId);
+        return riscos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId);
+    }
+    @Override @Transactional public PrjRisco salvarRisco(Long empresaId, Long projetoId, PrjRisco r) {
+        exigirProjeto(empresaId, projetoId);
+        r.setId(null);
+        r.setProjetoId(projetoId);
+        if (r.getStatus() == null) r.setStatus("ABERTO");
+        return riscos.save(r);
+    }
+    @Override public List<PrjMudanca> mudancas(Long empresaId, Long projetoId) {
+        exigirProjeto(empresaId, projetoId);
+        return mudancas.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId);
+    }
+    @Override @Transactional public PrjMudanca solicitarMudanca(Long empresaId, Long projetoId, PrjMudanca m) {
+        exigirProjeto(empresaId, projetoId);
+        m.setId(null);
+        m.setProjetoId(projetoId);
+        m.setStatus("SOLICITADA");
+        return mudancas.save(m);
+    }
+    @Override @Transactional public PrjMudanca decidirMudanca(Long empresaId, Long userId, Long projetoId, Long mudancaId, boolean aprovar) {
+        exigirProjeto(empresaId, projetoId);
+        PrjMudanca m = exigir(mudancas.findByIdAndEmpresaIdAndDeletedAtIsNull(mudancaId, empresaId), "Mudanca inexistente");
+        if (m.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mudanca de outro projeto");
+        if ("SOLICITADA".equals(m.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Mudanca ja decidida");
+        m.setStatus(aprovar ? "APROVADA" : "REJEITADA");
+        m.setDecididaPor(userId);
+        m.setDecididaEm(LocalDateTime.now());
+        return mudancas.save(m);
+    }
+    @Override public List<PrjFaturamento> faturamentos(Long empresaId, Long projetoId) {
+        exigirProjeto(empresaId, projetoId);
+        return faturamentos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId);
+    }
+    @Override @Transactional public PrjFaturamento salvarFaturamento(Long empresaId, Long projetoId, PrjFaturamento f) {
+        exigirProjeto(empresaId, projetoId);
+        f.setId(null);
+        f.setProjetoId(projetoId);
+        if (f.getStatus() == null) f.setStatus("PREVISTO");
+        return faturamentos.save(f);
+    }
+    @Override @Transactional public PrjFaturamento faturar(Long empresaId, Long projetoId, Long faturamentoId) {
+        exigirProjeto(empresaId, projetoId);
+        PrjFaturamento f = exigir(faturamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(faturamentoId, empresaId), "Faturamento inexistente");
+        if (f.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Faturamento de outro projeto");
+        Titulo t = new Titulo();
+        t.setDescricao("Projeto #" + f.getProjetoId() + " - " + f.getDescricao());
+        t.setTipo("R");
+        t.setValorOriginal(f.getValor() == null ? java.math.BigDecimal.ZERO : f.getValor());
+        t.setValorSaldo(t.getValorOriginal());
+        t.setDataEmissao(java.time.LocalDate.now());
+        t.setDataVencimento(java.time.LocalDate.now().plusDays(30));
+        t.setStatus("ABERTO");
+        t = titulos.save(t);
+        f.setTituloId(t.getId());
+        f.setStatus("FATURADO");
+        f.setDataFaturado(LocalDate.now());
+        return faturamentos.save(f);
+    }
+    @Override public Map<String, Object> resumo(Long empresaId, Long projetoId) {
+        PrjProjeto p = exigirProjeto(empresaId, projetoId);
+        BigDecimal custo = BigDecimal.ZERO;
+        BigDecimal receita = BigDecimal.ZERO;
+        for (PrjMovimento m : movimentos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId)) {
+            if ("CUSTO".equals(m.getTipo())) custo = custo.add(m.getValor() == null ? BigDecimal.ZERO : m.getValor());
+            if ("RECEITA".equals(m.getTipo())) receita = receita.add(m.getValor() == null ? BigDecimal.ZERO : m.getValor());
+        }
+        BigDecimal faturado = BigDecimal.ZERO;
+        for (PrjFaturamento f : faturamentos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId))
+            if ("FATURADO".equals(f.getStatus())) faturado = faturado.add(f.getValor() == null ? BigDecimal.ZERO : f.getValor());
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("orcamento", p.getOrcamentoTotal() == null ? BigDecimal.ZERO : p.getOrcamentoTotal());
+        m.put("custoRealizado", custo);
+        m.put("receitaRealizada", receita);
+        m.put("faturado", faturado);
+        m.put("saldoOrcamento", (p.getOrcamentoTotal() == null ? BigDecimal.ZERO : p.getOrcamentoTotal()).subtract(custo));
+        m.put("margem", receita.subtract(custo));
+        return m;
+    }
+}
