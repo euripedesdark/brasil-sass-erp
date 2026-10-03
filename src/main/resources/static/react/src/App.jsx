@@ -129,6 +129,7 @@ function App() {
 
                     <Route path="configurar-empresa" element={<ConfigurarEmpresa />} />
                     <Route path="sobre" element={<Sobre />} />
+                    <Route path="doacoes" element={<Sobre />} />
                     <Route path="admin/usuarios" element={<Usuarios />} />
                     <Route path="admin/configuracoes" element={<Configuracoes />} />
                     {/* Gerenciador SQL: a tela valida o perfil, a API exige SUPERUSER */}

@@ -4,8 +4,6 @@ import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
 import { Divider } from 'primereact/divider';
 import { PanelMenu } from 'primereact/panelmenu';
-import { PixChaveComBotao } from './shared/ApoiePix';
-import './shared/ApoiePix.css';
 import { TieredMenu } from 'primereact/tieredmenu';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog } from 'primereact/confirmdialog';
@@ -316,6 +314,11 @@ export const Layout = () => {
             icon: 'pi pi-info-circle',
             command: () => handleNavigation('/sobre')
         });
+        items.push({
+            label: t('nav.donations', { defaultValue: 'Doacoes' }),
+            icon: 'pi pi-heart-fill',
+            command: () => handleNavigation('/doacoes')
+        });
 
         return items;
     }, [handleNavigation, t, user?.isAdmin, user?.isDiretoria, isSuperuser, temModulo]);
@@ -413,17 +416,6 @@ export const Layout = () => {
                     )}
                 </div>
             </main>
-
-            {/* Rodape com a chave PIX. Fica dentro do wrapper e fora do
-                <main> para que o conteudo da pagina continue rolando
-                sozinho e o rodape nao suma ao rolar. */}
-            <footer className="system-footer">
-                <span className="system-footer-titulo">
-                    <i className="pi pi-heart-fill" style={{ color: '#e11d48' }} />
-                    {t('footer.supportProject')}
-                </span>
-                <PixChaveComBotao tamanho={72} />
-            </footer>
         </div>
     );
 };
