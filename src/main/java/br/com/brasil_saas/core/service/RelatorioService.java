@@ -66,6 +66,20 @@ public class RelatorioService {
                 resumo.put("valorTotalNotas", total(dados, "valor_total"));
                 response.setNomeRelatorio("Resumo de Notas Fiscais");
             }
+            case "DRE" -> {
+                dados = relatorioDre(empresaId, inicio, fim);
+                resumo.put("totalDebitos", total(dados, "debitos"));
+                resumo.put("totalCreditos", total(dados, "creditos"));
+                resumo.put("resultado", total(dados, "resultado"));
+                response.setNomeRelatorio("DRE Gerencial");
+            }
+            case "FLUXO_CAIXA" -> {
+                dados = relatorioFluxoCaixa(empresaId, inicio, fim);
+                resumo.put("totalEntradas", total(dados, "valor_previsto_entrada"));
+                resumo.put("totalSaidas", total(dados, "valor_previsto_saida"));
+                resumo.put("saldoProjetado", total(dados, "saldo_projetado"));
+                response.setNomeRelatorio("Fluxo de Caixa Projetado");
+            }
             default -> throw new IllegalArgumentException("Tipo de relatório não suportado: " + tipo);
         }
 
@@ -128,6 +142,37 @@ public class RelatorioService {
             WHERE o.empresa_id = ? AND o.deleted_at IS NULL
             """.formatted(SCHEMA);
         return consultar(sql, empresaId, inicio, fim, "o.data_inicio");
+    }
+
+    private List<Map<String, Object>> relatorioDre(Long empresaId, LocalDate inicio, LocalDate fim) {
+        String sql = """
+            SELECT pc.codigo,
+                   pc.descricao,
+                   pc.natureza,
+                   COALESCE(SUM(CASE WHEN lp.tipo = 'D' THEN lp.valor ELSE 0 END), 0) AS debitos,
+                   COALESCE(SUM(CASE WHEN lp.tipo = 'C' THEN lp.valor ELSE 0 END), 0) AS creditos,
+                   COALESCE(SUM(CASE WHEN lp.tipo = 'C' THEN lp.valor ELSE -lp.valor END), 0) AS resultado
+            FROM %1$sbc_fin_lancamento_contabil lc
+            JOIN %1$sbc_fin_lancamento_partida lp ON lp.lancamento_id = lc.id
+            JOIN %1$sbc_fin_plano_contas pc ON pc.id = lp.plano_contas_id
+            WHERE lc.empresa_id = ? AND lc.deleted_at IS NULL
+              AND lp.deleted_at IS NULL AND pc.deleted_at IS NULL
+            GROUP BY pc.codigo, pc.descricao, pc.natureza
+            ORDER BY pc.codigo
+            """.formatted(SCHEMA);
+        return consultar(sql, empresaId, inicio, fim, "lc.data_lancamento");
+    }
+
+    private List<Map<String, Object>> relatorioFluxoCaixa(Long empresaId, LocalDate inicio, LocalDate fim) {
+        String sql = """
+            SELECT data_projecao,
+                   valor_previsto_entrada,
+                   valor_previsto_saida,
+                   (COALESCE(valor_previsto_entrada, 0) - COALESCE(valor_previsto_saida, 0)) AS saldo_projetado
+            FROM %1$sbc_fin_projecao_fluxo_caixa
+            WHERE empresa_id = ? AND deleted_at IS NULL
+            """.formatted(SCHEMA);
+        return consultar(sql, empresaId, inicio, fim, "data_projecao");
     }
 
     private List<Map<String, Object>> relatorioFiscal(Long empresaId, LocalDate inicio, LocalDate fim) {
