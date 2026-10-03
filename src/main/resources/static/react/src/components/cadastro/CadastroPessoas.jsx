@@ -13,6 +13,7 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import CepService from '../../services/CepService';
 
 const BASE = '/api/cadastro/pessoas';
 
@@ -30,7 +31,8 @@ const vazio = () => ({
     tipo: 'FISICA', nome: '', documento: '', email: '', telefone: '',
     status: 'ATIVO', observacao: '',
     fisica: { cpf: '', rg: '', orgaoExpedidor: '', dataNascimento: '', sexo: '', estadoCivil: '' },
-    juridica: { cnpj: '', inscricaoEstadual: '', inscricaoMunicipal: '', dataAbertura: '', porte: '', naturezaJuridica: '' }
+    juridica: { cnpj: '', inscricaoEstadual: '', inscricaoMunicipal: '', dataAbertura: '', porte: '', naturezaJuridica: '' },
+    enderecos: []
 });
 
 const erroDe = (e, padrao) => {
@@ -67,6 +69,8 @@ export const CadastroPessoas = () => {
     const [form, setForm] = useState(vazio());
     const [erro, setErro] = useState('');
     const [busca, setBusca] = useState('');
+    const [consultandoCep, setConsultandoCep] = useState(false);
+    const [consultandoMunicipio, setConsultandoMunicipio] = useState(false);
 
     const carregar = async () => {
         setLoading(true);
@@ -94,13 +98,80 @@ export const CadastroPessoas = () => {
                 ...pessoa,
                 documento: pessoa.documento ?? '',
                 fisica: { ...vazio().fisica, ...(pessoa.fisica ?? {}) },
-                juridica: { ...vazio().juridica, ...(pessoa.juridica ?? {}) }
+                juridica: { ...vazio().juridica, ...(pessoa.juridica ?? {}) },
+                enderecos: pessoa.enderecos ?? []
             });
         } else {
             setEditando(null);
             setForm(vazio());
         }
         setDialog(true);
+    };
+
+    const endereco = form.enderecos?.[0] ?? {
+        tipo: 'PRINCIPAL', logradouro: '', numero: '', complemento: '',
+        bairro: '', cep: '', municipioId: null, uf: '', principal: true
+    };
+
+    const atualizarEndereco = (campoEndereco, valor) => {
+        const atual = { ...endereco, [campoEndereco]: valor };
+        setForm({ ...form, enderecos: [atual] });
+    };
+
+    const consultarCep = async () => {
+        const cep = endereco.cep || '';
+        setConsultandoCep(true);
+        try {
+            const data = await CepService.consultar(cep);
+            let municipioId = endereco.municipioId ?? null;
+
+            // Consulta externa preenche os dados postais. O município continua
+            // sendo resolvido contra o catálogo interno do ERP, para gravar a
+            // FK local e não depender de texto vindo da internet.
+            if (data.localidade) {
+                setConsultandoMunicipio(true);
+                try {
+                    const response = await apiFetch('/api/municipios/buscar?nome=' +
+                        encodeURIComponent(data.localidade) + '&page=0&size=20');
+                    if (response.ok) {
+                        const page = await response.json();
+                        const municipios = Array.isArray(page?.content) ? page.content : [];
+                        const encontrado = municipios.find((m) =>
+                            String(m.uf || '').toUpperCase() === String(data.uf || '').toUpperCase()
+                        ) || municipios[0];
+                        municipioId = encontrado?.id ?? null;
+                    }
+                } finally {
+                    setConsultandoMunicipio(false);
+                }
+            }
+
+            setForm({
+                ...form,
+                enderecos: [{
+                    ...endereco,
+                    logradouro: data.logradouro || endereco.logradouro,
+                    bairro: data.bairro || endereco.bairro,
+                    uf: data.uf || endereco.uf,
+                    municipioId
+                }]
+            });
+            toast.current?.show({
+                severity: 'success',
+                summary: 'CEP consultado',
+                detail: 'Endereço preenchido pelo serviço externo; município resolvido no cadastro interno.',
+                life: 4000
+            });
+        } catch (e) {
+            toast.current?.show({
+                severity: 'warn',
+                summary: 'Consulta de CEP',
+                detail: e.message || 'Não foi possível consultar o CEP.',
+                life: 5000
+            });
+        } finally {
+            setConsultandoCep(false);
+        }
     };
 
     const salvar = async () => {
@@ -342,6 +413,52 @@ export const CadastroPessoas = () => {
                             </div>
                         </section>
                     )}
+
+                    <section className="bc-form-section">
+                        <div className="bc-form-section-title">
+                            <i className="pi pi-map-marker" aria-hidden="true" />
+                            <div>
+                                <h3>Endereço principal</h3>
+                                <span>CEP é consultado externamente; município é selecionado do catálogo interno do ERP.</span>
+                            </div>
+                        </div>
+                        <div className="bc-form-grid">
+                            {campo('cep', 'CEP',
+                                <div className="p-inputgroup">
+                                    <InputMask id="cep" mask="99999-999" value={endereco.cep || ''}
+                                        onChange={(e) => atualizarEndereco('cep', e.value || '')}
+                                        placeholder="00000-000" />
+                                    <Button type="button" icon="pi pi-search" outlined
+                                        loading={consultandoCep || consultandoMunicipio}
+                                        onClick={consultarCep} tooltip="Consultar CEP externamente" />
+                                </div>)}
+                            {campo('logradouro', 'Logradouro',
+                                <InputText id="logradouro" value={endereco.logradouro || ''}
+                                    onChange={(e) => atualizarEndereco('logradouro', e.target.value)} />)}
+                            {campo('numero', 'Número',
+                                <InputText id="numero" value={endereco.numero || ''}
+                                    onChange={(e) => atualizarEndereco('numero', e.target.value)} />)}
+                            {campo('complemento', 'Complemento',
+                                <InputText id="complemento" value={endereco.complemento || ''}
+                                    onChange={(e) => atualizarEndereco('complemento', e.target.value)} />)}
+                            {campo('bairro', 'Bairro',
+                                <InputText id="bairro" value={endereco.bairro || ''}
+                                    onChange={(e) => atualizarEndereco('bairro', e.target.value)} />)}
+                            {campo('uf', 'UF',
+                                <InputText id="uf" value={endereco.uf || ''} maxLength={2}
+                                    onChange={(e) => atualizarEndereco('uf', e.target.value.toUpperCase())} />)}
+                            {campo('municipioId', 'Município (cadastro interno)',
+                                <InputText id="municipioId"
+                                    value={endereco.municipioId ? String(endereco.municipioId) : ''}
+                                    readOnly
+                                    placeholder="Preenchido após consulta do CEP" />)}
+                            <div className="col-12">
+                                <small className="bc-muted">
+                                    Fonte externa: ViaCEP. Fonte interna: /api/municipios. Se a consulta externa falhar, os campos continuam editáveis manualmente.
+                                </small>
+                            </div>
+                        </div>
+                    </section>
 
                     <section className="bc-form-section">
                         <div className="bc-form-section-title">
