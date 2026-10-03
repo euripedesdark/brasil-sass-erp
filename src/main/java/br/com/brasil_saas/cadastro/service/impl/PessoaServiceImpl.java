@@ -193,6 +193,7 @@ public class PessoaServiceImpl implements PessoaService {
     @Transactional(readOnly = true)
     public PessoaResponse buscarPorId(Long empresaId, Long id) {
         Pessoa pessoa = pessoaRepository.findById(id)
+            .filter(p -> empresaId.equals(p.getEmpresaId()))
             .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
         return PessoaResponse.from(pessoa);
     }
