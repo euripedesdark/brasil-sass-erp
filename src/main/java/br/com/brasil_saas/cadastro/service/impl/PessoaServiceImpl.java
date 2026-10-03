@@ -29,7 +29,7 @@ public class PessoaServiceImpl implements PessoaService {
     @Transactional
     public PessoaResponse criar(PessoaRequest request, Long empresaId) {
         if (request.documento() != null && !request.documento().isBlank()) {
-            if (pessoaRepository.existsByDocumentoAndDeletedAtIsNull(request.documento())) {
+            if (pessoaRepository.existsByEmpresaIdAndDocumentoAndDeletedAtIsNull(empresaId, request.documento())) {
                 throw new BusinessException("CPF_CNPJ_DUPLICADO", "Documento já cadastrado");
             }
         }
@@ -116,12 +116,13 @@ public class PessoaServiceImpl implements PessoaService {
 
     @Override
     @Transactional
-    public PessoaResponse atualizar(Long id, PessoaRequest request) {
+    public PessoaResponse atualizar(Long empresaId, Long id, PessoaRequest request) {
         Pessoa pessoa = pessoaRepository.findById(id)
+            .filter(p -> empresaId.equals(p.getEmpresaId()))
             .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
 
         if (request.documento() != null && !request.documento().isBlank()) {
-            if (pessoaRepository.existsByDocumentoAndIdNotAndDeletedAtIsNull(request.documento(), id)) {
+            if (pessoaRepository.existsByEmpresaIdAndDocumentoAndIdNotAndDeletedAtIsNull(empresaId, request.documento(), id)) {
                 throw new BusinessException("CPF_CNPJ_DUPLICADO", "Documento já cadastrado");
             }
         }
@@ -164,7 +165,7 @@ public class PessoaServiceImpl implements PessoaService {
 
     @Override
     @Transactional(readOnly = true)
-    public PessoaResponse buscarPorId(Long id) {
+    public PessoaResponse buscarPorId(Long empresaId, Long id) {
         Pessoa pessoa = pessoaRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
         return PessoaResponse.from(pessoa);
@@ -172,15 +173,16 @@ public class PessoaServiceImpl implements PessoaService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<PessoaResponse> listar(String nome, String documento, Pageable pageable) {
-        Page<Pessoa> page = pessoaRepository.buscar(nome, documento, pageable);
+    public PageResponse<PessoaResponse> listar(Long empresaId, String nome, String documento, Pageable pageable) {
+        Page<Pessoa> page = pessoaRepository.buscar(empresaId, nome, documento, pageable);
         return PageResponse.from(page, PessoaResponse::from);
     }
 
     @Override
     @Transactional
-    public void excluir(Long id) {
+    public void excluir(Long empresaId, Long id) {
         Pessoa pessoa = pessoaRepository.findById(id)
+            .filter(p -> empresaId.equals(p.getEmpresaId()))
             .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada"));
         pessoa.setDeletedAt(LocalDateTime.now());
         pessoaRepository.save(pessoa);
