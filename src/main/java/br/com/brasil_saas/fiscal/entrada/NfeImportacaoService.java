@@ -175,7 +175,7 @@ public class NfeImportacaoService {
         } else {
             Optional<Pessoa> achada = l.emitenteCnpj() == null
                     ? Optional.empty()
-                    : pessoaRepo.findByDocumentoAndDeletedAtIsNull(l.emitenteCnpj());
+                    : pessoaRepo.findByEmpresaIdAndDocumentoAndDeletedAtIsNull(empresaId, l.emitenteCnpj());
             if (achada.isPresent()) {
                 pessoa = achada.get().getId();
                 sitPessoa = "ACHADO_PELO_CNPJ";
