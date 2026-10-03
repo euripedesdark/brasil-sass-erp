@@ -72,6 +72,10 @@ export const RH = () => {
     };
 
     const handleSave = async () => {
+        if (!form.pessoaId) {
+            setError('Selecione uma Pessoa cadastrada para o colaborador.');
+            return;
+        }
         setLoading(true);
         setError('');
         setSuccess(false);
