@@ -41,16 +41,18 @@ public class PessoaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('cadastro:pessoa:escrita')")
     @Operation(summary = "Atualizar pessoa")
-    public ResponseEntity<ApiResponse<PessoaResponse>> atualizar(@PathVariable Long id, @Valid @RequestBody PessoaRequest request) {
-        PessoaResponse response = pessoaService.atualizar(id, request);
+    public ResponseEntity<ApiResponse<PessoaResponse>> atualizar(@PathVariable Long id, @Valid @RequestBody PessoaRequest request,
+            @AuthenticationPrincipal AuthenticatedUser usuarioAutenticado) {
+        PessoaResponse response = pessoaService.atualizar(usuarioAutenticado.getEmpresaId(), id, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('cadastro:pessoa:leitura')")
     @Operation(summary = "Buscar pessoa por ID")
-    public ResponseEntity<ApiResponse<PessoaResponse>> buscarPorId(@PathVariable Long id) {
-        PessoaResponse response = pessoaService.buscarPorId(id);
+    public ResponseEntity<ApiResponse<PessoaResponse>> buscarPorId(@PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser usuarioAutenticado) {
+        PessoaResponse response = pessoaService.buscarPorId(usuarioAutenticado.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -60,16 +62,18 @@ public class PessoaController {
     public ResponseEntity<ApiResponse<PageResponse<PessoaResponse>>> listar(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) String documento,
-            Pageable pageable) {
-        PageResponse<PessoaResponse> response = pessoaService.listar(nome, documento, pageable);
+            Pageable pageable,
+            @AuthenticationPrincipal AuthenticatedUser usuarioAutenticado) {
+        PageResponse<PessoaResponse> response = pessoaService.listar(usuarioAutenticado.getEmpresaId(), nome, documento, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('cadastro:pessoa:escrita')")
     @Operation(summary = "Excluir pessoa (soft delete)")
-    public ResponseEntity<ApiResponse<Void>> excluir(@PathVariable Long id) {
-        pessoaService.excluir(id);
+    public ResponseEntity<ApiResponse<Void>> excluir(@PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser usuarioAutenticado) {
+        pessoaService.excluir(usuarioAutenticado.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
