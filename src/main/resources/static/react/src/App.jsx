@@ -16,6 +16,7 @@ import { CadastroPessoas } from './components/cadastro/CadastroPessoas';
 import { CadastroProdutos } from './components/cadastro/CadastroProdutos';
 import { Categoria } from './components/cadastro/Categoria';
 import { Cliente } from './components/cadastro/Cliente';
+import { Bancos } from './components/cadastro/Bancos';
 import { Fornecedor } from './components/cadastro/Fornecedor';
 import { Marca } from './components/cadastro/Marca';
 import { ServicoCadastro } from './components/cadastro/ServicoCadastro';
@@ -172,6 +173,7 @@ function App() {
                     <Route path="cadastro/transportadoras" element={<Transportadora />} />
                     <Route path="cadastro/unidades-medida" element={<UnidadeMedida />} />
                     <Route path="cadastro/municipios" element={<Municipios />} />
+                    <Route path="cadastro/bancos" element={<Bancos />} />
                     <Route path="cadastros/municipios" element={<Municipios />} />
 
                     <Route path="vendas/*" element={<Vendas />} />

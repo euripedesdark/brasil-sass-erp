@@ -180,7 +180,8 @@
     "renegotiation": "Renegociación",
     "budget": "Presupuesto vs Real",
     "loans": "Préstamos",
-    "buscaFiscal": "Búsqueda fiscal"
+    "buscaFiscal": "Búsqueda fiscal",
+    "banks": "Bancos"
   },
   "stock": {
     "default": "Estándar",

@@ -113,7 +113,8 @@ export const Layout = () => {
                     item('menu.serviceCatalog', 'pi pi-wrench', '/cadastro/servicos'),
                     item('menu.carriers', 'pi pi-truck', '/cadastro/transportadoras'),
                     item('menu.units', 'pi pi-sliders-h', '/cadastro/unidades-medida'),
-                    item('menu.cities', 'pi pi-map-marker', '/cadastro/municipios')
+                    item('menu.cities', 'pi pi-map-marker', '/cadastro/municipios'),
+                    item('menu.banks', 'pi pi-building-columns', '/cadastro/bancos')
                 ]
             },
             {

@@ -180,7 +180,8 @@
     "renegotiation": "Renegotiation",
     "budget": "Budget vs Actual",
     "loans": "Loans",
-    "buscaFiscal": "Tax search"
+    "buscaFiscal": "Tax search",
+    "banks": "Banks"
   },
   "stock": {
     "default": "Default",
