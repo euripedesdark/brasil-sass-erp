@@ -1,0 +1,112 @@
+package br.com.brasil_saas.workflow.service.impl;
+import br.com.brasil_saas.workflow.model.*;
+import br.com.brasil_saas.workflow.repository.*;
+import br.com.brasil_saas.workflow.service.WorkflowService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.LocalDateTime;
+import java.util.List;
+@Service @RequiredArgsConstructor
+public class WorkflowServiceImpl implements WorkflowService {
+    private final WkfDefinitionRepository definitions;
+    private final WkfStageRepository stages;
+    private final WkfInstanceRepository instances;
+    private final WkfTaskRepository tasks;
+    private <T> T exigir(java.util.Optional<T> o, String msg) {
+        return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
+    @Override public List<WkfDefinition> definitions(Long empresaId) {
+        return definitions.findByEmpresaIdAndDeletedAtIsNull(empresaId);
+    }
+    @Override @Transactional public WkfDefinition salvarDefinition(Long empresaId, Long userId, WkfDefinition d) {
+        d.setId(null);
+        return definitions.save(d);
+    }
+    @Override @Transactional public WkfDefinition addStage(Long empresaId, Long definitionId, WkfStage s) {
+        WkfDefinition d = exigir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(definitionId, empresaId), "Definicao inexistente");
+        s.setId(null);
+        s.setDefinitionId(d.getId());
+        if (s.getOrdem() == null) {
+            int max = stages.findByDefinitionIdAndEmpresaIdAndDeletedAtIsNullOrderByOrdem(d.getId(), empresaId)
+                    .stream().mapToInt(x -> x.getOrdem() == null ? 0 : x.getOrdem()).max().orElse(0);
+            s.setOrdem(max + 1);
+        }
+        stages.save(s);
+        return d;
+    }
+    @Override public List<WkfStage> stages(Long empresaId, Long definitionId) {
+        exigir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(definitionId, empresaId), "Definicao inexistente");
+        return stages.findByDefinitionIdAndEmpresaIdAndDeletedAtIsNullOrderByOrdem(definitionId, empresaId);
+    }
+    @Override @Transactional public WkfInstance abrir(Long empresaId, Long userId, String entidadeTipo, Long entidadeId, Long definitionId, String observacao) {
+        WkfDefinition d = exigir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(definitionId, empresaId), "Definicao inexistente");
+        if (Boolean.FALSE.equals(d.getAtivo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Definicao inativa");
+        WkfInstance i = new WkfInstance();
+        i.setDefinitionId(d.getId());
+        i.setEntidadeTipo(entidadeTipo);
+        i.setEntidadeId(entidadeId);
+        i.setStatus("EM_ANDAMENTO");
+        i.setEtapaAtual(1);
+        i.setSolicitadoPor(userId);
+        i.setObservacao(observacao);
+        i = instances.save(i);
+        criarTarefaEtapa(empresaId, i, 1);
+        return i;
+    }
+    private void criarTarefaEtapa(Long empresaId, WkfInstance i, int ordem) {
+        List<WkfStage> ss = stages.findByDefinitionIdAndEmpresaIdAndDeletedAtIsNullOrderByOrdem(i.getDefinitionId(), empresaId);
+        WkfStage s = ss.stream().filter(x -> Integer.valueOf(ordem).equals(x.getOrdem())).findFirst().orElse(null);
+        if (s == null) {
+            i.setStatus("CONCLUIDA");
+            i.setConcludedAt(LocalDateTime.now());
+            instances.save(i);
+            return;
+        }
+        WkfTask t = new WkfTask();
+        t.setInstanceId(i.getId());
+        t.setStageId(s.getId());
+        t.setResponsavel(s.getAprovadores());
+        t.setStatus("PENDENTE");
+        t.setSlaLimite(LocalDateTime.now().plusHours(s.getSlaHoras() == null ? 48 : s.getSlaHoras()));
+        tasks.save(t);
+    }
+    @Override public List<WkfInstance> instances(Long empresaId, String status) {
+        if (status == null || status.isBlank()) return instances.findByEmpresaIdAndDeletedAtIsNull(empresaId);
+        return instances.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, status);
+    }
+    @Override public List<WkfTask> tasks(Long empresaId, Long instanceId) {
+        exigir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId), "Instancia inexistente");
+        return tasks.findByInstanceIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId);
+    }
+    @Override public List<WkfTask> pendentes(Long empresaId) {
+        return tasks.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, "PENDENTE");
+    }
+    @Override @Transactional public WkfTask decidir(Long empresaId, Long userId, Long taskId, boolean aprovar, String comentario) {
+        WkfTask t = exigir(tasks.findByIdAndEmpresaIdAndDeletedAtIsNull(taskId, empresaId), "Tarefa inexistente");
+        if (!"PENDENTE".equals(t.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tarefa ja decidida");
+        WkfInstance i = exigir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(t.getInstanceId(), empresaId), "Instancia inexistente");
+        t.setStatus(aprovar ? "APROVADA" : "REJEITADA");
+        t.setDecidedAt(LocalDateTime.now());
+        t.setDecididoPor(userId);
+        t.setComentario(comentario);
+        tasks.save(t);
+        if (!aprovar) {
+            i.setStatus("REJEITADA");
+            i.setConcludedAt(LocalDateTime.now());
+            instances.save(i);
+            return t;
+        }
+        i.setEtapaAtual(i.getEtapaAtual() + 1);
+        instances.save(i);
+        criarTarefaEtapa(empresaId, i, i.getEtapaAtual());
+        return t;
+    }
+    @Override @Transactional public void inativarDefinition(Long empresaId, Long id) {
+        WkfDefinition d = exigir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Definicao inexistente");
+        d.setAtivo(false);
+        definitions.save(d);
+    }
+}

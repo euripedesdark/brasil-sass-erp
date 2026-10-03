@@ -38,6 +38,12 @@ import { TipoPagamento } from './components/financeiro/TipoPagamento';
 import { Titulo } from './components/financeiro/Titulo';
 import AprovacoesTitulos from './components/financeiro/AprovacoesTitulos';
 import Caixa from './components/Caixa';
+import { Workflow } from "./components/workflow/Workflow";
+import { Contabilidade } from "./components/contabil/Contabilidade";
+import { CRM } from "./components/crm/CRM";
+import { WMS } from "./components/wms/WMS";
+import { Portais } from "./components/portais/Portais";
+import { PortalPublico } from "./components/portais/PortalPublico";
 import { Boletos } from './components/financeiro/Boletos';
 import ConfigurarEmpresa from './components/core/ConfigurarEmpresa';
 import Sobre from './components/core/Sobre';
@@ -111,6 +117,7 @@ function App() {
     return (
         <Router>
             <Routes>
+                <Route path="portal" element={<PortalPublico />} />
                 <Route
                     path="/login"
                     element={!isAuthenticated ? <Login /> : <Navigate to="/inicio" replace />}
@@ -131,6 +138,11 @@ function App() {
                     <Route path="configurar-empresa" element={<ConfigurarEmpresa />} />
                     <Route path="sobre" element={<Sobre />} />
                     <Route path="doacoes" element={<Sobre />} />
+                    <Route path="workflow" element={<Workflow />} />
+                    <Route path="contabilidade" element={<Contabilidade />} />
+                    <Route path="crm" element={<CRM />} />
+                    <Route path="wms" element={<WMS />} />
+                    <Route path="portais" element={<Portais />} />
                     <Route path="admin/usuarios" element={<Usuarios />} />
                     <Route path="admin/configuracoes" element={<Configuracoes />} />
                     {/* Gerenciador SQL: a tela valida o perfil, a API exige SUPERUSER */}
