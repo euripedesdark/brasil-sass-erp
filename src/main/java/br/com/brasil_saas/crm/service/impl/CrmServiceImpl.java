@@ -2,6 +2,9 @@ package br.com.brasil_saas.crm.service.impl;
 import br.com.brasil_saas.crm.model.*;
 import br.com.brasil_saas.crm.repository.*;
 import br.com.brasil_saas.crm.service.CrmService;
+import br.com.brasil_saas.vendas.dto.PedidoVendaRequest;
+import br.com.brasil_saas.vendas.dto.PedidoVendaResponse;
+import br.com.brasil_saas.vendas.service.PedidoVendaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import java.util.*;
 public class CrmServiceImpl implements CrmService {
     private final CrmLeadRepository leads;
     private final CrmAtividadeRepository atividades;
+    private final PedidoVendaService pedidos;
     private static final List<String> ETAPAS = List.of("PROSPECCAO", "QUALIFICACAO", "PROPOSTA", "NEGOCIACAO", "FECHAMENTO");
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
@@ -91,5 +95,18 @@ public class CrmServiceImpl implements CrmService {
         a.setConcluida(true);
         a.setConcluidaEm(LocalDateTime.now());
         return atividades.save(a);
+    }
+    @Override @Transactional public java.util.Map<String, Object> gerarPedido(Long empresaId, Long leadId, Long clienteId) {
+        CrmLead l = exigir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(leadId, empresaId), "Lead inexistente");
+        if ("ABERTO".equals(l.getStatus()) == false) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Lead nao esta aberto");
+        PedidoVendaRequest req = new PedidoVendaRequest(empresaId, clienteId, null, "PEDIDO", "ABERTO", java.time.LocalDate.now(), null, null, null, java.math.BigDecimal.ZERO, null, "CRM", "Lead #" + l.getId() + " " + (l.getNome() == null ? "" : l.getNome()), java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO, java.util.List.of());
+        PedidoVendaResponse pv = pedidos.criar(req.comEmpresaDa(empresaId));
+        l.setEtapa("FECHAMENTO");
+        l.setStatus("GANHO");
+        leads.save(l);
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("pedidoId", pv.id());
+        m.put("leadId", l.getId());
+        return m;
     }
 }

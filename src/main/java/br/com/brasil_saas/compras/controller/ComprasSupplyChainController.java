@@ -25,7 +25,11 @@ public class ComprasSupplyChainController {
 
  @PostMapping("/solicitacoes/{id}/aprovar")
  @PreAuthorize("hasAuthority('compras:solicitacao:aprovar')")
- public SolicitacaoCompra aprovar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){return service.aprovarSolicitacao(u.getEmpresaId(),id);}
+ public SolicitacaoCompra aprovar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){return service.aprovarSolicitacao(u.getEmpresaId(),u.getId(),id);}
+
+ @PostMapping("/solicitacoes/{id}/rejeitar")
+ @PreAuthorize("hasAuthority('compras:solicitacao:aprovar')")
+ public SolicitacaoCompra rejeitar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){return service.rejeitarSolicitacao(u.getEmpresaId(),u.getId(),id);}
 
  @PostMapping("/cotacoes")
  @PreAuthorize("hasAuthority('compras:cotacao:escrita')")

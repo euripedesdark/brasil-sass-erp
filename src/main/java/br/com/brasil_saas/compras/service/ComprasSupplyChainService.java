@@ -5,7 +5,8 @@ import java.util.*;
 public interface ComprasSupplyChainService {
  List<SolicitacaoCompra> listarSolicitacoes(Long empresaId);
  SolicitacaoCompra criarSolicitacao(Long empresaId,Long solicitanteId,LocalRequest request);
- SolicitacaoCompra aprovarSolicitacao(Long empresaId,Long id);
+ SolicitacaoCompra aprovarSolicitacao(Long empresaId,Long userId,Long id);
+ SolicitacaoCompra rejeitarSolicitacao(Long empresaId,Long userId,Long id);
  CotacaoCompra criarCotacao(Long empresaId,Long solicitacaoId,LocalCotacao request);
  List<Map<String,Object>> mapaComparativo(Long empresaId,Long cotacaoId);
  PedidoCompra gerarPedido(Long empresaId,Long cotacaoFornecedorId);
