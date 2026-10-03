@@ -34,7 +34,7 @@ public class ProdutoServiceImpl implements ProdutoService {
         // Mesma falha que a Pessoa: sem a empresa o INSERT viola o
         // not-null e volta 409, que parece duplicidade.
         request = request.comEmpresaDa(empresaId);
-        if (produtoRepository.existsByCodigoAndDeletedAtIsNull(request.codigo())) {
+        if (produtoRepository.existsByEmpresaIdAndCodigoAndDeletedAtIsNull(empresaId, request.codigo())) {
             throw new BusinessException("CODIGO_DUPLICADO", "Código de produto já cadastrado");
         }
 
@@ -84,11 +84,11 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     @Override
     @Transactional
-    public ProdutoResponse atualizar(Long id, ProdutoRequest request) {
-        Produto produto = produtoRepository.findById(id)
+    public ProdutoResponse atualizar(Long empresaId, Long id, ProdutoRequest request) {
+        Produto produto = produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
 
-        if (produtoRepository.existsByCodigoAndIdNotAndDeletedAtIsNull(request.codigo(), id)) {
+        if (produtoRepository.existsByEmpresaIdAndCodigoAndIdNotAndDeletedAtIsNull(empresaId, request.codigo(), id)) {
             throw new BusinessException("CODIGO_DUPLICADO", "Código de produto já cadastrado");
         }
 
@@ -100,23 +100,23 @@ public class ProdutoServiceImpl implements ProdutoService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProdutoResponse buscarPorId(Long id) {
-        Produto produto = produtoRepository.findById(id)
+    public ProdutoResponse buscarPorId(Long empresaId, Long id) {
+        Produto produto = produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
         return ProdutoResponse.from(produto);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<ProdutoResponse> listar(String nome, String codigo, Long categoriaId, Long marcaId, Boolean ativo, Pageable pageable) {
-        Page<Produto> page = produtoRepository.buscar(nome, codigo, categoriaId, marcaId, ativo, pageable);
+    public PageResponse<ProdutoResponse> listar(Long empresaId, String nome, String codigo, Long categoriaId, Long marcaId, Boolean ativo, Pageable pageable) {
+        Page<Produto> page = produtoRepository.buscar(empresaId, nome, codigo, categoriaId, marcaId, ativo, pageable);
         return PageResponse.from(page, ProdutoResponse::from);
     }
 
     @Override
     @Transactional
-    public void excluir(Long id) {
-        Produto produto = produtoRepository.findById(id)
+    public void excluir(Long empresaId, Long id) {
+        Produto produto = produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado"));
         produto.setDeletedAt(LocalDateTime.now());
         produtoRepository.save(produto);
