@@ -29,6 +29,8 @@ export const Relatorios = () => {
         { label: 'Financeiro', value: 'FINANCEIRO' },
         { label: 'Produção', value: 'PRODUCAO' },
         { label: 'Fiscal', value: 'FISCAL' },
+        { label: 'DRE Gerencial', value: 'DRE' },
+        { label: 'Fluxo de Caixa Projetado', value: 'FLUXO_CAIXA' },
     ];
 
     // O backend resolve o tenant pelo token. empresaId vai na query apenas como
@@ -129,6 +131,8 @@ export const Relatorios = () => {
                             <DataTable
                                 value={dados}
                                 responsiveLayout="scroll"
+                                stripedRows
+                                showGridlines
                                 className="p-datatable-sm"
                                 paginator
                                 rows={10}
