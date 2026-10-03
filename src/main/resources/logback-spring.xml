@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="brasil-saas-erp"/>
+
+    <!-- MDC padrão (traceId/spanId via micrometer-tracing; empresaId/usuarioId preenchidos pelos filtros na Fase 5) -->
+    <variable name="MDC_FIELDS" value="%X{traceId:-} %X{spanId:-} %X{empresaId:-} %X{usuarioId:-}"/>
+
+    <!-- ============ CONSOLE (dev) ============ -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] ${MDC_FIELDS} %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ============ ARQUIVO ROTATIVO (hom/prod) ============ -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] ${MDC_FIELDS} %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ============ JSON (produção, para Loki) ============ -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/${APP_NAME}.json.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/${APP_NAME}.json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>{"ts":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}","level":"%level","app":"${APP_NAME}","logger":"%logger","thread":"%thread","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}","empresaId":"%X{empresaId:-}","usuarioId":"%X{usuarioId:-}","msg":"%replace(%msg){'\"','\\\"'}"}%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ============ PERFIS ============ -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="hom">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON_FILE"/>
+        </root>
+    </springProfile>
+
+</configuration>

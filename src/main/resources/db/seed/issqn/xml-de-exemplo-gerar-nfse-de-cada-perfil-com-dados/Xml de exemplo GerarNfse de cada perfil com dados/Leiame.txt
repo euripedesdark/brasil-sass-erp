@@ -1,0 +1,5 @@
+Os arquivos XML contidos nesta pasta foram gerados com informações de uma base de dados de desenvolvimento.
+
+Os mesmos foram gerados conforme os possíveis perfis de prestadores de serviços do sistema.
+
+Ao utilizar os mesmos para testes, o conteúdo das tags devem ser alterados para conteúdos válidos da base que será utilizada para o consumo do webservice.

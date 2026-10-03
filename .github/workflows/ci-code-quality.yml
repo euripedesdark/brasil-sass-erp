@@ -1,0 +1,183 @@
+name: CI - Code Quality Checks
+
+permissions:
+  contents: read
+  security-events: write
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * 1'  # Every Monday at 2 AM
+  workflow_dispatch:
+
+concurrency:
+  group: code-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Install Node.js dependencies
+        run: |
+          cd src/main/resources/static/react
+          npm ci
+          cd ../../../../
+
+      - name: Build frontend
+        run: |
+          cd src/main/resources/static/react
+          npm run build
+          cd ../../../../
+
+      - name: Build backend
+        run: mvn clean compile
+
+      - name: Run SonarQube Scanner
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@master
+        with:
+          args: >-
+            -Dsonar.projectKey=BrasilSaaS
+            -Dsonar.organization=euripedesdark
+            -Dsonar.java.binaries=target/classes
+            -Dsonar.sources=src/main/java
+            -Dsonar.tests=src/test/java
+            -Dsonar.java.test.binaries=target/test-classes
+            -Dsonar.coverageReportPaths=target/site/jacoco/jacoco.xml
+            -Dsonar.exclusions=**/generated/**,**/target/**,**/node_modules/**
+
+  code-coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: brasil-saas
+          POSTGRES_PASSWORD: test123
+          POSTGRES_DB: brasil-saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Run tests with JaCoCo
+        continue-on-error: true
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas
+          SPRING_DATASOURCE_USERNAME: brasil-saas
+          SPRING_DATASOURCE_PASSWORD: test123
+        run: mvn clean test jacoco:report
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 30
+
+  dependency-check:
+    name: Dependency Vulnerability Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Run OWASP Dependency Check
+        continue-on-error: true
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'BrasilSaaS'
+          path: '.'
+          format: 'HTML,JSON'
+          args: >-
+            --failOnCVSS 7
+            --enableExperimental
+            --scan ./pom.xml
+
+      - name: Upload dependency check report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/
+          retention-days: 30
+
+  trivy-scan:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'

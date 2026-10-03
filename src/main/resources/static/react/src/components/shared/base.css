@@ -1,0 +1,584 @@
+/* =============================================================================
+   Base transversal do ERP
+   -----------------------------------------------------------------------------
+   Antes cada tela reestilizava por conta propria: existem 40 arquivos .css no
+   projeto e apenas 6 eram importados — os outros 34 eram codigo morto, com
+   seletores de classe que nem existem no JSX. O visual varies de tela para
+   tela porque nao havia uma camada comum.
+
+   Aqui ficam apenas o que e transversal: o painel de conteudo, a pagina 404 e
+   os utilitarios minimos (rotulo, texto atenuado, grid responsivo).
+   ============================================================================= */
+
+:root {
+    --bc-panel-bg: rgba(255, 255, 255, 0.86);
+    --bc-panel-border: 1px solid rgba(15, 23, 42, 0.08);
+    --bc-panel-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+    --bc-panel-radius: 16px;
+    --bc-panel-muted: #64748b;
+    --bc-panel-text: #0f172a;
+    --bc-danger: #dc2626;
+    --bc-radius: 10px;
+}
+
+/* ---------------------------------------------------------------------------
+   Painel de conteudo.
+
+   A regra antiga era `.page-content > div:not([class*='p-']):first-child`, ou
+   seja: o painel de vidro so era aplicado quando a tela nao tinha nenhuma
+   classe contendo "p-". Por isso algumas telas tinham painel e outras nao,
+   sem que ninguem tivesse decidido isso.
+
+   Aqui a regra e a mesma para todas, e telas que ja usam <Card> nao ficam com
+   vidro duplo porque o Card e tratado explicitamente logo abaixo.
+   --------------------------------------------------------------------------- */
+.page-content > *:not(.page-content-header) {
+    background: var(--bc-panel-bg);
+    border: var(--bc-panel-border);
+    border-radius: var(--bc-panel-radius);
+    box-shadow: var(--bc-panel-shadow);
+    padding: 1.25rem 1.5rem;
+}
+
+/* Tela que ja e um Card do PrimeReact nao recebe painel em volta: seria
+   vidro sobre vidro, com duas bordas arredondadas encostando. */
+.page-content .p-card {
+    background: var(--bc-panel-bg);
+    border: var(--bc-panel-border);
+    border-radius: var(--bc-panel-radius);
+    box-shadow: var(--bc-panel-shadow);
+    padding: 0;
+}
+
+.page-content .p-card > .p-card-body {
+    padding: 1.25rem 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Dialogo.
+
+   O PrimeReact renderiza Dialog em portal na raiz do documento, entao
+   estilizar por `.page-content .p-dialog` nunca casava nada. Aqui o seletor
+   alcança o dialogo de verdade.
+   --------------------------------------------------------------------------- */
+body .p-dialog {
+    border-radius: var(--bc-panel-radius);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+    max-width: 96vw;
+}
+
+body .p-dialog .p-dialog-header {
+    border-radius: var(--bc-panel-radius) var(--bc-panel-radius) 0 0;
+}
+
+body .p-dialog .p-dialog-content {
+    padding: 1.25rem 1.5rem;
+}
+
+body .p-dialog .p-dialog-footer {
+    padding: 1rem 1.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Utilitarios
+   --------------------------------------------------------------------------- */
+.bc-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+    color: var(--bc-panel-text);
+}
+
+.bc-muted {
+    color: var(--bc-panel-muted);
+    font-size: 0.875rem;
+}
+
+.bc-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.bc-field > .p-inputtext,
+.bc-field > .p-dropdown,
+.bc-field > .p-inputnumber,
+.bc-field > .p-calendar,
+.bc-field > .p-multiselect {
+    width: 100%;
+}
+
+.bc-field-mensagem {
+    color: var(--bc-danger);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* Tabela sem dados nenhum precisa dizer isso. Sem esta regra, uma lista
+   filtrada sem resultado e uma lista ainda carregando ficam idênticas. */
+.p-datatable .p-datatable-emptymessage > td {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--bc-panel-muted);
+}
+
+/* ---------------------------------------------------------------------------
+   Página 404
+   --------------------------------------------------------------------------- */
+.bc-404 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    padding: 2rem 1rem;
+}
+
+.bc-404-card {
+    background: var(--bc-panel-bg);
+    border: var(--bc-panel-border);
+    border-radius: var(--bc-panel-radius);
+    box-shadow: var(--bc-panel-shadow);
+    max-width: 30rem;
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.bc-404-codigo {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--bc-panel-muted);
+    letter-spacing: -0.03em;
+}
+
+.bc-404-titulo {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0.5rem 0 0.75rem;
+    color: var(--bc-panel-text);
+}
+
+.bc-404-texto {
+    color: var(--bc-panel-muted);
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+
+.bc-404-acoes {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Detalhe tecnico da tela que falhou (ErrorBoundary) */
+.bc-404-detalhe {
+    background: rgba(15, 23, 42, 0.05);
+    border-radius: 8px;
+    color: var(--bc-panel-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+    max-height: 9rem;
+    overflow: auto;
+    padding: 0.75rem;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Galeria de imagens do produto */
+.bc-galeria { display: flex; flex-direction: column; gap: 0.75rem; }
+.bc-galeria-grade {
+    display: grid;
+    grid-template-columns:repeat(6,1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.bc-galeria-item {
+    margin: 0;
+    position: relative;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(15, 23, 42, 0.03);
+}
+.bc-galeria-item img { display: block; width: 100%; height: 76px; object-fit: cover; }
+.bc-galeria-item .p-tag {
+    position: absolute; bottom: 4px; left: 4px; font-size: 0.6rem; padding: 1px 6px;
+}
+.bc-galeria-erro, .bc-galeria-vazia {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.35rem; min-height: 76px; color: var(--bc-panel-muted);
+}
+
+
+/* UX 2026 — superfície operacional dos módulos. Shell preservado. */
+:root {
+  --bc-content-bg: rgba(10,24,45,.58);
+  --bc-content-bg-soft: rgba(18,38,66,.50);
+  --bc-content-border: rgba(148,190,235,.24);
+  --bc-content-text: #eaf3ff;
+  --bc-content-muted: #4d94f0;
+  --bc-content-accent: #7db7ff;
+}
+.page-content { width:100%; min-width:0; padding:2vh 1.8vw 2.4vh; overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable; }
+.page-content > *:not(.page-content-header),
+.page-content .p-card, .page-content .p-panel {
+  width:100%; max-width:100%; min-width:0;
+  background:linear-gradient(145deg,rgba(15,34,60,.62),rgba(8,22,42,.54)) !important;
+  border:1px solid var(--bc-content-border) !important;
+  border-radius:1vw !important;
+  box-shadow:0 18px 48px rgba(0,12,30,.30), inset 0 1px 0 rgba(255,255,255,.06);
+  color:var(--bc-content-text);
+}
+.page-content .p-card .p-card-title,
+.page-content .p-card .p-card-subtitle,
+.page-content .p-card .p-card-content,
+.page-content .p-card .p-card-body,
+.page-content .p-panel .p-panel-header,
+.page-content .p-panel .p-panel-content { color:var(--bc-content-text) !important; background:transparent !important; }
+.page-content .p-card .p-card-subtitle,
+.page-content .p-card p { color:var(--bc-content-muted) !important; }
+.page-content .p-inputtext,.page-content .p-inputnumber-input,.page-content .p-dropdown,
+.page-content .p-multiselect,.page-content .p-calendar .p-inputtext,.page-content .p-autocomplete-input {
+  background:rgba(5,18,35,.72) !important; color:var(--bc-content-text) !important;
+  border-color:var(--bc-content-border) !important;
+}
+.page-content .p-inputtext::placeholder { color:rgba(185,205,226,.62) !important; }
+.page-content .p-dropdown-label,.page-content .p-multiselect-label { color:var(--bc-content-text) !important; }
+.page-content .p-inputtext:enabled:focus,.page-content .p-dropdown:not(.p-disabled).p-focus,
+.page-content .p-multiselect:not(.p-disabled).p-focus {
+  border-color:var(--bc-content-accent) !important; box-shadow:0 0 0 2px rgba(79,150,245,.16) !important;
+}
+.page-content .p-datatable { width:100%; min-width:0; background:transparent !important; color:var(--bc-content-text) !important; }
+.page-content .p-datatable .p-datatable-wrapper { width:100%; overflow-x:auto; scrollbar-gutter:stable; }
+.page-content .p-datatable .p-datatable-thead > tr > th { background:rgba(37,65,96,.76) !important; color:#eaf3ff !important; border-color:rgba(148,190,235,.18) !important; }
+.page-content .p-datatable .p-datatable-tbody > tr,
+.page-content .p-datatable .p-datatable-tbody > tr:nth-child(even) { background:rgba(7,23,43,.48) !important; color:var(--bc-content-text) !important; }
+.page-content .p-datatable .p-datatable-tbody > tr:hover { background:rgba(64,115,170,.28) !important; }
+.page-content .p-datatable .p-datatable-tbody > tr > td { color:var(--bc-content-text) !important; border-color:rgba(148,190,235,.12) !important; }
+.page-content .p-datatable .p-paginator,.page-content .p-datatable .p-datatable-header,.page-content .p-datatable .p-datatable-footer,
+.page-content .p-toolbar { background:rgba(15,34,60,.44) !important; color:var(--bc-content-text) !important; border-color:var(--bc-content-border) !important; }
+.page-content .p-button { min-height:2.45rem; border-radius:.55rem; }
+.page-content .p-button:not(.p-button-text):not(.p-button-outlined):hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,20,55,.28); }
+.page-content .p-button.p-button-text { color:var(--bc-content-accent) !important; }
+.page-content .p-button.p-button-outlined { border-color:var(--bc-content-border) !important; color:var(--bc-content-text) !important; background:rgba(15,34,60,.32) !important; }
+body .p-dialog { width:68vw !important; max-width:92vw !important; min-width:48rem; background:rgba(10,25,45,.60) !important; border:1px solid var(--bc-content-border) !important; }
+body .p-dialog .p-dialog-header { background:linear-gradient(120deg,rgba(28,60,94,.88),rgba(12,34,60,.88)) !important; color:var(--bc-content-text) !important; border-bottom:1px solid var(--bc-content-border) !important; }
+body .p-dialog .p-dialog-content,body .p-dialog .p-dialog-footer { background:rgba(10,25,45,.60) !important; color:var(--bc-content-text) !important; }
+body .p-dialog .p-dialog-footer { display:flex; justify-content:flex-end; align-items:center; gap:.75rem; }
+.bc-form-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:1.4vh 1vw; }
+.bc-form-grid > * { min-width:0; }
+.bc-form-col-12{grid-column:span 12}.bc-form-col-9{grid-column:span 9}.bc-form-col-8{grid-column:span 8}.bc-form-col-6{grid-column:span 6}.bc-form-col-4{grid-column:span 4}.bc-form-col-3{grid-column:span 3}
+.bc-action-bar { display:flex; align-items:center; justify-content:space-between; gap:1vw; width:100%; min-width:0; }
+.bc-action-group { display:flex; align-items:center; justify-content:flex-end; gap:.6vw; flex-wrap:wrap; }
+.bc-action-group .p-button { min-width:8.5rem; }
+@media(max-width:1100px){.page-content .p-dialog{width:82vw !important;min-width:0}.bc-form-col-9,.bc-form-col-8{grid-column:span 12}.bc-form-col-6,.bc-form-col-4,.bc-form-col-3{grid-column:span 6}}
+@media(max-width:760px){.page-content{padding:1.2vh 2vw 2vh}.page-content > *:not(.page-content-header){border-radius:2.5vw !important;padding:1.5vh 2vw}.page-content .p-dialog{width:94vw !important;max-width:94vw !important;min-width:0}.bc-form-col-12,.bc-form-col-9,.bc-form-col-8,.bc-form-col-6,.bc-form-col-4,.bc-form-col-3{grid-column:span 12}.bc-action-bar{align-items:stretch;flex-direction:column}.bc-action-group{justify-content:stretch;width:100%}.bc-action-group .p-button{flex:1 1 100%;min-width:0}}
+
+/* Galeria: colunas fixas por breakpoint, sem auto-fill. */
+.bc-galeria-grade{grid-template-columns:repeat(6,1fr)}
+@media(max-width:900px){.bc-galeria-grade{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:600px){.bc-galeria-grade{grid-template-columns:repeat(2,1fr)}}
+
+
+
+/* =============================================================================
+   UX 2026-10-02 — contraste e composição de formulários
+   -----------------------------------------------------------------------------
+   O shell visual NÃO é alterado: fundo, sidebar, header e paleta azul continuam
+   sendo os mesmos. O problema corrigido aqui é de contraste: o conteúdo dos
+   Dialogs é azul escuro, mas vários labels herdavam o texto escuro do painel
+   claro. Resultado: o campo aparecia, porém o usuário não conseguia ler o
+   rótulo.
+
+   Regra:
+   - superfície azul -> texto claro;
+   - controle de entrada claro -> texto escuro;
+   - grupos relacionados -> espaçamento consistente;
+   - dialog responsivo -> sem largura mínima fixa.
+   ============================================================================= */
+
+:root {
+  --bc-form-label: #eaf4ff;
+  --bc-form-helper: #a8c4e8;
+  --bc-form-input-bg: rgba(255, 255, 255, 0.97);
+  --bc-form-input-text: #1e293b;
+  --bc-form-input-border: rgba(168, 196, 232, 0.58);
+  --bc-form-section-bg: rgba(15, 34, 60, 0.30);
+  --bc-form-section-border: rgba(148, 190, 235, 0.18);
+}
+
+/* Dialog é portal: estas regras precisam ficar fora de .page-content. */
+body .p-dialog {
+  width: min(76vw, 1120px) !important;
+  max-width: 94vw !important;
+  min-width: 0 !important;
+  overflow: hidden;
+}
+
+body .p-dialog .p-dialog-content {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  color: var(--bc-form-label) !important;
+}
+
+body .p-dialog .p-dialog-content label,
+body .p-dialog .p-dialog-content .bc-label,
+body .p-dialog .p-dialog-content .field > label,
+body .p-dialog .p-dialog-content .p-field > label {
+  color: var(--bc-form-label) !important;
+  font-weight: 600;
+  line-height: 1.35;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.18);
+}
+
+body .p-dialog .p-dialog-content small,
+body .p-dialog .p-dialog-content .bc-muted {
+  color: var(--bc-form-helper) !important;
+}
+
+body .p-dialog .p-dialog-content .p-inputtext,
+body .p-dialog .p-dialog-content .p-inputnumber-input,
+body .p-dialog .p-dialog-content .p-inputmask,
+body .p-dialog .p-dialog-content .p-calendar .p-inputtext,
+body .p-dialog .p-dialog-content .p-autocomplete-input,
+body .p-dialog .p-dialog-content textarea,
+body .p-dialog .p-dialog-content .p-dropdown,
+body .p-dialog .p-dialog-content .p-multiselect {
+  background: var(--bc-form-input-bg) !important;
+  color: var(--bc-form-input-text) !important;
+  border-color: var(--bc-form-input-border) !important;
+}
+
+body .p-dialog .p-dialog-content .p-inputtext::placeholder,
+body .p-dialog .p-dialog-content textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
+
+body .p-dialog .p-dialog-content .p-dropdown-label,
+body .p-dialog .p-dialog-content .p-multiselect-label {
+  color: var(--bc-form-input-text) !important;
+}
+
+body .p-dialog .p-dialog-content .p-dropdown-trigger,
+body .p-dialog .p-dialog-content .p-multiselect-trigger {
+  color: #475569 !important;
+  background: rgba(241, 245, 249, 0.90) !important;
+}
+
+body .p-dialog .p-dialog-content .p-inputtext:enabled:focus,
+body .p-dialog .p-dialog-content .p-dropdown:not(.p-disabled).p-focus,
+body .p-dialog .p-dialog-content .p-multiselect:not(.p-disabled).p-focus,
+body .p-dialog .p-dialog-content .p-inputnumber:focus-within {
+  border-color: var(--bc-content-accent) !important;
+  box-shadow: 0 0 0 2px rgba(125, 183, 255, 0.20) !important;
+}
+
+body .p-dialog .p-dialog-content .grid > .field,
+body .p-dialog .p-dialog-content .bc-field {
+  min-width: 0;
+  margin-bottom: 0.35rem;
+}
+
+.bc-form-section {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem 0.35rem;
+  border: 1px solid var(--bc-form-section-border);
+  border-radius: 0.7rem;
+  background: var(--bc-form-section-bg);
+}
+
+.bc-form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  color: var(--bc-form-label);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.bc-form-section-title .pi {
+  color: var(--bc-content-accent);
+}
+
+.bc-form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.bc-form-section-title > div {
+  min-width: 0;
+}
+
+.bc-form-section-title h3 {
+  margin: 0;
+  color: var(--bc-form-label);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.bc-form-section-title span {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--bc-form-helper);
+  font-size: 0.82rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.bc-form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.85rem 0.9rem;
+  align-items: start;
+}
+
+.bc-form-grid > [class~="col-12"] {
+  grid-column: span 12;
+}
+
+.bc-form-grid > [class~="md:col-8"] {
+  grid-column: span 8;
+}
+
+.bc-form-grid > [class~="md:col-6"] {
+  grid-column: span 6;
+}
+
+.bc-form-grid > [class~="md:col-4"] {
+  grid-column: span 4;
+}
+
+.bc-form-grid > [class~="md:col-3"] {
+  grid-column: span 3;
+}
+
+.bc-form-grid > * {
+  min-width: 0;
+  margin: 0 !important;
+}
+
+.bc-form-grid .p-inputtext,
+.bc-form-grid .p-inputmask,
+.bc-form-grid .p-dropdown,
+.bc-form-grid .p-inputnumber,
+.bc-form-grid .p-calendar,
+.bc-form-grid .p-autocomplete {
+  width: 100%;
+}
+
+
+
+.bc-form-grid > .bc-form-section {
+  grid-column: 1 / -1;
+}
+
+.bc-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1100px) {
+  body .p-dialog {
+    width: 88vw !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body .p-dialog {
+    width: 94vw !important;
+    max-width: 94vw !important;
+  }
+
+  body .p-dialog .p-dialog-content {
+    max-height: calc(100vh - 150px);
+    padding: 1rem !important;
+  }
+
+  .bc-form-section {
+    padding: 0.75rem 0.75rem 0.25rem;
+  }
+
+  .bc-form-actions .p-button {
+    flex: 1 1 100%;
+  }
+}
+
+
+/* PrimeFlex grids dentro de Dialogs passam a obedecer uma grade determinística.
+   Isso evita o efeito "um campo por linha" quando a tela possui espaço para
+   dois ou três campos. As classes existentes continuam válidas; só mudamos a
+   composição visual no contexto de formulário. */
+body .p-dialog .p-fluid > .grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.8rem 0.9rem;
+  margin: 0;
+}
+
+body .p-dialog .p-fluid > .grid > * {
+  min-width: 0;
+  margin: 0 !important;
+}
+
+body .p-dialog .p-fluid > .grid > [class~="col-12"] { grid-column: span 12; }
+body .p-dialog .p-fluid > .grid > [class~="md:col-8"] { grid-column: span 8; }
+body .p-dialog .p-fluid > .grid > [class~="md:col-6"] { grid-column: span 6; }
+body .p-dialog .p-fluid > .grid > [class~="md:col-4"] { grid-column: span 4; }
+body .p-dialog .p-fluid > .grid > [class~="md:col-3"] { grid-column: span 3; }
+
+body .p-dialog .p-fluid > .grid > [class~="md:col-8"] > .p-inputtext,
+body .p-dialog .p-fluid > .grid > [class~="md:col-6"] > .p-inputtext,
+body .p-dialog .p-fluid > .grid > [class~="md:col-4"] > .p-inputtext,
+body .p-dialog .p-fluid > .grid > [class~="md:col-6"] > .p-dropdown,
+body .p-dialog .p-fluid > .grid > [class~="md:col-4"] > .p-dropdown,
+body .p-dialog .p-fluid > .grid > [class~="col-12"] > .p-inputtext,
+body .p-dialog .p-fluid > .grid > [class~="col-12"] > .p-inputtextarea {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .bc-form-grid > [class~="md:col-8"],
+  .bc-form-grid > [class~="md:col-6"],
+  .bc-form-grid > [class~="md:col-4"],
+  .bc-form-grid > [class~="md:col-3"] {
+    grid-column: span 6;
+  }
+
+  body .p-dialog .p-fluid > .grid > [class~="md:col-8"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-6"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-4"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-3"] {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 600px) {
+  .bc-form-grid > [class~="col-12"],
+  .bc-form-grid > [class~="md:col-8"],
+  .bc-form-grid > [class~="md:col-6"],
+  .bc-form-grid > [class~="md:col-4"],
+  .bc-form-grid > [class~="md:col-3"] {
+    grid-column: span 12;
+  }
+
+  body .p-dialog .p-fluid > .grid > [class~="col-12"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-8"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-6"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-4"],
+  body .p-dialog .p-fluid > .grid > [class~="md:col-3"] {
+    grid-column: span 12;
+  }
+}

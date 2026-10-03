@@ -1,0 +1,230 @@
+/* Estilos do modulo de Compras */
+
+.compras-enterprise-container {
+    padding: 0.5rem;
+}
+
+.compras-main-card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.compras-main-card .p-card-content {
+    padding: 0;
+}
+
+.compras-main-card .p-card-body {
+    padding: 1.5rem;
+}
+
+.compras-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.compras-info p {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.compras-acoes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.compras-acoes .p-button {
+    min-width: 2rem;
+}
+
+/* Dialog styles */
+.compras-enterprise-container .p-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.compras-enterprise-container .p-dialog-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+}
+
+.compras-enterprise-container .p-dialog-header-icons {
+    color: white;
+}
+
+.compras-enterprise-container .p-dialog-header-icons .p-dialog-header-icon {
+    color: white;
+}
+
+.compras-enterprise-container .p-dialog-content {
+    padding: 1.5rem;
+}
+
+.compras-enterprise-container .p-dialog-footer {
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+}
+
+/* Form fields */
+.compras-enterprise-container .field label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.compras-enterprise-container .field .p-inputtext,
+.compras-enterprise-container .field .p-inputnumber,
+.compras-enterprise-container .field .p-dropdown,
+.compras-enterprise-container .field .p-calendar {
+    width: 100%;
+}
+
+.compras-enterprise-container .field .p-dropdown {
+    min-width: 12rem;
+}
+
+/* DataTable customization */
+.compras-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: rgba(15,34,60,.44);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+.compras-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.compras-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: rgba(15,34,60,.44);
+}
+
+.compras-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(37,65,96,.56);
+}
+
+/* Status tags */
+.compras-enterprise-container .p-tag {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+.compras-enterprise-container .p-tag.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.compras-enterprise-container .p-tag.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.compras-enterprise-container .p-tag.primary {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.compras-enterprise-container .p-tag.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.compras-enterprise-container .p-tag.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Paginator */
+.compras-enterprise-container .p-paginator {
+    background: rgba(15,34,60,.44);
+    border-radius: 0 0 12px 12px;
+    padding: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .compras-enterprise-container .p-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+    
+    .compras-enterprise-container .p-datatable {
+        font-size: 0.8rem;
+    }
+    
+    .compras-enterprise-container .p-datatable .p-datatable-thead > tr > th,
+    .compras-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+        padding: 0.5rem;
+    }
+}
+
+/* Total summary */
+.compras-enterprise-container .p-3.bg-gray-100 {
+    background: rgba(15,34,60,.44);
+    border: 1px solid #dee2e6;
+}
+
+.compras-enterprise-container .p-3.bg-gray-100 h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+/* Loading state */
+.compras-enterprise-container .p-datatable .p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.compras-enterprise-container .p-progress-spinner {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Toast customization */
+.compras-enterprise-container .p-toast {
+    min-width: 280px;
+}
+
+.compras-enterprise-container .p-toast-message {
+    font-size: 0.9rem;
+}
+
+/* Button styling */
+.compras-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.compras-enterprise-container .p-button-success:hover {
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a4295 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.compras-enterprise-container .p-button-outlined.p-button-success {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.compras-enterprise-container .p-button-outlined.p-button-success:hover {
+    background: #667eea;
+    color: white;
+}
+
+.compras-enterprise-container .p-button-danger {
+    background: #dc3545;
+    border: none;
+}
+
+.compras-enterprise-container .p-button-danger:hover {
+    background: #c82333;
+}

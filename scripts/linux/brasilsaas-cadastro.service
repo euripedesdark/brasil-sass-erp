@@ -1,0 +1,29 @@
+[Unit]
+Description=Brasil SaaS ERP - Serviço de Cadastro
+Documentation=https://github.com/euripedesdark/BRASIL-SAAS-ERP
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=brasil-saas
+Group=brasil-saas
+WorkingDirectory=/opt/brasil-saas
+ExecStart=/usr/bin/java -jar /opt/brasil-saas/brasil-saas-erp.jar --spring.profiles.active=servico-cadastro
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=brasil-saas-cadastro
+
+# Limites de recursos
+MemoryLimit=2G
+CPUQuota=100%
+
+# Variáveis de ambiente
+Environment="JAVA_OPTS=-Xmx1536m -Xms512m -XX:+UseG1GC"
+Environment="SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas&sslmode=prefer"
+Environment="TZ=America/Sao_Paulo"
+
+[Install]
+WantedBy=multi-user.target

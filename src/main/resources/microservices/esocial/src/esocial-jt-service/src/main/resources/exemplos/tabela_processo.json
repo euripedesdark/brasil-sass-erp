@@ -1,0 +1,26 @@
+{
+  "tipoOcorrencia": "TABELA_PROCESSO",
+  "referencia": "00000007120215004000",
+  "operacao": "INCLUSAO",
+  "dataOcorrencia": 1522181304444,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "infoProcesso": {
+      "ideProcesso": {
+        "tpProc": 2,
+        "nrProc": "00000007120215004000",
+        "iniValid": "2018-07",
+        "fimValid": null
+      },
+      "dadosProc": {
+        "indAutoria": 2,
+        "indMatProc": 7,
+        "dadosProcJud": null,
+        "infoSusp": null
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+# API de boletos e arquivos CNAB (remessa/retorno).
+#
+# Fonte: https://github.com/akretion/boleto_cnab_api
+# Copia em src/main/resources/microservices/boleto-cnab-api
+#   commit 9969a8d5100e39fb24ee34c9d70d96a5df3296c2 (2026-09-08)
+#
+# Fica em compose separado de proposito: e a unica peca do stack que nao e
+# Java. O ERP fala com ela por HTTP, entao subir e derrubar nao afeta o resto.
+#
+# O que ela resolve no financeiro:
+#   - gerar boleto (PDF/PNG) para cobranca
+#   - calcular nosso_numero
+#   - gerar remessa CNAB 240/400 para enviar ao banco
+#   - converter retorno CNAB do banco em JSON (baixa de titulos em lote)
+#
+# Dependencias: a imagem oficial ja traz Ruby + Ghostscript. Nao precisa
+# instalar nada na maquina que roda o ERP.
+
+services:
+  boleto-cnab-api:
+    image: ghcr.io/akretion/boleto_cnab_api:latest
+    container_name: boleto-cnab-api-brasil-saas
+    restart: unless-stopped
+    ports:
+      - "${BOLETO_CNBAB_PORT:-9292}:9292"
+    environment:
+      # Chavesaceitas em X-Api-Key. Vazio = sem autenticacao, aceitavel so em
+      # desenvolvimento; em producao defina.
+      - API_KEYS=${BOLETO_CNAB_API_KEYS:-}
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      # /docs responde 200 sem autenticacao, entao serve de sentinela simples
+      test: ["CMD", "ruby", "-e", "require 'net/http'; exit(Net::HTTP.get_response(URI('http://127.0.0.1:9292/docs')).code == '200' ? 0 : 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s

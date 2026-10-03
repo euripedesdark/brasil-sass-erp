@@ -1,0 +1,58 @@
+/* Issqn.css */
+
+.issqn-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.issqn-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.issqn-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.issqn-enterprise-container .p-datatable {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.issqn-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.issqn-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.issqn-header {
+    padding: 1rem;
+    background: rgba(15,34,60,.44);
+    border-radius: 8px;
+    display: flex;
+    gap: 1rem;
+}
+
+.issqn-header .p-dropdown {
+    min-width: 100px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .issqn-enterprise-container { padding: 0.5rem; }
+    .issqn-header { flex-direction: column; }
+    .issqn-header .p-dropdown { width: 100%; }
+}

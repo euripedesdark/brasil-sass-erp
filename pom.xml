@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Parent – Spring Boot (versão 3.3.5) -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>br.com.brasil_saas</groupId>
+    <artifactId>brasil-saas-erp</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Brasil SaaS ERP</name>
+    <description>ERP brasileiro cloud-native, multiempresa, com IA assistiva nativa</description>
+
+    <!-- =============== VERSION PROPERTIES =============== -->
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Bibliotecas externas -->
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <!--
+            Lombok 1.18.34 quebra ao compilar com o JDK 21.0.12.1 (o Oracle RPM
+            do DC, build 18/08/2026). O stack trace e' :
+
+                ExceptionInInitializerError
+                    at lombok.javac.apt.LombokProcessor.init
+
+            Lombok reescreve o bytecode usando as APIs INTERNAS do javac
+            (com.sun.tools.javac.*), que mudam entre builds de patch do JDK. Um
+            Lombok mais antigo que o javac que o executa aborta o compilador
+            inteiro — e o Maven so reporta 'Fatal error compiling', sem nenhuma
+            linha de .java, que e' o que torna o erro confuso.
+
+            O notebook compila com 21.0.12 (build 21/07/2026), que o 1.18.34
+            ainda alcanca. O DC tem o build de 18/08, um mes mais novo, e o
+            1.18.34 nao alcanca.
+
+            A correcao e' subir o Lombok, e nao rebaixar o JDK: um Lombok novo
+            funciona nos dois JDKs, e tambem em qualquer atualizacao futura
+            dele. Rebaixar o JDK prenderia o projeto a um build especifico
+            enquanto a distribuicao ja oferece um mais novo.
+        -->
+        <lombok.version>1.18.48</lombok.version>
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <springdoc.version>2.6.0</springdoc.version>
+        <jjwt.version>0.12.6</jjwt.version>
+        <flyway.version>10.17.0</flyway.version>
+        <openpdf.version>3.0.5</openpdf.version>
+        <pdfbox.version>3.0.3</pdfbox.version>
+        <poi.version>5.3.0</poi.version>
+        <jasperreports.version>6.21.3</jasperreports.version>
+        <java-nfe.version>4.1.3</java-nfe.version>
+        <!-- MDF-e, EFD e CT-e: mesma familia do java-nfe, entao a pilha de
+             axis2 1.7.5, jaxb 4.0.5 e java_certificado 3.16 ja vem por
+             transitiva do java-nfe e nao e preciso declarar nada disso aqui.
+             As quatro ja estavam no .m2, baixadas. -->
+        <!-- fincatto documentofiscal: NFe, CT-e, MDF-e, NFS-e, ECF e EFD.
+             5.1.2 e a ultima RELEASE publicada. -->
+        <documentofiscal.version>5.1.2</documentofiscal.version>
+        <!-- A fincatto 5.1.2 declara httpclient5 5.3.1 no pom dela, mas o
+             codigo chama TlsSocketStrategy, que so existe a partir da 5.4.
+             Sem esta fixacao o ERP sobe e quebra no primeiro HTTPS:
+             NoClassDefFoundError: org/apache/hc/client5/http/ssl/TlsSocketStrategy
+             É bug do release; nao e uso errado. -->
+        <httpclient5.version>5.6.4</httpclient5.version>
+          <!-- O httpcore5 tem de ir junto com o client5, e o par correto e o que
+               o proprio client declara: o httpclient5-parent 5.6.4 fixa
+               httpcore.version 5.4.3. O 5.3.4 que estava aqui quebrava com
+               NoClassDefFoundError: org/apache/hc/core5/io/IOFunction, que so
+               existe a partir do core 5.4. Como o chat do Spring AI estava com
+               enabled=false, a classe nunca era carregada, o erro nunca
+               apareceu, e a integracao com o OpenRouter nunca tinha sido
+               exercitada de verdade. -->
+        <httpcore5.version>5.4.3</httpcore5.version>
+        <java-efd-icms.version>3.21.1</java-efd-icms.version>
+        <java-efd-contribuicoes.version>1.32.1</java-efd-contribuicoes.version>
+        <java-cte.version>4.00.14</java-cte.version>
+        <testcontainers.version>1.20.2</testcontainers.version>
+        <pgvector.version>0.1.6</pgvector.version>
+        <minio.version>8.5.12</minio.version>
+    </properties>
+
+    <!-- =============== DEPENDENCIES =============== -->
+    <dependencies>
+
+        <!-- ==== WEB ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ==== SEGURANÇA ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ==== BANCO ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-envers</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pgvector</groupId>
+            <artifactId>pgvector</artifactId>
+            <version>${pgvector.version}</version>
+        </dependency>
+
+        <!-- ==== CACHE ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+        <!-- ==== MENSAGERIA ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!-- ==== EMAIL ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- ==== OBSERVABILIDADE ==== -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+
+        <!-- ==== DOCUMENTAÇÃO API ==== -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- ==== MAPEAMENTO ==== -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
+
+        <!-- ==== PDF / RELATÓRIOS ==== -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>${openpdf.version}</version>
+            <exclusions>
+                <!-- O openpdf traz o brotli4j, que carrega a biblioteca
+                     NATIVA por JNI. Em fat jar do Spring Boot o brotli4j
+                     nao consegue extrair o .so de dentro do jar aninhado, e
+                     a PRIMEIRA chamada HTTPS morre com
+                     UnsatisfiedLinkError: DecoderJNI.nativeCreate.
+                     O brotli nao e usado para gerar PDF nem para falar com
+                     o OpenRouter, que aceita gzip. O efeito so apareceria em
+                     producao, no meio de uma consulta fiscal. -->
+                <exclusion>
+                    <groupId>com.aayushatharva.brotli4j</groupId>
+                    <artifactId>brotli4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+
+        <!-- ==== FISCAL BRASILEIRO ==== -->
+        <dependency>
+            <groupId>br.com.swconsultoria</groupId>
+            <artifactId>java-nfe</artifactId>
+            <version>${java-nfe.version}</version>
+        </dependency>
+
+        <!-- MDF-e, e tambem NFe, CT-e, NFS-e, ECF e EFD numa base so.
+             Escolhida no lugar da br.com.swconsultoria:java-mdfe porque a
+             swconsultoria e BINARIAMENTE INCOMPATIVEL com o java_certificado
+             que o ERP ja usa. A java-mdfe 3.00.4 (de 2019) chama
+             Certificado.getTipo(); a 3.16, que vem pelo java-nfe, tem
+             getTipoCertificado() e nao tem getTipo(). Em runtime:
+             NoSuchMethodError, e o /status do MDF-e caia junto. Nao ha flag
+             de Maven que resolva: as duas libs precisam de APIs diferentes da
+             mesma classe, e so uma pode estar no classpath.
+
+             A fincatto assina com o Apache Santuario (xmlsec) e nao depende de
+             java_certificado, entao o conflito nao existe. E traz NFe e CT-e
+             junto, que e o que mais falta depois.
+
+             5.1.2 e a ultima RELEASE no central. A pasta local em
+             microservices/nfe e 5.1.3-SNAPSHOT, que nao esta no central. -->
+        <dependency>
+            <groupId>com.github.wmixvideo</groupId>
+            <artifactId>nfe</artifactId>
+            <version>${documentofiscal.version}</version>
+            <exclusions>
+                <!-- A fincatto 5.1.2 traz httpclient5 5.3.1, que nao tem a
+                     TlsSocketStrategy que o codigo dela chama. Fixa-se a
+                     versao boa logo abaixo, e a exclusion impede que a
+                     5.3.1 volte por baixo. -->
+                <exclusion>
+                    <groupId>org.apache.httpcomponents.client5</groupId>
+                    <artifactId>httpclient5</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents.core5</groupId>
+                    <artifactId>httpcore5</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>${httpclient5.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>${httpcore5.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5-h2</artifactId>
+            <version>${httpcore5.version}</version>
+        </dependency>
+
+        <!-- SPED EFD ICMS/IPI. 289 registros em 10 blocos. Gera o arquivo
+             texto separado por | e os contadores 9900/9990/9999, que sao a
+             parte chata porque e o fechamento que a SEFAZ valida. O formato
+             esta em microservices/Java-Efd-Icms/src/test/resources/efd.txt. -->
+        <dependency>
+            <groupId>br.com.swconsultoria</groupId>
+            <artifactId>java-efd-icms</artifactId>
+            <version>${java-efd-icms.version}</version>
+        </dependency>
+
+        <!-- SPED EFD Contribuicoes. Blocos 0, 1, 9, A, C, D, F, I, M, P :
+             os de A/F/I/M/P nao existem no EFD ICMS. -->
+        <dependency>
+            <groupId>br.com.swconsultoria</groupId>
+            <artifactId>java-efd-contribuicoes</artifactId>
+            <version>${java-efd-contribuicoes.version}</version>
+        </dependency>
+
+        <!-- CT-e. Nao e usado agora, mas e o documento mais proximo do MDF-e
+             : mesmo formato, assinado e autorizado pela SEFAZ : e serve de
+             referencia quando o MDF-e travar em alguma duvida de evento. -->
+        <dependency>
+            <groupId>br.com.swconsultoria</groupId>
+            <artifactId>java-cte</artifactId>
+            <version>${java-cte.version}</version>
+        </dependency>
+
+  
+        <!-- ==== STORAGE S3 ==== -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>${minio.version}</version>
+        </dependency>
+
+        <!-- ==== IA ==== -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+            <version>1.0.0-M3</version>
+        </dependency>
+
+        <!-- ==== UTILITÁRIOS ==== -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ==== TESTES ==== -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>4.1.3</version>
+        </dependency>
+    </dependencies>
+
+    <!-- =============== BUILD =============== -->
+    <build>
+        <finalName>brasil-saas-erp-${project.version}</finalName>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>microservices/**</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
+        <plugins>
+
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>br.com.brasil_saas.BrasilSaasErpApplication</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Compiler Plugin (Java 21) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>${lombok-mapstruct-binding.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
+                    <excludes>
+                        <exclude>com/sysfluxo/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Surefire Plugin (unit tests) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.1</version>
+            </plugin>
+
+            <!-- JaCoCo coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.14</version>
+                <executions>
+                    <execution><id>prepare-agent</id><goals><goal>prepare-agent</goal></goals></execution>
+                    <execution><id>report</id><phase>test</phase><goals><goal>report</goal></goals></execution>
+                </executions>
+            </plugin>
+
+            <!-- Flyway Maven Plugin -->
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>10.17.0</version>
+                <configuration>
+                    <url>${env.FLYWAY_URL:jdbc:postgresql://localhost:5432/brasil-saas}</url>
+                    <user>${env.FLYWAY_USER:postgres}</user>
+                    <password>${env.FLYWAY_PASSWORD}</password>
+                    <schemas>
+                        <schema>brasil_saas</schema>
+                    </schemas>
+                    <locations>
+                        <location>filesystem:src/main/resources/db/migration</location>
+                    </locations>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <!-- =============== REPOSITORIES =============== -->
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+    </repositories>
+
+    <!-- =============== PLUGIN REPOSITORIES =============== -->
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+</project>

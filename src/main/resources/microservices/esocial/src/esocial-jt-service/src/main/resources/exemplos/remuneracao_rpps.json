@@ -1,0 +1,47 @@
+{
+  "tipoOcorrencia": "REMUNERACAO_RPPS",
+  "referencia": "12000",
+  "operacao": "NORMAL",
+  "dataOcorrencia": 1522181179561,
+  "dadosOcorrencia": {
+    "ideEvento": {
+      "indApuracao": 1,
+      "perApur": "2021-12"
+    },
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "ideTrabalhador": {
+      "cpfTrab": "77993893704"
+    },
+    "dmDev": [
+      {
+        "ideDmDev": "123",
+        "codCateg": 301,
+        "infoPerApur": {
+          "ideEstab": [
+            {
+              "tpInsc": 1,
+              "nrInsc": "00509968000148",
+              "remunPerApur": [
+                {
+                  "matricula": "12000",
+                  "itensRemun": [
+                    {
+                      "codRubr": "01",
+                      "ideTabRubr": "01",
+                      "vrRubr": 1234,
+                      "indApurIR": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "infoPerAnt": null
+      }
+    ]
+  }
+}

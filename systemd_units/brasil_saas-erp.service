@@ -1,0 +1,88 @@
+# Brasil SaaS ERP — serviço do monólito, perfil dev
+# =============================================================================
+# POR QUE ESTE ARQUIVO EXISTE
+#
+# Os docs mandavam copiar uma unit que ninguém tinha:
+#
+#     docs/infra/README_MODULES.md
+#     sudo cp systemd_units/brasil-saas-erp.service /etc/systemd/system/
+#
+# E esse arquivo não estava no repositório. Pior, o nome citado no doc e' o
+# `brasil-saas-erp`, enquanto `scripts/install_service.sh` gera
+# `brasil_saas-erp`. Duas convenções em conflito para o mesmo serviço, e a
+# segunda é a que o dono escolheu: **prefixo `brasil_saas-`**. É o que o
+# instalador escreve hoje (`brasil_saas-minio`, `brasil_saas-watchdog`) e o que
+# está de pé no erp.
+#
+# ESTA UNIT NÃO VEM DO INSTALADOR, DE PROPÓSITO
+#
+# Quando o installbase.sh escrevia uma unit de ERP, sobrescreveu uma que já
+# existia na máquina, e o conteúdo original não está no repositório para
+# recuperar. As três ferramentas do dono ficam assim:
+#
+#     installbase.sh   instala
+#     compilar.py      compila
+#     subir-dev.sh     sobe o Java e depois o React
+#
+# E a unit de serviço é artefato de máquina, como as da NFS-e no notebook.
+# Copie este arquivo se quiser, mas confira o caminho antes.
+#
+# =============================================================================
+# O CAMINHO DO REPOSITÓRIO VARIA ENTRE MÁQUINAS
+#
+# No erp:      /home/euripedes/BRASIL-SAAS-ERP
+# No notebook: /home/euripedes/OneDrive/python/projetos-leno/GIT Repos/BRASIL-SAAS-ERP
+#
+# Por isso o caminho vem de uma variável, com o padrão sendo o repositório ao pé
+# do home. Se na sua máquina o repositório estiver em outro lugar, defina
+# BRASIL_SAAS_REPO_DIR no EnvironmentFile (o /etc/brasil-saas/erp.env) — não
+# edite esta unit. A variável do EnvironmentFile tem precedência sobre a
+# Environment= daqui, então dá para sobrescrever sem tocar neste arquivo.
+#
+# O User= e' LITERAL de proposito: nao existe especificador systemd para "o
+# usuario que vai rodar", e %i so tem valor em unit template (foo@bar.service).
+# Numa unit solta o %i fica vazio e o User= fica sem dono.
+#
+# A CERTA E' A RAIZ DO REPOSITÓRIO, não a pasta do módulo: o jar do monólito sai
+# de target/, e é lá que o compilar.py o deixa.
+# =============================================================================
+[Unit]
+Description=Brasil SaaS ERP (Spring Boot, 8080) — perfil dev
+Documentation=https://github.com/euripedesdark/BRASIL-SAAS-ERP
+After=network-online.target postgresql.service mongod.service redis-server.service rabbitmq-server.service minio.service nginx.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=euripedes
+WorkingDirectory=%h/BRASIL-SAAS-ERP
+# Sem EnvironmentFile o perfil dev cai no caminho do notebook, que não existe
+# numa máquina nova, e o app sobe em laço de retentativa do Hikari. O
+# instalador cria este arquivo; se ele não existir, o serviço sobe e o que
+# falha é a conexão — que é o diagnóstico certo.
+EnvironmentFile=-/etc/brasil-saas/erp.env
+Environment=BRASIL_SAAS_REPO_DIR=%h/BRASIL-SAAS-ERP
+# O ERP entra no Postgres por CERTIFICADO de cliente. Sem esta variável, o
+# perfil dev aponta para a PKI de outra máquina e a conexão falha com
+# "connection requires a valid client certificate" — mensagem que aponta para
+# certificado e cuja causa é o caminho.
+Environment=BRASIL_SAAS_CERTS_DIR=%h/BRASIL-SAAS-ERP/certs/pki
+# O valor PRECISA estar entre aspas. Sem elas, o systemd reparte a linha por
+# espaço: "JAVA_OPTS=-Xmx2g" e "-XX:+UseG1GC". A segunda não tem NOME=, então
+# é descartada com "Invalid environment assignment, ignoring" — e o coletor de
+# lixo se perde sem ninguém notar, porque o serviço sobe do mesmo jeito.
+Environment="JAVA_OPTS=-Xmx2g -XX:+UseG1GC"
+# O caminho do jar entre aspas DUPLAS porque o repositório pode estar em pasta
+# com espaço — e no notebook está, em ".../GIT Repos/...". Sem as aspas, o
+# bash -lc parte o caminho em dois argumentos e o serviço morre com "Unable to
+# access jarfile", que parece jar faltando e não é.
+ExecStart=/usr/bin/env bash -lc 'exec java $JAVA_OPTS -jar "$BRASIL_SAAS_REPO_DIR/target/brasil-saas-erp-1.0.0-SNAPSHOT.jar"'
+Restart=always
+RestartSec=15
+# Sem isto, o serviço sobe antes do Postgres aceitar conexão e entra em laço de
+# falha, gastando o RestartSec inteiro até o banco estar pronto.
+StandardOutput=append:/var/log/brasil-saas/erp.log
+StandardError=append:/var/log/brasil-saas/erp.log
+
+[Install]
+WantedBy=multi-user.target

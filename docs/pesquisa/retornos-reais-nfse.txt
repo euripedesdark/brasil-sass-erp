@@ -1,0 +1,37 @@
+### entidadeId=1  arquivo=retorno-emissao-1.json
+{"erro_transporte": "org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 : \"{\"erro\":\"Falha inesperada: Required request body is missing: public org.springframework.http.ResponseEntity<?> br.com.brasil_saas.fiscal.sp.NfseSpController.emitirRps(br.com.brasil_saas.fiscal.sp.NfseSpController$RpsRequest)\",\"sucesso\":false}\""}
+
+### entidadeId=2  arquivo=retorno-emissao-2.json
+{
+  "sucesso" : true,
+  "numero_nfse" : "999",
+  "alertas" : [ ],
+  "captura" : 1
+}
+
+### entidadeId=3  arquivo=retorno-emissao-3.json
+{"erro_transporte": "org.springframework.web.client.HttpClientErrorException$UnprocessableEntity: 422 : \"{\"erro\":\"A prefeitura recusou o RPS: [1001] XML não compatível com Schema.The 'CodigoServico' element is invalid - The value 'ZZZ999' is invalid according to its datatype 'http://www.prefeitura.sp.gov.br/nfe/tipos:tpCodigoServico' - The Pattern constraint failed.\",\"sucesso\":false}\""}
+
+### entidadeId=4  arquivo=retorno-emissao-4.json
+{
+  "erro" : "A prefeitura recusou o RPS: [1001] XML não compatível com Schema.The 'CodigoServico' element is invalid - The value 'ZZZ999' is invalid according to its datatype 'http://www.prefeitura.sp.gov.br/nfe/tipos:tpCodigoServico' - The Pattern constraint failed.",
+  "sucesso" : false
+}
+
+### entidadeId=5  arquivo=retorno-emissao-5.json
+{
+  "sucesso" : true,
+  "chave_nfse" : "2130033",
+  "numero_nfse" : "26",
+  "codigo_verificacao" : "CHGEIPFB",
+  "chave_nota_nacional" : "35503081200000000000191000000000002626097518490221",
+  "alertas" : [ ],
+  "xml_assinado" : "<PedidoEnvioRPS xmlns=\"http://www.prefeitura.sp.gov.br/nfe\"><Cabecalho xmlns=\"\" Versao=\"1\"><CPFCNPJRemetente><CNPJ>00000000000191</CNPJ></CPFCNPJRemetente></Cabecalho><RPS xmlns=\"\"><Assinatura>bqoULBZst8oeZLrwKLpYn7P/kqvailWxYkCuovOStfr/cWugsjWjKZ3gUxaUWq0pyD5rxh8g8wwEMX/CHjBgr4sfX1zxUT1jlt3biUOQpxElWKcfkg4LNSvzEIz5hZHVtI8oYI2hQKnrMUfPQOK+j/oFepjC4zcweqxjr6ZxDLmw/1N5Rv3ZF8h5PkPlxbzwZq4kxRNwgsIIa53/eu77MLplir9d+HF/HD5tGTTaow06FoNj9+tEwepIpDyePTOMN5s9wrCOsfytGrlzZx7A/vs7LfbCaijph7fGX4+Ez5NeyiXy1tQ4yLGNE9hXqGLDPoP6CnXSYhQMcD/c9XAyhg==</Assinatura><ChaveRPS><InscricaoPrestador>2130033</InscricaoPrestador><SerieRPS>BC</SerieRPS><NumeroRPS>99041</NumeroRPS></ChaveRPS><TipoRPS>RPS</TipoRPS><DataEmissao>2026-09-26</DataEmissao><StatusRPS>N</StatusRPS><TributacaoRPS>T</TributacaoRPS><ValorServicos>150.00</ValorServicos><ValorDeducoes>0.00</ValorDeducoes><CodigoServico>2919</CodigoServico><AliquotaServicos>0.0290</AliquotaServicos><ISSRetido>false</ISSRetido><CPFCNPJTomador><CNPJ>00000000000192</CNPJ></CPFCNPJTomador><RazaoSocialTomador>EMPRESA DE TESTE LTDA</RazaoSocialTomador><Discriminacao>Servico de teste com retorno gravado</Discriminacao></RPS><Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\"/><SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"/><Reference URI=\"\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/><Transform Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\"/></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"/><DigestValue>goZJ7GOXM01ZC/2xPF2+61kTpcw=</DigestValue></Reference></SignedInfo><SignatureValue>BaJjJ8PMyhqdr5aHKmiq21mzeir3kA6PF2d4g/Noh1j/aWKmDKx/WAGBfhGejlslB6Js6B5IZ399&#13;\nyrRS1f4ILOr94mAltV6tml0b90SRRuCM4jcc0u7apnQbiwM1DiC6+K+On8++qhOBFg/dIvkoiVew&#13;\nzJj9KwoS8IKqGaFQSWm7fzpQ3mQ2aNABwyCCUeM2LopVXbXizhRlSZkRhlwsoyiBAzxlZm3Naxtv&#13;\ntZGALme5lAtSmSR6YE4qpc1kHHOVdKLaMgByzLmUwsB2yFVQOXk44RnSdAsMkP0UUHVLkkWK14yO&#13;\nMiQOUV4IZLRHLIsmx5r6AU4bynbC3YuLczMuxQ==</SignatureValue><KeyInfo><X509Data><X509Certificate>MIIIBjCCBe6gAwIBAgIIeyL7uxLEgtEwDQYJKoZIhvcNAQELBQAwdjELMAkGA1UEBhMCQlIxEzAR&#13;\nBgNVBAoTCklDUC1CcmFzaWwxNjA0BgNVBAsTLVNlY3JldGFyaWEgZGEgUmVjZWl0YSBGZWRlcmFs&#13;\nIGRvIEJyYXNpbCAtIFJGQjEaMBgGA1UEAxMRQUMgU0FGRVdFQiBSRkIgdjUwHhcNMjYwMzA5MTc1&#13;\nNjM3WhcNMjcwMzA5MTc1NjM3WjCCARIxCzAJBgNVBAYTAkJSMRMwEQYDVQQKEwpJQ1AtQnJhc2ls&#13;\nMQswCQYDVQQIEwJTUDESMBAGA1UEBxMJU0FPIFBBVUxPMTYwNAYDVQQLEy1TZWNyZXRhcmlhIGRh&#13;\nIFJlY2VpdGEgRmVkZXJhbCBkbyBCcmFzaWwgLSBSRkIxFjAUBgNVBAsTDVJGQiBlLUNOUEogQTEx&#13;\nFzAVBgNVBAsTDjAxNTc5Mjg2MDAwMTc0MRkwFwYDVQQLExB2aWRlb2NvbmZlcmVuY2lhMUkwRwYD&#13;\nVQQDE0BFVVJJUEVERVMgQkFUSVNUQSBERSBQQUlWQSBKVU5JT1IgVEVDTk9MT0dJQSBEQSBJOjY1&#13;\nNTI3MjY0MDAwMTQzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsGsnWKaKe8/6Z0bT&#13;\nooypD8KVHtlHJ9LdadxsY5y2ocfr327wCTOcl2BamSV97tmIxSzanvILUqh/7616klLKLaEB8dYe&#13;\neKsJJ6JFNXA1DWWlrlfhE4irnMLFXfWWk0vqGd4D8cIPIALA43P+BztP1QB9sUDDu0lg12uioofy&#13;\nR0/3iIZLlg1iBj8dVWuWjCsvTVWZEaAeveqjpci1C7lioCQVE4Ebd7yOVW2iqOBoMghp4ac+VcCc&#13;\ny1CMLPh30Ja8QWrOEd9yPyZK2q0ArDh1S59FdVFSYWZsCwJm65DZ/ilzKQf7bvLpaobRFUyB10so&#13;\n+40zaeAoo76VjIV6YBWqYQIDAQABo4IC+DCCAvQwHwYDVR0jBBgwFoAUKV5L1UZMu/4Wp2PBHcQm&#13;\n8t3Y8wUwDgYDVR0PAQH/BAQDAgXgMGkGA1UdIARiMGAwXgYGYEwBAgEzMFQwUgYIKwYBBQUHAgEW&#13;\nRmh0dHA6Ly9yZXBvc2l0b3Jpby5hY3NhZmV3ZWIuY29tLmJyL2FjLXNhZmV3ZWJyZmIvZHBjLWFj&#13;\nc2FmZXdlYnJmYi5wZGYwga4GA1UdHwSBpjCBozBPoE2gS4ZJaHR0cDovL3JlcG9zaXRvcmlvLmFj&#13;\nc2FmZXdlYi5jb20uYnIvYWMtc2FmZXdlYnJmYi9sY3ItYWMtc2FmZXdlYnJmYnY1LmNybDBQoE6g&#13;\nTIZKaHR0cDovL3JlcG9zaXRvcmlvMi5hY3NhZmV3ZWIuY29tLmJyL2FjLXNhZmV3ZWJyZmIvbGNy&#13;\nLWFjLXNhZmV3ZWJyZmJ2NS5jcmwwgbcGCCsGAQUFBwEBBIGqMIGnMFEGCCsGAQUFBzAChkVodHRw&#13;\nOi8vcmVwb3NpdG9yaW8uYWNzYWZld2ViLmNvbS5ici9hYy1zYWZld2VicmZiL2FjLXNhZmV3ZWJy&#13;\nZmJ2NS5wN2IwUgYIKwYBBQUHMAKGRmh0dHA6Ly9yZXBvc2l0b3JpbzIuYWNzYWZld2ViLmNvbS5i&#13;\nci9hYy1zYWZld2VicmZiL2FjLXNhZmV3ZWJyZmJ2NS5wN2IwgcAGA1UdEQSBuDCBtYEXRVVSSVBF&#13;\nREVTREFSS0BHTUFJTC5DT02gLAYFYEwBAwKgIxMhRVVSSVBFREVTIEJBVElTVEEgREUgUEFJVkEg&#13;\nSlVOSU9SoBkGBWBMAQMDoBATDjY1NTI3MjY0MDAwMTQzoDgGBWBMAQMEoC8TLTI5MDMxOTgxODY5&#13;\nNDY3NDkxMjAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMKAXBgVgTAEDB6AOEwwwMDAwMDAwMDAw&#13;\nMDAwHQYDVR0lBBYwFAYIKwYBBQUHAwIGCCsGAQUFBwMEMAkGA1UdEwQCMAAwDQYJKoZIhvcNAQEL&#13;\nBQADggIBAGng2AH4hNH6dMZsiDBtha+boQMU9uwqUzBh0Gp5ocPWlOdtz6QENZmON7kR9n+Cga1W&#13;\naxHTsLD5lGmwdvZq3E6u0dOxaajXSOr/qGfTtqXs6wOaiuZqOl8lIx+T8wmHG4/KUtxlEA0kO1IM&#13;\nRx9JnmaQVd6SWdgr90i3nKMpgw/uGPJMTxlYU1+WMSr9kjeoIMdWOi1QbD70XekXqVBW9W+xggVL&#13;\nAzx2xj476JYUJp5ffz6Y2F0cZBEg0RM1L98VWuouZo0TcmRf9KDisFTTpipe7Kv3CuznLfr+LH4o&#13;\n8lKNaA6JgZayTo5UQp/NtZad4AqtS8Q0wFAreG6y8aKO/cKqQlNV52ArXsNFBSMkz/+6g9L2IEN2&#13;\nDjjSusuTCywq/VOYKKNceDHBbv3CL07qWETK8PQMa7rfSwiEzIPeu4BC81tjFQ2XLCH162IIKBmI&#13;\n1uzGuke1KhUQRM+gwD7H/kR7Ys4p8QnHBt7i9G5Tqg9YoRUeIkKMWy6+sXCq68FLZ4iKZPqw5bKP&#13;\nVLQ2cZ1UC8oe/nJS9MjMwZ3CkGevFLv3lfUFqUlji8lJ7s88JXjsTu+yxD+lUn8JyG5bJRPoYg8N&#13;\nZ+x1iS4RJ7ZfOQXCFvNsz5lYGdDdfNPUIo5v2abO2Z2i51Bu6Y522tkFV8Zg1VLBFOoAw3W+32Pn&#13;\nb9k4+X1j</X509Certificate></X509Data></KeyInfo></Signature></PedidoEnvioRPS>"
+}
+
+### entidadeId=6  arquivo=retorno-cancelamento-6.json
+{
+  "alertas" : [ ],
+  "sucesso" : true
+}
+

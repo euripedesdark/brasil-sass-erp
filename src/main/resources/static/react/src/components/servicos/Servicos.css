@@ -1,0 +1,265 @@
+/* Estilos do modulo de Servicos */
+
+.servicos-enterprise-container {
+    padding: 0.5rem;
+}
+
+.servicos-main-card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.servicos-main-card .p-card-content {
+    padding: 0;
+}
+
+.servicos-main-card .p-card-body {
+    padding: 1.5rem;
+}
+
+.servicos-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.servicos-info p {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.servicos-acoes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.servicos-acoes .p-button {
+    min-width: 2rem;
+}
+
+/* Dialog styles */
+.servicos-enterprise-container .p-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.servicos-enterprise-container .p-dialog-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+}
+
+.servicos-enterprise-container .p-dialog-header-icons {
+    color: white;
+}
+
+.servicos-enterprise-container .p-dialog-header-icons .p-dialog-header-icon {
+    color: white;
+}
+
+.servicos-enterprise-container .p-dialog-content {
+    padding: 1.5rem;
+}
+
+.servicos-enterprise-container .p-dialog-footer {
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+}
+
+/* Form fields */
+.servicos-enterprise-container .field label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.servicos-enterprise-container .field .p-inputtext,
+.servicos-enterprise-container .field .p-inputnumber,
+.servicos-enterprise-container .field .p-dropdown,
+.servicos-enterprise-container .field .p-calendar,
+.servicos-enterprise-container .field .p-inputtextarea {
+    width: 100%;
+}
+
+.servicos-enterprise-container .field .p-dropdown {
+    min-width: 12rem;
+}
+
+/* DataTable customization */
+.servicos-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: rgba(15,34,60,.44);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+.servicos-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.servicos-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: rgba(15,34,60,.44);
+}
+
+.servicos-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(37,65,96,.56);
+}
+
+/* Status tags */
+.servicos-enterprise-container .p-tag {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+.servicos-enterprise-container .p-tag.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.servicos-enterprise-container .p-tag.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Paginator */
+.servicos-enterprise-container .p-paginator {
+    background: rgba(15,34,60,.44);
+    border-radius: 0 0 12px 12px;
+    padding: 0.75rem;
+}
+
+/* Resumo section */
+.servicos-resumo {
+    background: rgba(15,34,60,.44);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.servicos-resumo div {
+    font-size: 0.9rem;
+}
+
+.servicos-resumo .font-bold {
+    color: #495057;
+}
+
+.servicos-resumo span {
+    color: #6c757d;
+}
+
+/* Checkbox styling */
+.servicos-enterprise-container .p-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.servicos-enterprise-container .p-checkbox-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+}
+
+.servicos-enterprise-container .p-checkbox-label strong {
+    color: #2c3e50;
+}
+
+/* Loading state */
+.servicos-enterprise-container .p-datatable .p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.servicos-enterprise-container .p-progress-spinner {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Toast customization */
+.servicos-enterprise-container .p-toast {
+    min-width: 280px;
+}
+
+.servicos-enterprise-container .p-toast-message {
+    font-size: 0.9rem;
+}
+
+/* Button styling */
+.servicos-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.servicos-enterprise-container .p-button-success:hover {
+    background: linear-gradient(135deg, #148a9c 0%, #117384 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
+}
+
+.servicos-enterprise-container .p-button-outlined.p-button-success {
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.servicos-enterprise-container .p-button-outlined.p-button-success:hover {
+    background: #17a2b8;
+    color: white;
+}
+
+.servicos-enterprise-container .p-button-danger {
+    background: #dc3545;
+    border: none;
+}
+
+.servicos-enterprise-container .p-button-danger:hover {
+    background: #c82333;
+}
+
+.servicos-enterprise-container .p-button-info {
+    background: #0dcaf0;
+    border: none;
+}
+
+.servicos-enterprise-container .p-button-info:hover {
+    background: #0b9cae;
+}
+
+.servicos-enterprise-container .p-button-primary {
+    background: #007bff;
+    border: none;
+}
+
+.servicos-enterprise-container .p-button-primary:hover {
+    background: #0069d9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .servicos-enterprise-container .p-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+    
+    .servicos-enterprise-container .p-datatable {
+        font-size: 0.8rem;
+    }
+    
+    .servicos-enterprise-container .p-datatable .p-datatable-thead > tr > th,
+    .servicos-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+        padding: 0.5rem;
+    }
+    
+    .servicos-enterprise-container .servicos-resumo {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}

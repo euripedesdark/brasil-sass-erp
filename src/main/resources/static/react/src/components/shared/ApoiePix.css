@@ -1,0 +1,86 @@
+/* Blocos de apoio: PIX, rodape do sistema e o dialog da tela de login.
+   Compartilhado por Layout, Login e Sobre. */
+
+/* Bloco de PIX, compartilhado por Login, Layout e Sobre */
+
+.pix-apoie {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+}
+
+/* O QRCode e um <canvas> quadrado. Sem travar a largura, ele estica ate
+   preencher o container e o codigo sai deforma, o que o leitor de PIX nao
+   le. inline-block + canvas{display:block} mantem o quadrado e evitam a
+   linha de base sob o canvas. */
+.pix-qrcode {
+    display: inline-block;
+    background: #fff;
+    padding: 0.5rem;
+    border-radius: 8px;
+    line-height: 0;
+    border: 1px solid var(--surface-border, #e2e8f0);
+}
+
+.pix-qrcode canvas {
+    display: block;
+}
+
+.pix-linha {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pix-chave {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    background: var(--surface-ground, #f1f5f9);
+    border: 1px solid var(--surface-border, #e2e8f0);
+    user-select: all;
+    word-break: break-all;
+}
+
+.pix-ok {
+    color: #16a34a;
+}
+
+/* Rodape do sistema */
+
+.system-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--surface-border, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--text-color-secondary, #64748b);
+}
+
+.system-footer .system-footer-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: var(--text-color, #1e293b);
+}
+
+.system-footer .system-footer-pix {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .system-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

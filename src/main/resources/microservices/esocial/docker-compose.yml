@@ -1,0 +1,42 @@
+version: "3.5"
+services:
+  frontend:
+    image: tstlabs/esocial-jt-frontend:latest
+    container_name: esocial-jt-frontend
+    ports:
+      - "80:8080"
+    depends_on:
+      - app
+    networks:
+      - esocial-net
+
+  app:
+    image: tstlabs/esocial-jt-service:latest
+    container_name: esocial-jt-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - esocial-net
+    volumes:
+      - "./config:/config"
+    environment:
+      - spring.datasource.url=jdbc:postgresql://esocial-db/postgres
+
+  db:
+    image: postgres:10
+    container_name: esocial-db
+    volumes:
+      - "/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    networks:
+      - esocial-net
+    environment:
+      - POSTGRES_PASSWORD=esocial
+
+networks:
+  esocial-net:
+    name: esocial-net
+    driver: bridge

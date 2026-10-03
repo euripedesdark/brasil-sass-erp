@@ -1,0 +1,59 @@
+import React, { useState } from 'react';
+import { Card } from 'primereact/card';
+import { Button } from 'primereact/button';
+import { Tag } from 'primereact/tag';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { apiFetch } from '../../services/ApiConfig';
+import BuscaFiscal from './BuscaFiscal';
+
+const items=[
+ // NFS-e em primeiro: e o unico modulo fiscal que EMITE documento contra a
+ // prefeitura, e a tela tinha o codigo pronto sem estar neste menu nem no
+ // router. A rota agora existe em App.jsx.
+ ['fiscal.nfse','fiscal.nfseDesc','pi pi-send','/fiscal/nfse'],
+ ['menu.taxEntries','fiscal.entriesDesc','pi pi-download','/fiscal/entradas'],
+ ['menu.ncm','fiscal.ncmDesc','pi pi-list','/fiscal/ncm'],
+ ['menu.cfop','fiscal.cfopDesc','pi pi-sitemap','/fiscal/cfop'],
+ ['menu.cest','fiscal.cestDesc','pi pi-tags','/fiscal/cest'],
+ ['menu.issqn','fiscal.issqnDesc','pi pi-briefcase','/fiscal/issqn'],
+ ['menu.taxes','fiscal.taxesDesc','pi pi-percentage','/fiscal/impostos'],
+ ['menu.digitalCertificate','fiscal.certificateDesc','pi pi-key','/fiscal/certificados'],
+ ['menu.sped','fiscal.spedDesc','pi pi-file-export','/fiscal/sped'],
+ ['menu.sefaz','fiscal.sefazDesc','pi pi-cloud','/fiscal/sefaz']
+];
+export default function FiscalHub(){
+ const navigate=useNavigate();
+ const { t } = useTranslation();
+ const [status, setStatus] = useState({ cte: null, mdfe: null });
+ const [loading, setLoading] = useState(false);
+ const consultarStatus = async () => {
+  setLoading(true);
+  try {
+   const [cte, mdfe] = await Promise.all([
+	apiFetch('/api/fiscal/cte/status').then((r) => r.json()),
+	apiFetch('/api/fiscal/mdfe/status').then((r) => r.json())
+   ]);
+   setStatus({ cte, mdfe });
+  } finally {
+   setLoading(false);
+  }
+ };
+ const statusLabel = (value) => value?.status || value?.situacao || (value ? t('common.available') : t('common.notChecked'));
+ return <div className="p-3">
+   <h2>{t('nav.tax')}</h2>
+   <p className="text-color-secondary">{t('fiscal.subtitle')}</p>
+  <Card className="mb-3">
+   <div className="flex justify-content-between align-items-center gap-3 flex-wrap">
+   <div><strong>{t('fiscal.services')}</strong><div className="text-color-secondary mt-1">{t('fiscal.servicesDesc')}</div></div>
+   <Button label={t('fiscal.checkStatus')} icon="pi pi-refresh" outlined onClick={consultarStatus} loading={loading} />
+   </div>
+   <div className="grid mt-2 mb-0">
+	<div className="col-12 md:col-6"><span className="mr-2">CT-e</span><Tag value={statusLabel(status.cte)} severity={status.cte ? 'success' : 'secondary'} /></div>
+	<div className="col-12 md:col-6"><span className="mr-2">MDF-e</span><Tag value={statusLabel(status.mdfe)} severity={status.mdfe ? 'success' : 'secondary'} /></div>
+   </div>
+  </Card>
+   <BuscaFiscal />
+   <div className="grid">{items.map(([titleKey,descKey,i,p])=><div className="col-12 md:col-6 xl:col-4" key={p}><Card className="h-full"><i className={i} style={{fontSize:'1.8rem'}}/><h3>{t(titleKey)}</h3><p className="text-color-secondary">{t(descKey)}</p><Button label={t('common.open')} icon="pi pi-arrow-right" outlined onClick={()=>navigate(p)}/></Card></div>)}</div>
+ </div>
+}

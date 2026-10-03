@@ -1,0 +1,214 @@
+/* Transportadora.css - Estilos para o componente de Transportadoras */
+
+.transportadora-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.transportadora-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.transportadora-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.transportadora-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Acoes da tabela */
+.transportadora-acoes {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.transportadora-acoes .p-button {
+    transition: all 0.2s ease;
+}
+
+.transportadora-acoes .p-button:hover {
+    transform: scale(1.1);
+    opacity: 0.9;
+}
+
+/* Dialog */
+.transportadora-dialog .p-dialog {
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.transportadora-dialog .p-dialog-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.transportadora-dialog .p-dialog-content {
+    padding: 1.5rem;
+    background: rgba(15,34,60,.44);
+}
+
+/* Campos do formulario */
+.transportadora-dialog .field {
+    margin-bottom: 1rem;
+}
+
+.transportadora-dialog label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.transportadora-dialog .p-inputtext,
+.transportadora-dialog .p-dropdown,
+.transportadora-dialog .p-inputmask {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease;
+}
+
+.transportadora-dialog .p-inputtext:focus,
+.transportadora-dialog .p-dropdown:focus,
+.transportadora-dialog .p-inputmask:focus {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+}
+
+/* Resumo */
+.transportadora-resumo {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(145deg, rgba(15,34,60,.62), rgba(8,22,42,.54));
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.transportadora-resumo .font-bold {
+    color: #495057;
+    font-weight: 600;
+}
+
+.transportadora-resumo span:not(.font-bold) {
+    color: #6c757d;
+}
+
+/* Footer do dialog */
+.transportadora-dialog .p-dialog-footer {
+    padding: 1rem 1.5rem;
+    background: rgba(15,34,60,.44);
+    border-radius: 0 0 8px 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.transportadora-dialog .p-button-success {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border: none;
+}
+
+.transportadora-dialog .p-button-success:hover {
+    background: linear-gradient(135deg, #ee5a6f 0%, #d84a5f 100%);
+}
+
+/* DataTable */
+.transportadora-enterprise-container .p-datatable {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.transportadora-enterprise-container .p-datatable .p-datatable-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    padding: 1rem;
+}
+
+.transportadora-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.transportadora-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.transportadora-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(255, 107, 107, 0.05);
+}
+
+/* Botao Nova Transportadora */
+.transportadora-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.transportadora-enterprise-container .p-button-success:hover {
+    background: linear-gradient(135deg, #ee5a6f 0%, #d84a5f 100%);
+    transform: translateY(-1px);
+}
+
+/* Animacao */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .transportadora-enterprise-container {
+        padding: 0.5rem;
+    }
+    
+    .transportadora-main-card {
+        padding: 0.5rem;
+    }
+    
+    .transportadora-header-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .transportadora-info {
+        font-size: 0.8rem;
+    }
+    
+    .transportadora-dialog {
+        width: 95vw !important;
+    }
+    
+    .transportadora-resumo {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Toast */
+.transportadora-enterprise-container .p-toast {
+    z-index: 9999;
+}
+
+.transportadora-enterprise-container .p-toast .p-toast-message {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

@@ -1,0 +1,29 @@
+{
+  "tipoOcorrencia": "TABELA_ESTABELECIMENTO",
+  "referencia": "00509968000148",
+  "operacao": "INCLUSAO",
+  "dataOcorrencia": 1522181304444,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "infoEstab": {
+      "ideEstab": {
+        "tpInsc": 1,
+        "nrInsc": "00509968000148",
+        "iniValid": "2018-01",
+        "fimValid": null
+      },
+      "dadosEstab": {
+        "cnaePrep": 8411600,
+        "infoCaepf": null,
+        "infoObra": null,
+        "infoTrab": {
+          "infoApr": null,
+          "infoPCD": null
+        }
+      }
+    }
+  }
+}

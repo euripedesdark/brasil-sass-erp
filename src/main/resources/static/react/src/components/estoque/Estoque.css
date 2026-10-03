@@ -1,0 +1,261 @@
+/* Estilos do modulo de Estoque */
+
+.estoque-enterprise-container {
+    padding: 0.5rem;
+}
+
+.estoque-main-card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.estoque-main-card .p-card-content {
+    padding: 0;
+}
+
+.estoque-main-card .p-card-body {
+    padding: 1.5rem;
+}
+
+.estoque-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.estoque-info p {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.estoque-acoes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.estoque-acoes .p-button {
+    min-width: 2rem;
+}
+
+/* Dialog styles */
+.estoque-enterprise-container .p-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.estoque-enterprise-container .p-dialog-header {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+}
+
+.estoque-enterprise-container .p-dialog-header-icons {
+    color: white;
+}
+
+.estoque-enterprise-container .p-dialog-header-icons .p-dialog-header-icon {
+    color: white;
+}
+
+.estoque-enterprise-container .p-dialog-content {
+    padding: 1.5rem;
+}
+
+.estoque-enterprise-container .p-dialog-footer {
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+}
+
+/* Form fields */
+.estoque-enterprise-container .field label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.estoque-enterprise-container .field .p-inputtext,
+.estoque-enterprise-container .field .p-inputnumber,
+.estoque-enterprise-container .field .p-dropdown,
+.estoque-enterprise-container .field .p-calendar {
+    width: 100%;
+}
+
+.estoque-enterprise-container .field .p-dropdown {
+    min-width: 12rem;
+}
+
+/* DataTable customization */
+.estoque-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: rgba(15,34,60,.44);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+.estoque-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.estoque-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: rgba(15,34,60,.44);
+}
+
+.estoque-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(37,65,96,.56);
+}
+
+/* Status tags */
+.estoque-enterprise-container .p-tag {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+.estoque-enterprise-container .p-tag.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.estoque-enterprise-container .p-tag.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.estoque-enterprise-container .p-tag.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.estoque-enterprise-container .p-tag.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Paginator */
+.estoque-enterprise-container .p-paginator {
+    background: rgba(15,34,60,.44);
+    border-radius: 0 0 12px 12px;
+    padding: 0.75rem;
+}
+
+/* Resumo section */
+.estoque-resumo {
+    background: rgba(15,34,60,.44);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.estoque-resumo div {
+    font-size: 0.9rem;
+}
+
+.estoque-resumo .font-bold {
+    color: #495057;
+}
+
+.estoque-resumo span {
+    color: #6c757d;
+}
+
+/* Input group */
+.estoque-enterprise-container .p-inputgroup {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.estoque-enterprise-container .p-inputgroup > * {
+    flex: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .estoque-enterprise-container .p-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+    
+    .estoque-enterprise-container .p-datatable {
+        font-size: 0.8rem;
+    }
+    
+    .estoque-enterprise-container .p-datatable .p-datatable-thead > tr > th,
+    .estoque-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+        padding: 0.5rem;
+    }
+    
+    .estoque-enterprise-container .estoque-resumo {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .estoque-enterprise-container .p-inputgroup {
+        flex-direction: column;
+    }
+}
+
+/* Loading state */
+.estoque-enterprise-container .p-datatable .p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.estoque-enterprise-container .p-progress-spinner {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Toast customization */
+.estoque-enterprise-container .p-toast {
+    min-width: 280px;
+}
+
+.estoque-enterprise-container .p-toast-message {
+    font-size: 0.9rem;
+}
+
+/* Button styling */
+.estoque-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.estoque-enterprise-container .p-button-success:hover {
+    background: linear-gradient(135deg, #3e8e41 0%, #388e3c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.estoque-enterprise-container .p-button-outlined.p-button-success {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.estoque-enterprise-container .p-button-outlined.p-button-success:hover {
+    background: #4caf50;
+    color: white;
+}
+
+.estoque-enterprise-container .p-button-danger {
+    background: #dc3545;
+    border: none;
+}
+
+.estoque-enterprise-container .p-button-danger:hover {
+    background: #c82333;
+}
+
+.estoque-enterprise-container .p-button-info {
+    background: #17a2b8;
+    border: none;
+}
+
+.estoque-enterprise-container .p-button-info:hover {
+    background: #138496;
+}

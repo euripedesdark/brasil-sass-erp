@@ -1,0 +1,616 @@
+package com.fincatto.documentofiscal.validadores;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class DFStringValidadorTest {
+
+    @Test
+    public void deveValidarDataPadraoBrasileiro() { DFStringValidador.mmaaaa("12/2014"); }
+
+    @Test
+    public void deveLancarExcecaoCasoEstejaPadraoAmericano() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.mmaaaa("2014-12"));
+    }
+
+    @Test
+    public void deveLancarExcecaoCasoEstejaSemCaracterSeparador() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.mmaaaa("201412"));
+    }
+
+    @Test
+    public void deveValidarDataPadraoAnoMes() { DFStringValidador.aamm("1412"); }
+
+    @Test
+    public void deveLancarExcecaoDataPadraoAnoMesComBarra() { Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.aamm("14/12")); }
+
+    @Test
+    public void deveValidarTamanhoDeStringCasoEstejaDentroIntervalo60() {
+        DFStringValidador.tamanho60("oO3xPZlrBVtl4YcGaFLDmKouamLIoyIptA1fZ8CBfZWjzsjMW7ozuF1bkQrh", "");
+        DFStringValidador.tamanho60("o", "");
+    }
+
+    @Test
+    public void deveValidarTelefone() {
+        DFStringValidador.telefone("30303030");
+        DFStringValidador.telefone("30303030", "Numero de telefone");
+    }
+
+    @Test
+    public void deveLancarExcecaoTelefone() { Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.telefone("(48)30303020")); }
+
+    @Test
+    public void deveLancarExcecaoTelefoneComInfo() { Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.telefone("(48)30303020", "Numero telefone")); }
+
+    @Test
+    public void deveValidarEmail() {
+        DFStringValidador.email("nfe@teste.com.br");
+        DFStringValidador.email("nfe@teste.com.br", "Email");
+    }
+
+    @Test
+    public void deveLancarExcecaoEmail() { Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.email("nfeteste.com.br")); }
+
+    @Test
+    public void deveLancarExcecaoEmailInfo() { Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.email("nfeteste.com.br", "Email")); }
+
+
+
+    @Test
+    public void deveLancarExcecaoCasoEstejaForaDoIntervalo60() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.tamanho60("oO3xPZlrBVtl4YcGaFLDmKouamLIoyIptA1fZ8CBfZWjzsjMW7ozuF1bkQrh1", "");
+                Assertions.fail("Validacao falhou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.tamanho60("", "");
+            }
+            Assertions.fail("Validacao falhou");
+        });
+    }
+
+    @Test
+    public void deveValidarTamanho2ou3N() {
+        DFStringValidador.tamanho2ou3N("01", "");
+        DFStringValidador.tamanho2ou3N("999", "");
+    }
+
+    @Test
+    public void naoDevePermitirNaoNumerosParaTamanho2ou3N() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.tamanho2ou3N("0N", ""));
+    }
+
+    @Test
+    public void naoDevePermitirExtrapolarTamanho2ou3N() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.tamanho2ou3N("9", "");
+                Assertions.fail();
+            } catch (final IllegalStateException e) {
+                DFStringValidador.tamanho2ou3N("1000", "");
+                Assertions.fail();
+            }
+        });
+    }
+
+    @Test
+    public void deveValidarTamanhoDeString() {
+        DFStringValidador.tamanho3("abc", "");
+        DFStringValidador.tamanho4("abcd", "");
+        DFStringValidador.tamanho6("abcdef", "");
+        DFStringValidador.tamanho9("abcdefghi", "");
+        DFStringValidador.tamanho10("abcdefghij", "");
+        DFStringValidador.tamanho12("abcdefghijkl", "");
+        DFStringValidador.tamanho15("acrqwlfidp2ofmq", "");
+        DFStringValidador.tamanho21("acrqwlfidp2ofmvyw9ql", "");
+        DFStringValidador.tamanho22("o", "");
+        DFStringValidador.tamanho22("AZgCErXz4DlSwRmsJaeyUV", "");
+        DFStringValidador.tamanho30("hodawubchdvbauhfaiuehoaueaieuo", "");
+        DFStringValidador.tamanho40("1234567890123456789012345678901234567890", "");
+        DFStringValidador.tamanho100("aleiufldvblafeufieurbfhaleivbieurhgfeaiufg", "");
+        DFStringValidador.tamanho120("aleiufldvblafeufieurbfhaleivbieurhgfeaiufgaleiufldvblafeufieurbfhaaiufg", "");
+        DFStringValidador.tamanho160("aleiufldvblafeufieurbfhaleivbieurhgfeaiufgaleiufldvblafeufieurbfhaleivbieurhgfeaiufgsferfergvergegrergverfgerg", "");
+        DFStringValidador.tamanho256("aleiufldvblafeufieurbfhaleivbieurhgfeaiufgaleiufldvblafeufieurbfhaleivbieurhgfeaiufg", "");
+        DFStringValidador.tamanho500("aleiufldvblafeufieurbfhaleivbieurhgfeaiufieurbfhaleivbieurhgfeaiufgsaleiufldvblafeufieurbfhaleivbieurhgfeaiufgaleiufldvblafeufieurbfhaleivbieurhgfeaiufg", "");
+        DFStringValidador.tamanho2000("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho5000("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s512asdliuhvlsejnvbseugh", "");
+        DFStringValidador.tamanho2N("12", "");
+        DFStringValidador.tamanho3N("123", "");
+        DFStringValidador.tamanho4N("1234", "");
+        DFStringValidador.tamanho6N("123456", "");
+        DFStringValidador.tamanho9N("123456789", "");
+        DFStringValidador.tamanho10N("1234567890", "");
+        DFStringValidador.tamanho14N("12345678901234", "");
+        DFStringValidador.tamanho15N("123456789012345", "");
+        DFStringValidador.tamanho20N("12345678901234567890", "");
+        DFStringValidador.tamanho2a4("123", "");
+        DFStringValidador.tamanho2a9N("123456789", "");
+        DFStringValidador.tamanho2ate60("a1s5d6q7r8e9a5f4q8s5a5aa1s5d6q7r8e9a5f45d6q7r8e9a5f4q8s5a", "");
+        DFStringValidador.tamanho2ate40("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho2a95("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6qa5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho2ate255("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho5a20("asfeidoflgkvidjfhe", "");
+        DFStringValidador.tamanho5a14("fdusofiehnfs", "");
+        DFStringValidador.tamanho5a60("alskdiwoeirjfurjguthfjdskdoelfirkdjshwue", "");
+        DFStringValidador.tamanho4a60("alskdiwoeirjfurjguthfjdskdoelfirkdjshwue", "");
+        DFStringValidador.tamanho8a9("alskdiwoe", "");
+        DFStringValidador.tamanho8a9N("123456789", "");
+        DFStringValidador.tamanho15a256("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho15a255("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho15a1000("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.tamanho100a600("a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5a1s5d6q7r8e9a5f4q8s5", "");
+        DFStringValidador.validaIntervalo("abc", 1, 3, "");
+        DFStringValidador.validaIntervalo("123", 1, 3, "", true);
+        DFStringValidador.validador("123", "", 5);
+        DFStringValidador.validador("abcde", "", 5, true, false);
+        DFStringValidador.validador("abc", "", 5, false, false);
+        DFStringValidador.validador("12345", "", 5, true);
+        DFStringValidador.validador("123", "", 5, false);
+    }
+
+    @Test
+    public void deveLancarExcecaoCasoEstejaForaDoIntervalo22() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.tamanho22("AZgCErXz4DlSwRmsJaeyUV1", "");
+                Assertions.fail("Validacao falhou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.tamanho22("", "");
+            }
+            Assertions.fail("Validacao falhou");
+        });
+    }
+
+    @Test
+    public void deveValidarTamanhoDeStringCasoEstejaDentroDoIntervalo() {
+        DFStringValidador.tamanho20("AZgCErXz4DlSwRmsJaey", "");
+        DFStringValidador.tamanho20("o", "");
+    }
+
+    @Test
+    public void deveLancarExcecaoCasoEstejaForaDoIntervalo20() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.tamanho20("AZgCErXz4DlSwRmsJaey1", "");
+                Assertions.fail("Validacao falhou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.tamanho20("", "");
+            }
+            Assertions.fail("Validacao falhou");
+        });
+    }
+
+    @Test
+    public void deveValidarPlacaDeVeiculo() {
+        DFStringValidador.placaDeVeiculo("MKZ8851");
+        DFStringValidador.placaDeVeiculo("MKZT885");
+        DFStringValidador.placaDeVeiculo("MKZ885");
+        DFStringValidador.placaDeVeiculo("MK8851");
+        DFStringValidador.placaDeVeiculo("MKZ8851", "");
+        DFStringValidador.placaDeVeiculo("MK8851", "");
+    }
+
+    @Test
+    public void naoDeveValidarPlacaDeVeiculoCasoNaoPossua6ou7Caracteres() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.placaDeVeiculo("MK885");
+                Assertions.fail("Validacao nao funcionou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.placaDeVeiculo("MKZT8851");
+            }
+            Assertions.fail("Validacao nao funcionou");
+        });
+    }
+
+    @Test
+    public void deveValidarCNPJ() {
+        DFStringValidador.cnpj("ZLVERP05000160");
+        DFStringValidador.cnpj("01234567000100");
+        DFStringValidador.cnpj("ABCDEFGHIJKL80", "");
+        DFStringValidador.cnpj("01234567000100", "");
+    }
+
+    @Test
+    public void deveValidarCNPJAlfanumerico() {
+        // CNPJ com letras maiúsculas (novo formato alfanumérico)
+        DFStringValidador.cnpj("12ABC34501DE35");
+        DFStringValidador.cnpj("12ABC34501DE35", "CNPJ Emitente");
+        // CNPJ com letras minúsculas (deve ser aceito pelo formato — normalização de case fica a cargo do chamador)
+        DFStringValidador.cnpj("12abc34501de35");
+        DFStringValidador.cnpj("12abc34501de35", "CNPJ Emitente");
+    }
+
+    @Test
+    public void naoDeveValidarCNPJComUnderscoreNoPrimeiroBlocoDeCaracteres() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.cnpj("12AB_34501DE35"));
+    }
+
+    @Test
+    public void naoDeveValidarPlacaDeVeiculoCasoNaoPossua6ou7CaracteresInfo() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.placaDeVeiculo("MKZT8851", ""));
+    }
+
+    @Test
+    public void naoDeveValidarCPFCasoNaoPossua11Caracteres() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.cpf("1234567890");
+                Assertions.fail("Validacao nao funcionou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.cpf("123456789012");
+            }
+            Assertions.fail("Validacao nao funcionou");
+        });
+    }
+
+    @Test
+    public void naoDeveValidarCPFCasoNaoPossua11CaracteresInfo() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.cpf("1234567890", "");
+                Assertions.fail("Validacao nao funcionou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.cpf("123456789012", "");
+            }
+            Assertions.fail("Validacao nao funcionou");
+        });
+    }
+
+    @Test
+    public void naoDeveValidarCNPJCasoNaoPossua14Caracteres() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.cnpj("1234567890123");
+                Assertions.fail("Validacao nao funcionou");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.cnpj("123456789012345");
+            }
+            Assertions.fail("Validacao nao funcionou");
+        });
+    }
+
+    @Test
+    public void naoDeveValidarCNPJCasoNaoPossua14CaracteresInfo() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.cnpj("1234567890123", ""));
+    }
+
+    @Test
+    public void naoDeveValidarCNPJCasoNaoEstejaNoPadrao() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            DFStringValidador.cnpj("ZLVERP0500016a");
+            DFStringValidador.cnpj("aLVERP0500016a", "");
+        });
+    }
+
+    @Test
+    public void deveValidarCnpjNumerico() {
+        // Testa CNPJs numéricos válidos
+        DFStringValidador.cnpj("00000000000192");
+        DFStringValidador.cnpj("03918609000132");
+        DFStringValidador.cnpj("00000000000191");
+    }
+
+    @Test
+    public void deveValidarCnpjNumericoComInfo() {
+        // Testa CNPJs numéricos válidos com parâmetro info
+        DFStringValidador.cnpj("00000000000192", "Emitente");
+        DFStringValidador.cnpj("03918609000132", "Destinatario");
+    }
+
+    @Test
+    public void deveValidarCnpjAlfanumericoFormatoCTe() {
+        // Testa CNPJs alfanuméricos do formato CTe [A-Z0-9]{12}[0-9]{2}
+        DFStringValidador.cnpj("0JRXDN7G000175");
+        DFStringValidador.cnpj("0X0J92JY000196");
+        DFStringValidador.cnpj("ABCD1234567890");
+        DFStringValidador.cnpj("123456ABCDEF01");
+    }
+
+    @Test
+    public void deveValidarCnpjAlfanumericoFormatoCTeComInfo() {
+        // Testa CNPJs alfanuméricos com parâmetro info
+        DFStringValidador.cnpj("0JRXDN7G000175", "Emitente CTe");
+        DFStringValidador.cnpj("0X0J92JY000196", "Destinatario CTe");
+    }
+
+    @Test
+    public void deveValidarCnpjAlfanumericoMinusculo() {
+        // Testa CNPJs alfanuméricos com letras minúsculas (devem ser aceitas)
+        DFStringValidador.cnpj("0jrxdn7g000175");
+        DFStringValidador.cnpj("0x0j92jy000196");
+        DFStringValidador.cnpj("abcd1234567890");
+    }
+
+    @Test
+    public void naoDeveValidarCnpjComCaracteresEspeciais() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.cnpj("0JRXDN7G0001@5"));
+    }
+
+    @Test
+    public void naoDeveValidarCnpjComEspacos() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.cnpj("0JRXDN7G 00175"));
+    }
+
+    @Test
+    public void naoDeveValidarCnpjComLetraNoDigitoVerificador() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            // Os últimos 2 caracteres devem ser numéricos
+            DFStringValidador.cnpj("0JRXDN7G0001AB");
+        });
+    }
+
+    @Test
+    public void naoDeveValidarCnpjComTamanhoMenor() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.cnpj("0JRXDN7G00017"));
+    }
+
+    @Test
+    public void naoDeveValidarCnpjComTamanhoMaior() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.cnpj("0JRXDN7G0001755"));
+    }
+
+    @Test
+    public void deveValidarInscricaoEstadualCasoEstejaNoPadrao() {
+        DFStringValidador.inscricaoEstadual("");
+        DFStringValidador.inscricaoEstadual("ISENTO");
+        DFStringValidador.inscricaoEstadual("12");
+        DFStringValidador.inscricaoEstadual("12345678901234");
+        DFStringValidador.inscricaoEstadualSemIsencao("12345678901234");
+        DFStringValidador.inscricaoEstadualSemIsencao("12345678901234", "");
+    }
+
+    @Test
+    public void naoDeveValidarInscricaoEstadualCasoNaoEstejaNoTamanho() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.inscricaoEstadual("1");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.inscricaoEstadual("123456789012345");
+            }
+        });
+    }
+
+    @Test
+    public void naoDeveValidarInscricaoEstadualSemIsencaoCasoNaoEstejaNoTamanho() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.inscricaoEstadualSemIsencao("1");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.inscricaoEstadualSemIsencao("123456789012345");
+            }
+        });
+    }
+
+    @Test
+    public void naoDeveValidarInscricaoEstadualSemIsencaoInfoCasoNaoEstejaNoTamanho() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.inscricaoEstadualSemIsencao("1", "");
+            } catch (final IllegalStateException e) {
+                DFStringValidador.inscricaoEstadualSemIsencao("123456789012345", "");
+            }
+        });
+    }
+
+    @Test
+    public void naoDeveValidarInscricaoEstadualCasoEstejaForaDoPadrao() {
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.inscricaoEstadual("ISENT0"));
+    }
+
+    @Test
+    public void deveValidarCodigoDeBarrasValido() {
+        DFStringValidador.codigoDeBarras("35647210039861");
+        DFStringValidador.codigoDeBarras("356472100398");
+        DFStringValidador.codigoDeBarras("35647210");
+        DFStringValidador.codigoDeBarras("");
+    }
+
+    @Test
+    public void naoDevePermitirCodigoDeBarrasComValorInvalido() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.codigoDeBarras("356472100398610");
+            } catch (final IllegalStateException e) {
+                try {
+                    DFStringValidador.codigoDeBarras("35647210039");
+                } catch (final IllegalStateException e2) {
+                    try {
+                        DFStringValidador.codigoDeBarras("3564721");
+                    } catch (final IllegalStateException e3) {
+                        DFStringValidador.codigoDeBarras("3");
+                    }
+                }
+            }
+        });
+    }
+
+    @Test
+    public void devePermitirNCMFormatoValido() {
+        DFStringValidador.ncm("00");
+        DFStringValidador.ncm("99");
+        DFStringValidador.ncm("00000000");
+        DFStringValidador.ncm("99999999");
+    }
+
+    @Test
+    public void naoDevePermitirNCMForaDoLimite2Posicoes() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.ncm("9");
+                Assertions.fail();
+            } catch (final IllegalStateException e) {
+                DFStringValidador.ncm("000");
+                Assertions.fail();
+            }
+        });
+    }
+
+    @Test
+    public void naoDevePermitirNCMForaDoLimite8Posicoes() {
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.ncm("9999999");
+                Assertions.fail();
+            } catch (final IllegalStateException e) {
+                DFStringValidador.ncm("000000000");
+                Assertions.fail();
+            }
+        });
+    }
+
+    @Test
+    public void stringNotEquals(){
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.equals("teste", "test"));
+    }
+
+    @Test
+    public void stringEquals(){
+        DFStringValidador.equals("teste", "teste");
+    }
+
+    @Test
+    public void emailError(){
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.email("teste@teste");
+            } catch (final IllegalStateException e) {
+                try {
+                    DFStringValidador.email("teste@");
+                } catch (final IllegalStateException e2) {
+                        DFStringValidador.email("@teste");
+                }
+            }
+        });
+    }
+
+    @Test
+    public void email(){
+        DFStringValidador.email("teste@teste.com");
+
+    }
+
+    @Test
+    public void tara(){
+        DFStringValidador.capacidadeNDigitos("0", "capacidadeNDigitos",0);
+        DFStringValidador.capacidadeNDigitos("20", "capacidadeNDigitos",1);
+        DFStringValidador.capacidadeNDigitos("10000", "capacidadeNDigitos",4);
+    }
+
+    @Test
+    public void taraError(){
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.capacidadeNDigitos("10000.0", "capacidadeNDigitos",5);
+            } catch (final IllegalStateException e) {
+                try {
+                    DFStringValidador.capacidadeNDigitos("1000KG", "capacidadeNDigitos",5);
+                } catch (final IllegalStateException e2) {
+                    DFStringValidador.capacidadeNDigitos("", "capacidadeNDigitos",5);
+                }
+            }
+        });
+    }
+
+    @Test
+    public void validadorStrings(){
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            try {
+                DFStringValidador.validador("1000000",
+                        "Totais", 6,false, true);
+            } catch (final IllegalStateException e) {
+                try {
+                    DFStringValidador.validador("a",
+                            "Totais", 6,false, true);
+                } catch (final IllegalStateException e2) {
+                    DFStringValidador.validador("10000",
+                            "Totais", 6,true, true);
+                }
+            }
+        });
+    }
+
+    @Test
+    public void deveValidarTamanhoExato(){
+        DFStringValidador.exatamente1("1", "");
+        DFStringValidador.exatamente2("12", "");
+        DFStringValidador.exatamente3("123", "");
+        DFStringValidador.exatamente4("1234", "");
+        DFStringValidador.exatamente5("12345", "");
+        DFStringValidador.exatamente6("123456", "");
+        DFStringValidador.exatamente7("1234567", "");
+        DFStringValidador.exatamente8("12345678", "");
+        DFStringValidador.exatamente9("123456789", "");
+        DFStringValidador.codigoProdutoAnvisa("ISENTO", "");
+        DFStringValidador.codigoProdutoAnvisa("12345678901", "");
+        DFStringValidador.codigoProdutoAnvisa("1234567890123", "");
+        DFStringValidador.exatamente13("1234567890123", "");
+        DFStringValidador.exatamente17("12345678901234567", "");
+        DFStringValidador.exatamente21("123456789012345678901", "");
+        DFStringValidador.exatamente44("12345678901234567890123456789012345678901234", "");
+        DFStringValidador.exatamente44("AB345678901234567890123456789012345678901234", "");
+        DFStringValidador.exatamente44("422505AB000000000001550010000000011000000010", "");
+        DFStringValidador.exatamente54("123456789012345678901234567890123456789012345678901234", "");
+        DFStringValidador.exatamente2N("12", "");
+        DFStringValidador.exatamente4N("1234", "");
+        DFStringValidador.exatamente7N("1234567", "");
+        DFStringValidador.exatamente6N("123456", "");
+        DFStringValidador.exatamente8N("12345678", "");
+        DFStringValidador.exatamente9N("123456789", "");
+        DFStringValidador.exatamente11N("12345678901", "");
+        DFStringValidador.exatamente15N("123456789012345", "");
+        DFStringValidador.exatamente20N("12345678901234567890", "");
+        DFStringValidador.exatamente44N("12345678901234567890123456789012345678901234", "");
+    }
+
+    @Test
+    public void deveValidarFCI(){
+        DFStringValidador.fci("12345678-1234-1234-1234-123456789012");
+    }
+
+    @Test
+    public void naoDevePermitirFCIComTamanhoIncorreto(){
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.fci("12345678-1234-1234-1234-1234"));
+    }
+
+    @Test
+    public void deveValidarNVE(){
+        DFStringValidador.nve("AB1234");
+    }
+
+    @Test
+    public void naoDevePermitirNVEComTamanhoIncorreto(){
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.nve("X12345f"));
+    }
+
+    @Test
+    public void deveValidarItemListaServico(){
+        DFStringValidador.itemListaServico("11.11");
+    }
+
+    @Test
+    public void naoDevePermitirItemListaServicoIncorreto(){
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.itemListaServico("15.xx"));
+    }
+
+    @Test
+    public void deveValidarModeloDocumentoFiscal(){
+        DFStringValidador.modeloDocumentoFiscal("55");
+        DFStringValidador.modeloDocumentoFiscal("65");
+    }
+
+    @Test
+    public void naoDevePermitirModeloDocumentoFiscalDiferente(){
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.modeloDocumentoFiscal("01"));
+    }
+
+    @Test
+    public void deveValidarIdentificador(){
+        DFStringValidador.identificador("ID12345678901234567890123456789012345678901");
+    }
+
+    @Test
+    public void naoDevePermitirIdentificadorDiferenteDoPadrao(){
+        Assertions.assertThrows(IllegalStateException.class, () -> DFStringValidador.identificador("ID1234567890123456789012345678901234567890"));
+    }
+}

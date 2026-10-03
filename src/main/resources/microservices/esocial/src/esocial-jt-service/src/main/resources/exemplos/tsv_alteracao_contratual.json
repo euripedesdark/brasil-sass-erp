@@ -1,0 +1,29 @@
+{
+  "tipoOcorrencia": "TSV_ALTERACAO_CONTRATUAL",
+  "referencia": "77993893704",
+  "operacao": "NORMAL",
+  "dataOcorrencia": 1522181179561,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "ideTrabSemVinculo": {
+      "cpfTrab": "77993893704",
+      "matricula": "1234567"
+    },
+    "infoTSVAlteracao": {
+      "dtAlteracao": 1522181179561,
+      "infoComplementares": {
+        "infoEstagiario": {
+          "natEstagio": "N",
+          "nivEstagio": 1,
+          "dtPrevTerm": 1609470000000,
+          "instEnsino": {
+            "cnpjInstEnsino": "00038174000143"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "tipoOcorrencia": "BENEFICIO_RPPS",
+  "referencia": "12000",
+  "operacao": "NORMAL",
+  "dataOcorrencia": 1522181179561,
+  "dadosOcorrencia": {
+    "ideEvento": {
+      "indApuracao": 1,
+      "perApur": "2022-02"
+    },
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "ideBenef": {
+      "cpfBenef": "77993893704"
+    },
+    "dmDev": [
+      {
+        "nrBeneficio": 12000,
+        "ideDmDev": "123",
+        "infoPerApur": {
+          "ideEstab": [
+            {
+              "tpInsc": 1,
+              "nrInsc": "00509968000148",
+              "itensRemun": [
+                {
+                  "codRubr": "01",
+                  "ideTabRubr": "01",
+                  "vrRubr": 37328.65,
+                  "indApurIR": 0
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

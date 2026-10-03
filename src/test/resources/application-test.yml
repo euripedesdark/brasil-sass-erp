@@ -1,0 +1,48 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;INIT=CREATE SCHEMA IF NOT EXISTS brasil_saas"
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: brasil_saas
+
+  flyway:
+    enabled: false
+
+  # Mail dummy para o perfil de teste (JavaMailSender é obrigatório em RelatorioAgendadoServiceImpl)
+  mail:
+    host: localhost
+    port: 25
+    properties:
+      mail:
+        smtp:
+          connectiontimeout: 1000
+          timeout: 1000
+          writetimeout: 1000
+
+  data:
+    mongodb:
+      auto-index-creation: false
+
+  # Desabilita OpenAI no teste para evitar chamadas externas sem API key
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:test-key-not-for-production}
+      chat:
+        enabled: false
+      image:
+        enabled: false
+      embedding:
+        enabled: false
+
+logging:
+  level:
+    root: WARN
+    br.com.brasil_saas: INFO

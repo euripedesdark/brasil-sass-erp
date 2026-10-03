@@ -1,0 +1,77 @@
+/* EmpresaLogo.css */
+
+.empresalogo-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.empresalogo-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.empresalogo-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.empresalogo-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.empresalogo-preview, .empresalogo-empty {
+    border: 2px dashed #dee2e6;
+}
+
+.empresalogo-image {
+    object-fit: contain;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.empresalogo-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.empresalogo-actions .p-button {
+    transition: all 0.2s ease;
+}
+
+.empresalogo-actions .p-button:hover {
+    transform: translateY(-1px);
+    opacity: 0.95;
+}
+
+.empresalogo-recomendacoes {
+    font-size: 0.85rem;
+}
+
+.empresalogo-recomendacoes ul {
+    padding-left: 1.5rem;
+}
+
+.empresalogo-recomendacoes li {
+    margin-bottom: 0.25rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .empresalogo-enterprise-container { padding: 0.5rem; }
+    .empresalogo-actions { flex-direction: column; }
+}

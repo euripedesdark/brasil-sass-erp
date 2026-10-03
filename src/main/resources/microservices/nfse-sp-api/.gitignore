@@ -1,0 +1,23 @@
+# Build
+target/
+*.class
+
+# Configuracao local do Bundler: guarda um caminho ABSOLUTO desta maquina.
+# Versionar isso quebra o bundle em qualquer outra estacao.
+.bundle/
+
+# Certificado A1 e senha NUNCA entram no git.
+*.pfx
+*.p12
+*.pem
+*.key
+.env
+
+# Saida da comparacao com a implementacao de referencia
+/tmp/opencode/comparacao/
+
+# Editores
+*~
+*.swp
+.idea/
+.vscode/

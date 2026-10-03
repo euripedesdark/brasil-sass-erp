@@ -1,0 +1,191 @@
+PATH
+  remote: ../nfse_prefeitura_sp
+  specs:
+    nfse_prefeitura_sp (0.3.0)
+      nokogiri (~> 1.18.0)
+      openssl (~> 3.3.0)
+      savon (~> 3.0.0.rc2)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
+    akami (1.4.0)
+      base64
+      gyoku (>= 0.4.0)
+      nokogiri
+    base64 (0.3.0)
+    bigdecimal (4.1.3)
+    builder (3.3.0)
+    date (3.5.1)
+    faraday (2.14.4)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-follow_redirects (0.5.0)
+      faraday (>= 1, < 3)
+    faraday-gzip (2.0.1)
+      faraday (>= 1.0)
+      zlib (~> 3.0)
+    faraday-net_http (3.4.4)
+      net-http (~> 0.5)
+    gyoku (1.4.0)
+      builder (>= 2.1.2)
+      rexml (~> 3.0)
+    json (3.0.2)
+    logger (1.7.0)
+    mail (2.9.1)
+      logger
+      mini_mime (>= 0.1.1)
+      net-imap
+      net-pop
+      net-smtp
+    mini_mime (1.1.5)
+    mustermann (3.1.1)
+    net-http (0.9.1)
+      uri (>= 0.11.1)
+    net-imap (0.6.7)
+      date
+      net-protocol
+    net-pop (0.1.2)
+      net-protocol
+    net-protocol (0.4.0)
+      timeout
+    net-smtp (0.5.1)
+      net-protocol
+    nio4r (2.7.5)
+    nokogiri (1.18.10-aarch64-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.10-aarch64-linux-musl)
+      racc (~> 1.4)
+    nokogiri (1.18.10-arm-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.10-arm-linux-musl)
+      racc (~> 1.4)
+    nokogiri (1.18.10-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.10-x86_64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.18.10-x86_64-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.10-x86_64-linux-musl)
+      racc (~> 1.4)
+    nori (2.9.1)
+      bigdecimal
+      stringio
+    openssl (3.3.3)
+    public_suffix (7.0.5)
+    puma (8.0.2)
+      nio4r (~> 2.0)
+    racc (1.8.1)
+    rack (3.2.7)
+    rack-protection (4.2.1)
+      base64 (>= 0.1.0)
+      logger (>= 1.6.0)
+      rack (>= 3.0.0, < 4)
+    rack-session (2.1.2)
+      base64 (>= 0.1.0)
+      rack (>= 3.0.0)
+    rackup (2.3.1)
+      rack (>= 3)
+    rexml (3.4.4)
+    savon (3.0.0.rc2)
+      akami (~> 1.2)
+      builder (>= 2.1.2)
+      faraday (~> 2.11)
+      faraday-follow_redirects (~> 0.3)
+      faraday-gzip (~> 2.0)
+      gyoku (~> 1.2)
+      mail (~> 2.5)
+      nokogiri (>= 1.8.1)
+      nori (~> 2.4)
+      wasabi (> 5)
+    sinatra (4.2.1)
+      logger (>= 1.6.0)
+      mustermann (~> 3.0)
+      rack (>= 3.0.0, < 4)
+      rack-protection (= 4.2.1)
+      rack-session (>= 2.0.0, < 3)
+      tilt (~> 2.0)
+    stringio (3.2.0)
+    tilt (2.9.0)
+    timeout (0.6.1)
+    uri (1.1.1)
+    wasabi (5.2.0)
+      addressable
+      faraday (>= 1.9, < 3)
+      nokogiri (>= 1.13.9)
+    zlib (3.2.3)
+
+PLATFORMS
+  aarch64-linux-gnu
+  aarch64-linux-musl
+  arm-linux-gnu
+  arm-linux-musl
+  arm64-darwin
+  x86_64-darwin
+  x86_64-linux-gnu
+  x86_64-linux-musl
+
+DEPENDENCIES
+  json
+  nfse_prefeitura_sp!
+  puma
+  rackup
+  sinatra
+
+CHECKSUMS
+  addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
+  akami (1.4.0) sha256=9e98f8396bfd29128f1768f1d107a1f82356881891aef840e1e47df407eaba33
+  base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
+  bigdecimal (4.1.3) sha256=61ebe1e5e559bdc3cc6f2c0ee7f427321fc838f59611c294356eb04d6e21cf66
+  builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
+  bundler (4.0.21) sha256=7cbf5499b426076aa16c8d28a59e4c2c3aad5a438402abcd961f0119f29f1dd0
+  date (3.5.1) sha256=750d06384d7b9c15d562c76291407d89e368dda4d4fff957eb94962d325a0dc0
+  faraday (2.14.4) sha256=9bb4408c44621b0dbaaaa39e5dbfc4dbe58cc6751b6eb94d16ae9e1f2f2fab6e
+  faraday-follow_redirects (0.5.0) sha256=5cde93c894b30943a5d2b93c2fe9284216a6b756f7af406a1e55f211d97d10ad
+  faraday-gzip (2.0.1) sha256=45d686da637e5812854635f93dff343165a765faff1d7176b714e19a74fa92d1
+  faraday-net_http (3.4.4) sha256=0e78af151747ed1b00f33e25973b4bc220d7f16c00c39676817c8b12331eb588
+  gyoku (1.4.0) sha256=389d887384c777f271cb9377bb642f20bbe0c633d1ef5af78569d4db53c1a2cd
+  json (3.0.2) sha256=8e6d7e7b11384c21230430cef90b71f14849a34a1f4452796670f7c981bd19df
+  logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
+  mail (2.9.1) sha256=06574eca475253d6c18145dd70af80d0eb970182d55053497c5f4d797ea160e8
+  mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
+  mustermann (3.1.1) sha256=4c6170c7234d5499c345562ba7c7dfe73e1754286dcc1abb053064d66a127198
+  net-http (0.9.1) sha256=25ba0b67c63e89df626ed8fac771d0ad24ad151a858af2cc8e6a716ca4336996
+  net-imap (0.6.7) sha256=b5c9573be975d856de252ee851871724da66aa2d449b2482d5690bd12bc23660
+  net-pop (0.1.2) sha256=848b4e982013c15b2f0382792268763b748cce91c9e91e36b0f27ed26420dff3
+  net-protocol (0.4.0) sha256=f9f90c8c6f64794a45160bf422177a336db12809de3beeeaa26b88fcd2e8c853
+  net-smtp (0.5.1) sha256=ed96a0af63c524fceb4b29b0d352195c30d82dd916a42f03c62a3a70e5b70736
+  nfse_prefeitura_sp (0.3.0)
+  nio4r (2.7.5) sha256=6c90168e48fb5f8e768419c93abb94ba2b892a1d0602cb06eef16d8b7df1dca1
+  nokogiri (1.18.10-aarch64-linux-gnu) sha256=7fb87235d729c74a2be635376d82b1d459230cc17c50300f8e4fcaabc6195344
+  nokogiri (1.18.10-aarch64-linux-musl) sha256=7e74e58314297cc8a8f1b533f7212d1999dbe2639a9ee6d97b483ea2acc18944
+  nokogiri (1.18.10-arm-linux-gnu) sha256=51f4f25ab5d5ba1012d6b16aad96b840a10b067b93f35af6a55a2c104a7ee322
+  nokogiri (1.18.10-arm-linux-musl) sha256=1c6ea754e51cecc85c30ee8ab1e6aa4ce6b6e134d01717e9290e79374a9e00aa
+  nokogiri (1.18.10-arm64-darwin) sha256=c2b0de30770f50b92c9323fa34a4e1cf5a0af322afcacd239cd66ee1c1b22c85
+  nokogiri (1.18.10-x86_64-darwin) sha256=536e74bed6db2b5076769cab5e5f5af0cd1dccbbd75f1b3e1fa69d1f5c2d79e2
+  nokogiri (1.18.10-x86_64-linux-gnu) sha256=ff5ba26ba2dbce5c04b9ea200777fd225061d7a3930548806f31db907e500f72
+  nokogiri (1.18.10-x86_64-linux-musl) sha256=0651fccf8c2ebbc2475c8b1dfd7ccac3a0a6d09f8a41b72db8c21808cb483385
+  nori (2.9.1) sha256=72dd12420ccb3f62c32466c2e4d8ab1cc08ae525c2488f30524be6ee8cb6e606
+  openssl (3.3.3) sha256=d46902138f2987c13122fab826030a11c2bb9b8a16394215cbfc5062c5e2d335
+  public_suffix (7.0.5) sha256=1a8bb08f1bbea19228d3bed6e5ed908d1cb4f7c2726d18bd9cadf60bc676f623
+  puma (8.0.2) sha256=c8ed871dfbbe66448ea9ffd46692342d9804d4071522b52b5331b7b6e7b686fb
+  racc (1.8.1) sha256=4a7f6929691dbec8b5209a0b373bc2614882b55fc5d2e447a21aaa691303d62f
+  rack (3.2.7) sha256=93e13e1c24f93556671d85d2d79fa228c3485815c50d7e2f265b5330c6528fb7
+  rack-protection (4.2.1) sha256=cf6e2842df8c55f5e4d1a4be015e603e19e9bc3a7178bae58949ccbb58558bac
+  rack-session (2.1.2) sha256=595434f8c0c3473ae7d7ac56ecda6cc6dfd9d37c0b2b5255330aa1576967ffe8
+  rackup (2.3.1) sha256=6c79c26753778e90983761d677a48937ee3192b3ffef6bc963c0950f94688868
+  rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
+  savon (3.0.0.rc2) sha256=d470ab460eb3b2323cdfbcbe78967900b83a2f08ce09e17a9bf4fd317739cc99
+  sinatra (4.2.1) sha256=b7aeb9b11d046b552972ade834f1f9be98b185fa8444480688e3627625377080
+  stringio (3.2.0) sha256=c37cb2e58b4ffbd33fe5cd948c05934af997b36e0b6ca6fdf43afa234cf222e1
+  tilt (2.9.0) sha256=da5735d0280bba96e9a91041bb14aee435ccad5c17b0fa519249ae543d9aa3a5
+  timeout (0.6.1) sha256=78f57368a7e7bbadec56971f78a3f5ecbcfb59b7fcbb0a3ed6ddc08a5094accb
+  uri (1.1.1) sha256=379fa58d27ffb1387eaada68c749d1426738bd0f654d812fcc07e7568f5c57c6
+  wasabi (5.2.0) sha256=3a6086e793ae3b62ca5c764455791e30629b938453c6c46dda7f8c1c1b1c103a
+  zlib (3.2.3) sha256=5bd316698b32f31a64ab910a8b6c282442ca1626a81bbd6a1674e8522e319c20
+
+BUNDLED WITH
+  4.0.21

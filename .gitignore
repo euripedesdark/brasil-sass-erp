@@ -1,0 +1,180 @@
+# Build
+target/
+node_modules/
+
+# Area de staging: arquivos aguardando envio ao MongoDB.
+# Sao temporarios por definicao — o que importa esta no Mongo.
+staging/
+
+# Ambiente
+.env
+
+# PIDs e logs do subir-dev.sh
+.run/
+
+# Catalogo de bancos: repo de terceiro com .git proprio. O conteudo
+# dele nao entra no repo — a carga esta em V96, gerada do CSV.
+src/main/resources/microservices/BancosBrasileiros/
+src/main/resources/microservices/MANIFESTO-MICROSERVICES.json
+__pycache__/
+*.pyc
+
+# senhas de teste que criei, nunca versionar
+.senhas.usuarios
+
+# Certificado A1 da empresa (ICP-Brasil).
+# Fica FORA do git de proposito: e' o certificado que assina a
+# declaracao da empresa. Nao versionar chave nem certificado de
+# producao em repositorio, mesmo privado.
+certs/empresa/a1/
+
+# Chave de host do scp/ssh, local de cada maquina.
+.known_hosts
+
+# Backup das conversas do opencode (banco sqlite + export em texto).
+# Fora do git: contem historico e nao deve ser versionado.
+_backup-conversas-opencode/
+
+# Copia de seguranca de outra maquina. Dentro de src/ ela entra no
+# classpath e, se for .sql em db/migration, o Flyway ve DUAS migrations com
+# a mesma versao e o ERP nao sobe: "Found more than one migration with version 1".
+*-dc2-safeBackup-*
+
+# --- dados sensiveis e material local ---
+# Dump do banco e backup: nunca versionar. Pode conter CNPJ, CPF e
+# nota fiscal de cliente.
+*.sql
+*.dump
+*.sql.gz
+dump/
+dados_cadastro_erp.sql
+mongo_brasil-saas.zip
+
+# PKI local do Easy-RSA: chave privada de servidor e de CA.
+# O material real fica em /etc/brasil-saas/pki, fora do repositorio.
+#
+# Isso ja estava no .gitignore, mas os arquivos entraram no git antes da
+# regra, e .gitignore nao destracke. O installbase.sh nao depende disso:
+# quando ca.crt ou sa.crt nao existem ele roda init-pki, build-ca e
+# build-client-full e gera a PKI nova. A chave versionada era, portanto,
+# so exposicao.
+certs/pki/
+certs/pki*/
+certs/*.key
+certs/*.pem
+certs/*.crt
+certs/*.pk8
+certs/*.csr
+certs/*.srl
+
+# Arquivo de ambiente: contem senha de banco e segredo de JWT.
+# O que entra no git e .env.example, sem valor.
+.env
+.env.local
+.env.production
+
+# Backup do .env: e o mesmo arquivo, com senha de banco e segredo de JWT.
+.env.bak*
+.env.*.bak*
+
+# Backup qualquer (.bak, .bak-recuperado). Guardam estado velho e as vezes
+# credencial; nao pertencem a arvore.
+*.bak
+*.bak-*
+
+# Certificado em formato PKCS#12 (.pfx/.p12) e chave privada PEM.
+# O material de homologacao das bibliotecas de terceiros tambem fica de
+# fora: .pfx e chave privada, versionado ou nao.
+*.pfx
+*.p12
+*.pk8
+*.jks
+*.keystore
+
+# Dump do Mongo
+mongo_*.zip
+
+# =============================================================================
+# VARREDURA LOCAL - 2026-10-03
+#
+# Regras adicionadas depois de varrer TODO o disco de trabalho. Os tres furos
+# abaixo nao eram cobertos pelos padroes acima.
+# =============================================================================
+
+# Dump do Postgres. .dump e binario e nao casa com nenhum outro padrao, e este
+# arquivo estava entrando no repo. Sao 42 MB de dump do schema.
+*.dump
+sysfluxo_backup_antes_refatoracao.dump
+
+# Dados cadastrais de pessoa fisica: 11 CPF e 23 e-mail. Este arquivo e' a
+# captura de tela do vazamento, entao e' justamente o que nao pode ser
+# versionado. O .gitignore nao destracke arquivo ja commitado: ver
+# `git rm --cached dados_cadastro_erp.sql`.
+dados_cadastro_erp.sql
+dados_cadastro*.sql
+
+# Manifesto de dump do Mongo: aponta caminho de servidor, usuario e nome de
+# banco. Sao 35 linhas e nao tem valor de versionamento.
+dump_manifest.env
+*manifest*.env
+dump/
+!dump/schema/
+
+# Certificado A1 da empresa e qualquer coisa dentro de certs/.
+# A regra abaixo e' por redundancia: a linha 29 ja cobre certs/empresa/a1/, mas
+# um .pfx solto em outro diretorio passaria.
+*.pfx
+*.p12
+*.pk8
+*.pem
+*.key
+*.jks
+*.keystore
+*.csr
+*.crt
+*.srl
+*.ppk
+*.ovpn
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+
+# .env e variantes. O .env.example precisa continuar versionado porque e' o
+# modelo que o instalador le, entao a excecao vem logo depois.
+.env
+.env.*
+!.env.example
+!.env.*.example
+.env.bak*
+
+# Artefato temporario e spool de log.
+*.old
+*.orig
+*~
+*.swp
+
+# ---------------------------------------------------------------- VARREDURA LOCAL
+# Arquivos soltos de trabalho: contem estrutura de banco, logs de erro e
+# rascunhos. Nao pertencem ao codigo-fonte.
+alteracoes.txt
+arvore.txt
+erros.txt
+correcoes-solicitadas.txt
+estrutura_banco.txt
+estrutura_completa.txt
+concat *.txt
+BRASIL-SAAS-ETP.txt
+BRASIL-SAAS-ETP.txt.b64
+certs/[Help*
+.metadata/.plugins/org.eclipse.jdt.core/
+
+# Patches: o GitHub le .patch como email e cria contributor a
+# partir do cabecalho From:. Nao versionar.
+*.patch
+
+# Marcadores de agente de IA. O GitHub le CLAUDE.md/AGENTS.md para detectar
+# uso de IA e mostrar isso no repositorio. Nao fazem parte do ERP.
+CLAUDE.md
+AGENTS.md
+.cursorrules

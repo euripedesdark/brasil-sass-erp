@@ -1,0 +1,54 @@
+name: Test Coverage Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  JAVA_VERSION: '21'
+  MIN_COVERAGE: '70'
+
+jobs:
+  coverage:
+    name: Backend coverage
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '${{ env.JAVA_VERSION }}'
+          cache: maven
+
+      - name: Run tests and generate JaCoCo report
+        run: mvn -B -ntp clean test jacoco:report
+
+      - name: Check line coverage
+        shell: bash
+        run: |
+          set -e
+          REPORT="target/site/jacoco/jacoco.csv"
+          test -f "$REPORT" || { echo "::error::JaCoCo CSV not found"; exit 1; }
+          read -r MISSED COVERED < <(awk -F',' 'NR>1 {m+=$7; c+=$8} END {print m, c}' "$REPORT")
+          TOTAL=$((MISSED + COVERED))
+          if [ "$TOTAL" -eq 0 ]; then COVERAGE=0; else COVERAGE=$(( COVERED * 100 / TOTAL )); fi
+          echo "Line coverage: ${COVERAGE}%"
+          if [ "$COVERAGE" -lt "${MIN_COVERAGE}" ]; then
+            echo "::error::Line coverage ${COVERAGE}% is below required ${MIN_COVERAGE}%"
+            exit 1
+          fi
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 30

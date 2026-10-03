@@ -1,0 +1,180 @@
+version: '3.8'
+
+services:
+  # Aplicacao principal
+  brasil-saas-erp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brasil-saas-erp
+    restart: unless-stopped
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
+      - SPRING_DATASOURCE_USERNAME=brasil-saas
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-brasil-saas123}
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/brasil-saas
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=brasil-saas
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-ALTERE_ME}
+      - JWT_SECRET=${JWT_SECRET:-brasil-saas-erp-secret-key-2026}
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xmx2g -Xms512m
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:18
+    container_name: postgres-brasil-saas
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=brasil-saas
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-brasil-saas123}
+      - POSTGRES_DB=brasil-saas
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./schemas:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brasil-saas -d brasil-saas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Banco de dados MongoDB
+  mongodb:
+    image: mongo:7
+    container_name: mongodb-brasil-saas
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-mongodb123}
+      - MONGO_INITDB_DATABASE=brasil-saas
+    volumes:
+      - mongodb-data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache Redis
+  redis:
+    image: redis:7
+    container_name: redis-brasil-saas
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mensageria RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-brasil-saas
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=brasil-saas
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-ALTERE_ME}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Storage MinIO
+  minio:
+    image: minio/minio
+    container_name: minio-brasil-saas
+    restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD:-minioadmin123}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - brasil-saas-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx como reverse proxy (opcional para producao)
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-brasil-saas
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - brasil-saas-erp
+    networks:
+      - brasil-saas-network
+    profiles:
+      - production
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  redis-data:
+  rabbitmq-data:
+  minio-data:
+
+networks:
+  brasil-saas-network:
+    driver: bridge

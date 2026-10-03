@@ -1,0 +1,117 @@
+/* Cfop.css - Estilos para o componente CFOP */
+
+.cfop-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.cfop-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.cfop-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+/* DataTable */
+.cfop-enterprise-container .p-datatable {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.cfop-enterprise-container .p-datatable .p-datatable-header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 1rem;
+}
+
+.cfop-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.cfop-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cfop-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(240, 147, 251, 0.05);
+}
+
+/* Header de busca */
+.cfop-header {
+    padding: 1rem;
+    background: rgba(15,34,60,.44);
+    border-radius: 8px;
+    display: flex;
+    gap: 1rem;
+}
+
+.cfop-header .p-input-icon-left {
+    flex: 1;
+}
+
+.cfop-header .p-input-icon-left i {
+    color: #6c757d;
+}
+
+.cfop-header .p-inputtext {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+}
+
+.cfop-header .p-dropdown {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    min-width: 150px;
+}
+
+/* Animacao */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cfop-enterprise-container {
+        padding: 0.5rem;
+    }
+    
+    .cfop-main-card {
+        padding: 0.5rem;
+    }
+    
+    .cfop-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .cfop-header .p-dropdown {
+        width: 100%;
+    }
+}
+
+/* Toast */
+.cfop-enterprise-container .p-toast {
+    z-index: 9999;
+}
+
+.cfop-enterprise-container .p-toast .p-toast-message {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

@@ -1,0 +1,41 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+  datasource:
+    url: ${DB_URL}?currentSchema=brasil_saas
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:ALTERE_ME}
+    password: ${RABBIT_PASSWORD:ALTERE_ME}
+
+logging:
+  level:
+    br.com.brasil_saas: DEBUG
+    org.hibernate.SQL: WARN
+
+app:
+  minio:
+    url: ${MINIO_URL}
+    access-key: ${MINIO_ACCESS_KEY}
+    secret-key: ${MINIO_SECRET_KEY}
+    bucket: brasil-saas-hom
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:86400}
+  ia:
+    provider: ${IA_PROVIDER:openai}
+    api-key: ${OPENAI_API_KEY:}
+    model: ${IA_MODEL:gpt-4o-mini}
+    embedding-model: ${IA_EMBEDDING_MODEL:text-embedding-3-small}

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>br.com.brasil_saas</groupId>
+    <artifactId>nfse-sp-api</artifactId>
+    <version>1.0.0</version>
+    <name>nfse-sp-api</name>
+    <description>
+        API de emissao e cancelamento de NFS-e da Prefeitura de Sao Paulo,
+        com assinatura digital A1. Standalone: roda sem banco de dados.
+    </description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!--
+        Sem JPA de proposito.
+
+        Esta API e um adaptador de protocolo: assina a mensagem e conversa com o
+        WebService da prefeitura. Quem guarda a nota, o XML e o PDF e o ERP
+        de origem, na propria transacao. Colocar banco aqui criaria uma segunda
+        fonte de verdade para a nota fiscal, com o risco de divergirem.
+
+        So duas dependencias, e ambas de primeiro nivel:
+          - spring-boot-starter-web  (HTTP e injecao)
+          - spring-boot-starter-validation (@Valid no controller)
+
+        A assinatura usa javax.xml.crypto.dsig, que ja vem no JDK. Nao ha
+        BouncyCastle, e por isso o certificado RC2-40-CBC da ICP-Brasil abre sem
+        provider externo - que era o maior problema da versao em Ruby.
+    -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!--
+            Lombok em provided: fica so no compile, nao vai para o jar final.
+            E o que o ERP usa, entao o codigo fica com a mesma cara do resto do
+            projeto. Se preferir zero anotacao, da para remover: sao @Slf4j,
+            @Getter, @Setter e @RequiredArgsConstructor.
+        -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>nfse-sp-api</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,280 @@
+/* Cliente.css - Estilos para o componente de Clientes */
+
+.cliente-enterprise-container {
+    padding: 0;
+    height: 100%;
+}
+
+.cliente-main-card {
+    margin: 0;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.cliente-main-card .p-card-content {
+    padding: 1rem;
+    height: calc(100% - 100px);
+    display: flex;
+    flex-direction: column;
+}
+
+.cliente-main-card .p-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.cliente-header-actions {
+    margin-bottom: 1rem;
+}
+
+.cliente-info p {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.cliente-acoes {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.cliente-acoes .p-button {
+    width: 32px;
+    height: 32px;
+}
+
+.cliente-acoes .p-button-text {
+    background-color: transparent;
+}
+
+.valor-formatado {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    color: #10b981;
+}
+
+.cliente-resumo {
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.cliente-resumo .font-bold {
+    color: #374151;
+}
+
+.cliente-resumo span:not(.font-bold) {
+    color: #6b7280;
+}
+
+.cliente-resumo > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Estilos para o DataTable */
+.cliente-enterprise-container .p-datatable {
+    flex: 1;
+    min-height: 0;
+}
+
+.cliente-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem;
+}
+
+.cliente-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cliente-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background-color: #f9fafb;
+}
+
+.cliente-enterprise-container .p-datatable .p-datatable-tbody > tr > td:first-child {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Estilos para o Dialog */
+.cliente-enterprise-container .p-dialog {
+    border-radius: 0.75rem;
+}
+
+.cliente-enterprise-container .p-dialog .p-dialog-header {
+    background-color: #374151;
+    color: white;
+    border-radius: 0.75rem 0.75rem 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.cliente-enterprise-container .p-dialog .p-dialog-header-icons {
+    color: white;
+}
+
+.cliente-enterprise-container .p-dialog .p-dialog-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+}
+
+.cliente-enterprise-container .p-dialog .p-dialog-footer {
+    background-color: #f9fafb;
+    border-radius: 0 0 0.75rem 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Estilos para os campos do formulario */
+.cliente-enterprise-container .p-inputtext,
+.cliente-enterprise-container .p-inputnumber,
+.cliente-enterprise-container .p-inputmask,
+.cliente-enterprise-container .p-dropdown {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.cliente-enterprise-container .p-inputtext:focus,
+.cliente-enterprise-container .p-inputnumber:focus,
+.cliente-enterprise-container .p-inputmask:focus,
+.cliente-enterprise-container .p-dropdown:focus {
+    box-shadow: 0 0 0 1px #2563eb;
+}
+
+.cliente-enterprise-container .field label {
+    color: #374151;
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.cliente-enterprise-container .p-fluid .grid > div {
+    margin-bottom: 1rem;
+}
+
+/* Estilos para Dropdown */
+.cliente-enterprise-container .p-dropdown {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cliente-enterprise-container .p-dropdown:hover {
+    border-color: #9ca3af;
+}
+
+.cliente-enterprise-container .p-dropdown .p-dropdown-trigger {
+    background-color: #f9fafb;
+    border-left: 1px solid #d1d5db;
+}
+
+/* Estilos para InputMask */
+.cliente-enterprise-container .p-inputmask {
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.cliente-enterprise-container .p-inputmask:enabled:hover {
+    border-color: #9ca3af;
+}
+
+.cliente-enterprise-container .p-inputmask:enabled:focus {
+    outline: 0 none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px #2563eb;
+}
+
+/* Estilos para os botoes */
+.cliente-enterprise-container .p-button-success {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+
+.cliente-enterprise-container .p-button-success:hover {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.cliente-enterprise-container .p-button-danger {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+.cliente-enterprise-container .p-button-danger:hover {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.cliente-enterprise-container .p-button-info {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Estilos para Toast */
+.cliente-enterprise-container .p-toast {
+    min-width: 300px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .cliente-enterprise-container .p-dialog {
+        width: 90vw;
+        max-width: 90vw;
+    }
+    
+    .cliente-enterprise-container .p-datatable .p-datatable-thead > tr > th,
+    .cliente-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+    
+    .cliente-header-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .cliente-resumo {
+        flex-direction: column;
+    }
+    
+    .cliente-resumo > div {
+        min-width: 100%;
+    }
+}
+
+/* Estilos para Message */
+.cliente-enterprise-container .p-message {
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+}
+
+.cliente-enterprise-container .p-message-error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.cliente-enterprise-container .p-message-success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #10b981;
+}
+
+/* Estilos para Divider */
+.cliente-enterprise-container .p-divider {
+    margin: 1rem 0;
+    border-color: #e5e7eb;
+}

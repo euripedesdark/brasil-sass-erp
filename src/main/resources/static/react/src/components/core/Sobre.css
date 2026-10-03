@@ -1,0 +1,111 @@
+/* Pagina Sobre o Projeto */
+
+.sobre-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sobre-hero {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.sobre-hero .sobre-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.sobre-hero h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.sobre-hero p {
+    margin: 0.25rem 0 0;
+    color: var(--text-color-secondary, #64748b);
+}
+
+.sobre-card {
+    background: var(--surface-card, #fff);
+    border: 1px solid var(--surface-border, #e2e8f0);
+    border-radius: 12px;
+    padding: 1.25rem;
+}
+
+.sobre-card h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.125rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sobre-card h3 {
+    margin: 1rem 0 0.35rem;
+    font-size: 0.95rem;
+}
+
+.sobre-card p,
+.sobre-card li {
+    line-height: 1.6;
+    color: var(--text-color, #1e293b);
+}
+
+.sobre-card ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.sobre-licenca {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.sobre-tecnologias {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.sobre-tecnologias li {
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--surface-border, #e2e8f0);
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.sobre-apoie {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.sobre-apoie-texto {
+    flex: 1 1 260px;
+}

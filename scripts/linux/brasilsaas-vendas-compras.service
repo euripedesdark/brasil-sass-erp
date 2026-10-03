@@ -1,0 +1,26 @@
+[Unit]
+Description=Brasil SaaS ERP - Serviço de Vendas e Compras
+Documentation=https://github.com/euripedesdark/BRASIL-SAAS-ERP
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=brasil-saas
+Group=brasil-saas
+WorkingDirectory=/opt/brasil-saas
+ExecStart=/usr/bin/java -jar /opt/brasil-saas/brasil-saas-erp.jar --spring.profiles.active=servico-vendas-compras
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=brasil-saas-vendas-compras
+
+MemoryLimit=2G
+CPUQuota=100%
+
+Environment="JAVA_OPTS=-Xmx1536m -Xms512m -XX:+UseG1GC"
+Environment="TZ=America/Sao_Paulo"
+
+[Install]
+WantedBy=multi-user.target

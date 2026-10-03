@@ -1,0 +1,203 @@
+package br.jus.tst.esocialjt.negocio;
+
+import br.jus.tst.esocialjt.comunicacaogov.ComunicacaoEsocialGov;
+import br.jus.tst.esocialjt.comunicacaogov.RetornoEvento;
+import br.jus.tst.esocialjt.comunicacaogov.RetornoEventoTotalizador;
+import br.jus.tst.esocialjt.comunicacaogov.RetornoLote;
+import br.jus.tst.esocialjt.comunicacaogov.RetornoProcessamento;
+import br.jus.tst.esocialjt.dominio.CodigoResposta;
+import br.jus.tst.esocialjt.dominio.EnvioEvento;
+import br.jus.tst.esocialjt.dominio.ErroProcessamento;
+import br.jus.tst.esocialjt.dominio.Estado;
+import br.jus.tst.esocialjt.dominio.EventoTotalizador;
+import br.jus.tst.esocialjt.dominio.Lote;
+import br.jus.tst.esocialjt.evento.EventoRepository;
+import br.jus.tst.esocialjt.negocio.exception.ComunicacaoEsocialGovException;
+import br.jus.tst.esocialjt.ocorrencia.OcorrenciaServico;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+@Service
+public class AtualizacaoProcessamentoServico {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(AtualizacaoProcessamentoServico.class);
+	
+	@Autowired
+	private LoteServico loteServico;
+	
+	@Autowired
+	private EstadoServico estadoServico;
+
+	@Autowired
+	private CodigoRespostaServico codigoRespostaServico;
+
+	@Autowired
+	private ErroProcessamentoServico erroProcessamentoServico;
+
+	@Autowired
+	private ComunicacaoEsocialGov comunicacaoEsocialGov;
+
+	@Autowired
+	private EventoTotalizadorServico eventoTotalizadorServico;
+
+	@Autowired
+	private OcorrenciaServico ocorrenciaServico;
+
+	@Autowired
+	private EventoRepository eventoRepository;
+
+	public List<Lote> atualizarTodosEmProcessamento() {
+		List<Lote> lotes = loteServico.criarConsulta().nosEstados(Estado.PROCESSAMENTO).buscar();
+		return atualizarProcessamentoLote(lotes);
+	}
+
+	public List<Lote> atualizarProcessamentoLote(String... protocolo) {
+		List<Lote> lotes = loteServico.criarConsulta().comProtocolos(protocolo).buscar();
+		return atualizarProcessamentoLote(lotes);
+	}
+
+	@Transactional
+	public List<Lote> abortarTodosEmProcessamento() {
+		List<Lote> lotesAtualizados = new ArrayList<>();
+		List<Lote> lotes = loteServico.criarConsulta().nosEstados(Estado.PROCESSAMENTO).buscar();
+		lotes.forEach(lote -> {
+			lote.setEstado(Estado.ERRO);
+			lote.setErroInterno("Processamento abortado.");
+			lotesAtualizados.add(loteServico.atualiza(lote));
+		});
+		return lotesAtualizados;
+	}
+
+	public List<Lote> atualizarProcessamentoLote(List<Lote> lotes) {
+		List<Lote> lotesAtualizados = new ArrayList<>();
+
+		lotes.forEach(lote -> {
+			try {
+				RetornoProcessamento retornoProcessamento = comunicacaoEsocialGov.consultarLoteEventos(lote.getProtocolo());
+				RetornoLote retornoLote = retornoProcessamento.getRetornoLote();
+
+				preencherDadosProcessamentoLote(lote, retornoLote);
+				estadoServico.atualizarEstado(lote);
+
+				preencherProcessamentoEnviosEvento(lote, retornoProcessamento);
+				lote.getEnviosEvento().forEach(envio -> estadoServico.atualizarEstado(envio));
+
+				lotesAtualizados.add(loteServico.atualiza(lote));
+				salvaEventosTotalizadores(retornoLote);
+				atualizarExclusoesRetificacoes(lote);
+			} catch (ComunicacaoEsocialGovException e) {
+				LOGGER.error(e.getMessage());
+				LOGGER.debug(e.getMessage(), e);
+			}
+		});
+
+		return lotesAtualizados;
+	}
+
+	public void salvaEventosTotalizadores(RetornoLote retornoLote) {
+		List<RetornoEventoTotalizador> listaRetornoEventoTotalizador = retornoLote.getRetornoEventoTotalizador();
+
+		if (!listaRetornoEventoTotalizador.isEmpty()) {
+			for (RetornoEventoTotalizador eventoTot : listaRetornoEventoTotalizador) {
+				EventoTotalizador eventoTotalizador = new EventoTotalizador();
+				eventoTotalizador.setTipo(eventoTot.getTipo());
+				String nrReciboArquivoBase = eventoTot.getNrReciboArquivoBase();
+				if (isNotBlank(nrReciboArquivoBase) && existeEventoComRecibo(nrReciboArquivoBase)) {
+					eventoTotalizador.setNrReciboArquivoBase(eventoTot.getNrReciboArquivoBase());
+				} else {
+					LOGGER.warn("Totalizador salvo sem FK válida (análise manual necessária). " +
+							"recibo={}, tipo={}, perApuracao={}, cpf={}",
+							nrReciboArquivoBase, eventoTot.getTipo(), eventoTot.getPerApuracao(),
+							eventoTot.getCpfTrabalhador());
+				}
+				eventoTotalizador.setIndApuracao(eventoTot.getIndApuracao());
+				eventoTotalizador.setPerApuracao(eventoTot.getPerApuracao());
+				eventoTotalizador.setCpfTrabalhador(eventoTot.getCpfTrabalhador());
+				eventoTotalizador.setXmlEventoTotalizador(eventoTot.getXmlEventoTotalizador());
+				try {
+					eventoTotalizadorServico.salvar(eventoTotalizador);
+				} catch (Exception e) {
+                    LOGGER.error("Erro ao salvar evento totalizador: {}", e.getMessage());
+					if (e.getCause() instanceof SQLException) {
+						SQLException sqlException = (SQLException) e.getCause();
+						LOGGER.error("SQL State: {}", sqlException.getSQLState());
+						LOGGER.error("Error Code: {}", sqlException.getErrorCode());
+					}
+					LOGGER.error(eventoTotalizador.toString());
+					LOGGER.debug(e.getMessage(), e);
+				}
+			}
+		}
+	}
+
+	public boolean existeEventoComRecibo(String nrRecibo) {
+		return eventoRepository.existsByNrRecibo(nrRecibo);
+	}
+
+	public void preencherProcessamentoEnviosEvento(Lote lote, RetornoProcessamento retornoProcessamento) {
+		List<EnvioEvento> enviosEvento = lote.getEnviosEvento();
+		List<RetornoEvento> listaRetornoEvento = retornoProcessamento.getRetornoLote().getRetornoEvento();
+
+		if (!listaRetornoEvento.isEmpty()) {
+			enviosEvento.forEach(envioEvento -> {
+				RetornoEvento retornoEvento = listaRetornoEvento.stream()
+						.filter(re -> re.getIdEvento().equals(envioEvento.getEvento().getIdEvento()))
+						.findFirst()
+						.get();
+
+				envioEvento.getEvento().setNrRecibo(retornoEvento.getNrRecibo());
+
+				CodigoResposta codigoResposta = new CodigoResposta(
+						CodigoResposta.RESPOSTA_GOV_EVENTO,
+						retornoEvento.getCodigoRespostaProcessamento(),
+						retornoEvento.getDescricaoRespostaProcessamento()
+				);
+
+				codigoResposta = codigoRespostaServico.obterCodigoResposta(codigoResposta);
+				envioEvento.setCodRespostaProcessamento(codigoResposta);
+
+				Set<ErroProcessamento> errosProcessamento = erroProcessamentoServico.retornaErroProcessamento(
+						retornoEvento.getRetornoErrosProcessamento(),
+						envioEvento
+				);
+
+				envioEvento.setErrosProcessamento(errosProcessamento);
+			});
+		}
+
+		if (lote.getEstado().getId() == Estado.PROCESSADO_COM_ERRO.getId()) {
+			String desResposta = lote.getCodigoResposta().getDesResposta();
+			enviosEvento.forEach(envioEvento -> envioEvento.setErroInterno(desResposta));
+		}
+
+	}
+
+	public Lote preencherDadosProcessamentoLote(Lote lote, RetornoLote retornoLote) {
+		CodigoResposta codigoResposta = new CodigoResposta(
+				CodigoResposta.RESPOSTA_GOV_LOTE,
+				retornoLote.getCodigoRespostaProcessamento(),
+				retornoLote.getDescricaoRespostaProcessamento()
+		);
+		codigoResposta = codigoRespostaServico.obterCodigoResposta(codigoResposta);
+		lote.setResposta(codigoResposta);
+
+		return lote;
+	}
+
+	public void atualizarExclusoesRetificacoes(Lote lote) {
+		lote.getEnviosEvento().forEach(envioEvento -> {
+			ocorrenciaServico.atualizarExclusao(envioEvento.getEvento());
+			ocorrenciaServico.atualizarRetificacao(envioEvento.getEvento());
+		});
+	}
+}

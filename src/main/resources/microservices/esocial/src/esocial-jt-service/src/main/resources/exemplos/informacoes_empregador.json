@@ -1,0 +1,31 @@
+{
+  "tipoOcorrencia": "INFORMACOES_EMPREGADOR",
+  "referencia": "00509968000148",
+  "operacao": "INCLUSAO",
+  "dataOcorrencia": 1522180917526,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "infoEmpregador": {
+      "idePeriodo": {
+        "iniValid": "2018-01",
+        "fimValid": null
+      },
+      "novaValidade": null,
+      "infoCadastro": {
+        "classTrib": "85",
+        "indCoop": 0,
+        "indConstr": 0,
+        "indDesFolha": 0,
+        "indOpcCP": null,
+        "indPorte": null,
+        "indOptRegEletron": 1,
+        "cnpjEFR": "41414323000109",
+        "dadosIsencao": null,
+        "infoOrgInternacional": null
+      }
+    }
+  }
+}

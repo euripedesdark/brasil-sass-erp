@@ -1,0 +1,73 @@
+.municipios-container {
+    padding: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.card-header h1 {
+    font-size: 24px;
+    color: #1f2937;
+    margin: 0;
+}
+
+.busca-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9fafb;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.busca-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.busca-field label {
+    font-weight: 600;
+    color: #4b5563;
+    min-width: 120px;
+}
+
+.acao-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.form-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.field label {
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.w-15rem {
+    width: 15rem;
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}

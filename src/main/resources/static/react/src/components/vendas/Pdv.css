@@ -1,0 +1,194 @@
+/*
+ * PDV — Fase 2A.
+ *
+ * Sem cor de fundo, sem gradiente, sem borda propria: o card translucido do
+ * base.css ja faz esse trabalho, e repetir aqui deixaria o PDV com a cor
+ * errada na primeira vez que o tema mudar. Este arquivo cuida de espaco e de
+ * legibilidade do que e' do PDV.
+ */
+.pdv {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ topo */
+.pdv-topo {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.pdv-topo__busca { flex: 1 1 22rem; min-width: 0; }
+.pdv-busca { display: block; width: 100%; }
+.pdv-busca input { width: 100%; }
+.pdv-topo__cliente { display: flex; flex-direction: column; gap: 0.2rem; }
+.pdv-limite {
+  color: var(--bc-content-muted, #4d94f0);
+  font-size: 0.78rem;
+  padding-left: 0.3rem;
+}
+
+.pdv-erro { width: 100%; }
+
+/* ----------------------------------------------------------------- corpo */
+.pdv-corpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 1rem;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .pdv-corpo { grid-template-columns: minmax(0, 1fr); }
+}
+
+.pdv-painel {
+  min-width: 0;
+  padding: 0.75rem;
+  border-radius: 0.8rem;
+  background: rgba(15, 34, 60, 0.44);
+}
+.pdv-painel--carrinho { display: flex; flex-direction: column; gap: 0.85rem; }
+
+/* --------------------------------------------------------------- busca */
+.pdv-vazio {
+  color: var(--bc-content-muted, #4d94f0);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin: 0 0 0.6rem;
+  padding: 0 0.2rem;
+}
+.pdv-produto { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.pdv-produto__nome {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pdv-produto__meta {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.pdv-preco { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ------------------------------------------------------------- carrinho */
+.pdv-desconto { display: flex; align-items: center; gap: 0.25rem; }
+.pdv-saldo { font-variant-numeric: tabular-nums; opacity: 0.8; }
+.pdv-saldo--nada { opacity: 0.4; }
+
+/* ------------------------------------------------- desconto do pedido */
+.pdv-desconto-pedido {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(148, 190, 235, 0.18);
+}
+.pdv-desconto-pedido label { font-size: 0.86rem; opacity: 0.85; }
+.pdv-desconto-pedido input { width: 7.5rem; }
+.pdv-ou { font-size: 0.78rem; opacity: 0.55; }
+.pdv-dica {
+  flex: 1 1 100%;
+  font-size: 0.75rem;
+  color: var(--bc-content-muted, #4d94f0);
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------- total */
+.pdv-total {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.7rem;
+  background: rgba(8, 22, 42, 0.5);
+}
+.pdv-total__linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.pdv-total__linha--soma { border-top: 1px solid rgba(148, 190, 235, 0.18); padding-top: 0.35rem; }
+.pdv-total__linha--total {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
+.pdv-total__nota {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--bc-content-muted, #4d94f0);
+}
+
+.pdv-finalizar { width: 100%; }
+
+/* ------------------------------------------------------------- diálogos */
+.pdv-dialogo-item { font-weight: 600; margin: 0 0 0.25rem; }
+.pdv-dialogo-base { font-size: 0.82rem; opacity: 0.75; margin: 0 0 0.8rem; }
+.pdv-dialogo-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.pdv-concluido {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0.9rem 0;
+  font-variant-numeric: tabular-nums;
+}
+.pdv-concluido > div { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; }
+.pdv-concluido__total {
+  border-top: 1px solid rgba(148, 190, 235, 0.2);
+  padding-top: 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ------------------------------------------------- 2B.1 fechamento de venda */
+.pdv-forma-label {
+  display: block;
+  font-size: 0.84rem;
+  opacity: 0.85;
+  margin: 0.5rem 0 0.3rem;
+}
+.pdv-dialogo-aviso { width: 100%; margin-top: 0.6rem; }
+.pdv-dialogo-base--fechamento { margin-top: 0.8rem; }
+.pdv-dialogo-base--fechamento em { font-style: normal; font-weight: 600; }
+
+/* --------------------------------------- 2B.2 multiplas formas de pagamento */
+.pdv-pagamentos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.8rem 0 0.2rem;
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.6rem;
+  background: rgba(8, 22, 42, 0.5);
+}
+.pdv-pagamentos__titulo {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+}
+.pdv-pagamento {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.pdv-pagamento--falta {
+  border-top: 1px solid rgba(148, 190, 235, 0.18);
+  padding-top: 0.3rem;
+  margin-top: 0.15rem;
+  font-weight: 700;
+}

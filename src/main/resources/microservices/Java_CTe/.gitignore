@@ -1,0 +1,11 @@
+/target/
+*.iml
+
+*.classpath
+*.project
+.settings/org.eclipse.jdt.core.prefs
+*.prefs
+.settings/org.eclipse.wst.common.component
+*.xml
+/.idea/
+/.github/*.md

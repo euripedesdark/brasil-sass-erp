@@ -1,0 +1,206 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Dialog } from 'primereact/dialog';
+import { Button } from 'primereact/button';
+import { Message } from 'primereact/message';
+import { Toast } from 'primereact/toast';
+import { Checkbox } from 'primereact/checkbox';
+import { Tag } from 'primereact/tag';
+import { apiFetch } from '../../services/ApiConfig';
+
+/**
+ * Seletor de modulos por usuario.
+ *
+ * Antes o acesso era so por perfil, e quem trabalhava em Financeiro e Estoque
+ * precisava de um perfil "hifenizado" so para isso. Aqui a pessoa marca os
+ * modulos que pode acessar — pode marcar varios, e cada um pode ser somente
+ * leitura.
+ *
+ * O conjunto enviado SUBSTITUI o anterior: o que a tela mostra e o que fica.
+ */
+export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
+    const toast = useRef(null);
+    const [modulos, setModulos] = useState([]);
+    const [selecionados, setSelecionados] = useState({});
+    const [somenteLeitura, setSomenteLeitura] = useState({});
+    const [carregando, setCarregando] = useState(false);
+    const [salvando, setSalvando] = useState(false);
+    const [erro, setErro] = useState('');
+
+    useEffect(() => {
+        if (!visible || !usuario?.id) return;
+        setCarregando(true);
+        setErro('');
+        (async () => {
+            try {
+                const r = await apiFetch(`/api/superadmin/usuarios/${usuario.id}/modulos`);
+                if (!r.ok) throw new Error((await r.json())?.errors?.[0]?.message || `HTTP ${r.status}`);
+                const d = await r.json();
+                setModulos(d.modulos || []);
+                const sel = {};
+                const leitura = {};
+                (d.modulos || []).forEach((m) => {
+                    sel[m.id] = !!m.liberado;
+                    leitura[m.id] = !!m.somenteLeitura;
+                });
+                setSelecionados(sel);
+                setSomenteLeitura(leitura);
+            } catch (e) {
+                setErro(e.message);
+            } finally {
+                setCarregando(false);
+            }
+        })();
+    }, [visible, usuario?.id]);
+
+    const alternar = (id) => {
+        setSelecionados((s) => ({ ...s, [id]: !s[id] }));
+        if (selecionados[id]) {
+            setSomenteLeitura((s) => ({ ...s, [id]: false }));
+        }
+    };
+
+    const alternarLeitura = (id) => {
+        if (!selecionados[id]) return;
+        setSomenteLeitura((s) => ({ ...s, [id]: !s[id] }));
+    };
+
+    const marcarTodos = (marcar) => {
+        const todos = {};
+        modulos.forEach((m) => { todos[m.id] = marcar; });
+        setSelecionados(todos);
+        if (!marcar) setSomenteLeitura({});
+    };
+
+    const salvar = async () => {
+        const moduloIds = Object.entries(selecionados)
+            .filter(([, v]) => v)
+            .map(([k]) => Number(k));
+        const leitura = {};
+        moduloIds.forEach((id) => { leitura[id] = !!somenteLeitura[id]; });
+
+        setSalvando(true);
+        setErro('');
+        try {
+            const r = await apiFetch(`/api/superadmin/usuarios/${usuario.id}/modulos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ moduloIds, somenteLeitura: leitura })
+            });
+            if (!r.ok) throw new Error((await r.json())?.errors?.[0]?.message || `HTTP ${r.status}`);
+
+            const total = moduloIds.length;
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Módulos atualizados',
+                detail: total === 0
+                    ? `${usuario.username} ficou sem acesso a nenhum módulo.`
+                    : `${usuario.username} tem acesso a ${total} módulo(s).`,
+                life: 3500
+            });
+            onSalvo?.();
+        } catch (e) {
+            setErro(e.message);
+        } finally {
+            setSalvando(false);
+        }
+    };
+
+    const marcados = Object.values(selecionados).filter(Boolean).length;
+
+    return (
+        <Dialog
+            visible={visible}
+            onHide={onHide}
+            modal
+            draggable={false}
+            style={{ width: 'min(680px, 94vw)' }}
+            header={`Módulos de ${usuario?.username || ''}`}
+            footer={
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', alignItems: 'center' }}>
+                    <span className="text-muted" style={{ fontSize: '0.82rem' }}>
+                        {marcados} de {modulos.length} selecionado(s)
+                    </span>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Button label="Cancelar" severity="secondary" text onClick={onHide} />
+                        <Button label="Salvar" icon="pi pi-check" loading={salvando} onClick={salvar} />
+                    </div>
+                </div>
+            }
+        >
+            <Toast />
+
+            {erro && <Message severity="error" text={erro} className="mb-3" onLifeEnd={() => setErro('')} />}
+
+            {carregando ? (
+                <Message severity="info" text="Carregando módulos..." />
+            ) : (
+                <>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.9rem' }}>
+                        <Button
+                            label="Marcar todos"
+                            size="small" text icon="pi pi-check-square"
+                            onClick={() => marcarTodos(true)}
+                        />
+                        <Button
+                            label="Desmarcar todos"
+                            size="small" text icon="pi pi-stop"
+                            severity="secondary"
+                            onClick={() => marcarTodos(false)}
+                        />
+                    </div>
+
+                    <div className="modulo-selector">
+                        {modulos.map((m) => (
+                            <div
+                                key={m.id}
+                                className={`modulo-selector__item ${selecionados[m.id] ? 'is-on' : ''}`}
+                            >
+                                <div className="modulo-selector__main">
+                                    <Checkbox
+                                        inputId={`mod-${m.id}`}
+                                        checked={!!selecionados[m.id]}
+                                        onChange={() => alternar(m.id)}
+                                    />
+                                    <label htmlFor={`mod-${m.id}`} className="modulo-selector__label">
+                                        <i className={m.icone || 'pi pi-box'} />
+                                        <span>{m.nome}</span>
+                                        {m.exigeSuperuser && (
+                                            <Tag severity="danger" value="restrito" />
+                                        )}
+                                    </label>
+                                </div>
+
+                                <div className="modulo-selector__desc">{m.descricao}</div>
+
+                                {selecionados[m.id] && !m.exigeSuperuser && (
+                                    <label className="modulo-selector__somente">
+                                        <Checkbox
+                                            inputId={`somente-${m.id}`}
+                                            checked={!!somenteLeitura[m.id]}
+                                            onChange={() => alternarLeitura(m.id)}
+                                        />
+                                        <span>Somente leitura</span>
+                                    </label>
+                                )}
+
+                                {m.exigeSuperuser && (
+                                    <small className="modulo-selector__aviso">
+                                        Módulo com documentos sensíveis: exige SUPERUSER.
+                                    </small>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    <Message
+                        severity="info"
+                        text="Desmarcar todos deixa a pessoa sem acesso a nenhum módulo do sistema."
+                        className="mt-3"
+                    />
+                </>
+            )}
+        </Dialog>
+    );
+};
+
+export default ModuloSelector;

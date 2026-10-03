@@ -1,0 +1,58 @@
+/* SefazConsulta.css */
+
+.sefazconsulta-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.sefazconsulta-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.sefazconsulta-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.field .p-dropdown, .field .p-inputtext {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+}
+
+.sefazconsulta-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sefazconsulta-actions .p-button {
+    transition: all 0.2s ease;
+}
+
+.sefazconsulta-actions .p-button:hover {
+    transform: translateY(-1px);
+    opacity: 0.95;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .sefazconsulta-enterprise-container { padding: 0.5rem; }
+    .sefazconsulta-actions { flex-direction: column; }
+}

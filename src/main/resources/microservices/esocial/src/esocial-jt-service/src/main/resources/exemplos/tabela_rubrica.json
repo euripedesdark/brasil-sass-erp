@@ -1,0 +1,34 @@
+{
+  "tipoOcorrencia": "TABELA_RUBRICA",
+  "referencia": "01",
+  "operacao": "INCLUSAO",
+  "dataOcorrencia": 1522181304444,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "infoRubrica": {
+      "ideRubrica": {
+        "codRubr": "01",
+        "ideTabRubr": "01",
+        "iniValid": "2018-01",
+        "fimValid": null
+      },
+      "dadosRubrica": {
+        "dscRubr": "RUBRICA",
+        "natRubr": 1000,
+        "tpRubr": 1,
+        "codIncCP": "00",
+        "codIncIRRF": "11",
+        "codIncFGTS": "11",
+        "observacao": "Observação sobre a rubrica",
+        "ideProcessoCP": null,
+        "ideProcessoIRRF": null,
+        "ideProcessoFGTS": null,
+        "tetoRemun": "S",
+        "codIncCPRP": "00"
+      }
+    }
+  }
+}

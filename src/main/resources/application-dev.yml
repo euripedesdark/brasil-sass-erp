@@ -1,0 +1,123 @@
+spring:
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:25}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+            required: ${MAIL_SMTP_STARTTLS_REQUIRED:false}
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+  data:
+    mongodb:
+      uri: "mongodb://admin:${MONGODB_PASSWORD:ALTERE_ME}@localhost:27017/brasil-saas?authSource=admin"
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:brasil-saas}
+    password: ${RABBIT_PASSWORD:ALTERE_ME}
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 20
+        concurrency: 2
+        max-concurrency: 8
+    # Os certificados do Postgres sao GLOBAIS da maquina, e por isso vivem num
+    # caminho de SISTEMA, instalado pelo installbase.sh:
+    #
+    #     /etc/brasil-saas/pki/ca.crt            (sslrootcert, a CA)
+    #     /etc/brasil-saas/pki/issued/sa.crt     (sslcert,    o certificado do cliente)
+    #     /etc/brasil-saas/pki/private/sa.pk8    (sslkey,     a chave do cliente)
+    #
+    # O caminho anterior era o do notebook, e o depois disso o home do usuario:
+    #
+    #     ${BRASIL_SAAS_CERTS_DIR:/home/euripedes/OneDrive/.../GIT Repos/.../certs/pki}
+    #     ${BRASIL_SAAS_CERTS_DIR:${user.home}/.local/share/brasil-saas-certs/pki}
+    #
+    # Os dois funciona(m) numa maquina so. O primeiro porque o repositorio esta em
+    # outro lugar no erp; o segundo porque ${user.home} e' o usuario do PROCESSO,
+    # e o ERP pode rodar como outro usuario. Nos dois, sem a variavel de ambiente,
+    # o erro que aparecia nao era o caminho:
+    #
+    #     FATAL: connection requires a valid client certificate
+    #
+    # que aponta para certificado e cuja causa e' um arquivo inexistente naquele
+    # caminho. A PKI estava la, inteira e correta.
+    #
+    # O certificado DA EMPRESA (o A1) NAO esta aqui, e e' de proposito: ele nao e'
+    # global. Fica no MongoDB, na colecao `documentos`, como um documento
+    # `tipoEntidade: "certificado_digital"`, e e' por isso que ele chega junto na
+    # restauracao do dump. O que esta aqui e' so a infraestrutura de conexao.
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas&sslmode=verify-ca&sslrootcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/ca.crt&sslcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/issued/sa.crt&sslkey=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/private/sa.pk8"
+    username: sa
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: BrasilSaasDevPool
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    show-sql: true
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: brasil_saas
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: brasil_saas
+    default-schema: brasil_saas
+    baseline-on-migrate: true
+    validate-on-migrate: false
+
+  jackson:
+    time-zone: America/Sao_Paulo
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_null
+
+logging:
+  level:
+    root: INFO
+    br.com.brasil_saas: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.security: DEBUG
+
+brasil-saas:
+  imagens:
+    diretorio-entrada: ${IMAGENS_ENTRADA_DIR:src/main/resources/static/images}
+    monitoramento-intervalo-ms: 5000
+  jwt:
+    secret: ${JWT_SECRET:ALTERE_ME_32_BYTES_OU_MAIS}
+    expiration-ms: 3600000
+    refresh-expiration-ms: 604800000
+  fiscal:
+    sefaz:
+      enabled: false
+      ambiente: HOMOLOGACAO
+      timeout-ms: 30000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

@@ -1,0 +1,290 @@
+/* ClienteLogo.css - Estilos para o componente de Logos de Clientes */
+
+.cliente-logo-enterprise-container {
+    padding: 0;
+    height: 100%;
+}
+
+.cliente-logo-main-card {
+    margin: 0;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.cliente-logo-main-card .p-card-content {
+    padding: 1rem;
+    height: calc(100% - 100px);
+    display: flex;
+    flex-direction: column;
+}
+
+.cliente-logo-main-card .p-card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.cliente-logo-header-actions {
+    margin-bottom: 1rem;
+}
+
+.cliente-logo-info p {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.cliente-logo-acoes {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.cliente-logo-acoes .p-button {
+    width: 32px;
+    height: 32px;
+}
+
+.cliente-logo-acoes .p-button-text {
+    background-color: transparent;
+}
+
+/* Estilos para o DataTable */
+.cliente-logo-enterprise-container .p-datatable {
+    flex: 1;
+    min-height: 0;
+}
+
+.cliente-logo-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem;
+}
+
+.cliente-logo-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cliente-logo-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background-color: #f9fafb;
+}
+
+.cliente-logo-enterprise-container .p-datatable .p-datatable-tbody > tr > td:first-child {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Estilos para o Dialog */
+.cliente-logo-enterprise-container .p-dialog {
+    border-radius: 0.75rem;
+}
+
+.cliente-logo-enterprise-container .p-dialog .p-dialog-header {
+    background-color: #374151;
+    color: white;
+    border-radius: 0.75rem 0.75rem 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.cliente-logo-enterprise-container .p-dialog .p-dialog-header-icons {
+    color: white;
+}
+
+.cliente-logo-enterprise-container .p-dialog .p-dialog-content {
+    padding: 1.5rem;
+    overflow-y: auto;
+    max-height: 70vh;
+}
+
+.cliente-logo-enterprise-container .p-dialog .p-dialog-footer {
+    background-color: #f9fafb;
+    border-radius: 0 0 0.75rem 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Estilos para o FileUpload */
+.cliente-logo-enterprise-container .p-fileupload {
+    width: 100%;
+}
+
+.cliente-logo-enterprise-container .p-fileupload .p-fileupload-buttonbar {
+    background-color: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.cliente-logo-enterprise-container .p-fileupload .p-fileupload-buttonbar:hover {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.cliente-logo-enterprise-container .p-fileupload .p-button {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.cliente-logo-enterprise-container .p-fileupload .p-button:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+/* Estilos para ProgressBar */
+.cliente-logo-enterprise-container .p-progressbar {
+    border-radius: 0.5rem;
+    height: 8px;
+}
+
+.cliente-logo-enterprise-container .p-progressbar .p-progressbar-value {
+    background-color: #2563eb;
+    border-radius: 0.5rem;
+}
+
+/* Estilos para a Preview da Imagem */
+.cliente-logo-enterprise-container .logo-preview {
+    background-color: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.cliente-logo-enterprise-container .logo-preview-title {
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.cliente-logo-enterprise-container .logo-preview-image {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 0.375rem;
+    margin-top: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.cliente-logo-enterprise-container .logo-preview-actions {
+    margin-top: 1rem;
+}
+
+/* Estilos para o upload area */
+.cliente-logo-enterprise-container .upload-area {
+    background-color: #fef3c7;
+    border: 2px dashed #f59e0b;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    text-align: center;
+    color: #92400e;
+}
+
+/* Estilos para o upload section */
+.cliente-logo-enterprise-container .upload-section {
+    background-color: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+/* Estilos para Toast */
+.cliente-logo-enterprise-container .p-toast {
+    min-width: 300px;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .cliente-logo-enterprise-container .p-dialog {
+        width: 90vw;
+        max-width: 90vw;
+    }
+    
+    .cliente-logo-enterprise-container .p-datatable .p-datatable-thead > tr > th,
+    .cliente-logo-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+        font-size: 0.75rem;
+        padding: 0.5rem;
+    }
+    
+    .cliente-logo-enterprise-container .logo-preview-image {
+        max-height: 200px;
+    }
+}
+
+/* Estilos para Message */
+.cliente-logo-enterprise-container .p-message {
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+}
+
+.cliente-logo-enterprise-container .p-message-error {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.cliente-logo-enterprise-container .p-message-success {
+    background-color: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #10b981;
+}
+
+/* Estilos para os botoes */
+.cliente-logo-enterprise-container .p-button-success {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+
+.cliente-logo-enterprise-container .p-button-success:hover {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.cliente-logo-enterprise-container .p-button-danger {
+    background-color: #dc2626;
+    border-color: #dc2626;
+}
+
+.cliente-logo-enterprise-container .p-button-danger:hover {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.cliente-logo-enterprise-container .p-button-info {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.cliente-logo-enterprise-container .p-button-text {
+    background-color: transparent;
+    color: #374151;
+}
+
+.cliente-logo-enterprise-container .p-button-text:hover {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+/* Estilos para Tag */
+.cliente-logo-enterprise-container .p-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.cliente-logo-enterprise-container .p-tag-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.cliente-logo-enterprise-container .p-tag-warning {
+    background-color: #f59e0b;
+    color: white;
+}

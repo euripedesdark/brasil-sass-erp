@@ -1,0 +1,17 @@
+[Unit]
+Description=Brasil SaaS ERP Módulo de RH - Funcionários, Folha de Pagamento, Comissões Module
+After=network.target postgresql.service mongodb.service braslcloud-erp-core.service
+
+[Service]
+User=euripedes
+WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP
+ExecStart=/usr/bin/java -jar modules/rh/target/brasil-saas-erp-rh-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
+Restart=always
+RestartSec=10
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=JWT_SECRET=brasil-saas-erp-rh-ALTERE_ME_32_BYTES_OU_MAIS
+Environment=MONGODB_PASSWORD=ALTERE_ME
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

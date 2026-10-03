@@ -1,0 +1,36 @@
+name: Microservices Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  verify-presence:
+    name: Verify fiscal microservices
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify repository inventory
+        run: bash scripts/verify-microservices.sh
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Validate principal Maven microservices
+        shell: bash
+        run: |
+          set -e
+          for dir in             src/main/resources/microservices/Java_NFe             src/main/resources/microservices/Java-Efd-Icms             src/main/resources/microservices/Java-Efd-Contribuicoes             src/main/resources/microservices/Java_Certificado             src/main/resources/microservices/Java_Pdf_Signature             src/main/resources/microservices/nfe             src/main/resources/microservices/nfse; do
+            echo "=== Validating $dir ==="
+            mvn -B -ntp -f "$dir/pom.xml" test -DskipTests
+          done

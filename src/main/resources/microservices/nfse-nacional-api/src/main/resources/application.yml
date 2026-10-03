@@ -1,0 +1,68 @@
+# Configuracao da NFS-e nacional / AGILIBlue.
+#
+# Leitura: docs/relatorios/NFSE-NACIONAL-API.md
+#
+# O que e' deste ERP fica aqui. Os enderecos das oito operacoes ficam em
+# NfseNacionalOperacoes, junto do que a documentacao da prefeitura diz.
+server:
+  port: 4570
+
+nfse:
+  nacional:
+    # A base. A documentacao traz o exemplo
+    # https://nfse.rondonopolis.mt.gov.br/api/GerarNfse e a base isolada
+    # https://nfse.rondonopolis.mt.gov.br//api/.
+    url-base: https://nfse.rondonopolis.mt.gov.br/api
+
+    # O formato da declaracao. POS_REFORMA e' o vigente desde 09/02/2026, e e'
+    # o que o proprio AGILIBlue mandou no xml de 21/05/2026.
+    # PRE_REFORMA e' o que o nfse-v-100.xsd descreve.
+    formato: POS_REFORMA
+
+    # PARAMETRO, nao URL. A documentacao:
+    # "adicione a request o parametro booleano homologacao com valor igual a
+    # true. [...] realizara todas as etapas de validacao, mas ao final nao ira
+    # gravar a NFS-e no sistema".
+    #
+    # true  = valida e nao grava. O numero devolvido NAO existe.
+    # false = grava de verdade, e ocupa numero da serie.
+    #
+    # Deixado em true de proposito: com false e a UnidadeGestora errada, a nota
+    # vai para o municipio errado e nao ha como desfazer.
+    homologacao: true
+
+    # CNPJ da Prefeitura de Rondonopolis, para a tag UnidadeGestora.
+    # A documentacao diz que se obtem com a administracao publica municipal.
+    # DV conferido: 03.347.101/0001-21, digitos 2 e 1 batem com o calculo.
+    # E o mesmo que o <UnidadeGestora> do xml-21-de-maio-de-2026.xml.
+    unidade-gestora: "03347101000121"
+
+    # Chave digital do prestador, MD5 de 32 caracteres, dada pela prefeitura.
+    # Alternativa a assinatura: o XSD aceita UMA ou a outra, nunca as duas.
+    # Vazio = a API assina com o certificado A1.
+    chave-digital: ""
+
+    # O CNPJ do prestador e' o do certificado A1: 00000000000191, o
+    # e-CNPJ A1 da ICP-Brasil (AC SAFEWEB RFB v5) que o ERP ja usa para a NFS-e
+    # de Sao Paulo e para a SVRS. Nao e' o CNPJ da matriz.
+    cnpj-prestador: "00000000000191"
+    # A Inscricao Municipal e' opcional no XSD (minOccurs=0) porque o prestador
+    # pode nao estar no Database de Contribuincentes. Rondonopolis responde.
+    inscricao-municipal-prestador: ""
+
+    # O MESMO A1 que a API de Sao Paulo usa. Sem ChaveDigital, a autenticacao
+    # entra pelo dsig:Signature do JSR-105, e o certificado tambem vai no
+    # handshake TLS.
+    certificado-caminho: ${CERTIFICADO_CAMINHO:ALTERE_ME}
+    certificado-senha: "ALTERE_ME"
+
+    assinar: true
+    # Desligado por padrao: o unico XSD e' o 1.00, do formato ANTES, e ele
+    # rejeita o formato vigente — por tag e por posicao. Ligue so em diagnostico
+    # do formato PRE_REFORMA.
+    validar: false
+    timeouto-ms: 60000
+
+logging:
+  level:
+    br.com.brasil_saas.fiscal.nacional: INFO

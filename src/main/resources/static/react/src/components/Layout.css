@@ -1,0 +1,423 @@
+:root {
+    --bc-sidebar: rgba(10, 40, 90, 0.55);
+    --bc-sidebar-border: rgba(120, 180, 255, 0.28);
+    --bc-accent: #3b82f6;
+    --bc-accent-2: #60a5fa;
+    --bc-text: #f0f7ff;
+    --bc-text-muted: #a8c4e8;
+    --bc-glass: rgba(12, 35, 75, 0.45);
+    --bc-hover: rgba(96, 165, 250, 0.18);
+    /* painel de modulo */
+    --bc-panel-bg: rgba(255, 255, 255, 0.72);
+    --bc-panel-border: rgba(255, 255, 255, 0.55);
+    --bc-panel-text: #1e293b;
+    --bc-panel-muted: #475569;
+}
+
+.enterprise-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background: #0b1220;
+    background-size: cover;
+    background-position: center;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    color: var(--bc-text);
+}
+
+/* ============ SIDEBAR AZUL TRANSLÚCIDO ============ */
+.enterprise-sidebar {
+    width: 290px;
+    min-width: 290px;
+    flex-shrink: 0;
+    background: var(--bc-sidebar);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    border-right: 1px solid var(--bc-sidebar-border);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease, min-width 0.3s ease;
+    z-index: 100;
+    position: relative;
+    box-shadow: 4px 0 24px rgba(0, 30, 80, 0.25);
+}
+
+.enterprise-sidebar.collapsed {
+    width: 76px;
+    min-width: 76px;
+}
+
+.enterprise-sidebar.collapsed .brand-name,
+.enterprise-sidebar.collapsed .user-details {
+    display: none;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 0.85rem;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.enterprise-sidebar.collapsed .sidebar-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem 0.4rem;
+}
+
+.collapse-btn {
+    background: rgba(96, 165, 250, 0.15) !important;
+    color: #e0f0ff !important;
+    border: 1px solid rgba(120, 180, 255, 0.35) !important;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    min-width: 2.1rem !important;
+    flex-shrink: 0;
+}
+
+.collapse-btn:hover {
+    background: rgba(96, 165, 250, 0.3) !important;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.brand-logo {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    color: #fff;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    border: 1px solid rgba(147, 197, 253, 0.4);
+}
+
+.brand-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--bc-text);
+    white-space: nowrap;
+}
+
+.sidebar-user {
+    padding: 0.25rem 1.1rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.enterprise-sidebar.collapsed .sidebar-user {
+    justify-content: center;
+    padding: 0.25rem 0.4rem 0.75rem;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--bc-text);
+    white-space: nowrap;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--bc-accent-2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0.65rem 0.5rem;
+}
+
+.sidebar-footer {
+    padding: 0.65rem 0.75rem 1rem;
+    flex-shrink: 0;
+    border-top: 1px solid var(--bc-sidebar-border);
+}
+
+.enterprise-sidebar.collapsed .sidebar-footer .user-profile-btn .p-button-label {
+    display: none;
+}
+
+/* ============ MENU PRIMEREACT ============ */
+.enterprise-panel-menu {
+    width: 100%;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.enterprise-panel-menu .p-panelmenu-panel,
+.enterprise-panel-menu .p-panelmenu-header,
+.enterprise-panel-menu .p-panelmenu-content,
+.enterprise-panel-menu .p-panelmenu-submenu {
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.enterprise-panel-menu .p-panelmenu-content {
+    background: rgba(8, 30, 70, 0.35) !important;
+    border-radius: 0 0 10px 10px !important;
+}
+
+.enterprise-panel-menu .p-menuitem,
+.enterprise-panel-menu .p-menuitem-content {
+    background: transparent !important;
+}
+
+.enterprise-panel-menu .p-panelmenu-header-content,
+.enterprise-panel-menu .p-menuitem-content {
+    background: transparent !important;
+    border-radius: 10px;
+}
+
+.enterprise-panel-menu .p-panelmenu-header-content:hover,
+.enterprise-panel-menu .p-menuitem-content:hover {
+    background: var(--bc-hover) !important;
+}
+
+.enterprise-panel-menu .p-panelmenu-header-link,
+.enterprise-panel-menu .p-menuitem-link {
+    color: #eaf4ff !important;
+    background: transparent !important;
+    padding: 0.72rem 0.9rem !important;
+    border-radius: 10px;
+    min-height: 42px;
+    text-decoration: none !important;
+}
+
+.enterprise-panel-menu .p-menuitem-text {
+    color: #f0f7ff !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+    font-weight: 500 !important;
+    font-size: 0.92rem !important;
+    -webkit-text-fill-color: #f0f7ff !important;
+}
+
+.enterprise-panel-menu .p-panelmenu-header-link .p-menuitem-text {
+    font-weight: 700 !important;
+}
+
+.enterprise-panel-menu .p-menuitem-icon,
+.enterprise-panel-menu .p-submenu-icon,
+.enterprise-panel-menu .p-panelmenu-icon {
+    color: #93c5fd !important;
+}
+
+.enterprise-panel-menu .p-menuitem-link {
+    padding-left: 1.25rem !important;
+}
+
+.enterprise-sidebar.collapsed .enterprise-panel-menu .p-menuitem-text,
+.enterprise-sidebar.collapsed .enterprise-panel-menu .p-submenu-icon {
+    display: none !important;
+}
+
+.enterprise-sidebar.collapsed .enterprise-panel-menu .p-panelmenu-header-link,
+.enterprise-sidebar.collapsed .enterprise-panel-menu .p-menuitem-link {
+    justify-content: center;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.enterprise-sidebar.collapsed .enterprise-panel-menu .p-panelmenu-header-link .p-menuitem-icon,
+.enterprise-sidebar.collapsed .enterprise-panel-menu .p-menuitem-link .p-menuitem-icon {
+    margin-right: 0 !important;
+}
+
+/* ============ MAIN ============ */
+.enterprise-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.enterprise-header {
+    height: 64px;
+    background: var(--bc-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--bc-sidebar-border);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+    z-index: 90;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 1rem;
+}
+
+.page-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--bc-text);
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.page-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    background: transparent;
+}
+
+/* =========================================================
+   PAINÉIS DOS MÓDULOS — vidro translúcido legível
+   ========================================================= */
+.page-content > div,
+.page-content .dashboard-container,
+.page-content .p-card,
+.page-content .p-panel,
+.page-content .p-datatable,
+.page-content .p-toolbar {
+    color: var(--bc-panel-text);
+}
+
+.page-content .p-card,
+.page-content .p-panel {
+    background: var(--bc-panel-bg) !important;
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+    border-radius: 16px !important;
+    border: 1px solid var(--bc-panel-border) !important;
+    box-shadow:
+        0 8px 32px rgba(0, 20, 60, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+.page-content .p-card .p-card-title,
+.page-content .p-card .p-card-subtitle,
+.page-content .p-card .p-card-content,
+.page-content .p-card .p-card-body {
+    color: var(--bc-panel-text) !important;
+    background: transparent !important;
+}
+
+.page-content .p-card .p-card-subtitle,
+.page-content .p-card p {
+    color: var(--bc-panel-muted) !important;
+}
+
+/* DataTable glass */
+.page-content .p-datatable {
+    background: transparent !important;
+}
+
+.page-content .p-datatable .p-datatable-header,
+.page-content .p-datatable .p-datatable-footer {
+    background: rgba(255, 255, 255, 0.35) !important;
+    border: none !important;
+    color: var(--bc-panel-text) !important;
+}
+
+.page-content .p-datatable .p-datatable-thead > tr > th {
+    background: rgba(255, 255, 255, 0.45) !important;
+    color: var(--bc-panel-text) !important;
+    border-color: rgba(0, 0, 0, 0.06) !important;
+    font-weight: 600;
+}
+
+.page-content .p-datatable .p-datatable-tbody > tr {
+    background: rgba(255, 255, 255, 0.28) !important;
+    color: var(--bc-panel-text) !important;
+}
+
+.page-content .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.38) !important;
+}
+
+.page-content .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(255, 255, 255, 0.55) !important;
+}
+
+.page-content .p-datatable .p-datatable-tbody > tr > td {
+    border-color: rgba(0, 0, 0, 0.05) !important;
+    color: var(--bc-panel-text) !important;
+}
+
+.page-content .p-datatable .p-paginator {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: none !important;
+    color: var(--bc-panel-text) !important;
+}
+
+.page-content .p-datatable-emptymessage td {
+    background: transparent !important;
+    color: var(--bc-panel-muted) !important;
+}
+
+/* Toolbar / botões dentro do painel */
+.page-content .p-toolbar {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(8px);
+}
+
+/* O painel de conteudo e o estilo dos dialogos passaram para
+   components/shared/base.css, para valer igual em todas as telas.
+
+   As duas regras que ficam aqui sao as inconsistentes:
+
+   - `.page-content > div:not([class*='p-']):first-child` so dava painel a
+     telas cujo div raiz nao tivesse nenhuma classe comecando em "p-". Era por
+     isso que a mesma aplicacao ficava com cara diferente em cada menu, sem
+     ninguem ter decidido isso.
+   - `.page-content .p-dialog` nunca casou nada: o PrimeReact renderiza o
+     Dialog em portal na raiz do documento, fora de .page-content. Todo o
+     estilo de dialogo daqui era codigo morto. */
+
+.page-content > div:not([class*='p-']):first-child h1,
+.page-content > div:not([class*='p-']):first-child h2,
+.page-content > div:not([class*='p-']):first-child h3 {
+    color: var(--bc-panel-text);
+}
+
+.page-content > div:not([class*='p-']):first-child p {
+    color: var(--bc-panel-muted);
+}
+
+.user-profile-btn {
+    width: 100%;
+    justify-content: flex-start !important;
+    color: #eaf4ff !important;
+}
+
+
+/* UX 2026 — dimensionamento determinístico do shell. */
+.enterprise-main { width:0; min-width:0; }
+@media(min-width:1600px){.page-content{padding-left:1.6vw;padding-right:1.6vw}}
+@media(max-width:1200px){.enterprise-sidebar:not(.collapsed){width:23vw;min-width:23vw}.enterprise-header{padding-left:1.8vw;padding-right:1.8vw}}
+@media(max-width:900px){.enterprise-sidebar:not(.collapsed){width:26vw;min-width:26vw}.enterprise-header{height:7vh;min-height:52px}.page-title{font-size:clamp(.92rem,1.5vw,1.1rem)}}
+@media(max-width:760px){.enterprise-sidebar:not(.collapsed){width:76px;min-width:76px}.enterprise-sidebar:not(.collapsed) .brand-name,.enterprise-sidebar:not(.collapsed) .user-details,.enterprise-sidebar:not(.collapsed) .enterprise-panel-menu .p-menuitem-text,.enterprise-sidebar:not(.collapsed) .enterprise-panel-menu .p-submenu-icon{display:none !important}.enterprise-sidebar:not(.collapsed) .enterprise-panel-menu .p-panelmenu-header-link,.enterprise-sidebar:not(.collapsed) .enterprise-panel-menu .p-menuitem-link{justify-content:center;padding-left:0 !important;padding-right:0 !important}}

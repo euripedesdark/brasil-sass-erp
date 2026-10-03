@@ -1,0 +1,17 @@
+[Unit]
+Description=Brasil SaaS ERP - Service Watchdog
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP
+ExecStart=/bin/bash /home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP/scripts/service-watchdog.sh start
+Restart=always
+RestartSec=30
+Environment=GRAYLOG_SERVER=127.0.0.1
+Environment=GRAYLOG_PORT=12201
+Environment=GRAYLOG_ENABLED=true
+
+[Install]
+WantedBy=multi-user.target

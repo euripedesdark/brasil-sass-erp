@@ -1,0 +1,2 @@
+module NfsePrefeituraSp::Types
+end

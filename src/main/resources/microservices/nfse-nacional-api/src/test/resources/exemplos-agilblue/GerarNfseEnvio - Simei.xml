@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GerarNfseEnvio xmlns="http://www.agili.com.br/nfse_v_1.00.xsd">
+  <UnidadeGestora>43212247000184</UnidadeGestora>
+  <DeclaracaoPrestacaoServico>
+    <IdentificacaoPrestador>
+      <ChaveDigital>b46804fd23dc6145148dd78e7c1038db</ChaveDigital>
+      <CpfCnpj>
+        <Cnpj>16624611035289</Cnpj>
+      </CpfCnpj>
+      <InscricaoMunicipal>110864</InscricaoMunicipal>
+    </IdentificacaoPrestador>
+    <DadosTomador>
+      <IdentificacaoTomador>
+        <CpfCnpj>
+          <Cnpj>33548179000175</Cnpj>
+        </CpfCnpj>
+      </IdentificacaoTomador>
+      <RazaoSocial>TOMADOR NFS-e</RazaoSocial>
+      <LocalEndereco>1</LocalEndereco>
+      <Endereco>
+        <TipoLogradouro>Rua</TipoLogradouro>
+        <Logradouro>HARRISON CORREA</Logradouro>
+        <Numero>100</Numero>
+        <Bairro>CENTRO</Bairro>
+        <Municipio>
+          <CodigoMunicipioIBGE>5000203</CodigoMunicipioIBGE>
+          <Descricao>Água Clara</Descricao>
+          <Uf>MS</Uf>
+        </Municipio>
+        <Pais>
+          <CodigoPaisBacen>01058</CodigoPaisBacen>
+          <Descricao>Brasil</Descricao>
+        </Pais>
+        <Cep>79680000</Cep>
+      </Endereco>
+    </DadosTomador>
+    <RegimeEspecialTributacao>
+      <Codigo>-5</Codigo>
+      <Descricao>Microempreendedor individual (MEI)</Descricao>
+    </RegimeEspecialTributacao>
+    <OptanteSimplesNacional>0</OptanteSimplesNacional>
+    <OptanteMEISimei>1</OptanteMEISimei>
+    <ISSQNRetido>0</ISSQNRetido>
+    <ResponsavelISSQN>
+      <Codigo>-3</Codigo>
+      <Descricao>Prestador do serviÃ§o</Descricao>
+    </ResponsavelISSQN>
+    <CodigoAtividadeEconomica>26221.00</CodigoAtividadeEconomica>
+    <ExigibilidadeISSQN>
+      <Codigo>-8</Codigo>
+      <Descricao>Fixo</Descricao>
+    </ExigibilidadeISSQN>
+    <ValorServicos>1000.00</ValorServicos>
+    <ValorDescontos>0</ValorDescontos>
+    <ValorPis>0</ValorPis>
+    <ValorCofins>0</ValorCofins>
+    <ValorInss>0</ValorInss>
+    <ValorIrrf>0</ValorIrrf>
+    <ValorCsll>0</ValorCsll>
+    <ValorOutrasRetencoes>0</ValorOutrasRetencoes>
+    <ValorBaseCalculoISSQN>1000.00</ValorBaseCalculoISSQN>
+    <AliquotaISSQN>5.0</AliquotaISSQN>
+    <ValorISSQNCalculado>50.00</ValorISSQNCalculado>
+    <ValorISSQNRecolher>0</ValorISSQNRecolher>
+    <ValorDeducaoConstCivil>0.00</ValorDeducaoConstCivil>
+    <ValorLiquido>1000.00</ValorLiquido>
+    <Observacao>Gerado via WebService</Observacao>
+    <Complemento>Gerado via WebService</Complemento>
+    <ListaServico>
+      <DadosServico>
+        <Discriminacao>DescriÃ§Ã£o do serviÃ§o prestado</Discriminacao>
+        <ItemLei116>1.07</ItemLei116>
+        <Quantidade>1</Quantidade>
+        <ValorServico>1000.00</ValorServico>
+        <ValorDesconto>0</ValorDesconto>
+      </DadosServico>
+    </ListaServico>
+    <Versao>1.00</Versao>
+  </DeclaracaoPrestacaoServico>
+</GerarNfseEnvio>

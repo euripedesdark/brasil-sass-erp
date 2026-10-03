@@ -1,0 +1,238 @@
+.login-screen {
+    height: 100vh;
+    width: 100vw;
+    background: #1a1a1a;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    position: relative;
+    overflow: hidden;
+}
+
+.login-overlay {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+.login-box,
+.login-card {
+    width: 400px;
+    max-width: 92vw;
+    padding: 2.5rem 2.75rem;
+    border-radius: 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.12),
+        0 20px 60px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.login-header {
+    margin-bottom: 1.75rem;
+}
+
+.login-logo {
+    background: rgba(30, 30, 30, 0.75);
+    color: #fff;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.login-header h2 {
+    margin: 0;
+    color: #1a1a1a;
+    font-size: 1.65rem;
+    font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.login-header p {
+    color: #333;
+    font-size: 0.88rem;
+    margin-top: 0.45rem;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: left;
+}
+
+.input-group label {
+    font-weight: 600;
+    color: #222;
+    font-size: 0.82rem;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* campos claros + texto ESCURO legível */
+.input-wrapper .p-inputtext,
+.input-wrapper .p-password,
+.input-wrapper .p-password input {
+    width: 100%;
+    padding-right: 2.5rem !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(0, 0, 0, 0.18) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    color: #1a1a1a !important;
+    caret-color: #1a1a1a !important;
+}
+
+.input-wrapper .p-inputtext:focus,
+.input-wrapper .p-password input:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25) !important;
+}
+
+.input-wrapper .p-inputtext::placeholder,
+.input-wrapper .p-password input::placeholder {
+    color: #888 !important;
+}
+
+.input-wrapper .p-password {
+    display: block;
+    width: 100%;
+}
+
+.input-wrapper .p-password-toggle-icon,
+.input-wrapper .p-icon {
+    color: #555 !important;
+}
+
+/*
+ * Senha: os caracteres (digitados e o placeholder "********") sao laranja
+ * escuro. Antes herdavam branco do tema PrimeReact e ficavam ilegiveis
+ * sobre o campo claro. As regras usam o seletor completo do componente
+ * (.p-password > input.p-password-input) para vencer a especificidade do
+ * tema, que e importado depois deste arquivo.
+ */
+.input-wrapper .p-password input.p-password-input,
+.input-wrapper .p-password input.p-password-input:focus,
+.input-wrapper .p-password input.p-password-input:hover {
+    color: #b45309 !important;
+    -webkit-text-fill-color: #b45309 !important;
+    caret-color: #b45309 !important;
+}
+
+.input-wrapper .p-password input.p-password-input::placeholder,
+.input-wrapper .p-password input.p-password-input::-webkit-input-placeholder,
+.input-wrapper .p-password input.p-password-input::-moz-placeholder,
+.input-wrapper .p-password input.p-password-input:-ms-input-placeholder {
+    color: #b45309 !important;
+    -webkit-text-fill-color: #b45309 !important;
+    opacity: 0.75;
+}
+
+/* o painel de mostrar/ocultar nao pode clarear o texto digitado */
+.input-wrapper .p-password-panel,
+.input-wrapper .p-password .p-icon {
+    color: #b45309 !important;
+}
+
+.input-wrapper i {
+    position: absolute;
+    right: 1rem;
+    color: #666;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.login-btn {
+    margin-top: 0.5rem;
+    padding: 0.9rem !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    background: #1e293b !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    color: #fff !important;
+    transition: background 0.2s ease, transform 0.15s ease !important;
+}
+
+.login-btn:hover {
+    background: #0f172a !important;
+    transform: translateY(-1px);
+}
+
+.login-footer {
+    margin-top: 1.35rem;
+    color: #444;
+    font-size: 0.78rem;
+}
+
+.login-screen .p-message {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #1a1a1a !important;
+}
+
+/* Dialog de doaçao na tela de login */
+
+.login-apoie {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.85rem;
+}
+
+.login-apoie-dialog {
+    text-align: center;
+}
+
+.login-apoie-dialog p {
+    margin: 0 0 1rem;
+    line-height: 1.6;
+    color: var(--text-color-secondary, #64748b);
+}
+
+/* O QRCode e a chave ficam centralizados. Sem isso o <code> encosta na
+   borda do dialog e a chave e um bloco largo de 32 caracteres, entao ela
+   estoura a largura e o fim some. */
+.login-apoie-dialog .pix-qrcode,
+.login-apoie-dialog .pix-chave {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.login-apoie-dialog .pix-chave {
+    display: inline-block;
+    margin-top: 0.75rem;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+
+.login-auth-mode-selector { width: 100%; }
+.login-auth-mode-help { display: block; margin-top: 0.35rem; opacity: 0.8; }
+@media (max-width: 480px) {
+    .login-box, .login-card { padding: 2rem 1.25rem; }
+}

@@ -1,0 +1,66 @@
+/* FuncionarioFoto.css */
+
+.funcionariofoto-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.funcionariofoto-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.funcionariofoto-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.funcionariofoto-acoes {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.funcionariofoto-enterprise-container .p-datatable {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.funcionariofoto-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #e83e8c 0%, #c53483 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.funcionariofoto-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.funcionariofoto-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #e83e8c 0%, #c53483 100%);
+    border: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .funcionariofoto-enterprise-container { padding: 0.5rem; }
+}

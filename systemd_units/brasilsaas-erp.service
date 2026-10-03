@@ -1,0 +1,13 @@
+[Unit]
+Description=Brasil SaaS ERP Core
+After=network.target
+
+[Service]
+User=euripedes
+WorkingDirectory=/opt/brasil-saas
+ExecStart=/usr/bin/java -jar erp-core.jar
+Restart=always
+Environment=SPRING_PROFILES_ACTIVE=prod
+
+[Install]
+WantedBy=multi-user.target

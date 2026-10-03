@@ -1,0 +1,207 @@
+/* Marca.css - Estilos para o componente de Marcas */
+
+.marca-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.marca-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.marca-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.marca-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Acoes da tabela */
+.marca-acoes {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.marca-acoes .p-button {
+    transition: all 0.2s ease;
+}
+
+.marca-acoes .p-button:hover {
+    transform: scale(1.1);
+    opacity: 0.9;
+}
+
+/* Dialog */
+.marca-dialog .p-dialog {
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.marca-dialog .p-dialog-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.marca-dialog .p-dialog-content {
+    padding: 1.5rem;
+    background: rgba(15,34,60,.44);
+}
+
+/* Campos do formulario */
+.marca-dialog .field {
+    margin-bottom: 1rem;
+}
+
+.marca-dialog label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.marca-dialog .p-inputtext,
+.marca-dialog .p-dropdown {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease;
+}
+
+.marca-dialog .p-inputtext:focus,
+.marca-dialog .p-dropdown:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Resumo */
+.marca-resumo {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(145deg, rgba(15,34,60,.62), rgba(8,22,42,.54));
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.marca-resumo .font-bold {
+    color: #495057;
+    font-weight: 600;
+}
+
+.marca-resumo span:not(.font-bold) {
+    color: #6c757d;
+}
+
+/* Footer do dialog */
+.marca-dialog .p-dialog-footer {
+    padding: 1rem 1.5rem;
+    background: rgba(15,34,60,.44);
+    border-radius: 0 0 8px 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.marca-dialog .p-button-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    border: none;
+}
+
+.marca-dialog .p-button-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+}
+
+/* DataTable */
+.marca-enterprise-container .p-datatable {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.marca-enterprise-container .p-datatable .p-datatable-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+}
+
+.marca-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem;
+}
+
+.marca-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.marca-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(102, 126, 234, 0.05);
+}
+
+/* Botao Nova Marca */
+.marca-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.marca-enterprise-container .p-button-success:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    transform: translateY(-1px);
+}
+
+/* Animacao */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .marca-enterprise-container {
+        padding: 0.5rem;
+    }
+    
+    .marca-main-card {
+        padding: 0.5rem;
+    }
+    
+    .marca-header-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .marca-info {
+        font-size: 0.8rem;
+    }
+    
+    .marca-dialog {
+        width: 90vw !important;
+    }
+}
+
+/* Toast */
+.marca-enterprise-container .p-toast {
+    z-index: 9999;
+}
+
+.marca-enterprise-container .p-toast .p-toast-message {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

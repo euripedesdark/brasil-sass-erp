@@ -1,0 +1,73 @@
+.modulo-selector {
+    display: grid;
+    grid-template-columns:repeat(12,1fr);
+    gap: 0.6rem;
+    max-height: 52vh;
+    overflow-y: auto;
+    padding-right: 0.3rem;
+}
+
+.modulo-selector__item {
+    border: 1px solid #e3e6ea;
+    border-radius: 8px;
+    padding: 0.7rem 0.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    background: #fff;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.modulo-selector__item.is-on {
+    border-color: #b45309;
+    background: #fffbf5;
+}
+
+.modulo-selector__main {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.modulo-selector__label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #1a1a1a;
+    cursor: pointer;
+    flex: 1;
+}
+
+.modulo-selector__desc {
+    font-size: 0.74rem;
+    color: #666;
+    line-height: 1.3;
+    padding-left: 1.75rem;
+}
+
+.modulo-selector__somente {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: #555;
+    cursor: pointer;
+    padding-left: 1.75rem;
+}
+
+.modulo-selector__aviso {
+    font-size: 0.7rem;
+    color: #b91c1c;
+    padding-left: 1.75rem;
+    line-height: 1.3;
+}
+
+/* UX 2026 — selector administrativo sem auto-fill */
+.modulo-selector{display:grid;grid-template-columns:repeat(12,1fr);gap:1vh .8vw;max-height:52vh;overflow-y:auto;padding-right:.3vw}
+.modulo-selector__item{grid-column:span 4;min-width:0;border:1px solid rgba(148,190,235,.22);border-radius:.65vw;padding:1vh .8vw;background:rgba(10,25,45,.62);color:#eaf3ff}
+.modulo-selector__item.is-on{border-color:rgba(125,183,255,.55);background:rgba(35,68,102,.72)}
+.modulo-selector__label{color:#eaf3ff}.modulo-selector__desc,.modulo-selector__somente{color:#4d94f0}.modulo-selector__aviso{color:#ff9da6}
+@media(max-width:1000px){.modulo-selector__item{grid-column:span 6}}
+@media(max-width:600px){.modulo-selector__item{grid-column:span 12;border-radius:2vw}}

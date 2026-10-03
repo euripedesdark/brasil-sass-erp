@@ -1,0 +1,67 @@
+[submodule "src/main/resources/microservices/l10n-brazil"]
+	path = src/main/resources/microservices/l10n-brazil
+	url = https://github.com/OCA/l10n-brazil.git
+
+[submodule "src/main/resources/microservices/BancosBrasileiros"]
+	path = src/main/resources/microservices/BancosBrasileiros
+	url = https://github.com/guibranco/BancosBrasileiros.git
+
+[submodule "src/main/resources/microservices/EchoAvatar"]
+	path = src/main/resources/microservices/EchoAvatar
+	url = https://github.com/PantoMatrix/PantoMatrix.git
+
+[submodule "src/main/resources/microservices/Java-Efd-Contribuicoes"]
+	path = src/main/resources/microservices/Java-Efd-Contribuicoes
+	url = https://github.com/Samuel-Oliveira/Java-Efd-Contribuicoes.git
+
+[submodule "src/main/resources/microservices/Java-Efd-Icms"]
+	path = src/main/resources/microservices/Java-Efd-Icms
+	url = https://github.com/Samuel-Oliveira/Java-Efd-Icms.git
+
+[submodule "src/main/resources/microservices/Java_CTe"]
+	path = src/main/resources/microservices/Java_CTe
+	url = https://github.com/Samuel-Oliveira/Java_CTe.git
+
+[submodule "src/main/resources/microservices/Java_Certificado"]
+	path = src/main/resources/microservices/Java_Certificado
+	url = https://github.com/Samuel-Oliveira/Java_Certificado.git
+
+[submodule "src/main/resources/microservices/Java_MDFe"]
+	path = src/main/resources/microservices/Java_MDFe
+	url = https://github.com/Samuel-Oliveira/Java_MDFe.git
+
+[submodule "src/main/resources/microservices/Java_NFe"]
+	path = src/main/resources/microservices/Java_NFe
+	url = https://github.com/Samuel-Oliveira/Java_NFe.git
+
+[submodule "src/main/resources/microservices/Java_Pdf_Signature"]
+	path = src/main/resources/microservices/Java_Pdf_Signature
+	url = https://github.com/Samuel-Oliveira/Java_Pdf_Signature.git
+
+[submodule "src/main/resources/microservices/boleto-cnab-api"]
+	path = src/main/resources/microservices/boleto-cnab-api
+	url = https://github.com/akretion/boleto_cnab_api.git
+
+[submodule "src/main/resources/microservices/esocial"]
+	path = src/main/resources/microservices/esocial
+	url = https://github.com/tst-labs/esocial.git
+
+[submodule "src/main/resources/microservices/nfe"]
+	path = src/main/resources/microservices/nfe
+	url = https://github.com/wmixvideo/nfe.git
+
+[submodule "src/main/resources/microservices/nfse"]
+	path = src/main/resources/microservices/nfse
+	url = https://github.com/EduardoKuhn89/nfse.git
+
+[submodule "src/main/resources/microservices/nfse_prefeitura_sp"]
+	path = src/main/resources/microservices/nfse_prefeitura_sp
+	url = https://github.com/infosimples/nfse_prefeitura_sp.git
+
+[submodule "src/main/resources/microservices/sped-mdfe"]
+	path = src/main/resources/microservices/sped-mdfe
+	url = https://github.com/nfephp-org/sped-mdfe.git
+
+[submodule "src/main/resources/microservices/spring-ai"]
+	path = src/main/resources/microservices/spring-ai
+	url = https://github.com/spring-projects/spring-ai.git

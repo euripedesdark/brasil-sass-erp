@@ -1,0 +1,72 @@
+{
+  "name": "esocial-frontend",
+  "version": "0.1.1",
+  "private": true,
+  "dependencies": {
+    "@date-io/date-fns": "^2.17.0",
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@mui/material": "^5.2.8",
+    "@mui/x-date-pickers": "^5.0.20",
+    "@testing-library/jest-dom": "^5.16.1",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/user-event": "^13.5.0",
+    "ace-builds": "^1.43.5",
+    "axios": "1.12.0",
+    "date-fns": "^2.30.0",
+    "keycloak-js": "^25.0.5",
+    "muibox": "^2.0.0",
+    "notistack": "^2.0.3",
+    "prop-types": "^15.8.1",
+    "react": "^17.0.2",
+    "react-ace": "^14.0.1",
+    "react-dom": "^17.0.2",
+    "react-json-view": "^1.21.3",
+    "react-query": "^3.34.8",
+    "react-resize-detector": "^7.0.0",
+    "react-router-dom": "^6.2.1",
+    "react-scripts": "5.0.0"
+  },
+  "scripts": {
+    "prestart": "node app-info-gen.js && node app-env-gen.js",
+    "prebuild": "node app-info-gen.js && node app-env-gen.js",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint \"./src/**/*.js\" \"./src/**/*.jsx\"",
+    "lint:fix": "eslint --fix \"./src/**/*.js\" \"./src/**/*.jsx\""
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "axios": "axios/dist/node/axios.cjs"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(keycloak-js)/)"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "dotenv": "^11.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.5.1"
+  }
+}

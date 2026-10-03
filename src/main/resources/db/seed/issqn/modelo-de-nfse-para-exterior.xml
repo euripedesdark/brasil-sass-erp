@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GerarNfseEnvio xmlns="http://www.agili.com.br/nfse_v_1.00.xsd">
+    <UnidadeGestora>03239076000162</UnidadeGestora>
+    <DeclaracaoPrestacaoServico>
+        <IdentificacaoPrestador>
+            <ChaveDigital>fdac3dd161eb0e2e43099f3436fd0a37</ChaveDigital>
+            <CpfCnpj>
+                <Cnpj>14692576000171</Cnpj>
+            </CpfCnpj>
+            <InscricaoMunicipal>8424</InscricaoMunicipal>
+        </IdentificacaoPrestador>
+        <Rps>
+            <IdentificacaoRps>
+                <Numero>2619</Numero>
+                <Serie>NFSe</Serie>
+                <Tipo>-2</Tipo>
+            </IdentificacaoRps>
+            <DataEmissao>2021-10-28</DataEmissao>
+        </Rps>
+        <DadosTomador>
+            <RazaoSocial>Gustavo Luis Picca</RazaoSocial>
+            <LocalEndereco>2</LocalEndereco>
+            <EnderecoExterior>
+                <Descricao>Sesame Street, 192</Descricao>
+                <Pais>
+                    <CodigoPaisBacen>2496</CodigoPaisBacen>
+                </Pais>
+                <NomeEstado>Alabama</NomeEstado>
+                <NomeMunicipio>Montgomery</NomeMunicipio>
+            </EnderecoExterior>
+            <Contato>
+                <Email>gpicca2018@gmail.com</Email>
+            </Contato>
+        </DadosTomador>
+        <RegimeEspecialTributacao>
+            <Codigo>-6</Codigo>
+        </RegimeEspecialTributacao>
+        <OptanteSimplesNacional>1</OptanteSimplesNacional>
+        <OptanteMEISimei>0</OptanteMEISimei>
+        <ISSQNRetido>0</ISSQNRetido>
+        <ResponsavelISSQN>
+            <Codigo>-3</Codigo>
+        </ResponsavelISSQN>
+        <CodigoAtividadeEconomica>1.5510801</CodigoAtividadeEconomica>
+        <ExigibilidadeISSQN>
+            <Codigo>-1</Codigo>
+        </ExigibilidadeISSQN>
+        <MunicipioIncidencia>
+            <CodigoMunicipioIBGE>5107925</CodigoMunicipioIBGE>
+        </MunicipioIncidencia>
+        <ValorServicos>196.00</ValorServicos>
+        <ValorBaseCalculoISSQN>196.00</ValorBaseCalculoISSQN>
+        <AliquotaISSQN>4.77</AliquotaISSQN>
+        <ValorLiquido>196.00</ValorLiquido>
+        <Observacao>DIARIA - Qtde 1 x Valor Unit. R$ 196,00 = Total R$ 196,00._CHRLN__CHRLN_PMS NUMERO: 5118-1128 _CHRLN_ APTO.: 104 _CHRLN_ QTD_HOSPEDE: 2 _CHRLN_ QTD_DIARIA: 1 _CHRLN_ VALOR_DIARIA: 196.00 _CHRLN_ ABERTURA: 26/10/2021 _CHRLN_ FECHAMENTO: 27/10/2021 _CHRLN_ HOSPEDE PRINCIPAL: Gustavo Luis Picca _CHRLN_ PAGAMENTOS: InstallmentPaymentPlan: $196.00 _CHRLN__CHRLN__CHRLN_</Observacao>
+        <ListaServico>
+            <DadosServico>
+                <Discriminacao>DIARIA</Discriminacao>
+                <CodigoCnae>5510801</CodigoCnae>
+                <ItemLei116>9.01</ItemLei116>
+                <Quantidade>1.00000</Quantidade>
+                <ValorServico>196.00</ValorServico>
+            </DadosServico>
+        </ListaServico>
+        <Versao>1.00</Versao>
+    </DeclaracaoPrestacaoServico>
+</GerarNfseEnvio>

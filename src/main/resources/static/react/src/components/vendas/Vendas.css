@@ -1,0 +1,293 @@
+/* Estilos do modulo de Vendas */
+
+.vendas-enterprise-container {
+    padding: 0.5rem;
+}
+
+.vendas-main-card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.vendas-main-card .p-card-content {
+    padding: 0;
+}
+
+.vendas-main-card .p-card-body {
+    padding: 1.5rem;
+}
+
+.vendas-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.vendas-info p {
+    font-size: 0.95rem;
+    color: #666;
+}
+
+.vendas-acoes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.vendas-acoes .p-button {
+    min-width: 2rem;
+}
+
+/* Dialog styles */
+.vendas-enterprise-container .p-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.vendas-enterprise-container .p-dialog-header {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+}
+
+.vendas-enterprise-container .p-dialog-header-icons {
+    color: white;
+}
+
+.vendas-enterprise-container .p-dialog-header-icons .p-dialog-header-icon {
+    color: white;
+}
+
+.vendas-enterprise-container .p-dialog-content {
+    padding: 1.5rem;
+}
+
+.vendas-enterprise-container .p-dialog-footer {
+    border-radius: 0 0 12px 12px;
+    padding: 1rem;
+}
+
+/* Form fields */
+.vendas-enterprise-container .field label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.vendas-enterprise-container .field .p-inputtext,
+.vendas-enterprise-container .field .p-inputnumber,
+.vendas-enterprise-container .field .p-dropdown,
+.vendas-enterprise-container .field .p-calendar {
+    width: 100%;
+}
+
+.vendas-enterprise-container .field .p-dropdown {
+    min-width: 12rem;
+}
+
+/* DataTable customization */
+.vendas-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background: rgba(15,34,60,.44);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+}
+
+.vendas-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    border: 1px solid #dee2e6;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.vendas-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: rgba(15,34,60,.44);
+}
+
+.vendas-enterprise-container .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba(37,65,96,.56);
+}
+
+/* Status tags */
+.vendas-enterprise-container .p-tag {
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+.vendas-enterprise-container .p-tag.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.vendas-enterprise-container .p-tag.primary {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.vendas-enterprise-container .p-tag.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.vendas-enterprise-container .p-tag.danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Paginator */
+.vendas-enterprise-container .p-paginator {
+    background: rgba(15,34,60,.44);
+    border-radius: 0 0 12px 12px;
+    padding: 0.75rem;
+}
+
+/* Total summary */
+.vendas-enterprise-container .p-3.bg-gray-100 {
+    background: rgba(15,34,60,.44);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.vendas-enterprise-container .p-3.bg-gray-100 h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #28a745;
+    margin: 0;
+}
+
+.vendas-enterprise-container .p-3.bg-gray-100 p {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin: 0.25rem 0 0 0;
+}
+
+.vendas-enterprise-container .text-right p {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+/* Loading state */
+.vendas-enterprise-container .p-datatable .p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.vendas-enterprise-container .p-progress-spinner {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Toast customization */
+.vendas-enterprise-container .p-toast {
+    min-width: 280px;
+}
+
+.vendas-enterprise-container .p-toast-message {
+    font-size: 0.9rem;
+}
+
+/* Button styling */
+.vendas-enterprise-container .p-button-success {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.vendas-enterprise-container .p-button-success:hover {
+    background: linear-gradient(135deg, #1e7e34 0%, #19692c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.vendas-enterprise-container .p-button-outlined.p-button-success {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.vendas-enterprise-container .p-button-outlined.p-button-success:hover {
+    background: #28a745;
+    color: white;
+}
+
+.vendas-enterprise-container .p-button-danger {
+    background: #dc3545;
+    border: none;
+}
+
+.vendas-enterprise-container .p-button-danger:hover {
+    background: #c82333;
+}
+
+.vendas-enterprise-container .p-button-info {
+    background: #17a2b8;
+    border: none;
+}
+
+.vendas-enterprise-container .p-button-info:hover {
+    background: #138496;
+}
+
+.vendas-enterprise-container .p-button-primary {
+    background: #007bff;
+    border: none;
+}
+
+.vendas-enterprise-container .p-button-primary:hover {
+    background: #0069d9;
+}
+
+/* Disabled input styling */
+.vendas-enterprise-container .p-inputtext:disabled {
+    background: rgba(37,65,96,.56);
+    color: #495057;
+    cursor: not-allowed;
+}
+
+/* Grid adjustments */
+.vendas-enterprise-container .grid {
+    display: grid;
+    grid-template-columns:repeat(12,1fr);
+    gap: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .vendas-enterprise-container .p-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+    
+    .vendas-enterprise-container .p-datatable {
+        font-size: 0.8rem;
+    }
+    
+    .vendas-enterprise-container .p-datatable .p-datatable-thead > tr > th,
+    .vendas-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+        padding: 0.5rem;
+    }
+    
+    .vendas-enterprise-container .p-3.bg-gray-100 {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .vendas-enterprise-container .text-right {
+        text-align: center;
+    }
+}
+
+
+/* UX 2026 — Vendas: percentuais explícitos, sem auto-fit/auto-fill. */
+.vendas-enterprise-container,.vendas-enterprise-container > .p-card{width:100%;max-width:100%;min-width:0}
+.vendas-enterprise-container .grid{display:grid;grid-template-columns:repeat(12,1fr);column-gap:1vw;row-gap:1.2vh}
+.vendas-enterprise-container .grid > [class*="col-"]{min-width:0}
+.vendas-enterprise-container .p-datatable,.vendas-enterprise-container .p-datatable-wrapper{width:100%;min-width:0}
+.vendas-enterprise-container .p-datatable-wrapper{overflow-x:auto}
+.vendas-enterprise-container .p-datatable .p-datatable-thead > tr > th,.vendas-enterprise-container .p-datatable .p-datatable-tbody > tr > td{padding:.8vh .7vw}
+.vendas-enterprise-container .vendas-acoes,.vendas-enterprise-container .p-datatable td:last-child > div{display:flex;align-items:center;justify-content:flex-end;gap:.35vw;flex-wrap:nowrap}
+.vendas-enterprise-container .vendas-acoes .p-button,.vendas-enterprise-container .p-datatable td:last-child .p-button{flex:0 0 auto;min-width:2.35rem;width:2.35rem}
+.vendas-enterprise-container .p-dialog{width:68vw !important;max-width:92vw !important;min-width:48rem}
+@media(max-width:1100px){.vendas-enterprise-container .p-dialog{width:82vw !important;min-width:0}}
+@media(max-width:760px){.vendas-enterprise-container .p-dialog{width:94vw !important;max-width:94vw !important;min-width:0}.vendas-enterprise-container .p-dialog .p-dialog-footer{flex-direction:column-reverse}.vendas-enterprise-container .p-dialog .p-dialog-footer .p-button{width:100%}.vendas-enterprise-container .vendas-acoes,.vendas-enterprise-container .p-datatable td:last-child > div{justify-content:flex-start}}

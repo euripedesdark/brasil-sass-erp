@@ -1,0 +1,157 @@
+/* BI Module Styles */
+.bi-enterprise-container {
+    padding: 1rem;
+    min-height: calc(100vh - 120px);
+}
+
+.bi-main-card {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+}
+
+.bi-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.bi-info {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.bi-acoes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.bi-acoes .p-button {
+    min-width: 32px;
+}
+
+/* Dashboard Summary Cards */
+.bi-dashboard-summary {
+    margin-bottom: 1.5rem;
+}
+
+.bi-kpi-card {
+    background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    color: white;
+}
+
+.bi-kpi-card .p-card-body {
+    padding: 0;
+}
+
+.bi-kpi-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bi-kpi-value {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.bi-kpi-value span {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: white;
+}
+
+.bi-kpi-value small {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Chart Card */
+.bi-chart-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    border-radius: 8px;
+}
+
+.bi-chart-card .p-card-body {
+    padding: 1rem;
+}
+
+/* Dashboards and Indicators Cards */
+.bi-dashboards-card,
+.bi-indicadores-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+/* DataTable styles */
+.p-datatable-sm .p-datatable-thead > tr > th,
+.p-datatable-sm .p-datatable-tbody > tr > td {
+    padding: 0.5rem;
+}
+
+/* Dialog styles */
+.p-dialog .p-fluid .field {
+    margin-bottom: 1rem;
+}
+
+.p-dialog .p-fluid label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Checkbox styling */
+.p-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.p-checkbox-label {
+    cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .bi-enterprise-container {
+        padding: 0.5rem;
+    }
+    
+    .p-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+    
+    .bi-acoes {
+        gap: 0.25rem;
+    }
+    
+    .bi-dashboard-summary {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+/* Loading state */
+.p-datatable .p-datatable-loading-overlay {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+/* Status tags */
+.p-tag.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.p-tag.danger {
+    background: #f8d7da;
+    color: #721c24;
+}

@@ -1,0 +1,370 @@
+name: Brasil SaaS ERP CI/CD Pipeline
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "22"
+  MAVEN_OPTS: "-Xmx2048m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
+
+jobs:
+  # ===========================================================================
+  # BACKEND
+  # ===========================================================================
+  backend-build:
+    name: Backend Build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: brasil-saas
+          POSTGRES_PASSWORD: test123
+          POSTGRES_DB: brasil-saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Compile
+        run: mvn clean compile -DskipTests -B
+
+      - name: Initialize test database schema
+        env:
+          PGPASSWORD: test123
+        run: |
+          set -euo pipefail
+          psql -h localhost -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 \
+            -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+
+      - name: Unit tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas
+          SPRING_DATASOURCE_USERNAME: brasil-saas
+          SPRING_DATASOURCE_PASSWORD: test123
+          SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/brasil-saas
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
+          # V17 imports the optional legacy SYSFLUXO schema; clean CI has no public.fempresa.
+          SPRING_FLYWAY_IGNORE_MIGRATION_PATTERNS: "17:ignored"
+        run: mvn test -B
+
+      - name: Report executed tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          reports=(target/surefire-reports/TEST-*.xml)
+          if [ ${#reports[@]} -eq 0 ]; then
+            echo "::error::Surefire produced no TEST-*.xml reports; zero tests were executed."
+            exit 1
+          fi
+          total=0
+          for report in "${reports[@]}"; do
+            tests=$(grep -o 'tests="[0-9]*"' "$report" | head -1 | grep -o '[0-9]*')
+            total=$((total + ${tests:-0}))
+          done
+          echo "Executed tests: $total"
+          [ "$total" -gt 0 ] || { echo "::error::Zero tests executed."; exit 1; }
+
+      - name: Package
+        run: mvn package -DskipTests -B
+
+      - name: Upload JARs
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-artifacts
+          path: |
+            target/*.jar
+          if-no-files-found: warn
+          retention-days: 7
+
+  # ===========================================================================
+  # FRONTEND (Vite → static/dist)
+  # ===========================================================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/main/resources/static/react/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/main/resources/static/react
+        run: npm ci
+
+      - name: Smoke test
+        working-directory: src/main/resources/static/react
+        run: |
+          npm test
+
+      - name: Build (Vite → ../dist = static/dist)
+        working-directory: src/main/resources/static/react
+        run: npm run build
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-artifacts
+          # vite.config.js: outDir: '../dist'  →  src/main/resources/static/dist
+          path: src/main/resources/static/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # ===========================================================================
+  # DOCKER (só valida build; push só com secrets)
+  # ===========================================================================
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+      DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+    needs: [backend-build, frontend-build]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-artifacts
+          path: src/main/resources/static/dist
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (local, sem push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: false
+          load: true
+          tags: brasil-saas-erp:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Login Docker Hub
+        if: github.ref == 'refs/heads/main' && env.DOCKER_HUB_USERNAME != '' && env.DOCKER_HUB_TOKEN != ''
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Push to Docker Hub
+        if: github.ref == 'refs/heads/main' && env.DOCKER_HUB_USERNAME != '' && env.DOCKER_HUB_TOKEN != ''
+        run: |
+          docker tag brasil-saas-erp:ci euripedesdark/brasil-saas-erp:latest
+          docker tag brasil-saas-erp:ci euripedesdark/brasil-saas-erp:${{ github.sha }}
+          docker push euripedesdark/brasil-saas-erp:latest
+          docker push euripedesdark/brasil-saas-erp:${{ github.sha }}
+
+  # ===========================================================================
+  # DATABASE INTEGRATION SMOKE
+  # ===========================================================================
+  database-migration-smoke:
+    name: Database Migration Smoke
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: brasil-saas
+          POSTGRES_PASSWORD: test123
+          POSTGRES_DB: brasil-saas
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+      - name: Apply and validate Flyway migrations
+        env:
+          FLYWAY_URL: jdbc:postgresql://localhost:5432/brasil-saas
+          FLYWAY_USER: brasil-saas
+          FLYWAY_PASSWORD: test123
+        run: |
+          set -euo pipefail
+
+          PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+          mvn -B -ntp flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas -Dflyway.ignoreMigrationPatterns=17:ignored
+          mvn -B -ntp flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+          mvn -B -ntp flyway:info -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+          latest=$(PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -Atc "select max(version::numeric)::text from brasil_saas.flyway_schema_history where success")
+          expected=$(find src/main/resources/db/migration -maxdepth 1 -type f -name 'V*.sql' -printf '%f\n' | sed -n 's/^V\([0-9][0-9.]*\)__.*/\1/p' | sort -V | tail -1)
+          tables=$(PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -Atc "select count(*) from information_schema.tables where table_schema='brasil_saas'")
+          echo "Flyway latest version: $latest"
+          echo "Expected migration version: $expected"
+          echo "Tables in brasil_saas: $tables"
+          [ -n "$expected" ] || { echo "::error::No Flyway migration files found"; exit 1; }
+          [ "$latest" = "$expected" ] || { echo "::error::Flyway stopped at $latest; repository migrations end at $expected"; exit 1; }
+          [ "$tables" -gt 0 ] || { echo "::error::Migration smoke created zero tables"; exit 1; }
+
+  # ===========================================================================
+  # DEPLOY (opcional — só se secrets existirem)
+  # ===========================================================================
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    steps:
+      - name: Validate staging secrets
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_USERNAME: ${{ secrets.STAGING_USERNAME }}
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          [ -n "$STAGING_HOST" ] || { echo "::error::Missing STAGING_HOST"; exit 1; }
+          [ -n "$STAGING_USERNAME" ] || { echo "::error::Missing STAGING_USERNAME"; exit 1; }
+          [ -n "$STAGING_SSH_KEY" ] || { echo "::error::Missing STAGING_SSH_KEY"; exit 1; }
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USERNAME }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/brasil-saas-erp || exit 1
+            git pull origin ${{ github.ref_name }}
+            docker compose pull || true
+            docker compose up -d --build
+            sleep 45
+            curl -fsS http://localhost:8080/actuator/health || curl -fsS http://localhost:8081/actuator/health || true
+            echo "Deploy staging OK"
+
+  # ===========================================================================
+  # SONAR (opcional)
+  # ===========================================================================
+  sonar-analysis:
+    name: SonarQube
+    runs-on: ubuntu-latest
+    needs: [backend-build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    continue-on-error: true
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: SonarCloud
+        if: env.SONAR_TOKEN != ''
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B verify sonar:sonar \
+            -Dsonar.projectKey=BrasilSaaS \
+            -Dsonar.organization=euripedesdark \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=$SONAR_TOKEN \
+            -DskipTests
+
+  # ===========================================================================
+  # NOTIFY (opcional)
+  # ===========================================================================
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+    needs: [backend-build, frontend-build, docker-build, database-migration-smoke]
+    if: always()
+    continue-on-error: true
+
+    steps:
+      - name: Slack
+        if: env.SLACK_WEBHOOK != ''
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ contains(needs.*.result, 'failure') && 'danger' || 'good' }}
+          SLACK_TITLE: "Brasil SaaS ERP CI/CD"
+          SLACK_MESSAGE: "backend=${{ needs.backend-build.result }} frontend=${{ needs.frontend-build.result }} docker=${{ needs.docker-build.result }}"
+          SLACK_FOOTER: GitHub Actions

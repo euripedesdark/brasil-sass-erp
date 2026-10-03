@@ -1,0 +1,12 @@
+# Configuracao local do Bundler: guarda um caminho ABSOLUTO desta maquina
+# (BUNDLE_PATH). Versionar isso quebra o bundle em qualquer outra estacao.
+.bundle/
+
+# Editores
+*~
+*.swp
+
+# Certificado A1 e senhas NUNCA entram no git.
+*.pfx
+*.p12
+.env

@@ -1,0 +1,47 @@
+As XML foram geradas a partir da XSD do projeto no visual studio.
+
+O conteúdo das TAGs da XML "DEVEM" ser alterados com conteúdo de econômicos reais da base de dados que será utilizada para os testes.
+
+Segue o exemplo de uma das XML enviada:
+
+<?xml version="1.0" encoding="utf-8"?>
+<CancelarNfseEnvio xmlns="http://www.agili.com.br/nfse_v_1.00.xsd">
+  <UnidadeGestora>UnidadeGestor1</UnidadeGestora>
+  <PedidoCancelamento>
+    <IdentificacaoNfse>
+      <Numero>0</Numero>
+      <IdentificacaoPrestador>
+        <ChaveDigital>ChaveDigital___________________1</ChaveDigital>
+        <CpfCnpj>
+          <Cpf>Cpf_______1</Cpf>
+        </CpfCnpj>
+        <InscricaoMunicipal>InscricaoMunicipal1</InscricaoMunicipal>
+      </IdentificacaoPrestador>
+    </IdentificacaoNfse>
+    <CodigoCancelamento>1</CodigoCancelamento>
+    <JustificativaCancelamento>JustificativaCancelamento1</JustificativaCancelamento>
+    <Versao>Versao1</Versao>
+  </PedidoCancelamento>
+</CancelarNfseEnvio>
+
+A XML a seguir está com o conteúdo alterado com informações de um econômico
+
+<?xml version="1.0" encoding="utf-8"?>
+<CancelarNfseEnvio xmlns="http://www.agili.com.br/nfse_v_1.00.xsd">
+  <UnidadeGestora>74852147000125</UnidadeGestora>
+  <PedidoCancelamento>
+    <IdentificacaoNfse>
+      <Numero>175</Numero>
+      <IdentificacaoPrestador>
+        <ChaveDigital>8Bxg789Lko582xxuhbgs45856646dnjh</ChaveDigital>
+        <CpfCnpj>
+          <Cnpj>14852658000125</Cnpj>
+        </CpfCnpj>
+        <InscricaoMunicipal>20330.52</InscricaoMunicipal>
+      </IdentificacaoPrestador>
+    </IdentificacaoNfse>
+    <CodigoCancelamento>1</CodigoCancelamento>
+    <JustificativaCancelamento>Nota gerada para prestador de serviço incorreto</JustificativaCancelamento>
+    <Versao>Versao1</Versao>
+  </PedidoCancelamento>
+</CancelarNfseEnvio>

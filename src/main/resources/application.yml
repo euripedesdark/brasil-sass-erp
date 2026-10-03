@@ -1,0 +1,202 @@
+spring:
+  application:
+    name: brasil-saas-erp
+  profiles:
+    active: dev
+
+    # Os certificados do Postgres sao GLOBAIS da maquina, e por isso vivem num
+    # caminho de SISTEMA, instalado pelo installbase.sh:
+    #
+    #     /etc/brasil-saas/pki/ca.crt            (sslrootcert, a CA)
+    #     /etc/brasil-saas/pki/issued/sa.crt     (sslcert,    o certificado do cliente)
+    #     /etc/brasil-saas/pki/private/sa.pk8    (sslkey,     a chave do cliente)
+    #
+    # O caminho anterior era o do notebook, e o depois disso o home do usuario:
+    #
+    #     ${BRASIL_SAAS_CERTS_DIR:/home/euripedes/OneDrive/.../GIT Repos/.../certs/pki}
+    #     ${BRASIL_SAAS_CERTS_DIR:${user.home}/.local/share/brasil-saas-certs/pki}
+    #
+    # Os dois funciona(m) numa maquina so. O primeiro porque o repositorio esta em
+    # outro lugar no erp; o segundo porque ${user.home} e' o usuario do PROCESSO,
+    # e o ERP pode rodar como outro usuario. Nos dois, sem a variavel de ambiente,
+    # o erro que aparecia nao era o caminho:
+    #
+    #     FATAL: connection requires a valid client certificate
+    #
+    # que aponta para certificado e cuja causa e' um arquivo inexistente naquele
+    # caminho. A PKI estava la, inteira e correta.
+    #
+    # O certificado DA EMPRESA (o A1) NAO esta aqui, e e' de proposito: ele nao e'
+    # global. Fica no MongoDB, na colecao `documentos`, como um documento
+    # `tipoEntidade: "certificado_digital"`, e e' por isso que ele chega junto na
+    # restauracao do dump. O que esta aqui e' so a infraestrutura de conexao.
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas&sslmode=verify-ca&sslrootcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/ca.crt&sslcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/issued/sa.crt&sslkey=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/private/sa.pk8"
+    username: sa
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: BrasilSaasHikariPool
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        default_schema: brasil_saas
+        # -------------------------------------------------------------------
+        # ISOLAMENTO POR EMPRESA
+        #
+        # O Hibernate acrescenta `empresa_id = :tenant` em TODA query de uma
+        # entidade que herda de TenantEntity, que tem @TenantId no
+        # empresaId. Sao 84 entidades, e o filtro deixa de depender de cada
+        # controller lembrar.
+        #
+        # A chave e' `tenant_identifier_resolver` e nao
+        # `multi_tenant_identifier_resolver`. O nome vem de
+        # AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER, que resolve para
+        # "hibernate.tenant_identifier_resolver". Digitar o nome errado nao da
+        # erro: o Hibernate sobe, ignora a propriedade e nao filtra nada. Foi o
+        # que aconteceu na primeira tentativa, e o sintoma e' o pior possivel
+        # — a aplicacao parece func, diretores veem empresas alheias, e nada
+        # reclama.
+        #
+        # Por isso o nome da chave esta testado em
+        # ConfiguracaoIsolamentoPorEmpresaTest, que compara a chave do YAML com a
+        # constante do Hibernate. Se a biblioteca mudar o nome, o teste falha em
+        # vez do filtro sumir calado.
+        # -------------------------------------------------------------------
+        # ISOLAMENTO POR EMPRESA
+        #
+        # O Hibernate acrescenta `empresa_id = :tenant` em TODA query de uma
+        # entidade que herda de TenantEntity, que tem @TenantId no
+        # empresaId. Sao 84 entidades, e o filtro deixa de depender de cada
+        # controller lembrar.
+        #
+        # O resolver devolve o empresaId do usuario autenticado, e devolve
+        # NULL para o superuser — no Hibernate 6, null significa "nao aplicar
+        # o filtro", que e' o que faz o superuser ver todas as empresas.
+        #
+        # Sem esta propriedade, o @TenantId fica registrado e nunca exercitado:
+        # o Hibernate sobe, valida o schema e nao filta nada. E' o modo de
+        # falha silencioso deste mecanismo, entao a propriedade vem logo abaixo
+        # da anotacao que depende dela.
+        # -------------------------------------------------------------------
+        tenant_identifier_resolver: br.com.brasil_saas.shared.tenant.EmpresaTenantIdentifierResolver
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: brasil_saas
+    default-schema: brasil_saas
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  jackson:
+    time-zone: America/Sao_Paulo
+    date-format: yyyy-MM-dd HH:mm:ss
+    default-property-inclusion: non_null
+    serialization:
+      fail-on-empty-beans: false
+
+  thymeleaf:
+    cache: false
+
+  messages:
+    basename: messages/messages
+    encoding: UTF-8
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-placeholder-not-real}
+      chat:
+        enabled: false
+      embedding:
+        enabled: false
+
+server:
+  port: 8080
+  error:
+    include-message: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+brasil-saas:
+  bootstrap:
+    admin:
+      enabled: ${BRASIL_SAAS_BOOTSTRAP_ADMIN_ENABLED:false}
+      username: ${BRASIL_SAAS_BOOTSTRAP_ADMIN_USERNAME:}
+      password: ${BRASIL_SAAS_BOOTSTRAP_ADMIN_PASSWORD:}
+      email: ${BRASIL_SAAS_BOOTSTRAP_ADMIN_EMAIL:}
+  auth-service:
+    # A identidade do usuário vem exclusivamente do Auth Service, que autentica
+    # contra o Active Directory srvcloud.cloud.
+    enabled: ${BRASIL_SAAS_AUTH_SERVICE_ENABLED:true}
+    base-url: ${BRASIL_SAAS_AUTH_SERVICE_URL:http://localhost:8181}
+    authenticate-path: ${BRASIL_SAAS_AUTH_SERVICE_AUTHENTICATE_PATH:/api/v1/identity/authenticate}
+
+  jwt:
+    secret: ${JWT_SECRET:brasil-saas-erp-dev-secret-key-minimo-32-bytes-0123456789}
+    expiration-ms: 3600000
+    refresh-expiration-ms: 604800000
+
+  # ------------------------------------------------------------------
+  # Identidade: dominio e Active Directory.
+  #
+  # A identidade e' o que o usuario digita; o dominio e' o nome que entra no
+  # email de quem ainda nao tem um. Vem do AD por padrao porque o UPN do
+  # Active Directory tem exatamente a forma usuario@dominio — o cadastro
+  # passa a falar a mesma lingua do AD, e nao um dominio inventado.
+  # ------------------------------------------------------------------
+  identidade:
+    dominio-padrao: ${BRASIL_SAAS_IDENTIDADE_DOMINIO:srvcloud.cloud}
+
+  ad:
+    # Desligado por padrao. Sem chave e sem AD, o ERP funciona exatamente como
+    # antes: perfil no Postgres. Ligar e decisao de ambiente, nao de build.
+    enabled: ${BRASIL_SAAS_AD_ENABLED:false}
+    url: ${BRASIL_SAAS_AD_URL:ldap://dc-erp.srvcloud.cloud:389}
+    base-dn: ${BRASIL_SAAS_AD_BASE_DN:DC=srvcloud,DC=cloud}
+    keytab: ${BRASIL_SAAS_AD_KEYTAB:/etc/srvcloud/certs/srvcloud.keytab}
+    principal: ${BRASIL_SAAS_AD_PRINCIPAL:srvcloud-svc@srvcloud.cloud}
+    service-principal: ${BRASIL_SAAS_AD_SERVICE_PRINCIPAL:HTTP/dc-erp.srvcloud.cloud}
+
+    # Os tres grupos que a regra de acesso do ERP reconhece.
+    grupo-acesso: ${BRASIL_SAAS_AD_GRUPO_ACESSO:GRP_ERP_ACESSO}
+    grupo-admin: ${BRASIL_SAAS_AD_GRUPO_ADMIN:GRP_ERP_ADMIN}
+    prefixo-grupo-empresa: ${BRASIL_SAAS_AD_PREFIXO_EMPRESA:ERP_EMPRESA_}
+
+    # O filtro de JWT recarrega o usuario a cada requisicao. Sem cache em disco,
+    # cada clique seria uma consulta ao AD. O arquivo sobrevive a restart e, se
+    # o AD cair, segura o ultimo estado conhecido — por isso ser arquivo e nao
+    # so memoria.
+    arquivo-cache: ${BRASIL_SAAS_AD_CACHE:/var/lib/brasil-saas/cache/grupos-ad.json}
+    cache-segundos: ${BRASIL_SAAS_AD_CACHE_SEGUNDOS:300}
+    cooldown-falha-segundos: ${BRASIL_SAAS_AD_COOLDOWN_SEGUNDOS:30}
+
+    # false = o AD SOMA ao perfil, nunca tira. Grupo novo no AD nao tranca ninguem.
+    exigir-grupo-acesso: ${BRASIL_SAAS_AD_EXIGIR_GRUPO_ACESSO:false}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,306 @@
+/* ContaBancaria.css - Estilos para o componente de Contas Bancarias */
+
+.conta-bancaria-enterprise-container {
+    padding: 20px;
+    min-height: calc(100vh - 150px);
+}
+
+.conta-bancaria-main-card {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.conta-bancaria-header-actions {
+    margin-bottom: 20px;
+}
+
+.conta-bancaria-info {
+    flex: 1;
+}
+
+.conta-bancaria-info p {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* DataTable customizacao */
+.conta-bancaria-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background-color: rgba(15,34,60,.44);
+    border: 1px solid #dee2e6;
+    font-weight: 600;
+    text-align: center;
+    padding: 12px;
+}
+
+.conta-bancaria-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    border: 1px solid #dee2e6;
+    padding: 10px;
+    text-align: center;
+}
+
+.conta-bancaria-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
+    background-color: rgba(15,34,60,.44);
+}
+
+.conta-bancaria-enterprise-container .p-datatable .p-datatable-tbody > tr:hover > td {
+    background-color: rgba(37,65,96,.56);
+    cursor: pointer;
+}
+
+/* Acoes botoes */
+.conta-bancaria-acoes {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.conta-bancaria-acoes .p-button {
+    min-width: 36px;
+}
+
+/* Dialog estilizacao */
+.conta-bancaria-enterprise-container .p-dialog .p-dialog-header {
+    background-color: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+}
+
+.conta-bancaria-enterprise-container .p-dialog .p-dialog-header-icons {
+    color: white;
+}
+
+.conta-bancaria-enterprise-container .p-dialog .p-dialog-content {
+    padding: 20px;
+}
+
+/* Formularios */
+.conta-bancaria-enterprise-container .field {
+    margin-bottom: 15px;
+}
+
+.conta-bancaria-enterprise-container .field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+.conta-bancaria-enterprise-container .p-inputtext,
+.conta-bancaria-enterprise-container .p-dropdown,
+.conta-bancaria-enterprise-container .p-inputnumber {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.conta-bancaria-enterprise-container .p-inputtext:focus,
+.conta-bancaria-enterprise-container .p-dropdown:focus,
+.conta-bancaria-enterprise-container .p-inputnumber:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.conta-bancaria-enterprise-container .p-button {
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.conta-bancaria-enterprise-container .p-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.conta-bancaria-enterprise-container .p-button-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.conta-bancaria-enterprise-container .p-button-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.conta-bancaria-enterprise-container .p-button-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.conta-bancaria-enterprise-container .p-button-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.conta-bancaria-enterprise-container .p-button-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.conta-bancaria-enterprise-container .p-button-info:hover {
+    background-color: #138496;
+    border-color: #117a8b;
+}
+
+/* Tags de status */
+.conta-bancaria-enterprise-container .p-tag {
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.conta-bancaria-enterprise-container .p-tag.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.conta-bancaria-enterprise-container .p-tag.danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.conta-bancaria-enterprise-container .p-tag.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Divider customizacao */
+.conta-bancaria-enterprise-container .p-divider {
+    margin: 20px 0;
+    border-top: 2px solid #dee2e6;
+}
+
+/* Toast customizacao */
+.conta-bancaria-enterprise-container .p-toast {
+    z-index: 9999;
+}
+
+.conta-bancaria-enterprise-container .p-toast .p-toast-message {
+    border-radius: 8px;
+}
+
+/* Message customizacao */
+.conta-bancaria-enterprise-container .p-message {
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.conta-bancaria-enterprise-container .p-message-error {
+    background-color: #f8d7da;
+    border-left: 4px solid #dc3545;
+}
+
+.conta-bancaria-enterprise-container .p-message-success {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+}
+
+/* Resumo section */
+.conta-bancaria-resumo {
+    background-color: rgba(15,34,60,.44);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.conta-bancaria-resumo div {
+    font-size: 0.95rem;
+}
+
+.conta-bancaria-resumo .font-bold {
+    color: #495057;
+}
+
+.conta-bancaria-resumo span:not(.font-bold) {
+    color: #6c757d;
+}
+
+/* Paginator */
+.conta-bancaria-enterprise-container .p-paginator {
+    margin-top: 15px;
+    border-radius: 6px;
+}
+
+.conta-bancaria-enterprise-container .p-paginator .p-paginator-page {
+    min-width: 40px;
+    height: 40px;
+    line-height: 40px;
+}
+
+.conta-bancaria-enterprise-container .p-paginator .p-paginator-first,
+.conta-bancaria-enterprise-container .p-paginator .p-paginator-prev,
+.conta-bancaria-enterprise-container .p-paginator .p-paginator-next,
+.conta-bancaria-enterprise-container .p-paginator .p-paginator-last {
+    min-width: 40px;
+    height: 40px;
+    line-height: 40px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .conta-bancaria-enterprise-container {
+        padding: 15px;
+    }
+    
+    .conta-bancaria-header-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .conta-bancaria-enterprise-container .p-dialog {
+        width: 95vw !important;
+        max-width: 95vw !important;
+    }
+}
+
+/* Loading state */
+.conta-bancaria-enterprise-container .p-datatable .p-datatable-loading-overlay {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.conta-bancaria-enterprise-container .p-datatable .p-progress-spinner {
+    width: 40px;
+    height: 40px;
+}
+
+/* Scrollbar customizacao */
+.conta-bancaria-enterprise-container::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.conta-bancaria-enterprise-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.conta-bancaria-enterprise-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.conta-bancaria-enterprise-container::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Animacoes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.conta-bancaria-enterprise-container .p-card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.conta-bancaria-enterprise-container .p-dialog {
+    animation: fadeIn 0.3s ease-out;
+}

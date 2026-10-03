@@ -1,0 +1,15 @@
+[Unit]
+Description=Brasil SaaS eSocial Microservice
+After=network.target
+
+[Service]
+User=euripedes
+WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP/src/main/resources/microservices/esocial/src/esocial-jt-service
+ExecStart=/usr/bin/java -jar target/esocial-jt-service.jar
+Restart=always
+Environment=SPRING_PROFILES_ACTIVE=prod
+Environment=ESOCIAL_CERT_PATH=/etc/brasil-saas/certs/esocial_cert.pfx
+Environment=ESOCIAL_CERT_PASS=ALTERE_ME
+
+[Install]
+WantedBy=multi-user.target

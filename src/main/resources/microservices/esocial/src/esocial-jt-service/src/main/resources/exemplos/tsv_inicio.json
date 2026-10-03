@@ -1,0 +1,70 @@
+{
+  "tipoOcorrencia": "TSV_INICIO",
+  "referencia": "77993893704",
+  "operacao": "NORMAL",
+  "dataOcorrencia": 1522181179561,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "trabalhador": {
+      "cpfTrab": "77993893704",
+      "nmTrab": "JANGO FETT",
+      "sexo": "M",
+      "racaCor": 6,
+      "estCiv": 2,
+      "grauInstr": "10",
+      "nmSoc": null,
+      "nascimento": {
+        "dtNascto": 453524400000,
+        "paisNascto": "105",
+        "paisNac": "105"
+      },
+      "endereco": {
+        "brasil": {
+          "tpLograd": "IND",
+          "dscLograd": "SAFS QUADRA 0 LOTE 0",
+          "nrLograd": "1",
+          "complemento": "LOTE 0",
+          "bairro": "ZONA CÍVICO-ADMINISTRATIVA",
+          "cep": "70070943",
+          "codMunic": 5300108,
+          "uf": "DF"
+        },
+        "exterior": null
+      },
+      "infoDeficiencia": {
+        "defFisica": "N",
+        "defVisual": "N",
+        "defAuditiva": "N",
+        "defMental": "N",
+        "defIntelectual": "N",
+        "reabReadap": "N",
+        "infoCota": "N",
+        "observacao": null
+      },
+      "dependente": null,
+      "contato": {
+        "fonePrinc": "6130430001",
+        "emailPrinc": "jangofett@email.com"
+      }
+    },
+    "infoTSVInicio": {
+      "cadIni": "S",
+      "codCateg": 901,
+      "dtInicio": 1483236000000,
+      "matricula": "1234567",
+      "infoComplementares": {
+        "infoEstagiario": {
+          "natEstagio": "N",
+          "nivEstagio": 1,
+          "dtPrevTerm": 1609470000000,
+          "instEnsino": {
+            "cnpjInstEnsino": "00038174000143"
+          }
+        }
+      }
+    }
+  }
+}

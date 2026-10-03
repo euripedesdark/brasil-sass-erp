@@ -1,0 +1,64 @@
+/* Logos.css */
+
+.logos-enterprise-container {
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.logos-main-card {
+    margin: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.logos-header-actions {
+    margin-bottom: 1.5rem;
+}
+
+.logos-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 600;
+}
+
+.logos-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.logos-actions .p-button {
+    transition: all 0.2s ease;
+}
+
+.logos-info {
+    font-size: 0.85rem;
+}
+
+.logos-info ul {
+    padding-left: 1.5rem;
+}
+
+.logos-info li {
+    margin-bottom: 0.25rem;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .logos-enterprise-container { padding: 0.5rem; }
+    .logos-actions { flex-direction: column; }
+}

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.5</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>br.com.brasil_saas</groupId>
+  <artifactId>nfse-nacional-api</artifactId>
+  <version>1.0.0</version>
+  <name>nfse-nacional-api</name>
+  <description>NFS-e Nacional (LC 1418) — API para o Ambiente de Dados Nacional</description>
+
+  <properties>
+    <java.version>21</java.version>
+  </properties>
+
+  <!--
+    Deliberadamente NAO ha dependencia do nfse-client (io.github.eduardokuhn89)
+    aqui, e a razao vale um paragrafo porque a tentacao de coloca-la e' grande:
+    ela esta versionada em microservices/nfse, faz exatamente o que esta API
+    faz, e pareceria o caminho curto.
+
+    Nao da, por dois motivos que so aparecem em tempo de execucao:
+
+    1) nfse-client 1.2.9 e' Java 8 e usa javax.xml.bind (JAXB) nos DTOs. O
+       Java 11 removeu o JAXB do JDK e o Spring Boot 3 usa jakarta.xml.bind.
+       Depender da biblioteca traz os dois runtimes de JAXB para o mesmo
+       classloader, e a falha aparece em reflexao, longe da causa.
+
+    2) Ela arrasta jasperreports 6.21.3, que declara o openpdf com o groupId
+       errado — com.github.librepdf.openpdf em vez de com.github.librepdf. O
+       artefato com o groupId certo existe no Central; o que a jasperreports
+       pede, nao. A construcao falha em "Could not collect dependencies", e
+       nao ha repositorio publico que sirva aquele caminho.
+
+    O que se aproveitou dela, e' o conhecimento: os caminhos dos dois hosts
+    (SEFIN e ADN) e a forma da assinatura estao em NfseNacionalOperacoes e
+    NfseNacionalSigner, com o motivo de cada escolha escrito ao lado. O codigo
+    usado e' o do JDK (javax.xml.crypto.dsig, JSR-105), o mesmo que a API de
+    Sao Paulo ja usava com sucesso.
+  -->
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <finalName>nfse-nacional-api</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>

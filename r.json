@@ -1,0 +1,1 @@
+<ConsultarRequerimentoCancelamentoResposta xmlns="http://www.agili.com.br/nfse_v_1.00.xsd"><ListaMensagemRetorno><MensagemRetorno><Codigo>Erro</Codigo><Mensagem>Não foi possível encontrar informações sobre o esquema para o elemento 'x'.</Mensagem><Versao>1.00</Versao></MensagemRetorno></ListaMensagemRetorno></ConsultarRequerimentoCancelamentoResposta>

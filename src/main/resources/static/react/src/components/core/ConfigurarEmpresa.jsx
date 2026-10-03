@@ -1,0 +1,272 @@
+import { useTranslation } from 'react-i18next';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { apiFetch } from '../../services/ApiConfig';
+import { Button } from 'primereact/button';
+import { Dropdown } from 'primereact/dropdown';
+import { InputMask } from 'primereact/inputmask';
+import { InputText } from 'primereact/inputtext';
+import { Message } from 'primereact/message';
+import { Toast } from 'primereact/toast';
+import { useAuth } from '../../contexts/AuthContext';
+import { ImagemRegistro } from '../shared/ImagemRegistro';
+
+const REGIMES = [
+    { label: 'Simples Nacional', value: 'SIMPLES_NACIONAL' },
+    { label: 'Regime Efeito Normal', value: 'REGIME_NORMAL' },
+    { label: 'MEI', value: 'MEI' }
+];
+
+const UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+
+const erroDe = (e, padrao) => {
+    const d = e?.payload;
+    if (d?.errors?.[0]?.message) return d.errors[0].message;
+    if (d?.message) return d.message;
+    return padrao;
+};
+
+/**
+ * Cadastro da empresa.
+ *
+ * Empresa e o tenant: e o filtro de todos os dados do sistema. Um usuario sem
+ * empresa nao ve nada — e esta e a unica coisa que ele pode fazer ate ter uma.
+ *
+ * A tela funciona nos dois sentidos: sem empresa, cadastra; com empresa, edita
+ * os dados dela (inclusive razao social, inscricoes, endereco e regime).
+ */
+export const ConfigurarEmpresa = () => {
+    const { t } = useTranslation();
+    const { user, refreshPerfil } = useAuth();
+    const toast = useRef(null);
+
+    const [carregando, setCarregando] = useState(true);
+    const [salvando, setSalvando] = useState(false);
+    const [situacao, setSituacao] = useState(null);
+    const [empresaId, setEmpresaId] = useState(null);
+
+    const vazio = {
+        razaoSocial: '', nomeFantasia: '', cnpj: '',
+        inscricaoEstadual: '', inscricaoMunicipal: '',
+        regimeTributario: 'SIMPLES_NACIONAL', codigoIbge: '',
+        endereco: '', numero: '', complemento: '', bairro: '',
+        uf: '', cep: '', telefone: ''
+    };
+    const [form, setForm] = useState(vazio);
+    const [erros, setErros] = useState({});
+
+    const set = (campo) => (e) => setForm((f) => ({ ...f, [campo]: e?.value ?? e?.target?.value ?? '' }));
+
+    // O código IBGE vem de outra fonte e é só um número para o usuário. Buscar
+    // pelo código mostra de que município é, e avisa quando o código não existe
+    // na tabela — sem isso o campo aceita qualquer número e o erro só aparece na
+    // emissão do documento fiscal.
+    const [municipio, setMunicipio] = useState(null);
+    useEffect(() => {
+        const codigo = String(form.codigoIbge || '').trim();
+        if (!/^\d{7}$/.test(codigo)) { setMunicipio(null); return undefined; }
+        let cancelado = false;
+        const t = setTimeout(() => {
+            apiFetch(`/api/municipios/codigo/${codigo}`)
+                .then((r) => (r.ok ? r.json() : null))
+                .then((d) => { if (!cancelado) setMunicipio(d?.data ?? null); })
+                .catch(() => { if (!cancelado) setMunicipio(null); });
+        }, 350);
+        return () => { cancelado = true; clearTimeout(t); };
+    }, [form.codigoIbge]);
+
+    const carregar = useCallback(async () => {
+        setCarregando(true);
+        try {
+            const r = await apiFetch('/api/core/minha-empresa');
+            if (!r.ok) throw new Error(t('legacyUi.empresa.loadError'));
+            const s = (await r.json()).data;
+            setSituacao(s);
+            // id da empresa: e o que a rota do logo usa, e so existe depois de
+            // cadastrar — antes disso nao ha logo para enviar
+            if (s?.empresaId) setEmpresaId(s.empresaId);
+            setForm((f) => ({
+                ...f,
+                razaoSocial: s?.razaoSocial ?? '',
+                cnpj: s?.cnpj ?? ''
+            }));
+        } catch (e) {
+            toast.current?.show({
+                severity: 'error', summary: 'Erro',
+                detail: erroDe(e, t('legacyUi.empresa.loadError')), life: 5000
+            });
+        } finally {
+            setCarregando(false);
+        }
+    }, []);
+
+    useEffect(() => { carregar(); }, [carregar]);
+
+    const validar = () => {
+        const novos = {};
+        if (!form.razaoSocial?.trim()) novos.razaoSocial = t('legacyUi.empresa.nameRequired');
+        const digitos = (form.cnpj || '').replace(/\D/g, '');
+        if (digitos.length !== 14) novos.cnpj = t('legacyUi.empresa.cnpjRequired');
+        setErros(novos);
+        return Object.keys(novos).length === 0;
+    };
+
+    const salvar = async () => {
+        if (!validar()) {
+            toast.current?.show({
+                severity: 'warn', summary: 'Confira os campos',
+                detail: 'Some os campos destacados em vermelho', life: 4000
+            });
+            return;
+        }
+        setSalvando(true);
+        try {
+            const jaTem = situacao?.cadastrada;
+            const r = await apiFetch('/api/core/minha-empresa', {
+                method: jaTem ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form)
+            });
+            const json = await r.json();
+            if (!r.ok) {
+                const mensagem = json?.errors?.[0]?.message || t('legacyUi.empresa.saveError');
+                if (mensagem.toLowerCase().includes('cnpj')) setErros({ cnpj: mensagem });
+                throw new Error(mensagem);
+            }
+
+            // O token carrega a empresa; sem recarregar o perfil, a interface
+            // continuaria achando que o usuario esta sem empresa.
+            await refreshPerfil?.();
+            setSituacao(json.data);
+            toast.current?.show({
+                severity: 'success', summary: t('legacyUi.empresa.saved'),
+                detail: jaTem ? t('legacyUi.empresa.updated') : 'Agora o sistema está liberado',
+                life: 4000
+            });
+        } catch (e) {
+            toast.current?.show({
+                severity: 'error', summary: t('common.error'),
+                detail: erroDe(e, t('legacyUi.empresa.saveError')), life: 6000
+            });
+        } finally {
+            setSalvando(false);
+        }
+    };
+
+    const semEmpresa = situacao && situacao.cadastrada === false;
+    const campo = (id, rotulo, children, msg) => (
+        <div className="col-12 md:col-6">
+            <label className="bc-label" htmlFor={id}>{rotulo}</label>
+            {children}
+            {msg && <div className="bc-field-mensagem">{msg}</div>}
+        </div>
+    );
+
+    return (
+        <div className="p-4">
+            <Toast ref={toast} />
+            <div style={{ maxWidth: 860, margin: '0 auto' }}>
+                <div className="mb-4">
+                    <h2 className="m-0">Sua empresa</h2>
+                    <span className="bc-muted">
+                        {semEmpresa
+                            ? 'Cadastre a empresa para começar a usar o sistema'
+                            : 'Dados da empresa do seu usuário'}
+                    </span>
+                </div>
+
+                {semEmpresa && (
+                    <Message severity="info" className="mb-4" text="O sistema é multiempresa: os dados são separados por empresa. Enquanto não houver empresa cadastrada, o restante do sistema fica indisponível." />
+                )}
+
+                {carregando ? (
+                    <Message severity="secondary" text="Carregando..." />
+                ) : (
+                    <div className="grid p-fluid">
+                        {campo('razaoSocial', 'Razão social *',
+                            <InputText id="razaoSocial" value={form.razaoSocial}
+                                       onChange={set('razaoSocial')} className={erros.razaoSocial ? 'p-invalid' : ''} />,
+                            erros.razaoSocial)}
+
+                        {campo('nomeFantasia', 'Nome fantasia',
+                            <InputText id="nomeFantasia" value={form.nomeFantasia} onChange={set('nomeFantasia')} />)}
+
+                        {campo('cnpj', 'CNPJ *',
+                            <InputMask id="cnpj" mask="99.999.999/9999-99" value={form.cnpj}
+                                       onChange={set('cnpj')} placeholder="00.000.000/0000-00"
+                                       className={erros.cnpj ? 'p-invalid' : ''} />,
+                            erros.cnpj)}
+
+                        {campo('regimeTributario', 'Regime tributário',
+                            <Dropdown id="regimeTributario" value={form.regimeTributario} options={REGIMES}
+                                      onChange={set('regimeTributario')} />)}
+
+                        {campo('inscricaoEstadual', 'Inscrição estadual',
+                            <InputText id="inscricaoEstadual" value={form.inscricaoEstadual} onChange={set('inscricaoEstadual')} />)}
+
+                        {campo('inscricaoMunicipal', 'Inscrição municipal',
+                            <InputText id="inscricaoMunicipal" value={form.inscricaoMunicipal} onChange={set('inscricaoMunicipal')} />)}
+
+                        {campo('telefone', 'Telefone',
+                            <InputMask id="telefone" mask="(99) 99999-9999" value={form.telefone || ''} onChange={set('telefone')} />)}
+
+                        <div className="col-12"><hr className="mt-2 mb-0" /></div>
+
+                        {/* Logo da empresa. Os bytes vao para o MongoDB e o Postgres
+                            guarda so a referencia, como a imagem do produto. As tres
+                            rotas existiam sem nenhuma tela chamando. */}
+                        {empresaId && (
+                            <div className="col-12">
+                                <ImagemRegistro
+                                    registroId={empresaId}
+                                    lerUrl={`/api/core/empresas/logo/${empresaId}`}
+                                    enviarUrl={`/api/core/empresas/${empresaId}/logo`}
+                                    removerUrl={`/api/core/empresas/${empresaId}/logo`}
+                                    campo="logo"
+                                    rotulo="Logo da empresa"
+                                />
+                            </div>
+                        )}
+
+                        {campo('cep', 'CEP',
+                            <InputMask id="cep" mask="99999-999" value={form.cep || ''} onChange={set('cep')} />)}
+
+                        {campo('endereco', 'Endereço',
+                            <InputText id="endereco" value={form.endereco || ''} onChange={set('endereco')} />)}
+
+                        {campo('numero', 'Número',
+                            <InputText id="numero" value={form.numero || ''} onChange={set('numero')} />)}
+
+                        {campo('complemento', 'Complemento',
+                            <InputText id="complemento" value={form.complemento || ''} onChange={set('complemento')} />)}
+
+                        {campo('bairro', 'Bairro',
+                            <InputText id="bairro" value={form.bairro || ''} onChange={set('bairro')} />)}
+
+                        {campo('ibge', 'Código IBGE do município',
+                            <InputText id="ibge" value={form.codigoIbge} maxLength={7}
+                                       onChange={set('codigoIbge')}/>,
+                            form.codigoIbge && /\d{7}$/.test(form.codigoIbge) && !municipio
+                                ? 'Código IBGE não encontrado na tabela' : null)}
+                        <div className="col-12">
+                            {municipio && (
+                                <Message severity="success" text={`Município: ${municipio.nome} — ${municipio.uf}`} />
+                            )}
+                        </div>
+
+                        {campo('uf', 'UF',
+                            <Dropdown id="uf" value={form.uf || null} options={UFS.map((u) => ({ label: u, value: u }))}
+                                      onChange={set('uf')} placeholder="Selecione" />)}
+
+                        <div className="col-12 flex justify-end gap-2 mt-3">
+                            <Button label={semEmpresa ? t('legacyUi.empresa.save') : t('common.saveChanges')}
+                                    icon="pi pi-check" loading={salvando}
+                                    disabled={salvando} onClick={salvar} />
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default ConfigurarEmpresa;

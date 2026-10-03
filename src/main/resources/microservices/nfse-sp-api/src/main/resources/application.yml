@@ -1,0 +1,42 @@
+server:
+  port: ${NFSE_SP_PORT:4567}
+  error:
+    include-message: always
+
+spring:
+  application:
+    name: nfse-sp-api
+  # Esta API nao usa banco: e um adaptador de protocolo. Ver o pom.xml.
+  jackson:
+    default-property-inclusion: non_null
+
+brasil-saas:
+  fiscal:
+    nfse-sp:
+      # Liga apos configurar certificado e CNPJ do prestador.
+      enabled: ${NFSE_SP_ENABLED:false}
+
+      # Producao: nfews.prefeitura.sp.gov.br. O nfe.prefeitura.sp.gov.br (homologacao
+      # antigo) responde 403 e nao aceita o layout atual.
+      url: ${NFSE_SP_URL:https://nfews.prefeitura.sp.gov.br/lotenfe.asmx}
+
+      # 1 = leiaute classico. 2 = IBS/CBS (LC 214/2025).
+      #
+      # A prefeitura valida contra o cadastro do prestador e devolve o erro 641
+      # quando o regime nao bate com o leiaute enviado. Empresa do Simples
+      # Nacional e OBRIGADA no leiaute 1.
+      xsd-version: ${NFSE_SP_XSD_VERSION:1}
+
+      cnpj-remetente: ${NFSE_SP_CNPJ:}
+
+      # A senha do .pfx nao tem valor padrao e nao vai para o banco.
+      # Quem abre o certificado guarda a senha na propria estacao.
+      certificado-caminho: ${NFSE_SP_CERT_PATH:}
+      certificado-senha: ${NFSE_SP_CERT_PASS:}
+
+      timeout-conexao-segundos: 20
+      timeout-leitura-segundos: 120
+
+logging:
+  level:
+    br.com.brasil_saas.fiscal.sp: ${NFSE_SP_LOG_LEVEL:INFO}

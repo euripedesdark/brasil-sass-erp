@@ -1,0 +1,10 @@
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'json'
+gem 'rackup'
+gem 'puma'
+
+# Carrega a gem local de NFSe SP
+gem 'nfse_prefeitura_sp', path: '../nfse_prefeitura_sp'
+

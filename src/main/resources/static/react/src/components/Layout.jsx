@@ -1,0 +1,408 @@
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Button } from 'primereact/button';
+import { Avatar } from 'primereact/avatar';
+import { Divider } from 'primereact/divider';
+import { PanelMenu } from 'primereact/panelmenu';
+import { PixChaveComBotao } from './shared/ApoiePix';
+import './shared/ApoiePix.css';
+import { TieredMenu } from 'primereact/tieredmenu';
+import { Toast } from 'primereact/toast';
+import { ConfirmDialog } from 'primereact/confirmdialog';
+import { useAuth } from '../contexts/AuthContext';
+import ApiConfig, { apiFetch } from '../services/ApiConfig';
+import './Layout.css';
+import { ErrorBoundary } from './shared/ErrorBoundary';
+import { ExigeEmpresa } from './core/ExigeEmpresa';
+import { useTranslation } from 'react-i18next';
+
+const STATIC_BG = '/images/tela-inicial.jpeg';
+
+export const Layout = () => {
+    const { user, logout, isSuperuser, temModulo } = useAuth();
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [collapsed, setCollapsed] = useState(false);
+    const userMenuRef = useRef(null);
+    const [bgStyle, setBgStyle] = useState({
+        backgroundImage: `url(${STATIC_BG})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+    });
+    const toast = useRef(null);
+
+    // /inicio e / → só fundo; /dashboard → mostra o painel
+    const isHomeOnly =
+        location.pathname === '/' ||
+        location.pathname === '/inicio' ||
+        location.pathname === '';
+
+    useEffect(() => {
+        let objectUrl = null;
+
+        const applyImageUrl = (url) => {
+            setBgStyle({
+                backgroundImage: `url(${url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+            });
+        };
+
+        const loadBg = async () => {
+            try {
+                const response = await apiFetch(ApiConfig.BASE_URL + '/api/superadmin/assets/system/SISTEMA_BACKGROUND');
+                if (response.ok && response.status !== 204) {
+                    const blob = await response.blob();
+                    if (blob.size > 0) {
+                        objectUrl = URL.createObjectURL(blob);
+                        applyImageUrl(objectUrl);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('Imagem de fundo (Mongo) indisponível', err);
+            }
+
+            const img = new Image();
+            img.onload = () => applyImageUrl(STATIC_BG);
+            img.onerror = () => {
+                setBgStyle({
+                    background: 'linear-gradient(160deg, #0b1220 0%, #152238 45%, #1e3a5f 100%)'
+                });
+            };
+            img.src = STATIC_BG;
+        };
+
+        loadBg();
+
+        const handleToast = (e) => {
+            toast.current?.show(e.detail);
+        };
+
+        window.addEventListener('bc-toast', handleToast);
+        return () => {
+            window.removeEventListener('bc-toast', handleToast);
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, []);
+
+    const handleNavigation = useCallback((path) => {
+        navigate(path);
+    }, [navigate]);
+
+    const menuItems = useMemo(() => {
+        const item = (labelKey, icon, path) => ({
+            label: t(labelKey),
+            icon,
+            command: () => handleNavigation(path)
+        });
+
+        const groups = [
+            {
+                label: t('nav.registrations'),
+                modulo: 'cadastro',
+                icon: 'pi pi-database',
+                items: [
+                    item('menu.people', 'pi pi-users', '/cadastro/pessoas'),
+                    item('menu.customers', 'pi pi-user', '/cadastro/clientes'),
+                    item('menu.suppliers', 'pi pi-building', '/cadastro/fornecedores'),
+                    item('menu.products', 'pi pi-box', '/cadastro/produtos'),
+                    item('menu.categories', 'pi pi-tags', '/cadastro/categorias'),
+                    item('menu.brands', 'pi pi-bookmark', '/cadastro/marcas'),
+                    item('menu.serviceCatalog', 'pi pi-wrench', '/cadastro/servicos'),
+                    item('menu.carriers', 'pi pi-truck', '/cadastro/transportadoras'),
+                    item('menu.units', 'pi pi-sliders-h', '/cadastro/unidades-medida'),
+                    item('menu.cities', 'pi pi-map-marker', '/cadastro/municipios')
+                ]
+            },
+            {
+                label: t('nav.sales'),
+                modulo: 'vendas',
+                icon: 'pi pi-shopping-cart',
+                items: [
+                    item('menu.salesOrders', 'pi pi-file', '/vendas'),
+                    item('menu.pos', 'pi pi-shopping-cart', '/vendas/pdv'),
+                    item('menu.priceTables', 'pi pi-tags', '/vendas/tabelas-preco')
+                ]
+            },
+            {
+                label: t('nav.purchases'),
+                modulo: 'compras',
+                icon: 'pi pi-truck',
+                items: [
+                    item('menu.purchaseOrders', 'pi pi-file-import', '/compras'),
+                    item('menu.supplyChain', 'pi pi-sitemap', '/compras/supply-chain'),
+                    item('menu.receipts', 'pi pi-download', '/compras/recebimentos'),
+                    item('menu.threeWayMatch', 'pi pi-check-square', '/compras/conferencia-faturas')
+                ]
+            },
+            {
+                label: t('nav.inventory'),
+                modulo: 'estoque',
+                icon: 'pi pi-inbox',
+                items: [
+                    item('menu.stockBalances', 'pi pi-box', '/estoque'),
+                    item('menu.stockMovements', 'pi pi-arrow-left-arrow-right', '/estoque/movimentacoes'),
+                    item('menu.warehouses', 'pi pi-building', '/estoque/depositos'),
+                    item('menu.transfers', 'pi pi-arrow-right-arrow-left', '/estoque/transferencias'),
+                    item('menu.counts', 'pi pi-clipboard', '/estoque/inventarios'),
+                    item('menu.wms', 'pi pi-map', '/estoque/enderecos'),
+                    item('menu.lots', 'pi pi-calendar', '/estoque/lotes'),
+                    item('menu.reservations', 'pi pi-lock', '/estoque/reservas'),
+                    item('menu.shipping', 'pi pi-send', '/estoque/expedicoes')
+                ]
+            },
+            {
+                label: t('nav.finance'),
+                modulo: 'financeiro',
+                icon: 'pi pi-wallet',
+                items: [
+                    item('menu.overview', 'pi pi-chart-pie', '/financeiro'),
+                    item('menu.payablesReceivables', 'pi pi-money-bill', '/financeiro/lancamentos'),
+                    item('menu.titles', 'pi pi-file', '/financeiro/titulos'),
+                    item('menu.titleApprovals', 'pi pi-verified', '/financeiro/aprovacoes-titulos'),
+                    item('menu.commissions', 'pi pi-percentage', '/financeiro/comissoes'),
+                    item('menu.cash', 'pi pi-wallet', '/financeiro/caixa'),
+                    item('menu.bankSlips', 'pi pi-file-pdf', '/financeiro/boletos'),
+                    item('menu.statements', 'pi pi-chart-line', '/financeiro/extrato'),
+                    item('menu.reconciliation', 'pi pi-check-square', '/financeiro/conciliacao'),
+                    item('menu.functionalAudit', 'pi pi-list-check', '/bi/auditoria-funcional'),
+                    item('menu.bankAccounts', 'pi pi-building', '/financeiro/contas-bancarias'),
+                    item('menu.chartOfAccounts', 'pi pi-sitemap', '/financeiro/plano-contas'),
+                    item('menu.accountingEntries', 'pi pi-book', '/financeiro/contabil'),
+                    item('menu.costCenters', 'pi pi-th-large', '/financeiro/centro-custos'),
+                    item('menu.paymentTerms', 'pi pi-calendar', '/financeiro/condicoes-pagamento'),
+                    item('menu.paymentTypes', 'pi pi-credit-card', '/financeiro/tipos-pagamento')
+                ]
+            },
+            {
+                label: t('nav.tax'),
+                modulo: 'fiscal',
+                icon: 'pi pi-file-check',
+                items: [
+                    item('menu.ncm', 'pi pi-list', '/fiscal/ncm'),
+                    item('menu.cfop', 'pi pi-list', '/fiscal/cfop'),
+                    item('menu.cest', 'pi pi-list', '/fiscal/cest'),
+                    item('menu.issqn', 'pi pi-list', '/fiscal/issqn'),
+                    item('menu.taxEntries', 'pi pi-download', '/fiscal/entradas'),
+                    item('menu.taxes', 'pi pi-percentage', '/fiscal/impostos'),
+                    item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz')
+                ]
+            },
+            {
+                label: t('nav.production'),
+                modulo: 'producao',
+                icon: 'pi pi-cog',
+                items: [
+                    item('menu.productionOrders', 'pi pi-cog', '/producao'),
+                    item('menu.productionWaybills', 'pi pi-file', '/producao/romaneios'),
+                    item('menu.bom', 'pi pi-sitemap', '/producao/estrutura'),
+                    item('menu.productionReports', 'pi pi-clock', '/producao/apontamentos')
+                ]
+            },
+            {
+                label: t('nav.services'),
+                modulo: 'servicos',
+                icon: 'pi pi-wrench',
+                items: [
+                    item('menu.serviceCatalogFull', 'pi pi-list', '/servicos'),
+                    item('menu.serviceCatalog', 'pi pi-list', '/cadastro/servicos'),
+                    item('menu.serviceOrders', 'pi pi-file-edit', '/ordens-servico')
+                ]
+            },
+            {
+                label: t('nav.hr'),
+                modulo: 'rh',
+                icon: 'pi pi-users',
+                items: [
+                    item('menu.employees', 'pi pi-user', '/rh'),
+                    item('menu.positions', 'pi pi-briefcase', '/rh/cargos'),
+                    item('menu.payroll', 'pi pi-money-bill', '/rh/folha'),
+                    item('menu.employeePhotos', 'pi pi-image', '/rh/fotos')
+                ]
+            },
+            {
+                // BI e IA sao modulos separados; o grupo so aparece se a
+                // pessoa tiver pelo menos um dos dois liberados.
+                label: t('nav.intelligence'),
+                modulo: 'ia',
+                modulosAlternativos: ['bi', 'ia'],
+                icon: 'pi pi-chart-line',
+                items: [
+                    item('menu.bi', 'pi pi-chart-bar', '/bi'),
+                    item('menu.kpis', 'pi pi-percentage', '/bi/kpis'),
+                    item('menu.biReports', 'pi pi-file', '/bi/relatorios'),
+                    item('menu.scheduledReports', 'pi pi-clock', '/bi/relatorios-agendados'),
+                    item('nav.ai', 'pi pi-sparkles', '/ia'),
+                    item('nav.assistant', 'pi pi-compass', '/assistente'),
+                    item('nav.reports', 'pi pi-chart-line', '/relatorios')
+                ]
+            }
+        ];
+
+        // Cada grupo declara o modulo a que pertence. Grupos com
+        // `modulosAlternativos` aparecem se a pessoa tiver qualquer um deles
+        // (o grupo de IA tambem cobre as telas de BI). Sem `modulo`, o grupo
+        // aparece sempre.
+        const grupoVisivel = (g) => {
+            if (!g.modulo) return true;
+            if (g.modulosAlternativos) {
+                return g.modulosAlternativos.some(temModulo);
+            }
+            return temModulo(g.modulo);
+        };
+
+        const items = [
+            item('nav.dashboard', 'pi pi-home', '/dashboard'),
+            ...groups.filter(grupoVisivel)
+        ];
+
+        const podeGerirUsuarios = user?.isAdmin || user?.isDiretoria;
+        if (podeGerirUsuarios) {
+            const adminItens = [
+                item('admin.usersPermissions', 'pi pi-user-edit', '/admin/usuarios'),
+                item('admin.systemImages', 'pi pi-image', '/admin/configuracoes'),
+                item('nav.documents', 'pi pi-folder-open', '/documentos'),
+                item('nav.profile', 'pi pi-user', '/perfil')
+            ];
+
+            if (user?.isAdmin) {
+                adminItens.push(item('admin.parityAudit', 'pi pi-list-check', '/admin/paridade-erp'));
+                adminItens.push(item('admin.endpointCoverage', 'pi pi-sitemap', '/admin/endpoints'));
+            }
+
+            // Gerenciador SQL: restrito a SUPERUSER. A ideia e que a manutencao
+            // do banco nao dependa do usuario postgres do ERP.
+            if (isSuperuser) {
+                adminItens.push(item('admin.sqlManager', 'pi pi-database', '/admin/sql'));
+                // o controller exige hasRole('ADMIN') e as rotas manipulam
+                // arquivos do disco e collections do Mongo
+                adminItens.push(item('admin.imageStorage', 'pi pi-server', '/admin/armazenamento'));
+            }
+
+            items.unshift({
+                label: t('nav.administration'),
+                icon: 'pi pi-shield',
+                items: adminItens
+            });
+        }
+
+        items.push({
+            label: t('nav.aboutProject'),
+            icon: 'pi pi-info-circle',
+            command: () => handleNavigation('/sobre')
+        });
+
+        return items;
+    }, [handleNavigation, t, user?.isAdmin, user?.isDiretoria, isSuperuser, temModulo]);
+
+    const userMenuItems = useMemo(() => [
+        {
+            label: t('nav.logout'),
+            icon: 'pi pi-sign-out',
+            command: async () => {
+                await logout();
+                navigate('/login');
+            }
+        }
+    ], [logout, navigate, t]);
+
+    return (
+        <div className="enterprise-layout" style={bgStyle}>
+            <Toast ref={toast} />
+            <ConfirmDialog />
+
+            <aside className={'enterprise-sidebar' + (collapsed ? ' collapsed' : '')}>
+                <div className="sidebar-header">
+                    <div className="sidebar-brand">
+                        <div className="brand-logo">BC</div>
+                        {!collapsed && <span className="brand-name">Brasil SaaS ERP</span>}
+                    </div>
+
+                    <Button
+                        icon={collapsed ? 'pi pi-angle-double-right' : 'pi pi-angle-double-left'}
+                        className="p-button-rounded p-button-text collapse-btn"
+                        onClick={() => setCollapsed(c => !c)}
+                        tooltip={collapsed ? t('common.expandMenu') : t('common.collapseMenu')}
+                        tooltipOptions={{ position: 'right' }}
+                    />
+                </div>
+
+                <div className="sidebar-user">
+                    <Avatar
+                        label={(user?.nome || user?.username || '?').charAt(0)}
+                        size={collapsed ? 'normal' : 'large'}
+                        shape="circle"
+                    />
+                    {!collapsed && (
+                        <div className="user-details">
+                            <span className="user-name">{user?.nome || user?.username}</span>
+                            <span className="user-role">{user?.perfil || t('common.user')}</span>
+                        </div>
+                    )}
+                </div>
+
+                {!collapsed && <Divider style={{ background: 'var(--bc-sidebar-border)' }} />}
+
+                <div className="sidebar-nav">
+                    <PanelMenu model={menuItems} className="enterprise-panel-menu" />
+                </div>
+
+                <div className="sidebar-footer">
+                    <Button
+                        label={collapsed ? '' : (user?.nome || user?.username)}
+                        icon="pi pi-user"
+                        text
+                        onClick={(e) => userMenuRef.current?.toggle(e)}
+                        className="user-profile-btn"
+                    />
+                    <TieredMenu model={userMenuItems} popup ref={userMenuRef} />
+                </div>
+            </aside>
+
+            <main className="enterprise-main">
+                <header className="enterprise-header">
+                    <div className="header-content">
+                        <div className="current-page-info">
+                            <h2 className="page-title">{t('app.managementTitle')}</h2>
+                        </div>
+                        <div className="header-actions"></div>
+                    </div>
+                </header>
+
+                <div className="page-content">
+                    {/* A barreira fica aqui, e nao em volta das <Route>, para que o
+                        menu lateral e o cabecalho continuem de pe quando uma tela
+                        falha. Sem ela, um TypeError no render de um cadastro
+                        derrubava a arvore React inteira e o usuario via apenas o
+                        fundo — o que parecia "a rota nao abre". */}
+                    {!isHomeOnly && (
+                        <ErrorBoundary onSair={() => navigate('/dashboard')}>
+                            {/* ExigeEmpresa no Outlet, e nao rota por rota: e o
+                                que garante que TODO o sistema fique fechado para
+                                quem ainda nao cadastrou a empresa, inclusive as
+                                telas que forem adicionadas depois. */}
+                            <ExigeEmpresa>
+                                <Outlet />
+                            </ExigeEmpresa>
+                        </ErrorBoundary>
+                    )}
+                </div>
+            </main>
+
+            {/* Rodape com a chave PIX. Fica dentro do wrapper e fora do
+                <main> para que o conteudo da pagina continue rolando
+                sozinho e o rodape nao suma ao rolar. */}
+            <footer className="system-footer">
+                <span className="system-footer-titulo">
+                    <i className="pi pi-heart-fill" style={{ color: '#e11d48' }} />
+                    {t('footer.supportProject')}
+                </span>
+                <PixChaveComBotao tamanho={72} />
+            </footer>
+        </div>
+    );
+};

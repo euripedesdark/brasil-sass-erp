@@ -1,0 +1,48 @@
+{
+  "tipoOcorrencia": "ALTERACAO_CONTRATUAL",
+  "referencia": "12000",
+  "operacao": "NORMAL",
+  "dataOcorrencia": 1522181179561,
+  "dadosOcorrencia": {
+    "ideEmpregador": {
+      "tpInsc": 1,
+      "nrInsc": "00509968000148"
+    },
+    "ideVinculo": {
+      "cpfTrab": "77993893704",
+      "matricula": "12000"
+    },
+    "altContratual": {
+      "dtAlteracao": 1522181179561,
+      "dtEf": 1522181179561,
+      "dscAlt": "Alteração contratual de testes",
+      "vinculo": {
+        "tpRegPrev": 2,
+        "infoRegimeTrab": {
+          "infoCeletista": null,
+          "infoEstatutario": {
+            "tpPlanRP": 1,
+            "indTetoRGPS": "N",
+            "indAbonoPerm": "N"
+          }
+        },
+        "infoContrato": {
+          "codCateg": 301,
+          "nmCargo": "GESTOR",
+          "cbocargo": 261205,
+          "acumCargo": "N",
+          "localTrabalho": {
+            "localTrabGeral": {
+              "tpInsc": 1,
+              "nrInsc": "00509968000148",
+              "descComp": "TRIBUNAL SUPERIOR DO TRABALHO"
+            }
+          },
+          "horContratual": null,
+          "alvaraJudicial": null,
+          "observacoes": null
+        }
+      }
+    }
+  }
+}
