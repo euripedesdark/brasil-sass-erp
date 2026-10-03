@@ -77,6 +77,7 @@ export const ApontamentosProducao = () => {
     const toast = React.useRef(null);
 
     const [producoes, setProducoes] = useState([]);
+    const [funcionarios, setFuncionarios] = useState([]);
     const [apontamentos, setApontamentos] = useState([]);
     const [stats, setStats] = useState(null);
     const [carregando, setCarregando] = useState(false);
@@ -90,10 +91,18 @@ export const ApontamentosProducao = () => {
 
     // as ordens de produção vêm do próprio módulo: melhor que digitar o id
     useEffect(() => {
-        apiFetch('/api/producao')
-            .then((r) => (r.ok ? r.json() : []))
-            .then((d) => setProducoes(Array.isArray(d) ? d : []))
-            .catch(() => setProducoes([]));
+        Promise.all([
+            apiFetch('/api/producao'),
+            apiFetch('/api/rh/funcionarios')
+        ]).then(async ([rp, rf]) => {
+            const p = rp.ok ? await rp.json() : [];
+            const f = rf.ok ? await rf.json() : [];
+            setProducoes(Array.isArray(p) ? p : []);
+            setFuncionarios(Array.isArray(f) ? f : []);
+        }).catch(() => {
+            setProducoes([]);
+            setFuncionarios([]);
+        });
     }, []);
 
     const mostrar = (severity, summary, detail) =>
@@ -245,9 +254,15 @@ export const ApontamentosProducao = () => {
                                   placeholder="Escolha a ordem" filter
                                   onChange={(e) => setFiltro({ ...filtro, producaoId: e.value })} />, 'col-12 md:col-4')}
 
-                    {filtro.tipo === 'funcionario' && campo('ffunc', 'Funcionário (id)',
-                        <InputNumber id="ffunc" value={filtro.funcionarioId} useGrouping={false}
-                                     onValueChange={(e) => setFiltro({ ...filtro, funcionarioId: e.value })} />, 'col-12 md:col-4')}
+                    {filtro.tipo === 'funcionario' && campo('ffunc', 'Funcionário',
+                        <Dropdown id="ffunc" value={filtro.funcionarioId}
+                                  options={funcionarios.map(f => ({
+                                      label: `${f.matricula || f.id} — ${f.pessoaNome || f.nome || f.cargo || 'Colaborador'}`,
+                                      value: f.id
+                                  }))}
+                                  optionLabel="label" optionValue="value" filter
+                                  placeholder="Escolha o funcionário"
+                                  onChange={(e) => setFiltro({ ...filtro, funcionarioId: e.value })} />, 'col-12 md:col-4')}
 
                     {filtro.tipo === 'status' && campo('fstatus', 'Status',
                         <Dropdown id="fstatus" value={filtro.status} options={STATUS}
