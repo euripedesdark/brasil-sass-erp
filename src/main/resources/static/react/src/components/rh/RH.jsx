@@ -20,12 +20,17 @@ export const RH = () => {
     const [selectedFunc, setSelectedFunc] = useState(null);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [pessoas, setPessoas] = useState([]);
+    const [carregandoPessoas, setCarregandoPessoas] = useState(false);
 
     const [form, setForm] = useState({
+        pessoaId: null,
         nome: '',
         matricula: '',
         tipoColaborador: 'VENDEDOR',
-        salario: 0
+        salario: 0,
+        percentualComissao: 0,
+        valorHora: 0
     });
 
     const tiposColaboradores = [
@@ -36,7 +41,22 @@ export const RH = () => {
 
     useEffect(() => {
         fetchFuncionarios();
-    }, []);
+        fetchPessoas();
+    }, [user?.empresaId]);
+
+    const fetchPessoas = async (busca = '') => {
+        setCarregandoPessoas(true);
+        try {
+            const query = busca ? '?busca=' + encodeURIComponent(busca) : '';
+            const response = await apiFetch(ApiConfig.BASE_URL + '/api/rh/funcionarios/pessoas' + query);
+            if (!response.ok) throw new Error('Não foi possível consultar as pessoas.');
+            setPessoas(await response.json());
+        } catch (err) {
+            console.error('Erro ao carregar pessoas para RH', err);
+        } finally {
+            setCarregandoPessoas(false);
+        }
+    };
 
     const fetchFuncionarios = async () => {
         setLoading(true);
@@ -87,17 +107,20 @@ export const RH = () => {
     const openEdit = (f) => {
         setSelectedFunc(f);
         setForm({
+            pessoaId: f.pessoaId || null,
             nome: f.nome || '',
             matricula: f.matricula || '',
             tipoColaborador: f.tipoColaborador || 'VENDEDOR',
-            salario: f.salario || 0
+            salario: f.salario || 0,
+            percentualComissao: f.percentualComissao || 0,
+            valorHora: f.valorHora || 0
         });
         setDialogVisible(true);
     };
 
     const openNew = () => {
         setSelectedFunc(null);
-        setForm({ nome: '', matricula: '', tipoColaborador: 'VENDEDOR', salario: 0 });
+        setForm({ pessoaId: null, nome: '', matricula: '', tipoColaborador: 'VENDEDOR', salario: 0, percentualComissao: 0, valorHora: 0 });
         setDialogVisible(true);
     };
 
@@ -137,7 +160,10 @@ export const RH = () => {
                     className="p-datatable-sm"
                 >
                     <Column field="matricula" header="Matrícula" sortable style={{ width: '15%' }}></Column>
-                    <Column field="nome" header="Nome Completo" sortable style={{ width: '30%' }}></Column>
+                    <Column field="pessoaId" header="Nome Completo" body={(row) => {
+                        const pessoa = pessoas.find(p => p.id === row.pessoaId);
+                        return pessoa?.nome || row.nome || '—';
+                    }} sortable style={{ width: '30%' }}></Column>
                     <Column field="tipoColaborador" header="Função/Categoria" body={tipoTemplate} sortable style={{ width: '20%' }}></Column>
                     <Column field="salario" header="Salário Base" sortable style={{ width: '15%' }}></Column>
                     <Column
@@ -162,12 +188,24 @@ export const RH = () => {
             >
                 <div className="p-fluid">
                     <div className="field mb-3">
-                        <label className="font-bold mb-2 block">Nome Completo</label>
-                        <InputText
-                            value={form.nome}
-                            onChange={(e) => setForm({...form, nome: e.target.value})}
-                            placeholder="Ex: João da Silva"
+                        <label className="font-bold mb-2 block">Pessoa cadastrada *</label>
+                        <Dropdown
+                            value={form.pessoaId}
+                            options={pessoas}
+                            optionLabel="nome"
+                            optionValue="id"
+                            filter
+                            filterBy="nome,documento"
+                            showClear
+                            loading={carregandoPessoas}
+                            onChange={(e) => {
+                                const pessoa = pessoas.find(p => p.id === e.value);
+                                setForm({...form, pessoaId: e.value, nome: pessoa?.nome || form.nome});
+                            }}
+                            placeholder="Selecione uma Pessoa do cadastro"
+                            emptyMessage="Nenhuma Pessoa encontrada"
                         />
+                        <small className="text-muted">A Pessoa é uma consulta interna do cadastro; não é digitada livremente.</small>
                     </div>
                     <div className="field mb-3">
                         <label className="font-bold mb-2 block">Matrícula</label>
@@ -187,7 +225,7 @@ export const RH = () => {
                             optionValue="value"
                         />
                     </div>
-                    <div className="field mb-4">
+                    <div className="field mb-3">
                         <label className="font-bold mb-2 block">Salário Base (R$)</label>
                         <InputNumber
                             value={form.salario}
@@ -196,6 +234,20 @@ export const RH = () => {
                             currency="BRL"
                             locale="pt-BR"
                         />
+                    </div>
+                    <div className="grid">
+                        <div className="col-12 md:col-6 field">
+                            <label className="font-bold mb-2 block">Comissão (%)</label>
+                            <InputNumber value={form.percentualComissao}
+                                onValueChange={(e) => setForm({...form, percentualComissao: e.value ?? 0})}
+                                min={0} max={100} suffix=" %" minFractionDigits={2} maxFractionDigits={2} />
+                        </div>
+                        <div className="col-12 md:col-6 field">
+                            <label className="font-bold mb-2 block">Valor/hora (R$)</label>
+                            <InputNumber value={form.valorHora}
+                                onValueChange={(e) => setForm({...form, valorHora: e.value ?? 0})}
+                                mode="currency" currency="BRL" locale="pt-BR" />
+                        </div>
                     </div>
 
                     {error && <Message severity="error" text={error} className="w-full mb-3" />}
