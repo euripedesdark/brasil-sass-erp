@@ -120,6 +120,11 @@ public class ProducaoServiceImpl implements ProducaoService {
                 .orElseGet(() -> {
                     SaldoEstoque novo = new SaldoEstoque();
                     novo.setEmpresaId(empresaId);
+                    // deposito_id e NOT NULL: sem isso, finalizar uma OP de produto
+                    // que nunca teve saldo quebrava no INSERT
+                    novo.setDepositoId(depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO")
+                            .orElseThrow(() -> new BusinessException("Deposito PADRAO nao encontrado para a empresa " + empresaId))
+                            .getId());
                     novo.setProdutoId(produtoId);
                     novo.setQuantidade(BigDecimal.ZERO);
                     return novo;

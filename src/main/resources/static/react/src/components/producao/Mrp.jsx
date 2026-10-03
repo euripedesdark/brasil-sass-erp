@@ -15,6 +15,8 @@ export default function Mrp() {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const [erro, setErro] = useState('');
+    const [gerando, setGerando] = useState(false);
+    const [resultado, setResultado] = useState(null);
 
     const buscarProdutos = async (event) => {
         try {
@@ -60,11 +62,34 @@ export default function Mrp() {
             }
             const data = await response.json();
             setRows(data?.data ?? data ?? []);
+            setResultado(null);
         } catch (e) {
             setRows([]);
             setErro(e.message || 'Falha no MRP');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const gerarSugestoes = async () => {
+        if (!produto?.id || !rows.some(r => r.acao !== 'SEM_ACAO')) return;
+        setGerando(true);
+        setErro('');
+        try {
+            const response = await apiFetch('/api/producao/mrp/gerar-sugestoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ produtoId: produto.id, quantidade: Number(quantidade) })
+            });
+            if (!response.ok) {
+                throw new Error((await response.text()) || 'Falha ao gerar sugestões');
+            }
+            const data = await response.json();
+            setResultado(data?.data ?? data);
+        } catch (e) {
+            setErro(e.message || 'Falha ao gerar sugestões');
+        } finally {
+            setGerando(false);
         }
     };
 
@@ -109,9 +134,27 @@ export default function Mrp() {
                             onClick={simular}
                             disabled={!produto?.id}
                         />
+                        <Button
+                            label="Gerar OP / Solicitação"
+                            icon="pi pi-send"
+                            className="p-button-success ml-2"
+                            loading={gerando}
+                            onClick={gerarSugestoes}
+                            disabled={!rows.some(r => r.acao !== 'SEM_ACAO')}
+                        />
                     </div>
                 </div>
 
+                {resultado && (
+                    <Message
+                        severity="success"
+                        className="w-full mt-3"
+                        text={`Geradas ${resultado.ordensProducao?.length || 0} ordem(ns) de produção` +
+                            (resultado.solicitacaoCompra
+                                ? ` e a solicitação de compra ${resultado.solicitacaoCompra.numero}.`
+                                : '; nada a comprar.')}
+                    />
+                )}
                 {erro && <Message severity="error" text={erro} className="w-full mt-3" />}
 
                 <DataTable
@@ -123,8 +166,10 @@ export default function Mrp() {
                     responsiveLayout="scroll"
                 >
                     <Column field="produtoId" header="Produto" />
+                    <Column field="nivel" header="Nível" />
                     <Column field="necessidadeBruta" header="Necessidade bruta" />
                     <Column field="estoqueDisponivel" header="Estoque disponível" />
+                    <Column field="estoqueUtilizado" header="Estoque utilizado" />
                     <Column field="necessidadeLiquida" header="Necessidade líquida" />
                     <Column field="acao" header="Ação" />
                 </DataTable>
