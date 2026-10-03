@@ -1,0 +1,18 @@
+package br.com.brasil_saas.producao.controller;
+import br.com.brasil_saas.producao.service.*;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
+@RestController
+@RequestMapping("/api/producao/mrp")
+@RequiredArgsConstructor
+public class MrpController {
+ private final MrpService service;
+ @PostMapping("/simular")
+ public List<Map<String,Object>> simular(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody MrpRequest request){
+  return service.simular(u.getEmpresaId(),request);
+ }
+}
