@@ -2,6 +2,11 @@ package br.com.brasil_saas.projetos.service.impl;
 import br.com.brasil_saas.projetos.model.*;
 import br.com.brasil_saas.projetos.repository.*;
 import br.com.brasil_saas.projetos.service.ProjetoService;
+import br.com.brasil_saas.workflow.model.WkfDefinition;
+import br.com.brasil_saas.workflow.model.WkfInstance;
+import br.com.brasil_saas.workflow.model.WkfStage;
+import br.com.brasil_saas.workflow.model.WkfTask;
+import br.com.brasil_saas.workflow.service.WorkflowService;
 import br.com.brasil_saas.financeiro.model.Titulo;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +27,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     private final PrjRiscoRepository riscos;
     private final PrjMudancaRepository mudancas;
     private final PrjFaturamentoRepository faturamentos;
+    private final WorkflowService workflow;
     private final TituloRepository titulos;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
@@ -100,9 +106,30 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjMudanca decidirMudanca(Long empresaId, Long userId, Long projetoId, Long mudancaId, boolean aprovar) {
         exigirProjeto(empresaId, projetoId);
         PrjMudanca m = exigir(mudancas.findByIdAndEmpresaIdAndDeletedAtIsNull(mudancaId, empresaId), "Mudanca inexistente");
-        if (m.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Mudanca de outro projeto");
-        if ("SOLICITADA".equals(m.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Mudanca ja decidida");
-        m.setStatus(aprovar ? "APROVADA" : "REJEITADA");
+        if (m.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Mudanca de outro projeto");
+        if ("SOLICITADA".equals(m.getStatus()) == false) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Mudanca ja decidida");
+        WkfDefinition d = workflow.definitions(empresaId).stream().filter(x -> "MUDANCA_PROJETO".equals(x.getEntidadeAlvo()) && Boolean.TRUE.equals(x.getAtivo())).findFirst().orElseGet(() -> {
+            WkfDefinition n = new WkfDefinition();
+            n.setCodigo("PRJ-MUDANCA");
+            n.setNome("Aprovacao de mudanca de projeto");
+            n.setEntidadeAlvo("MUDANCA_PROJETO");
+            n.setAtivo(true);
+            n = workflow.salvarDefinition(empresaId, userId, n);
+            WkfStage st = new WkfStage();
+            st.setNome("Aprovacao");
+            st.setTipo("APROVACAO");
+            st.setSlaHoras(72);
+            workflow.addStage(empresaId, n.getId(), st);
+            return n;
+        });
+        WkfInstance inst = workflow.instanciaPara(empresaId, "MUDANCA_PROJETO", mudancaId).filter(x -> "EM_ANDAMENTO".equals(x.getStatus())).orElseGet(() -> workflow.abrir(empresaId, userId, "MUDANCA_PROJETO", mudancaId, d.getId(), m.getDescricao()));
+        java.util.List<WkfTask> pend = workflow.tasks(empresaId, inst.getId()).stream().filter(x -> "PENDENTE".equals(x.getStatus())).toList();
+        if (pend.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem tarefa pendente no workflow");
+        workflow.decidir(empresaId, userId, pend.get(0).getId(), aprovar, null);
+        WkfInstance atual = workflow.instanciaPara(empresaId, "MUDANCA_PROJETO", mudancaId).orElse(inst);
+        if ("REJEITADA".equals(atual.getStatus())) { m.setStatus("REJEITADA"); }
+        else if ("CONCLUIDA".equals(atual.getStatus())) { m.setStatus("APROVADA");
+        }
         m.setDecididaPor(userId);
         m.setDecididaEm(LocalDateTime.now());
         return mudancas.save(m);
