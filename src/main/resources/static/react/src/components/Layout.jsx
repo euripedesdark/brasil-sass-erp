@@ -204,6 +204,25 @@ export const Layout = () => {
                 ]
             },
             {
+                label: 'Qualidade',
+                modulo: 'qualidade',
+                icon: 'pi pi-check-circle',
+                items: [
+                    item('Planos de inspeção', 'pi pi-list-check', '/qualidade'),
+                    item('Inspeções', 'pi pi-search', '/qualidade'),
+                    item('Não conformidades', 'pi pi-exclamation-triangle', '/qualidade')
+                ]
+            },
+            {
+                label: 'Ativos e Manutenção',
+                modulo: 'ativos',
+                icon: 'pi pi-cog',
+                items: [
+                    item('Ativos imobilizados', 'pi pi-building', '/ativos'),
+                    item('Ordens de manutenção', 'pi pi-wrench', '/ativos')
+                ]
+            },
+            {
                 label: t('nav.services'),
                 modulo: 'servicos',
                 icon: 'pi pi-wrench',
