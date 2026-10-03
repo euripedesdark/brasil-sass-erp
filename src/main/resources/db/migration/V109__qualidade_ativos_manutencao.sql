@@ -41,3 +41,10 @@ CREATE INDEX idx_qual_inspecao_empresa_status ON brasil_saas.bc_qual_inspecao (e
 CREATE INDEX idx_qual_nc_empresa_status ON brasil_saas.bc_qual_nao_conformidade (empresa_id, status);
 CREATE INDEX idx_ativo_empresa_status ON brasil_saas.bc_ativo_imobilizado (empresa_id, status);
 CREATE INDEX idx_manut_empresa_status ON brasil_saas.bc_ativo_manutencao (empresa_id, status);
+
+INSERT INTO brasil_saas.bc_core_modulo (uuid,chave,nome,descricao,icone,rota,ordem,exige_superuser,ativo)
+SELECT gen_random_uuid(),'qualidade','Qualidade','Gestao da qualidade, inspeções e não conformidades','pi pi-check-circle','/qualidade',45,false,true
+WHERE NOT EXISTS (SELECT 1 FROM brasil_saas.bc_core_modulo WHERE chave='qualidade');
+INSERT INTO brasil_saas.bc_core_modulo (uuid,chave,nome,descricao,icone,rota,ordem,exige_superuser,ativo)
+SELECT gen_random_uuid(),'ativos','Ativos e Manutenção','Ativo imobilizado e manutenção de equipamentos','pi pi-cog','/ativos',46,false,true
+WHERE NOT EXISTS (SELECT 1 FROM brasil_saas.bc_core_modulo WHERE chave='ativos');
