@@ -213,6 +213,7 @@ export const Layout = () => {
                     item('Roteiros e centros de trabalho', 'pi pi-list', '/producao/roteiros'),
                     item('MRP', 'pi pi-cog', '/producao/mrp'),
                     item('MPS', 'pi pi-calendar-plus', '/producao/mps'),
+                    item('OEE', 'pi pi-gauge', '/producao/oee'),
                     item('Capacidade', 'pi pi-calendar', '/producao/capacidade'),
                     item('menu.productionReports', 'pi pi-clock', '/producao/apontamentos')
                 ]
