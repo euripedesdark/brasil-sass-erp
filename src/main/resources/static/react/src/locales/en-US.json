@@ -181,7 +181,8 @@
     "budget": "Budget vs Actual",
     "loans": "Loans",
     "buscaFiscal": "Tax search",
-    "banks": "Banks"
+    "banks": "Banks",
+    "cobranca": "Collections"
   },
   "stock": {
     "default": "Default",

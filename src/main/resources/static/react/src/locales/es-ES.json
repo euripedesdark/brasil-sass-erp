@@ -181,7 +181,8 @@
     "budget": "Presupuesto vs Real",
     "loans": "Préstamos",
     "buscaFiscal": "Búsqueda fiscal",
-    "banks": "Bancos"
+    "banks": "Bancos",
+    "cobranca": "Cobranza"
   },
   "stock": {
     "default": "Estándar",

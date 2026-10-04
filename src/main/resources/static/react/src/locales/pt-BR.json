@@ -181,7 +181,8 @@
     "budget": "Orçado x Realizado",
     "loans": "Empréstimos",
     "buscaFiscal": "Busca fiscal",
-    "banks": "Bancos"
+    "banks": "Bancos",
+    "cobranca": "Cobrança"
   },
   "stock": {
     "default": "Padrão",

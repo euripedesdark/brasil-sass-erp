@@ -181,7 +181,8 @@
     "budget": "Budget vs Réel",
     "loans": "Emprunts",
     "buscaFiscal": "Recherche fiscale",
-    "banks": "Banques"
+    "banks": "Banques",
+    "cobranca": "Recouvrement"
   },
   "stock": {
     "default": "Standard",

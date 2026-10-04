@@ -177,7 +177,8 @@ export const Layout = () => {
                     item('menu.paymentTypes', 'pi pi-credit-card', '/financeiro/tipos-pagamento'),
                     item('menu.renegotiation', 'pi pi-refresh', '/financeiro/renegociacao'),
                     item('menu.budget', 'pi pi-chart-bar', '/financeiro/orcamento'),
-                    item('menu.loans', 'pi pi-building-columns', '/financeiro/emprestimos')
+                    item('menu.loans', 'pi pi-building-columns', '/financeiro/emprestimos'),
+                    item('menu.cobranca', 'pi pi-phone', '/financeiro/cobranca')
                 ]
             },
             {

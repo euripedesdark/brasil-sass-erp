@@ -40,6 +40,7 @@ import { Titulo } from './components/financeiro/Titulo';
 import { Renegociacao } from './components/financeiro/Renegociacao';
 import { Orcamento } from './components/financeiro/Orcamento';
 import { Emprestimos } from './components/financeiro/Emprestimos';
+import { Cobranca } from './components/financeiro/Cobranca';
 import AprovacoesTitulos from './components/financeiro/AprovacoesTitulos';
 import Caixa from './components/Caixa';
 import { Workflow } from "./components/workflow/Workflow";
@@ -204,6 +205,7 @@ function App() {
                     <Route path="financeiro/renegociacao" element={<Renegociacao />} />
                     <Route path="financeiro/orcamento" element={<Orcamento />} />
                     <Route path="financeiro/emprestimos" element={<Emprestimos />} />
+                    <Route path="financeiro/cobranca" element={<Cobranca />} />
                     <Route path="financeiro/aprovacoes-titulos" element={<AprovacoesTitulos />} />
                     <Route path="financeiro/comissoes" element={<Comissoes />} />
                     <Route path="financeiro/extrato" element={<Extrato />} />
