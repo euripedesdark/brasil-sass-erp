@@ -4,6 +4,8 @@ import br.com.brasil_saas.estoque.model.*;
 import br.com.brasil_saas.estoque.repository.*;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -30,6 +32,7 @@ public class TransferenciaEstoqueController {
     private final ReservaEstoqueRepository reservaRepository;
     private final EnderecoEstoqueRepository enderecoRepository;
     private final LoteEstoqueRepository loteRepository;
+    private final ProdutoRepository produtoRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('estoque:transferencia:leitura')")
@@ -60,11 +63,20 @@ public class TransferenciaEstoqueController {
         for (ItemRequest item : request.itens()) {
             if (item.quantidade().signum() <= 0) throw new BusinessException("Quantidade deve ser maior que zero");
 
+            produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(item.produtoId(), user.getEmpresaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado: " + item.produtoId()));
+
             SaldoEstoque origem = saldoRepository.findForUpdate(user.getEmpresaId(), request.depositoOrigemId(), item.produtoId())
                     .orElseThrow(() -> new BusinessException("Não existe saldo do produto " + item.produtoId() + " no depósito de origem"));
 
-            if (origem.getQuantidade().compareTo(item.quantidade()) < 0)
-                throw new BusinessException("Saldo insuficiente para o produto " + item.produtoId());
+            BigDecimal reservado = reservaRepository.sumAtivas(
+                    user.getEmpresaId(), request.depositoOrigemId(), item.produtoId());
+            BigDecimal disponivel = origem.getQuantidade().subtract(
+                    reservado == null ? BigDecimal.ZERO : reservado);
+
+            if (disponivel.compareTo(item.quantidade()) < 0)
+                throw new BusinessException("Saldo disponível insuficiente para o produto " + item.produtoId()
+                        + ". Disponível: " + disponivel);
 
             SaldoEstoque destino = saldoRepository.findForUpdate(user.getEmpresaId(), request.depositoDestinoId(), item.produtoId())
                     .orElseGet(() -> {
