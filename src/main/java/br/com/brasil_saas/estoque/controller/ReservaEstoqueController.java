@@ -111,6 +111,8 @@ public class ReservaEstoqueController {
         if (disponivel.compareTo(request.quantidade()) < 0)
             throw new BusinessException("Estoque disponivel insuficiente. Disponivel: " + disponivel);
 
+        if (request.pedidoVendaId() != null && repository.findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(user.getEmpresaId(), request.pedidoVendaId()).stream().anyMatch(r -> !List.of("LIBERADA","CANCELADA","CONSUMIDA").contains(r.getStatus()) && request.produtoId().equals(r.getProdutoId()) && request.depositoId().equals(r.getDepositoId()) && request.enderecoId() != null && request.enderecoId().equals(r.getEnderecoId()))) throw new BusinessException("Ja existe reserva ativa para este pedido/produto/endereco");
+
         ReservaEstoque reserva;
         if (request.loteId() == null) {
             reserva = repository.findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndDeletedAtIsNull(
@@ -128,6 +130,7 @@ public class ReservaEstoqueController {
         reserva.setPedidoVendaId(request.pedidoVendaId());
         reserva.setLoteId(request.loteId());
         reserva.setEnderecoId(request.enderecoId());
+        if (request.dataExpiracao() != null && request.dataExpiracao().isBefore(LocalDateTime.now())) throw new BusinessException("Data de expiracao deve ser futura");
         reserva.setQuantidade(request.quantidade());
         reserva.setStatus("RESERVADA");
         if (reserva.getDataReserva() == null) reserva.setDataReserva(LocalDateTime.now());
