@@ -33,6 +33,13 @@ export const SpedService = {
         });
     },
 
+    gerarContribPeriodo(pedido) {
+        return jsonRequest(`${BASE_URL}/efd-contribuicoes/gerar-periodo`, {
+            method: 'POST',
+            body: JSON.stringify(pedido)
+        });
+    },
+
     exemplo() {
         return jsonRequest(`${BASE_URL}/efd/exemplo`);
     }

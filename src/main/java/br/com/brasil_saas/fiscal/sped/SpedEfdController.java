@@ -42,6 +42,7 @@ public class SpedEfdController {
 
     private final SpedEfdIcmsService efd;
     private final EfdPeriodoService periodo;
+    private final EfdContribService contrib;
 
     /**
      * Gera o arquivo EFD a partir de cabecalho, participantes e produtos.
@@ -130,6 +131,10 @@ public class SpedEfdController {
                         "99999999999999", "", "99999999", "9999999")));
         return gerar(p);
     }
+    @Operation(summary = "Gera o EFD-Contribuicoes do periodo a partir das apuracoes de PIS/COFINS")
+    @PostMapping("/efd-contribuicoes/gerar-periodo")
+    @PreAuthorize("hasAuthority('fiscal:sped:gerar')")
+    public Map<String, Object> gerarContrib(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody PedidoEfd pedido) { return contrib.gerarPeriodo(u.getEmpresaId(), pedido); }
 
     private Map<String, Integer> conta(List<String> linhas) {
         Map<String, Integer> contagem = new LinkedHashMap<>();
