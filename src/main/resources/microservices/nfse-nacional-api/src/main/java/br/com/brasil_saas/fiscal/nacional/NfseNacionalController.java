@@ -180,6 +180,9 @@ public class NfseNacionalController {
      * para ele.
      */
     public record EmissaoRequest(
+            String unidadeGestora,
+            String cnpjPrestador,
+            String inscricaoMunicipalPrestador,
             String discriminacao,
             String itemLei116,
             String codigoCnae,
@@ -320,11 +323,14 @@ public class NfseNacionalController {
         public NfseNacionalDeclaracaoBuilder.DadosDeclaracao paraDados(
                 NfseNacionalProperties p) {
             return new NfseNacionalDeclaracaoBuilder.DadosDeclaracao(
-                    p.getUnidadeGestora(),
+                    (vazio(unidadeGestora) ? p.getUnidadeGestora() : unidadeGestora),
 
                     new NfseNacionalDeclaracaoBuilder.DadosDeclaracao.IdentificacaoPrestador(
-                            p.getChaveDigital(), p.getCnpjPrestador(), null,
-                            p.getInscricaoMunicipalPrestador()),
+                            p.getChaveDigital(),
+                            vazio(cnpjPrestador) ? p.getCnpjPrestador() : cnpjPrestador,
+                            null,
+                            vazio(inscricaoMunicipalPrestador) ? p.getInscricaoMunicipalPrestador()
+                                    : inscricaoMunicipalPrestador),
 
                     new NfseNacionalDeclaracaoBuilder.DadosDeclaracao.Rps(numeroRps, serieRps, tipoRps, descricaoRps,
                             identificadorRps, identificadorSubstituidoRps,
