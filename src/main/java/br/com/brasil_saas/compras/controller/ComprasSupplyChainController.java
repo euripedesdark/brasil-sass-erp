@@ -37,7 +37,7 @@ public class ComprasSupplyChainController {
 
  @GetMapping("/cotacoes/{id}/mapa")
  @PreAuthorize("hasAuthority('compras:cotacao:leitura')")
- public List<Map<String,Object>> mapa(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){return service.mapaComparativo(u.getEmpresaId(),id);}
+ public List<Map<String,Object>> mapa(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestParam(required=false,defaultValue="70") int pesoPreco,@RequestParam(required=false,defaultValue="20") int pesoPrazo,@RequestParam(required=false,defaultValue="10") int pesoDesconto){return service.mapaComparativo(u.getEmpresaId(),id,pesoPreco,pesoPrazo,pesoDesconto);}
 
  @PostMapping("/cotacoes/fornecedor/{cotacaoFornecedorId}/gerar-pedido")
  @PreAuthorize("hasAuthority('compras:cotacao:selecionar')")

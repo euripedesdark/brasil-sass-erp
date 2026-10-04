@@ -9,6 +9,7 @@ public interface ComprasSupplyChainService {
  SolicitacaoCompra rejeitarSolicitacao(Long empresaId,Long userId,Long id);
  CotacaoCompra criarCotacao(Long empresaId,Long solicitacaoId,LocalCotacao request);
  List<Map<String,Object>> mapaComparativo(Long empresaId,Long cotacaoId);
+ List<Map<String,Object>> mapaComparativo(Long empresaId,Long cotacaoId,int pesoPreco,int pesoPrazo,int pesoDesconto);
  PedidoCompra gerarPedido(Long empresaId,Long cotacaoFornecedorId);
  record LocalItem(Long produtoId,BigDecimal quantidade,String observacao){}
  record LocalRequest(String numero,java.time.LocalDate dataNecessidade,String observacao,List<LocalItem> itens){}

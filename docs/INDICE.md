@@ -22,10 +22,10 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 | [`modulos/README.md`](modulos/README.md) | Índice dos módulos |
 | [`navegacao.md`](navegacao.md) | Rotas do frontend e estrutura de menus |
 | [`roadmap.md`](roadmap.md) | Fases concluídas e próximas |
-| [`arquitetura.md`](arquitetura.md) | Arquitetura do sistema |
-| [`modelo-dados.md`](modelo-dados.md) | Modelo de dados (204 tabelas) |
-| [`autenticacao.md`](autenticacao.md) | Autenticação e autorização |
-| [`cadastro.md`](cadastro.md) | Módulo de cadastros |
+| [`arquitetura/`](arquitetura/) | Arquitetura do sistema |
+| [`dados/modelo-dados.md`](dados/modelo-dados.md) | Modelo de dados (204 tabelas) |
+| [`dados/autenticacao.md`](dados/autenticacao.md) | Autenticação e autorização |
+| [`dados/cadastro.md`](dados/cadastro.md) | Módulo de cadastros |
 | [`INSTRUCOES-DO-DONO.md`](../INSTRUCOES-DO-DONO.md) | Instruções do dono do sistema |
 | [`infra/`](infra/) | Build, deploy, restore, microsserviços |
 | [`infra/README_MODULES.md`](infra/README_MODULES.md) | Módulos do sistema |
@@ -35,6 +35,28 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 | [`infra/RESTAURAR.md`](infra/RESTAURAR.md) | Como restaurar o banco |
 | [`perfis/`](perfis/) | Regras de perfil |
 | [`guia/CHANGELOG.md`](guia/CHANGELOG.md) | Changelog |
+
+
+## Documentos de trabalho (gerados por IA)
+
+> ⚠️ Os documentos abaixo são registros de sessão de desenvolvimento com
+> assistente IA. Não são documentação oficial do sistema.
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [`ia/`](ia/) | 31 documentos de trabalho gerados por IA |
+
+## Documentação de arquitetura
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [](arquitetura/) | Arquitetura do sistema |
+
+## Documentação de dados
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [](dados/) | Autenticação, cadastros, modelo de dados |
 
 ## Auditorias e relatórios (registros históricos)
 
