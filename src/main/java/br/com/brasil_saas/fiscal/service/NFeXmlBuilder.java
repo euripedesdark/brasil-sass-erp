@@ -92,7 +92,7 @@ public class NFeXmlBuilder {
     private InfNFe.Ide ide(ConfiguracoesNfe config, Empresa empresa, PedidoVenda pedido, int serie, int numero,
                            String tipoEmissao, String cnf, String cdv, LocalDateTime emissao, Endereco destino) {
         InfNFe.Ide ide = new InfNFe.Ide();
-        ide.setCUF(config.getEstado().getCodigoIbge());
+        ide.setCUF(required(empresa.getCodigoIbge(), "Codigo IBGE da empresa"));
         ide.setCNF(cnf);
         ide.setNatOp("VENDA DE MERCADORIA");
         ide.setMod(DocumentoEnum.NFE.getModelo());
