@@ -7,7 +7,7 @@ import br.com.nfse.dto.enuns.AmbienteEnum;
 import br.com.nfse.utils.DateUtils;
 import br.com.nfse.utils.StringUtils;
 import br.com.nfse.xsd.TCDPS;
-import br.com.nfse.xsd.TCInfoDPS;
+import br.com.nfse.xsd.TCInfDPS;
 import br.com.nfse.xsd.TCInfoPrestador;
 import br.com.nfse.xsd.TCInfoPessoa;
 import br.com.nfse.xsd.TCEndereco;
@@ -157,7 +157,7 @@ public final class NfseHttpServer {
         TCDPS dps = new TCDPS();
         dps.setVersao("1.01");
 
-        TCInfoDPS inf = new TCInfoDPS();
+        TCInfDPS inf = new TCInfDPS();
         inf.setTpAmb(config.getAmbiente().getValue());
         inf.setDhEmi(DateUtils.formatWithZone(ZonedDateTime.now(ZoneId.of("America/Sao_Paulo"))));
         inf.setVerAplic("BrasilCloudERP");
