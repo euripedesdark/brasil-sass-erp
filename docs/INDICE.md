@@ -9,10 +9,10 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 
 | Idioma | Arquivo |
 |--------|---------|
-| 🇧🇷 Português (Brasil) | [`../README.pt-BR.md`](../README.pt-BR.md) |
-| 🇺🇸 English | [`../README.en-US.md`](../README.en-US.md) |
-| 🇪🇸 Español | [`../README.es-ES.md`](../README.es-ES.md) |
-| 🇫🇷 Français | [`../README.fr-FR.md`](../README.fr-FR.md) |
+| 🇧🇷 Português (Brasil) | [`./i18n/README.pt-BR.md`](./i18n/README.pt-BR.md) |
+| 🇺🇸 English | [`./i18n/README.en-US.md`](./i18n/README.en-US.md) |
+| 🇪🇸 Español | [`./i18n/README.es-ES.md`](./i18n/README.es-ES.md) |
+| 🇫🇷 Français | [`./i18n/README.fr-FR.md`](./i18n/README.fr-FR.md) |
 
 ## Docs vivos (estado atual do sistema)
 
@@ -26,7 +26,7 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 | [`dados/modelo-dados.md`](dados/modelo-dados.md) | Modelo de dados (204 tabelas) |
 | [`dados/autenticacao.md`](dados/autenticacao.md) | Autenticação e autorização |
 | [`dados/cadastro.md`](dados/cadastro.md) | Módulo de cadastros |
-| [`INSTRUCOES-DO-DONO.md`](../INSTRUCOES-DO-DONO.md) | Instruções do dono do sistema |
+| [`INSTRUCOES-DO-DONO.md`](./ia/INSTRUCOES-DO-DONO.md) | Instruções do dono do sistema |
 | [`infra/`](infra/) | Build, deploy, restore, microsserviços |
 | [`infra/README_MODULES.md`](infra/README_MODULES.md) | Módulos do sistema |
 | [`infra/README_MICROSSERVICOS.md`](infra/README_MICROSSERVICOS.md) | Microsserviços fiscais |
@@ -69,8 +69,8 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 | [`auditorias/`](auditorias/) | 22–30/09/2026 | Auditorias e mapas de cobertura |
 | [`relatorios/`](relatorios/) | 21–25/09/2026 | Relatórios de teste e diagnóstico |
 | [`incidentes/`](incidentes/) | — | Incidentes e coordenação |
-| [`AUDITORIA_AUTENTICACAO_FRONTEND_BACKEND_24-09-2026.md`](AUDITORIA_AUTENTICACAO_FRONTEND_BACKEND_24-09-2026.md) | 24/09/2026 | Auditoria de autenticação |
-| [`RELATORIO_PARIDADE_FUNCIONAL_ERP_25-09-2026.md`](RELATORIO_PARIDADE_FUNCIONAL_ERP_25-09-2026.md) | 25/09/2026 | Paridade funcional |
+| [`./ia/AUDITORIA_AUTENTICACAO_FRONTEND_BACKEND_24-09-2026.md`](./ia/AUDITORIA_AUTENTICACAO_FRONTEND_BACKEND_24-09-2026.md) | 24/09/2026 | Auditoria de autenticação |
+| [`./ia/RELATORIO_PARIDADE_FUNCIONAL_ERP_25-09-2026.md`](./ia/RELATORIO_PARIDADE_FUNCIONAL_ERP_25-09-2026.md) | 25/09/2026 | Paridade funcional |
 
 ## Pesquisa (referência)
 
@@ -87,15 +87,15 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [`ARQUITETURA-IDENTIDADE.md`](ARQUITETURA-IDENTIDADE.md) | Arquitetura de identidade |
-| [`IDENTIDADE-AD.md`](IDENTIDADE-AD.md) | Identidade com Active Directory |
-| [`MAPA-MICROSERVICIOS-FISCAIS.md`](MAPA-MICROSERVICIOS-FISCAIS.md) | Mapa dos microsserviços fiscais |
-| [`MAPA-NFCE.md`](MAPA-NFCE.md) | Mapa da NFC-e |
+| [`./ia/ARQUITETURA-IDENTIDADE.md`](./ia/ARQUITETURA-IDENTIDADE.md) | Arquitetura de identidade |
+| [`./ia/IDENTIDADE-AD.md`](./ia/IDENTIDADE-AD.md) | Identidade com Active Directory |
+| [`./ia/MAPA-MICROSERVICOS-FISCAIS.md`](./ia/MAPA-MICROSERVICOS-FISCAIS.md) | Mapa dos microsserviços fiscais |
+| [`./ia/MAPA-NFCE.md`](./ia/MAPA-NFCE.md) | Mapa da NFC-e |
 
 ## Relatórios pendentes
 
 | Documento | Conteúdo |
 |-----------|----------|
-| [`RELATORIO-NCM-PENDENTES.md`](RELATORIO-NCM-PENDENTES.md) | NCMs pendentes |
-| [`ISSQN-PDFS-PENDENTE.md`](ISSQN-PDFS-PENDENTE.md) | PDFs de ISSQN pendentes |
-| [`FAILOVER-4567-PENDENTE.md`](FAILOVER-4567-PENDENTE.md) | Failover 4567 pendente |
+| [`./ia/RELATORIO-NCM-PENDENTES.md`](./ia/RELATORIO-NCM-PENDENTES.md) | NCMs pendentes |
+| [`./ia/ISSQN-PDFS-PENDENTE.md`](./ia/ISSQN-PDFS-PENDENTE.md) | PDFs de ISSQN pendentes |
+| [`./ia/FAILOVER-4567-PENDENTE.md`](./ia/FAILOVER-4567-PENDENTE.md) | Failover 4567 pendente |

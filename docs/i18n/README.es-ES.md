@@ -4,7 +4,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-blue.svg)](https://www.postgresql.org/)
-[![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](../../LICENSE.md)
 
 **ERP Enterprise multiempresa con IA asistiva, cobertura fiscal completa y arquitectura modular**
 
@@ -83,7 +83,7 @@ cliente e o envelope SOAP. **Não prova o XML do documento** — nenhum MDF-e ne
 CT-e foi emitido ainda, e a montagem do MDF-e não está implementada.
 
 Detalhe em
-[`docs/pesquisa/APIS-DE-TRANSPORTE-SPED-MDFE-CTE.md`](docs/pesquisa/APIS-DE-TRANSPORTE-SPED-MDFE-CTE.md).
+[`../pesquisa/APIS-DE-TRANSPORTE-SPED-MDFE-CTE.md`](../pesquisa/APIS-DE-TRANSPORTE-SPED-MDFE-CTE.md).
 
 **El plazo que no se puede ignorar:** la NT 2026.001 hace obligatorio el grupo
 `infCIOT` en el MDF-e rodoviario a partir del **23/11/2026** (rechazo `cStat 684`).
@@ -112,7 +112,7 @@ El ERP descubre quién atendió por el header `X-Backend` que devuelve el proxy.
 **Por qué dos implementaciones y no una:** el Ruby se escribió primero y es el que validó
 las reglas contra el ayuntamiento de São Paulo de verdad — emitió y canceló una NFS-e en
 producción, con los mensajes literales del ayuntamiento registrados en
-[`src/main/resources/microservices/nfse-sp-bridge/BRASIL-SAAS.md`](src/main/resources/microservices/nfse-sp-bridge/BRASIL-SAAS.md).
+[`../../src/main/resources/microservices/nfse-sp-bridge/BRASIL-SAAS.md`](../../src/main/resources/microservices/nfse-sp-bridge/BRASIL-SAAS.md).
 El Java reimplementó el mismo contrato con el mismo alcance, y comparar los XML entre los
 dos fue lo que detectó los bugs de firma y de namespace del lado Java. El Ruby sigue en
 pie **a propósito**: es el oráculo contra el cual se comprueba el Java.
@@ -171,7 +171,7 @@ com AES resolveria de vez.
 - ✅ Integração total com backend Spring Boot
 - ⚠️ 4 componentes placeholder (Compras, Inventario, Ventas, Servicios)
 
-📄 **Ver análise completa**: [docs/frontend/FRONTEND_ANALISE_COMPLETA.md](docs/frontend/FRONTEND_ANALISE_COMPLETA.md)
+📄 **Ver análise completa**: [../frontend/FRONTEND_ANALISE_COMPLETA.md](../frontend/FRONTEND_ANALISE_COMPLETA.md)
 
 | Tecnologia | Versão | Finalidade |
 |------------|--------|------------|
@@ -1056,7 +1056,7 @@ el README las separa por eso.
 ## 📡 Endpoints de la API
 
 El backend expone **451 endpoints REST** (`/api/**`). La lista
-completa está en [`docs/INDICE.md`](docs/INDICE.md) y en
+completa está en [`../INDICE.md`](../INDICE.md) y en
 el Swagger UI: <http://localhost:8080/swagger-ui.html>.
 
 ### Municípios
@@ -1444,7 +1444,7 @@ Os seguintes arquivos e diretórios são backups ou não estão em uso ativo:
 
 Este proyecto está bajo la **GNU Affero General Public License v3.0 (AGPLv3)**.
 
-El texto completo, sin cambios, está en [`LICENSE.md`](LICENSE.md).
+El texto completo, sin cambios, está en [`../../LICENSE.md`](../../LICENSE.md).
 
 La AGPLv3 exige que el código fuente se ofrezca a quien use el programa, incluso
 cuando el uso es **por red** — de ahí el "Affero". Para un ERP accesible por navegador,

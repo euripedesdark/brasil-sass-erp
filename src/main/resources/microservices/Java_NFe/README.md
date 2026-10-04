@@ -50,7 +50,7 @@ e renomeou várias classes de evento para evitar colisões. Imports antigos como
 **não compilam mais**.
 
 **Use o script automático de migração** — guia completo, tabela de renomeios,
-breaking changes e instruções de uso em **[docs/infra/MIGRATION.md](docs/infra/MIGRATION.md)**.
+breaking changes e instruções de uso em **[../../../../../docs/infra/MIGRATION.md](../../../../../docs/infra/MIGRATION.md)**.
 
 Resumo: `pwsh scripts/migrate.ps1 -ProjectRoot . -BumpPom` (ou `bash scripts/migrate.sh`).
 
@@ -73,7 +73,7 @@ ________________________________________________________________________________
 - Corrigido bug do `regenerate-jaxb` em que o `DetEvento` anônimo de cada evento colidia entre passes — agora cada evento tem sua própria classe nomeada via binding
 - Corrigido `package-info.java` de `schemas_eventos` (namespace estava apontando pra `xmldsig` em vez de `portalfiscal.inf.br/nfe`)
 - **BREAKING**: `TProtNFe.InfProt.getDhRecbto()` agora retorna `String` (era `XMLGregorianCalendar`) — ajuste callers que faziam conversão direta para `LocalDateTime`
-- Adicionado script automático de migração para projetos consumidores (ver [docs/infra/MIGRATION.md](docs/infra/MIGRATION.md))
+- Adicionado script automático de migração para projetos consumidores (ver [../../../../../docs/infra/MIGRATION.md](../../../../../docs/infra/MIGRATION.md))
 - Validado em 3 projetos consumidores: 1009 testes, 0 falhas
 
 ## v4.00.51 - 19/03/2026 - Schemas PL.010b (v1.30)

@@ -11,7 +11,7 @@
 </p>
 
 Para Iniciar : 
-- Caso use Libs baixe o [java-nfe-4.00.25.jar](https://github.com/Samuel-Oliveira/Java_NFe/raw/master/java-nfe-4.00.25.jar) e o adicione às bibliotecas de Seu Projeto.
+- Caso use Libs baixe o [java-nfe-4.00.25.jar](https://central.sonatype.com/artifact/br.com.swconsultoria/java-nfe/4.00.25) e o adicione às bibliotecas de Seu Projeto.
 
 - Baixe o [Schemas.rar](https://github.com/Samuel-Oliveira/Java_NFe/raw/master/schemas.zip) e extraia na sua Máquina.
 

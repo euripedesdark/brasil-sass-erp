@@ -125,7 +125,7 @@ As Diretrizes de Impacto na Comunidade foram inspiradas na
 [escada de aplicação do código de conduta da Mozilla][mozilla].
 
 [homepage]: https://www.contributor-covenant.org
-[v2.1]: https://www.contributor-covenant.org/version/2/1/code_of_conduct_html
+[v2.1]: https://www.contributor-covenant.org/version/2/1/code_of_conduct.html
 [mozilla]: https://github.com/mozilla/diversity
 
 Para respostas a perguntas comuns sobre este código de conduta, veja o FAQ em

@@ -2,8 +2,8 @@
 > de sessão de desenvolvimento com assistente IA. Não é documentação oficial
 > do sistema. Atualizado em 04/10/2026.
 >
-> Para documentação oficial, veja [`README.md`](../README.md) e
-> [`docs/INDICE.md`](INDICE.md).
+> Para documentação oficial, veja [`README.md`](../../README.md) e
+> [`docs/INDICE.md`](../INDICE.md).
 
 ---
 id: 2026-09-30-relatorio-ncm-pendentes

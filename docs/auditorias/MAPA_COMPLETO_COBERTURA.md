@@ -1,7 +1,7 @@
 > ⏳ **Registro histórico** — este documento é um retrato pontual da data
 > do arquivo e **não reflete o estado atual** do sistema. Para o estado
-> atual, veja [`README.pt-BR.md`](../README.pt-BR.md) e
-> [`docs/INDICE.md`](INDICE.md).
+> atual, veja [`README.pt-BR.md`](../i18n/README.pt-BR.md) e
+> [`docs/INDICE.md`](../INDICE.md).
 
 # Mapa Completo de Cobertura - Brasil SaaS ERP
 ## Data: 21/09/2026 (Atualizado - Continuacao do Trabalho)

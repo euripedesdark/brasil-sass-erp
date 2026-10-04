@@ -1,4 +1,4 @@
-O **esocial-jt-service** é o módulo principal do sistema eSocial na Justiça do Trabalho, que recebe dados de ocorrências da vida funcional dos trabalhadores/servidores e os comunica ao sistema eSocial governametal central [eSocial-Gov](https://portal.esocial.gov.br/).
+O **esocial-jt-service** é o módulo principal do sistema eSocial na Justiça do Trabalho, que recebe dados de ocorrências da vida funcional dos trabalhadores/servidores e os comunica ao sistema eSocial governametal central [eSocial-Gov](https://www.esocial.gov.br/).
 
 ## Características
 
@@ -17,7 +17,7 @@ Em poucas palavras, este módulo recebe um _JSON_ com os dados de uma **ocorrên
 - [Java EE 8](http://www.oracle.com/technetwork/pt/java/javaee/overview/index.html);
 - [Maven 3.3.9](https://maven.apache.org/index.html) (ou superior);
 - [Git 2.15.0](https://git-scm.com/) (ou superior);
-- [Certificado Digital ICP-Brasil A1 válido](https://portal.esocial.gov.br/institucional/ambiente-de-producao-restrita/perguntas-frequentes-producao-restrita#02---certificado-digital) (obrigatório mesmo para testes).
+- [Certificado Digital ICP-Brasil A1 válido](https://www.gov.br/esocial/pt-br/acesso-ao-sistema/cronograma-de-implantacao/perguntas-frequentes-producao-empresas-e-producao-restrita) (obrigatório mesmo para testes).
 
 ### Banco de dados
 
@@ -25,7 +25,7 @@ Atualmente, o **esocial-jt-service** é testado principalmente com **PostgreSQL*
 
 ### Criação/Atualização do banco de dados
 
-Os scripts de preparação de banco encontram-se em: [src/esocial-jt-service/src/main/resources/db/migration](src/esocial-jt-service/src/main/resources/db/migration).
+Os scripts de preparação de banco encontram-se em: [../../../../db/migration](../../../../db/migration).
 
 > TODO: Descrver o uso básico do flyway
 
@@ -91,7 +91,7 @@ mvn clean package -P war
 
 ### Testando o primeiro envio
 
-O **esocial-jt-service** foi projetado para receber dados de ocorrência via JSON a partir dos sistemas de origem ou de um conector. Porém, para um primeiro teste, no ambiente de [Produção Restrita](http://portal.esocial.gov.br/institucional/ambiente-de-producao-restrita), é possível enviar manualmente dados para o **esocial-jt-service**. Para isso, faça uma cópia do arquivo [/src/main/resources/exemplos/informacoes_empregador.json](./src/main/resources/exemplos/informacoes_empregador.json), edite com as informações referentes à instituição (o CNPJ deve ser o mesmo do proprietário do Certificado Digital) e envia usando o método **POST** (via linha de comando ou [Postman](https://www.getpostman.com/)) para o _endpoint_:
+O **esocial-jt-service** foi projetado para receber dados de ocorrência via JSON a partir dos sistemas de origem ou de um conector. Porém, para um primeiro teste, no ambiente de [Produção Restrita](https://www.gov.br/esocial/pt-br/acesso-ao-sistema/ambiente-de-producao-restrita), é possível enviar manualmente dados para o **esocial-jt-service**. Para isso, faça uma cópia do arquivo [/src/main/resources/exemplos/informacoes_empregador.json](./src/main/resources/exemplos/informacoes_empregador.json), edite com as informações referentes à instituição (o CNPJ deve ser o mesmo do proprietário do Certificado Digital) e envia usando o método **POST** (via linha de comando ou [Postman](https://www.getpostman.com/)) para o _endpoint_:
 
 ```
 http://localhost:8080/esocial-jt-service/ocorrencias

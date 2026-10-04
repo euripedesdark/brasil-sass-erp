@@ -2,8 +2,8 @@
 > de sessão de desenvolvimento com assistente IA. Não é documentação oficial
 > do sistema. Atualizado em 04/10/2026.
 >
-> Para documentação oficial, veja [`README.md`](../README.md) e
-> [`docs/INDICE.md`](INDICE.md).
+> Para documentação oficial, veja [`README.md`](../../README.md) e
+> [`docs/INDICE.md`](../INDICE.md).
 
 # ROADMAP FINAL SAP BI - Brasil SaaS ERP
 ## Plano de Ação para Alcançar Nível SAP Business One
@@ -349,10 +349,10 @@
 ---
 
 ## 🔗 Arquivos Relacionados
-- [docs/relatorios/RESUMO_FINAL_COMPLETO.md](docs/relatorios/RESUMO_FINAL_COMPLETO.md) - Resumo geral do projeto
-- [docs/roadmap.md](docs/roadmap.md) - Roadmap original
-- [docs/modulos/producao.md](docs/modulos/producao.md) - Detalhes do módulo Produção
-- [docs/modulos/bi.md](docs/modulos/bi.md) - Detalhes do módulo BI
+- [../relatorios/RESUMO_FINAL_COMPLETO.md](../relatorios/RESUMO_FINAL_COMPLETO.md) - Resumo geral do projeto
+- [../roadmap.md](../roadmap.md) - Roadmap original
+- [../modulos/producao.md](../modulos/producao.md) - Detalhes do módulo Produção
+- [../modulos/bi.md](../modulos/bi.md) - Detalhes do módulo BI
 
 ---
 

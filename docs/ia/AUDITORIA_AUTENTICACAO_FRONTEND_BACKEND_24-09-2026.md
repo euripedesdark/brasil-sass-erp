@@ -2,13 +2,13 @@
 > de sessão de desenvolvimento com assistente IA. Não é documentação oficial
 > do sistema. Atualizado em 04/10/2026.
 >
-> Para documentação oficial, veja [`README.md`](../README.md) e
-> [`docs/INDICE.md`](INDICE.md).
+> Para documentação oficial, veja [`README.md`](../../README.md) e
+> [`docs/INDICE.md`](../INDICE.md).
 
 > ⏳ **Registro histórico** — este documento é um retrato pontual da data
 > do arquivo e **não reflete o estado atual** do sistema. Para o estado
-> atual, veja [`README.pt-BR.md`](../README.pt-BR.md) e
-> [`docs/INDICE.md`](INDICE.md).
+> atual, veja [`README.pt-BR.md`](../i18n/README.pt-BR.md) e
+> [`docs/INDICE.md`](../INDICE.md).
 
 # Auditoria de Autenticacao, Frontend/Backend e IA — 24/09/2026
 

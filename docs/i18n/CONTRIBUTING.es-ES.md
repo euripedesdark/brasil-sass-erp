@@ -6,7 +6,7 @@ proporciona directrices para contribuir al proyecto.
 ## Código de Conducta
 
 Este proyecto y todos los participantes se rigen por el
-[Código de Conducta](CODE_OF_CONDUCT.md). Al participar, se espera que
+[Código de Conducta](../../CODE_OF_CONDUCT.md). Al participar, se espera que
 respete este código.
 
 ## ¿Cómo Puedo Contribuir?

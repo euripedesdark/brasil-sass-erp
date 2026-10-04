@@ -6,7 +6,7 @@ fournit des directives pour contribuer au projet.
 ## Code de Conduite
 
 Ce projet et tous les participants sont régis par le
-[Code de Conduite](CODE_OF_CONDUCT.md). En participant, vous êtes tenu de
+[Code de Conduite](../../CODE_OF_CONDUCT.md). En participant, vous êtes tenu de
 respecter ce code.
 
 ## Comment Contribuer ?

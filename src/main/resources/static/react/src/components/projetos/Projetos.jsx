@@ -34,7 +34,9 @@ export const Projetos = () => {
     const [dlgEtapa, setDlgEtapa] = useState(false);
     const [dlgMov, setDlgMov] = useState(false);
 
-    const js = async (r) => { const j = await r.json().catch(() => null); return Array.isArray(j) ? j : (j?.data ?? j ?? []); };
+    const pesoImpacto = (imp) => { const s = String(imp || '').trim().toUpperCase(); return s === 'BAIXO' ? 1 : s === 'ALTO' ? 3 : s === 'CRITICO' ? 4 : 2; };
+    const exposicao = (r) => (Number(r.probabilidade ?? 0) * pesoImpacto(r.impacto));
+        const js = async (r) => { const j = await r.json().catch(() => null); return Array.isArray(j) ? j : (j?.data ?? j ?? []); };
     const carregar = useCallback(async () => {
         setLoading(true);
         try { setProjs(await apiFetch(BASE).then(js)); }
@@ -89,7 +91,7 @@ export const Projetos = () => {
                 <div className='bc-form-col-8 col-12 md:col-8'>
                     {!sel && (<Card><p className='bc-muted'>Selecione um projeto.</p></Card>)}
                     {sel && resumo && (<div className='grid mb-2'>
-                        {[['Orçamento', resumo.orcamento], ['Custo', resumo.custoRealizado], ['Receita', resumo.receitaRealizada], ['Faturado', resumo.faturado], ['Margem', resumo.margem]].map(([l, v]) => (<div key={l} className='bc-form-col-4'><Card><small>{l}</small><div className='text-xl font-bold'>{fmt(v)}</div></Card></div>))}
+                        {[['Orçamento', resumo.orcamento], ['Custo', resumo.custoRealizado], ['Receita', resumo.receitaRealizada], ['Faturado', resumo.faturado], ['Margem', resumo.margem], ['Riscos', resumo.riscosAbertos ?? 0]].map(([l, v]) => (<div key={l} className='bc-form-col-4'><Card><small>{l}</small><div className='text-xl font-bold'>{l === 'Riscos' ? v : fmt(v)}</div></Card></div>))}
                     </div>)}
                     {sel && (<TabView>
                         <TabPanel header='WBS'>
@@ -112,7 +114,9 @@ export const Projetos = () => {
                         <TabPanel header='Riscos'>
                             <DataTable value={riscos} paginator rows={8} emptyMessage='Sem riscos.' responsiveLayout='scroll' dataKey='id'>
                                 <Column field='descricao' header='Risco' />
+                                <Column field='probabilidade' header='Prob.%' style={{ width: '5rem' }} />
                                 <Column field='impacto' header='Impacto' style={{ width: '7rem' }} />
+                                <Column header='Exposicao' body={(r) => exposicao(r)} style={{ width: '6rem' }} />
                                 <Column field='status' header='Status' style={{ width: '7rem' }} />
                             </DataTable>
                         </TabPanel>

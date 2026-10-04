@@ -32,7 +32,7 @@ Se nenhum bater, o script falha pedindo o caminho.
 
 ## Quando regerar
 
-Sempre que mudar uma ou mais XSDs em [`schemas/`](schemas/) (Sefaz publicou nova versão, p.ex.).
+Sempre que mudar uma ou mais XSDs em [`../../schemas`](../../schemas) (Sefaz publicou nova versão, p.ex.).
 
 Para mudanças no código de negócio (`src/main/java/**` **fora** dos packages `schemas/` e `schemas_eventos/`), **não** regere.
 
@@ -216,7 +216,7 @@ Quando a Sefaz publicar um novo evento ou documento:
 
 1. Copie a(s) XSD(s) nova(s) para `schemas/`.
 2. Crie um arquivo de binding em `scripts/bindings/meu-evento.xjb` que renomeie as classes conflitantes (TEvento → TMeuEvento, etc.).
-3. Edite [`scripts/regenerate-jaxb.ps1`](scripts/regenerate-jaxb.ps1) e adicione um novo `Invoke-XjcPass`:
+3. Edite [`../../src/main/resources/microservices/Java_NFe/scripts/regenerate-jaxb.ps1`](../../src/main/resources/microservices/Java_NFe/scripts/regenerate-jaxb.ps1) e adicione um novo `Invoke-XjcPass`:
    ```powershell
    # Para evento (schemas_eventos):
    Invoke-XjcPass `
@@ -240,7 +240,7 @@ Quando a Sefaz publicar um novo evento ou documento:
 
 ## Migrando um projeto consumidor de v4.00.* para v4.1.*
 
-Ver [`docs/infra/MIGRATION.md`](docs/infra/MIGRATION.md) e o script automático:
+Ver [`./MIGRATION.md`](./MIGRATION.md) e o script automático:
 
 ```bash
 # Windows / Linux / macOS (PowerShell — completo, recomendado):

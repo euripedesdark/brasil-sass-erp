@@ -6,7 +6,7 @@ provides guidelines for contributing to the project.
 ## Code of Conduct
 
 This project and all participants are governed by the
-[Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to
+[Code of Conduct](../../CODE_OF_CONDUCT.md). By participating, you are expected to
 uphold this code.
 
 ## How Can I Contribute?

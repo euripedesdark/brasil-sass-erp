@@ -226,6 +226,19 @@ public class ProjetoServiceImpl implements ProjetoService {
         m.put("faturado", faturado);
         m.put("saldoOrcamento", (p.getOrcamentoTotal() == null ? BigDecimal.ZERO : p.getOrcamentoTotal()).subtract(custo));
         m.put("margem", receita.subtract(custo));
+        java.util.List<java.util.Map<String, Object>> expo = new java.util.ArrayList<>();
+        for (PrjRisco r : riscos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId)) {
+            if ("ABERTO".equals(r.getStatus()) == false) continue;
+            int prob = r.getProbabilidade() == null ? 0 : r.getProbabilidade();
+            String imp = r.getImpacto() == null ? "" : r.getImpacto().trim().toUpperCase();
+            int peso = "BAIXO".equals(imp) ? 1 : "ALTO".equals(imp) ? 3 : "CRITICO".equals(imp) ? 4 : 2;
+            java.util.Map<String, Object> e = new java.util.LinkedHashMap<>();
+            e.put("id", r.getId()); e.put("descricao", r.getDescricao()); e.put("probabilidade", prob); e.put("impacto", r.getImpacto()); e.put("exposicao", prob * peso);
+            expo.add(e);
+        }
+        expo.sort((a, b) -> Integer.compare((Integer) b.get("exposicao"), (Integer) a.get("exposicao")));
+        m.put("riscosAbertos", expo.size());
+        m.put("exposicaoTop", expo.stream().limit(3).toList());
         return m;
     }
 }

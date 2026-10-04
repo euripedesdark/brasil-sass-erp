@@ -55,20 +55,20 @@
 
 ## Introdução
 
-O **eSocial-JT** é o projeto que reúne as iniciativas do [TST](http://www.tst.jus.br/) para atender às necessidades do sistema [eSocial](https://portal.esocial.gov.br/) do Governo Federal. A solução foi desenvolvida em módulos auto contidos e independentes, que podem ser adaptados e utilizados em ambientes de qualquer organização, tanto pública quanto privada.
+O **eSocial-JT** é o projeto que reúne as iniciativas do [TST](http://www.tst.jus.br/) para atender às necessidades do sistema [eSocial](https://www.esocial.gov.br/) do Governo Federal. A solução foi desenvolvida em módulos auto contidos e independentes, que podem ser adaptados e utilizados em ambientes de qualquer organização, tanto pública quanto privada.
 
 Em poucas palavras, o **esocial-jt-service**, módulo principal da solução, recebe um _JSON_ com os dados de uma **ocorrência** dos sistemas de origem, tranforma em um **evento** do eSocial, cria e assina o arquivo XML, transmite para o eSocial-Gov e posteriormente consulta o resultado de processamento com eventuais erros.
 
 ## Guia rápido
 
-Use este guia para obter rapidamente uma instância do **esocial-jt-service** em execução e enviar seu primeiro evento para o ambiente de [Produção Restrita](http://portal.esocial.gov.br/institucional/ambiente-de-producao-restrita) do eSocial-Gov.
+Use este guia para obter rapidamente uma instância do **esocial-jt-service** em execução e enviar seu primeiro evento para o ambiente de [Produção Restrita](https://www.gov.br/esocial/pt-br/acesso-ao-sistema/ambiente-de-producao-restrita) do eSocial-Gov.
 
 ### Pré-requisitos
 
 - [Git](https://git-scm.com/)
 - [Docker](https://www.docker.com/)
 - [Docker Compose](https://docs.docker.com/compose/)
-- [Certificado Digital ICP-Brasil A1 válido](https://portal.esocial.gov.br/institucional/ambiente-de-producao-restrita/perguntas-frequentes-producao-restrita#02---certificado-digital) (obrigatório mesmo para testes)
+- [Certificado Digital ICP-Brasil A1 válido](https://www.gov.br/esocial/pt-br/acesso-ao-sistema/cronograma-de-implantacao/perguntas-frequentes-producao-empresas-e-producao-restrita) (obrigatório mesmo para testes)
 - [Postman](https://www.getpostman.com/) (opcional)
 
 ### Download
@@ -320,7 +320,7 @@ spring.flyway.enabled=true
 spring.flyway.enabled=false
 ```
 
-2. Execute os scripts de criação do banco, localizados em [src/esocial-jt-service/src/main/resources/db/migration/](src/esocial-jt-service/src/main/resources/db/migration/).
+2. Execute os scripts de criação do banco, localizados em [../../db/migration](../../db/migration).
 
 ### Instalação via Docker
 

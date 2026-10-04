@@ -240,7 +240,7 @@ Quando a Sefaz publicar um novo evento ou documento:
 
 ## Migrando um projeto consumidor de v4.00.* para v4.1.*
 
-Ver [`docs/infra/MIGRATION.md`](docs/infra/MIGRATION.md) e o script automático:
+Ver [`../../../../../docs/infra/MIGRATION.md`](../../../../../docs/infra/MIGRATION.md) e o script automático:
 
 ```bash
 # Windows / Linux / macOS (PowerShell — completo, recomendado):

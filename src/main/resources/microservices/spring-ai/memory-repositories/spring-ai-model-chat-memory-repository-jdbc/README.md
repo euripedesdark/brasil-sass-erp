@@ -1,1 +1,1 @@
-[Chat Memory Documentation](https://docs.spring.io/spring-ai/reference/api/chatmemory.html)
+[Chat Memory Documentation](https://docs.spring.io/spring-ai/reference/api/chat-memory.html)

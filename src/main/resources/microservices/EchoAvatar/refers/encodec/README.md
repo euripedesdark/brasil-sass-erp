@@ -82,7 +82,7 @@ audio_codes = model(inputs["input_values"], inputs["padding_mask"]).audio_codes
 
 ## What's up?
 
-See [the changelog](docs/guia/CHANGELOG.md) for details on releases.
+See [the changelog](../../../../../../../docs/guia/CHANGELOG.md) for details on releases.
 
 ## Installation
 

@@ -1,7 +1,7 @@
 > ⏳ **Registro histórico** — este documento é um retrato pontual da data
 > do arquivo e **não reflete o estado atual** do sistema. Para o estado
-> atual, veja [`README.pt-BR.md`](../README.pt-BR.md) e
-> [`docs/INDICE.md`](INDICE.md).
+> atual, veja [`README.pt-BR.md`](../i18n/README.pt-BR.md) e
+> [`docs/INDICE.md`](../INDICE.md).
 
 # 📋 Resumo Final Completo - Brasil SaaS ERP
 
@@ -529,13 +529,13 @@ npm run build
 
 ## 📄 Documentos Relacionados
 
-- [docs/modulos/README.md](docs/modulos/README.md) - Visão geral completa
-- [docs/frontend/FRONTEND_ANALISE_COMPLETA.md](docs/frontend/FRONTEND_ANALISE_COMPLETA.md) - Análise detalhada do frontend
-- [docs/relatorios/RESUMO_TRABALHO.md](docs/relatorios/RESUMO_TRABALHO.md) - Resumo do trabalho realizado
-- [docs/relatorios/MODULOS_SERVICOS.md](docs/relatorios/MODULOS_SERVICOS.md) - Arquitetura de módulos
-- [docs/auditorias/MAPA-FUNCIONALIDADES.md](docs/auditorias/MAPA-FUNCIONALIDADES.md) - Mapa de funcionalidades
-- [docs/infra/BUILD.md](docs/infra/BUILD.md) - Guia de build
-- [docs/infra/MIGRATION.md](docs/infra/MIGRATION.md) - Migrations do banco de dados
+- [../../README.md](../../README.md) - Visão geral completa
+- [../frontend/FRONTEND_ANALISE_COMPLETA.md](../frontend/FRONTEND_ANALISE_COMPLETA.md) - Análise detalhada do frontend
+- [./RESUMO_TRABALHO.md](./RESUMO_TRABALHO.md) - Resumo do trabalho realizado
+- [./MODULOS_SERVICOS.md](./MODULOS_SERVICOS.md) - Arquitetura de módulos
+- [../auditorias/MAPA-FUNCIONALIDADES.md](../auditorias/MAPA-FUNCIONALIDADES.md) - Mapa de funcionalidades
+- [../infra/BUILD.md](../infra/BUILD.md) - Guia de build
+- [../infra/MIGRATION.md](../infra/MIGRATION.md) - Migrations do banco de dados
 
 
 
