@@ -184,7 +184,8 @@
     "banks": "Banks",
     "cobranca": "Collections",
     "devolucoes": "Exchanges and returns",
-    "ponto": "Time tracking"
+    "ponto": "Time tracking",
+    "rescisao": "Termination"
   },
   "stock": {
     "default": "Default",

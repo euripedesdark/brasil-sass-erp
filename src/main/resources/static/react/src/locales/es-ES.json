@@ -184,7 +184,8 @@
     "banks": "Bancos",
     "cobranca": "Cobranza",
     "devolucoes": "Cambios y devoluciones",
-    "ponto": "Fichaje"
+    "ponto": "Fichaje",
+    "rescisao": "Despido"
   },
   "stock": {
     "default": "Estándar",

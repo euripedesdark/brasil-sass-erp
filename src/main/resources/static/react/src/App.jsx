@@ -73,6 +73,7 @@ import { RH } from './components/rh/RH';
 import { Cargo } from './components/rh/Cargo';
 import { FolhaPagamento } from './components/rh/FolhaPagamento';
 import { Ponto } from './components/rh/Ponto';
+import { Rescisao } from './components/rh/Rescisao';
 import { FuncionarioFoto } from './components/rh/FuncionarioFoto';
 
 import { Vendas } from './components/vendas/Vendas';
@@ -244,6 +245,7 @@ function App() {
                     <Route path="rh/cargos" element={<Cargo />} />
                     <Route path="rh/folha" element={<FolhaPagamento />} />
                     <Route path="rh/ponto" element={<Ponto />} />
+                    <Route path="rh/rescisao" element={<Rescisao />} />
                     <Route path="rh/fotos" element={<FuncionarioFoto />} />
 
                     <Route path="producao" element={<Producao />} />

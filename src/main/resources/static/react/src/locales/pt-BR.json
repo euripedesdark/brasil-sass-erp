@@ -184,7 +184,8 @@
     "banks": "Bancos",
     "cobranca": "Cobrança",
     "devolucoes": "Trocas e devoluções",
-    "ponto": "Ponto"
+    "ponto": "Ponto",
+    "rescisao": "Rescisão"
   },
   "stock": {
     "default": "Padrão",

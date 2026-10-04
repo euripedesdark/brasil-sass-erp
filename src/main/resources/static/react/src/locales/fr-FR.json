@@ -184,7 +184,8 @@
     "banks": "Banques",
     "cobranca": "Recouvrement",
     "devolucoes": "Échanges et retours",
-    "ponto": "Pointage"
+    "ponto": "Pointage",
+    "rescisao": "Licenciement"
   },
   "stock": {
     "default": "Standard",
