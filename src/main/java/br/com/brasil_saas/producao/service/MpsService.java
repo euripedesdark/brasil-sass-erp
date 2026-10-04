@@ -26,6 +26,12 @@ public class MpsService {
         int mes = Integer.parseInt(periodo.substring(5, 7));
         LocalDate ini = LocalDate.of(ano, mes, 1);
         LocalDate fim = ini.withDayOfMonth(ini.lengthOfMonth());
+        for (MpsItem anterior : repo.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo)) {
+            if ("RASCUNHO".equals(anterior.getStatus())) {
+                anterior.setDeletedAt(java.time.LocalDateTime.now());
+                repo.save(anterior);
+            }
+        }
         Map<Long, BigDecimal> demanda = new LinkedHashMap<>();
         for (var p : pedidos.findByEmpresaIdAndPeriodo(empresaId, ini, fim)) {
             if ("ABERTO".equals(p.getStatus()) == false) continue;
