@@ -175,7 +175,13 @@
     "bi": "Business Intelligence",
     "kpis": "KPIs",
     "biReports": "BI Reports",
-    "scheduledReports": "Scheduled Reports"
+    "scheduledReports": "Scheduled Reports",
+    "cteMdfe": "CT-e / MDF-e",
+    "renegotiation": "Renegotiation",
+    "budget": "Budget vs Actual",
+    "loans": "Loans",
+    "buscaFiscal": "Tax search",
+    "banks": "Banks"
   },
   "stock": {
     "default": "Default",

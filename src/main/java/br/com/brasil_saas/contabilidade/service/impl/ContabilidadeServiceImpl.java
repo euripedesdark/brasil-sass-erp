@@ -225,4 +225,27 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         f.setStatus("ABERTO");
         fechamentos.save(f);
     }
+    @Override public java.util.List<java.util.Map<String, Object>> dre(Long empresaId, int exercicio) {
+        java.util.List<java.util.Map<String, Object>> out = new java.util.ArrayList<>();
+        for (int mes = 1; mes <= 12; mes++) {
+            java.time.LocalDate de = java.time.LocalDate.of(exercicio, mes, 1);
+            java.time.LocalDate ate = de.withDayOfMonth(de.lengthOfMonth());
+            java.math.BigDecimal receitas = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal custos = java.math.BigDecimal.ZERO;
+            for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate))
+                for (CtbPartida pt : partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(l.getId(), empresaId)) {
+                    String codigo = contas.findByIdAndEmpresaIdAndDeletedAtIsNull(pt.getContaId(), empresaId).map(PlanoContas::getCodigo).orElse("");
+                    if (codigo.startsWith("3") == false) continue;
+                    receitas = receitas.add(pt.getCredito() == null ? java.math.BigDecimal.ZERO : pt.getCredito());
+                    custos = custos.add(pt.getDebito() == null ? java.math.BigDecimal.ZERO : pt.getDebito());
+                }
+            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("mes", mes);
+            m.put("receitas", receitas);
+            m.put("custos", custos);
+            m.put("resultado", receitas.subtract(custos));
+            out.add(m);
+        }
+        return out;
+    }
 }

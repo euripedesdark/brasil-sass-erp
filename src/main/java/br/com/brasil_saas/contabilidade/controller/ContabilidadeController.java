@@ -60,6 +60,10 @@ public class ContabilidadeController {
     public List<Map<String, Object>> balancete(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate) {
         return svc.balancete(u.getEmpresaId(), de, ate);
     }
+    @GetMapping("/dre") @PreAuthorize("hasAuthority('contabilidade:leitura')")
+    public List<Map<String, Object>> dre(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam int exercicio) {
+        return svc.dre(u.getEmpresaId(), exercicio);
+    }
     @GetMapping("/balanco") @PreAuthorize("hasAuthority('contabilidade:leitura')")
     public Map<String, Object> balanco(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam int exercicio) {
         return svc.balanco(u.getEmpresaId(), exercicio);

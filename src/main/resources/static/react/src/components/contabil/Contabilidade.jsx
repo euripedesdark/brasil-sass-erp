@@ -60,6 +60,8 @@ export const Contabilidade = () => {
     const estornar = async (id) => { await apiFetch(BASE + '/lancamentos/' + id + '/estornar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); carregar(); };
     const buscarRazao = async () => { if (!filtroConta || !de || !ate) return; setRazao(await apiFetch(BASE + '/razao?contaId=' + filtroConta + '&de=' + iso(de) + '&ate=' + iso(ate)).then(js)); };
     const buscarBalancete = async () => { if (!de || !ate) return; setBalancete(await apiFetch(BASE + '/balancete?de=' + iso(de) + '&ate=' + iso(ate)).then(js)); };
+    const [dre, setDre] = useState([]);
+    const buscarDre = async () => { const r = await apiFetch(BASE + '/dre?exercicio=' + exercicio); setDre(await r.json().catch(() => [])); };
     const buscarBalanco = async () => { const r = await apiFetch(BASE + '/balanco?exercicio=' + exercicio); setBalanco(await r.json().catch(() => null)); };
     const fechar = async () => { if (!periodoFech) return; await apiFetch(BASE + '/fechamentos/' + periodoFech + '/fechar', { method: 'POST' }); setPeriodoFech(''); carregar(); };
 
@@ -129,6 +131,15 @@ export const Contabilidade = () => {
                         <Column field='status' header='Status' />
                         <Column field='fechadoEm' header='Fechado em' />
                     </DataTable>
+                <TabPanel header='DRE'>
+                    <div className='flex gap-2 mb-3 flex-wrap'><InputNumber value={exercicio} onValueChange={(e) => setExercicio(e.value)} useGrouping={false} /><Button label='Calcular DRE' icon='pi pi-calculator' onClick={buscarDre} /></div>
+                    <DataTable value={dre} paginator rows={12} emptyMessage='Calcule por exercício.' responsiveLayout='scroll'>
+                        <Column field='mes' header='Mês' style={{ width: '5rem' }} />
+                        <Column header='Receitas' body={(r) => fmt(r.receitas)} />
+                        <Column header='Custos' body={(r) => fmt(r.custos)} />
+                        <Column header='Resultado' body={(r) => fmt(r.resultado)} />
+                    </DataTable>
+                </TabPanel>
                 </TabPanel>
             </TabView>
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Novo lançamento' modal style={{ width: 'min(96vw, 520px)' }}>

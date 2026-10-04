@@ -113,7 +113,8 @@ export const Layout = () => {
                     item('menu.serviceCatalog', 'pi pi-wrench', '/cadastro/servicos'),
                     item('menu.carriers', 'pi pi-truck', '/cadastro/transportadoras'),
                     item('menu.units', 'pi pi-sliders-h', '/cadastro/unidades-medida'),
-                    item('menu.cities', 'pi pi-map-marker', '/cadastro/municipios')
+                    item('menu.cities', 'pi pi-map-marker', '/cadastro/municipios'),
+                    item('menu.banks', 'pi pi-building-columns', '/cadastro/bancos')
                 ]
             },
             {
@@ -173,7 +174,10 @@ export const Layout = () => {
                     item('menu.accountingEntries', 'pi pi-book', '/financeiro/contabil'),
                     item('menu.costCenters', 'pi pi-th-large', '/financeiro/centro-custos'),
                     item('menu.paymentTerms', 'pi pi-calendar', '/financeiro/condicoes-pagamento'),
-                    item('menu.paymentTypes', 'pi pi-credit-card', '/financeiro/tipos-pagamento')
+                    item('menu.paymentTypes', 'pi pi-credit-card', '/financeiro/tipos-pagamento'),
+                    item('menu.renegotiation', 'pi pi-refresh', '/financeiro/renegociacao'),
+                    item('menu.budget', 'pi pi-chart-bar', '/financeiro/orcamento'),
+                    item('menu.loans', 'pi pi-building-columns', '/financeiro/emprestimos')
                 ]
             },
             {
@@ -187,7 +191,9 @@ export const Layout = () => {
                     item('menu.issqn', 'pi pi-list', '/fiscal/issqn'),
                     item('menu.taxEntries', 'pi pi-download', '/fiscal/entradas'),
                     item('menu.taxes', 'pi pi-percentage', '/fiscal/impostos'),
-                    item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz')
+                    item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz'),
+                    item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
+                    item('menu.buscaFiscal', 'pi pi-search', '/fiscal/busca')
                 ]
             },
             {
@@ -339,6 +345,16 @@ export const Layout = () => {
             label: t('nav.wms', { defaultValue: 'WMS' }),
             icon: 'pi pi-box',
             command: () => handleNavigation('/wms')
+        });
+        items.push({
+            label: t('nav.projetos', { defaultValue: 'Projetos' }),
+            icon: 'pi pi-briefcase',
+            command: () => handleNavigation('/projetos')
+        });
+        items.push({
+            label: t('nav.dms', { defaultValue: 'DMS' }),
+            icon: 'pi pi-folder',
+            command: () => handleNavigation('/dms')
         });
         items.push({
             label: t('nav.portais', { defaultValue: 'Portais' }),
