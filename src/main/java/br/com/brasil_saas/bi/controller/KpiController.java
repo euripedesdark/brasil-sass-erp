@@ -90,7 +90,7 @@ public class KpiController {
     @PostMapping("/refresh")
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
     @Operation(summary = "Atualizar valores de todos os KPIs")
-    public ResponseEntity<ApiResponse<Void>> refreshAll(@RequestParam Long empresaId) {
+    public ResponseEntity<ApiResponse<Void>> refreshAll(@AuthenticationPrincipal AuthenticatedUser u) {
         kpiService.refreshKpiValues(u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -100,7 +100,7 @@ public class KpiController {
     @Operation(summary = "Calcular valor de um KPI")
     public ResponseEntity<ApiResponse<Object>> calculateValue(
             @PathVariable Long id,
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         Object value = kpiService.calculateKpiValue(id, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(value));
     }
