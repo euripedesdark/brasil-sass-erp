@@ -32,9 +32,11 @@ public class DevolucaoService {
     }
     @Transactional public VenDevolucao solicitar(Long empresaId, Long pedidoId, String motivo, Map<Long, BigDecimal> itensQtd) {
         PedidoVenda p = exigir(pedidos.findByIdAndEmpresaId(pedidoId, empresaId), "Pedido inexistente");
-        if ("FATURADO".equals(p.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente pedido faturado");
+        if (!"FATURADO".equals(p.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente pedido faturado");
         if (motivo == null || motivo.isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo obrigatorio");
+        if (itensQtd == null || itensQtd.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Informe ao menos um item");
         VenDevolucao d = new VenDevolucao();
+        d.setEmpresaId(empresaId);
         d.setPedidoId(pedidoId);
         d.setMotivo(motivo);
         d.setStatus("SOLICITADA");
@@ -47,6 +49,7 @@ public class DevolucaoService {
             BigDecimal qtd = e.getValue() == null ? BigDecimal.ZERO : e.getValue();
             if (qtd.signum() <= 0 || qtd.compareTo(vendida) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida para o produto " + e.getKey());
             VenDevolucaoItem i = new VenDevolucaoItem();
+            i.setEmpresaId(empresaId);
             i.setDevolucaoId(d.getId());
             i.setProdutoId(e.getKey());
             i.setQuantidade(qtd);

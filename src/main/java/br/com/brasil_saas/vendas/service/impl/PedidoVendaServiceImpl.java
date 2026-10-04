@@ -58,7 +58,10 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     @Transactional
     public PedidoVendaResponse criar(PedidoVendaRequest request) {
         PedidoVenda pedido = new PedidoVenda();
+        if (request.empresaId() == null) throw new BusinessException("Empresa obrigatoria");
+        if (request.itens() == null || request.itens().isEmpty()) throw new BusinessException("Pedido precisa possuir ao menos um item");
         pedido.setEmpresaId(request.empresaId());
+        if (request.clienteId() == null || clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.clienteId(), request.empresaId()).isEmpty()) throw new ResourceNotFoundException("Cliente nao encontrado");
         pedido.setClienteId(request.clienteId());
         pedido.setVendedorId(request.vendedorId());
         pedido.setTipo(request.tipo() != null ? request.tipo() : "PEDIDO");
@@ -80,6 +83,8 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         if (request.itens() != null) {
             int num = 1;
             for (var itemReq : request.itens()) {
+                if (itemReq.quantidade() == null || itemReq.quantidade().signum() <= 0) throw new BusinessException("Quantidade deve ser maior que zero");
+                if (itemReq.valorUnitario() == null || itemReq.valorUnitario().signum() < 0) throw new BusinessException("Valor unitario invalido");
                 ItemPedidoVenda item = new ItemPedidoVenda();
                 item.setPedido(pedido);
                 item.setEmpresaId(pedido.getEmpresaId());
@@ -212,7 +217,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         // nao esta presente na tabela bc_cad_pessoa"). Toda venda faturada
         // estourava 409 DATA_INTEGRITY e o estoque NAO baixava, porque a
         // transacao inteira rollback. O cliente guarda o pessoa_id.
-        Long pessoaId = clienteRepository.findById(pedido.getClienteId())
+        Long pessoaId = clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(pedido.getClienteId(), pedido.getEmpresaId())
                 .map(c -> c.getPessoa() == null ? null : c.getPessoa().getId())
                 .orElseThrow(() -> new BusinessException(
                         "Cliente " + pedido.getClienteId() + " do pedido "
