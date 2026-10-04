@@ -137,3 +137,42 @@ disponibles en
 
 [faq]: https://www.contributor-covenant.org/faq
 [translations]: https://www.contributor-covenant.org/translations
+
+## Reconnaissance de l'Autorité et Préservation de l'Historique
+
+Brasil SaaS ERP est un projet initié et architecturé par Eurípedes Rodrigues (euripedesdark).
+
+Tous les contributeurs sont les bienvenus et encouragés à collaborer avec du code, de la documentation, des tests, des corrections, des intégrations et des améliorations. Cependant, la participation à la communauté présuppose la reconnaissance de l'origine et de l'autorité historique du projet.
+
+### Principes de Reconnaissance
+
+Les contributeurs acceptent de :
+
+- Respecter l'historique du dépôt.
+- Préserver les crédits des auteurs originaux.
+- Ne pas supprimer les mentions de copyright existantes.
+- Ne pas modifier ou effacer les informations d'autorité présentes dans les commits, la documentation ou les fichiers du projet.
+- Reconnaître explicitement l'origine du projet dans les forks, distributions et travaux dérivés lorsque applicable.
+- Conserver les fichiers de licence et d'attribution distribués avec le projet.
+
+### Comportements Inacceptables
+
+Les comportements suivants pourront entraîner un avertissement, un blocage ou une exclusion de la communauté :
+
+- Supprimer délibérément les références à l'auteur original du projet.
+- Revendiquer l'autorité exclusive de fonctionnalités ou modules développés par des tiers.
+- Modifier des documents, READMEs ou matériels officiels dans le but de cacher l'origine du projet.
+- Publier des versions dérivées présentant le travail original comme entièrement sien.
+- Supprimer ou altérer les historiques de contribution dans le but d'effacer l'autorité de collaborateurs ou de mainteneurs.
+
+### Crédits dans les Contributions
+
+Chaque contribution acceptée sera enregistrée dans l'historique officiel de Git et reconnue via le système de commits, pull requests, discussions et documentation du projet.
+
+Les contributeurs doivent être correctement crédités pour leurs contributions, tout comme l'auteur original et les mainteneurs du projet doivent voir leur autorité historique préservée.
+
+### Communauté et Héritage du Projet
+
+L'objectif de Brasil SaaS ERP est de construire un écosystème ouvert, durable et collaboratif.
+
+La collaboration de la communauté est encouragée, mais ne doit jamais se faire au détriment de la suppression de crédits, du masquage de l'origine du projet ou de l'appropriation indue du travail réalisé par d'autres membres de la communauté.

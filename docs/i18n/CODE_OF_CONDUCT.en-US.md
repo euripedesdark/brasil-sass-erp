@@ -131,3 +131,42 @@ For answers to common questions about this code of conduct, see the FAQ at
 
 [faq]: https://www.contributor-covenant.org/faq
 [translations]: https://www.contributor-covenant.org/translations
+
+## Authorship Recognition and History Preservation
+
+Brasil SaaS ERP is a project initiated and architected by Eurípedes Rodrigues (euripedesdark).
+
+All contributors are welcome and encouraged to collaborate with code, documentation, tests, corrections, integrations and improvements. However, participation in the community presupposes recognition of the origin and historical authorship of the project.
+
+### Recognition Principles
+
+Contributors agree to:
+
+- Respect the repository history.
+- Preserve the credits of the original authors.
+- Not remove existing copyright notices.
+- Not alter or erase authorship information present in commits, documentation or project files.
+- Explicitly recognize the origin of the project in forks, distributions and derivative works when applicable.
+- Keep the licensing and attribution files distributed with the project.
+
+### Unacceptable Behaviors
+
+The following behaviors may result in warning, blocking or removal from the community:
+
+- Deliberately removing references to the original author of the project.
+- Claiming exclusive authorship of features or modules developed by third parties.
+- Modifying documents, READMEs or official materials in order to hide the origin of the project.
+- Publishing derivative versions presenting the original work as entirely one's own.
+- Removing or tampering with contribution history with the intention of erasing the authorship of collaborators or maintainers.
+
+### Credits in Contributions
+
+Every accepted contribution will be recorded in the official Git history and recognized through the system of commits, pull requests, discussions and project documentation.
+
+Contributors must be properly credited for their contributions, just as the original author and maintainers of the project must have their historical authorship preserved.
+
+### Community and Project Legacy
+
+The goal of Brasil SaaS ERP is to build an open, sustainable and collaborative ecosystem.
+
+Community collaboration is encouraged, but should never occur at the expense of removing credits, hiding the origin of the project or misappropriating the work done by other community members.

@@ -134,3 +134,42 @@ Para respostas a perguntas comuns sobre este código de conduta, veja o FAQ em
 
 [faq]: https://www.contributor-covenant.org/faq
 [translations]: https://www.contributor-covenant.org/translations
+
+## Reconhecimento de Autoria e Preservação do Histórico
+
+O Brasil SaaS ERP é um projeto iniciado e arquitetado por Eurípedes Rodrigues (euripedesdark).
+
+Todos os contribuidores são bem-vindos e incentivados a colaborar com código, documentação, testes, correções, integrações e melhorias. Entretanto, a participação na comunidade pressupõe o reconhecimento da origem e da autoria histórica do projeto.
+
+### Princípios de Reconhecimento
+
+Os contribuidores concordam em:
+
+- Respeitar o histórico do repositório.
+- Preservar os créditos dos autores originais.
+- Não remover avisos de copyright existentes.
+- Não alterar ou apagar informações de autoria presentes em commits, documentação ou arquivos do projeto.
+- Reconhecer explicitamente a origem do projeto em forks, distribuições e trabalhos derivados quando aplicável.
+- Manter os arquivos de licenciamento e atribuição distribuídos com o projeto.
+
+### Comportamentos Considerados Inaceitáveis
+
+Os seguintes comportamentos poderão resultar em advertência, bloqueio ou remoção da comunidade:
+
+- Remover deliberadamente referências ao autor original do projeto.
+- Reivindicar autoria exclusiva de funcionalidades ou módulos desenvolvidos por terceiros.
+- Modificar documentos, READMEs ou materiais oficiais com o objetivo de ocultar a origem do projeto.
+- Publicar versões derivadas apresentando o trabalho original como sendo inteiramente próprio.
+- Remover ou adulterar históricos de contribuição com a intenção de apagar a autoria de colaboradores ou mantenedores.
+
+### Créditos em Contribuições
+
+Toda contribuição aceita será registrada no histórico oficial do Git e reconhecida através do sistema de commits, pull requests, discussões e documentação do projeto.
+
+Contribuidores devem ser devidamente creditados por suas contribuições, assim como o autor original e os mantenedores do projeto devem ter sua autoria histórica preservada.
+
+### Comunidade e Legado do Projeto
+
+O objetivo do Brasil SaaS ERP é construir um ecossistema aberto, sustentável e colaborativo.
+
+A colaboração da comunidade é incentivada, mas nunca deve ocorrer às custas da remoção de créditos, da ocultação da origem do projeto ou da apropriação indevida do trabalho realizado por outros membros da comunidade.
