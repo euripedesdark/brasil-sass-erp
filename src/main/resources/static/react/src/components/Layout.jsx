@@ -250,7 +250,8 @@ export const Layout = () => {
                     item('menu.employees', 'pi pi-user', '/rh'),
                     item('menu.positions', 'pi pi-briefcase', '/rh/cargos'),
                     item('menu.payroll', 'pi pi-money-bill', '/rh/folha'),
-                    item('menu.employeePhotos', 'pi pi-image', '/rh/fotos')
+                    item('menu.employeePhotos', 'pi pi-image', '/rh/fotos'),
+                    item('menu.ponto', 'pi pi-clock', '/rh/ponto')
                 ]
             },
             {

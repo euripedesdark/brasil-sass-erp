@@ -183,7 +183,8 @@
     "buscaFiscal": "Tax search",
     "banks": "Banks",
     "cobranca": "Collections",
-    "devolucoes": "Exchanges and returns"
+    "devolucoes": "Exchanges and returns",
+    "ponto": "Time tracking"
   },
   "stock": {
     "default": "Default",

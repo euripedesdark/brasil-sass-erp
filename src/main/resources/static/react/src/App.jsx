@@ -72,6 +72,7 @@ import FiscalHub from './components/fiscal/FiscalHub';
 import { RH } from './components/rh/RH';
 import { Cargo } from './components/rh/Cargo';
 import { FolhaPagamento } from './components/rh/FolhaPagamento';
+import { Ponto } from './components/rh/Ponto';
 import { FuncionarioFoto } from './components/rh/FuncionarioFoto';
 
 import { Vendas } from './components/vendas/Vendas';
@@ -242,6 +243,7 @@ function App() {
                     <Route path="rh/*" element={<RH />} />
                     <Route path="rh/cargos" element={<Cargo />} />
                     <Route path="rh/folha" element={<FolhaPagamento />} />
+                    <Route path="rh/ponto" element={<Ponto />} />
                     <Route path="rh/fotos" element={<FuncionarioFoto />} />
 
                     <Route path="producao" element={<Producao />} />

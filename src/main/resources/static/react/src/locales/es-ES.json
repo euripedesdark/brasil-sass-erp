@@ -183,7 +183,8 @@
     "buscaFiscal": "Búsqueda fiscal",
     "banks": "Bancos",
     "cobranca": "Cobranza",
-    "devolucoes": "Cambios y devoluciones"
+    "devolucoes": "Cambios y devoluciones",
+    "ponto": "Fichaje"
   },
   "stock": {
     "default": "Estándar",
