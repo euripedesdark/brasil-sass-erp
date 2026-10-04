@@ -110,7 +110,9 @@ public class TituloServiceImpl implements TituloService {
             }
         }
 
-        if (titulo.getValorSaldo().compareTo(BigDecimal.ZERO) <= 0) {
+        if ("CANCELADO".equalsIgnoreCase(titulo.getStatus())) throw new BusinessException("Título cancelado não pode receber baixa");
+        if ("PENDENTE_APROVACAO".equalsIgnoreCase(titulo.getStatus())) throw new BusinessException("Título pendente de aprovação não pode receber baixa");
+        if (titulo.getValorSaldo() == null || titulo.getValorSaldo().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("Título já está totalmente baixado");
         }
 
@@ -119,6 +121,7 @@ public class TituloServiceImpl implements TituloService {
             throw new BusinessException("Valor da baixa + desconto excede o saldo do título");
         }
 
+        if (r.dataBaixa() != null && r.dataBaixa().isBefore(titulo.getDataEmissao())) throw new BusinessException("Data da baixa não pode ser anterior à emissão");
         if (r.contaBancariaId() != null) {
             ContaBancaria conta = contaBancariaRepository.findForUpdate(r.contaBancariaId(), empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conta bancária não encontrada ou inativa"));
