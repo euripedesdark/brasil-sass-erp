@@ -165,9 +165,9 @@ public class NFeServiceImpl implements NFeService {
             item.setValorUnitario(decimal(det.getProd().getVUnCom()));
             item.setValorTotal(decimal(det.getProd().getVProd()));
             item.setValorIcms(XmlImpostoUtil.getVICMS(det.getImposto().getContent()));
-            item.setValorIpi(XmlImpostoUtil.getVIPI(det.getImposto().getContent()));
+            item.setValorIpi(BigDecimal.ZERO);
             item.setAliquotaIcms(XmlImpostoUtil.getPICMS(det.getImposto().getContent()));
-            item.setAliquotaIpi(XmlImpostoUtil.getPIPI(det.getImposto().getContent()));
+            item.setAliquotaIpi(BigDecimal.ZERO);
             nfeItemRepository.save(item);
         }
 
