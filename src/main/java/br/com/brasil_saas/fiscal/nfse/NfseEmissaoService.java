@@ -579,6 +579,12 @@ public class NfseEmissaoService {
             return null;
         }
         Object xml = resposta.get("xml_assinado");
+        if (!(xml instanceof String) || ((String) xml).isBlank()) {
+            Object nacional = resposta.get("xml_nacional");
+            if (nacional instanceof String s && !s.isBlank()) {
+                return s;
+            }
+        }
         if (xml instanceof String s && !s.isBlank()) {
             return s;
         }
