@@ -230,6 +230,15 @@ public class NFeServiceImpl implements NFeService {
     }
 
     @Override
+    public Nfe consultarPersistida(Long empresaId, String chaveAcesso) {
+        if (chaveAcesso == null || !chaveAcesso.matches("\\d{44}")) {
+            throw new IllegalArgumentException("Chave de acesso deve conter 44 digitos");
+        }
+        return nfeRepository.findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, chaveAcesso)
+                .orElseThrow(() -> new IllegalArgumentException("NF-e nao encontrada para a empresa: " + chaveAcesso));
+    }
+
+    @Override
     public String consultarSituacao(Long empresaId, String chaveAcesso) throws Exception {
         if (chaveAcesso == null || !chaveAcesso.matches("\\d{44}")) {
             throw new IllegalArgumentException("Chave de acesso deve conter 44 digitos");
