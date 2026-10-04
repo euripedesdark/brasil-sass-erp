@@ -29,6 +29,8 @@ public class QualidadeController {
     @PreAuthorize("hasAuthority('qualidade:escrita')")
     public ResponseEntity<PlanoInspecao> criarPlano(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody PlanoInspecao p) {
         p.setId(null); p.setEmpresaId(u.getEmpresaId()); p.setDeletedAt(null); p.setAtivo(true);
+        if (p.getCodigo() == null || p.getCodigo().isBlank()) throw new IllegalArgumentException("Código do plano é obrigatório");
+        if (p.getDescricao() == null || p.getDescricao().isBlank()) throw new IllegalArgumentException("Descrição do plano é obrigatória");
         return ResponseEntity.ok(planos.save(p));
     }
 
@@ -42,6 +44,8 @@ public class QualidadeController {
     @PreAuthorize("hasAuthority('qualidade:escrita')")
     public ResponseEntity<Inspecao> criarInspecao(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Inspecao i) {
         i.setId(null); i.setEmpresaId(u.getEmpresaId()); i.setDeletedAt(null);
+        if (i.getPlanoInspecaoId() == null) throw new IllegalArgumentException("Plano de inspeção é obrigatório");
+        if (planos.findById(i.getPlanoInspecaoId()).filter(x -> u.getEmpresaId().equals(x.getEmpresaId()) && x.getDeletedAt() == null).isEmpty()) throw new IllegalArgumentException("Plano de inspeção inválido para a empresa");
         if (i.getStatus()==null) i.setStatus("ABERTA");
         return ResponseEntity.ok(inspecoes.save(i));
     }
@@ -56,6 +60,7 @@ public class QualidadeController {
     @PreAuthorize("hasAuthority('qualidade:escrita')")
     public ResponseEntity<NaoConformidade> criarNc(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody NaoConformidade n) {
         n.setId(null); n.setEmpresaId(u.getEmpresaId()); n.setDeletedAt(null);
+        if (n.getDescricao() == null || n.getDescricao().isBlank()) throw new IllegalArgumentException("Descrição da não conformidade é obrigatória");
         return ResponseEntity.ok(ncs.save(n));
     }
 
@@ -64,6 +69,7 @@ public class QualidadeController {
     public ResponseEntity<NaoConformidade> encerrar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id) {
         NaoConformidade n=ncs.findById(id).orElseThrow();
         if (!u.getEmpresaId().equals(n.getEmpresaId())) return ResponseEntity.notFound().build();
+        if ("ENCERRADA".equals(n.getStatus())) throw new IllegalArgumentException("Não conformidade já está encerrada");
         n.setStatus("ENCERRADA"); n.setEncerradaEm(LocalDateTime.now());
         return ResponseEntity.ok(ncs.save(n));
     }
