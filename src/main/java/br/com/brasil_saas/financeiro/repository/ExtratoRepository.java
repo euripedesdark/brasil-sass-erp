@@ -8,5 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ExtratoRepository extends JpaRepository<Extrato, Long> {
     List<Extrato> findByContaBancariaIdAndDeletedAtIsNullOrderByDataMovimento(Long contaBancariaId);
     List<Extrato> findByEmpresaIdAndConciliadoFalseAndDeletedAtIsNull(Long empresaId);
+    boolean existsByEmpresaIdAndContaBancariaIdAndFitidAndDeletedAtIsNull(Long empresaId, Long contaBancariaId, String fitid);
     Optional<Extrato> findTopByContaBancariaIdAndDeletedAtIsNullOrderByDataMovimentoDescIdDesc(Long contaBancariaId);
 }

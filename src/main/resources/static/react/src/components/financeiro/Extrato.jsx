@@ -29,6 +29,20 @@ export const Extrato = () => {
     const [loading, setLoading] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
     const [error, setError] = useState('');
+    const ofxRef = useRef(null);
+    const importarOfx = async (ev) => {
+        const arq = ev.target.files && ev.target.files[0];
+        if (!arq || !contaId) return;
+        const fd = new FormData();
+        fd.append('arquivo', arq);
+        try {
+            const r = await apiFetch('/api/financeiro/extrato/importar-ofx?contaBancariaId=' + contaId, { method: 'POST', body: fd });
+            const j = await r.json().catch(() => ({}));
+            toast.current?.show({ severity: r.ok ? 'success' : 'error', summary: r.ok ? 'OFX importado' : 'Erro', detail: 'Novos: ' + (j.novos ?? 0) + ' - repetidos: ' + (j.repetidos ?? 0), life: 5000 });
+            if (r.ok) carregarExtrato(contaId);
+        } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', life: 3000 }); }
+        if (ofxRef.current) ofxRef.current.value = '';
+    };
     const [form, setForm] = useState({
         contaBancariaId: null,
         dataMovimento: new Date(),
@@ -191,6 +205,14 @@ export const Extrato = () => {
                             setError('');
                             setDialogVisible(true);
                         }}
+                    />
+                    <input ref={ofxRef} type='file' accept='.ofx,.ofc' style={{ display: 'none' }} onChange={importarOfx} />
+                    <Button
+                        label='Importar OFX'
+                        icon='pi pi-upload'
+                        outlined
+                        disabled={!contaId}
+                        onClick={() => ofxRef.current && ofxRef.current.click()}
                     />
                 </div>
 

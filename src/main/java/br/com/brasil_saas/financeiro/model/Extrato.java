@@ -12,4 +12,5 @@ public class Extrato extends AuditableEntity {
     @Column(name="saldo_anterior", precision=15, scale=2) private BigDecimal saldoAnterior;
     @Column(name="saldo_atual", precision=15, scale=2) private BigDecimal saldoAtual;
     @Column(nullable=false) private Boolean conciliado = false;
+    @Column(length=100) private String fitid;
 }
