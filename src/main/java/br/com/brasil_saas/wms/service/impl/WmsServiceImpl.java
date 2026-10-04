@@ -7,6 +7,7 @@ import br.com.brasil_saas.estoque.repository.EnderecoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.ExpedicaoEstoqueItemRepository;
 import br.com.brasil_saas.estoque.repository.ExpedicaoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.ReservaEstoqueRepository;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
 import br.com.brasil_saas.wms.model.*;
 import br.com.brasil_saas.wms.repository.*;
 import br.com.brasil_saas.wms.service.WmsService;
@@ -28,6 +29,7 @@ public class WmsServiceImpl implements WmsService {
     private final ExpedicaoEstoqueRepository expedicoes;
     private final ExpedicaoEstoqueItemRepository expedicaoItens;
     private final ReservaEstoqueRepository reservas;
+    private final ProdutoRepository produtos;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -36,7 +38,9 @@ public class WmsServiceImpl implements WmsService {
         return ondas.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, status);
     }
     @Override @Transactional public WmsOnda criarOnda(Long empresaId, WmsOnda o) {
+        if (o.getDepositoId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Deposito obrigatorio");
         o.setId(null);
+        o.setEmpresaId(empresaId);
         o.setStatus("ABERTA");
         return ondas.save(o);
     }
@@ -46,7 +50,12 @@ public class WmsServiceImpl implements WmsService {
     @Override @Transactional public WmsOndaItem addItem(Long empresaId, Long ondaId, WmsOndaItem i) {
         WmsOnda o = exigirOnda(empresaId, ondaId);
         if (!"ABERTA".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda ja liberada");
+        if (i.getProdutoId() == null || !produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isPresent())
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto inexistente para a empresa");
+        if (i.getQtdSolicitada() == null || i.getQtdSolicitada().signum() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade solicitada deve ser positiva");
         i.setId(null);
+        i.setEmpresaId(empresaId);
         i.setOndaId(ondaId);
         i.setQtdSeparada(BigDecimal.ZERO);
         i.setStatus("PENDENTE");
@@ -97,12 +106,19 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public WmsOndaItem separar(Long empresaId, Long ondaId, Long itemId, BigDecimal qtd, Long enderecoId) {
         exigirOnda(empresaId, ondaId);
+        WmsOnda o = exigirOnda(empresaId, ondaId);
+        if (!"EM_SEPARACAO".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda nao esta em separacao");
         WmsOndaItem i = exigir(itens.findByIdAndEmpresaIdAndDeletedAtIsNull(itemId, empresaId), "Item inexistente");
         if (!ondaId.equals(i.getOndaId())) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item de outra onda");
         BigDecimal nova = (i.getQtdSeparada() == null ? BigDecimal.ZERO : i.getQtdSeparada()).add(qtd == null ? BigDecimal.ZERO : qtd);
         if (nova.compareTo(i.getQtdSolicitada()) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade acima da solicitada");
         i.setQtdSeparada(nova);
-        if (enderecoId != null) i.setEnderecoId(enderecoId);
+        if (enderecoId != null) {
+            EnderecoEstoque endereco = exigir(enderecos.findByIdAndEmpresaIdAndAtivoTrue(enderecoId, empresaId), "Endereco inexistente");
+            if (!Objects.equals(endereco.getDepositoId(), o.getDepositoId()))
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Endereco pertence a outro deposito");
+            i.setEnderecoId(enderecoId);
+        }
         i.setStatus(nova.compareTo(i.getQtdSolicitada()) >= 0 ? "SEPARADO" : "PARCIAL");
         return itens.save(i);
     }
@@ -134,13 +150,24 @@ public class WmsServiceImpl implements WmsService {
     @Override @Transactional public WmsVolume criarVolume(Long empresaId, WmsVolume v) {
         exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(v.getExpedicaoId(), empresaId), "Expedicao inexistente");
         v.setId(null);
+        v.setEmpresaId(empresaId);
         v.setStatus("ABERTO");
         return volumes.save(v);
     }
     @Override @Transactional public WmsVolumeItem embalar(Long empresaId, Long volumeId, WmsVolumeItem i) {
         WmsVolume v = exigir(volumes.findByIdAndEmpresaIdAndDeletedAtIsNull(volumeId, empresaId), "Volume inexistente");
         if (!"ABERTO".equals(v.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Volume fechado");
+        if (i.getProdutoId() == null || !produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isPresent())
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto inexistente para a empresa");
+        if (i.getQuantidade() == null || i.getQuantidade().signum() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade embalada deve ser positiva");
+        if (i.getOndaItemId() != null) {
+            WmsOndaItem oi = exigir(itens.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getOndaItemId(), empresaId), "Item da onda inexistente");
+            if (!Objects.equals(oi.getProdutoId(), i.getProdutoId()))
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto nao corresponde ao item da onda");
+        }
         i.setId(null);
+        i.setEmpresaId(empresaId);
         i.setVolumeId(volumeId);
         return volumeItens.save(i);
     }
