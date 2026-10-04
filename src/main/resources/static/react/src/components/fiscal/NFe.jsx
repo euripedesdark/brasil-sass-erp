@@ -110,7 +110,7 @@ export function NFe() {
             setErro('Consulte primeiro uma NF-e válida.');
             return;
         }
-        confirmDialog({
+        confirmDialog.require({
             message: 'O cancelamento será transmitido à SEFAZ. Informe o motivo na próxima etapa.',
             header: 'Cancelar NF-e',
             icon: 'pi pi-exclamation-triangle',
