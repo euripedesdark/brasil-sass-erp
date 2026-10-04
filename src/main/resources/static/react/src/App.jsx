@@ -125,6 +125,7 @@ import { IA } from './components/ia/IA';
 import { Assistente } from './components/ia/Assistente';
 import { Perfil } from './components/Perfil';
 import { useAuth } from './contexts/AuthContext';
+import { I18nDomBridge } from './components/shared/I18nDomBridge';
 
 function App() {
     const { isAuthenticated, loading } = useAuth();
@@ -138,7 +139,9 @@ function App() {
     }
 
     return (
-        <Router>
+        <>
+            <I18nDomBridge />
+            <Router>
             <Routes>
                 <Route path="portal" element={<PortalPublico />} />
                 <Route
@@ -292,7 +295,8 @@ function App() {
 
                 <Route path="*" element={<PaginaNaoEncontrada />} />
             </Routes>
-        </Router>
+            </Router>
+        </>
     );
 }
 
