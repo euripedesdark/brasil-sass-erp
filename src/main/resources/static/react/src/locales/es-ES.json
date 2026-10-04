@@ -187,7 +187,8 @@
     "ponto": "Fichaje",
     "rescisao": "Despido",
     "credito": "Crédito",
-    "fluxoCaixa": "Flujo de caja"
+    "fluxoCaixa": "Flujo de caja",
+    "esocial": "eSocial"
   },
   "stock": {
     "default": "Estándar",

@@ -187,7 +187,8 @@
     "ponto": "Ponto",
     "rescisao": "Rescisão",
     "credito": "Crédito",
-    "fluxoCaixa": "Fluxo de caixa"
+    "fluxoCaixa": "Fluxo de caixa",
+    "esocial": "eSocial"
   },
   "stock": {
     "default": "Padrão",

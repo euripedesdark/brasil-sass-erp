@@ -187,7 +187,8 @@
     "ponto": "Time tracking",
     "rescisao": "Termination",
     "credito": "Credit",
-    "fluxoCaixa": "Cash flow"
+    "fluxoCaixa": "Cash flow",
+    "esocial": "eSocial"
   },
   "stock": {
     "default": "Default",

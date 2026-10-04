@@ -187,7 +187,8 @@
     "ponto": "Pointage",
     "rescisao": "Licenciement",
     "credito": "Crédit",
-    "fluxoCaixa": "Flux de trésorerie"
+    "fluxoCaixa": "Flux de trésorerie",
+    "esocial": "eSocial"
   },
   "stock": {
     "default": "Standard",
