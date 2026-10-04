@@ -3,6 +3,8 @@ import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { InputTextarea } from 'primereact/inputtextarea';
 import { InputNumber } from 'primereact/inputnumber';
 import { Toast } from 'primereact/toast';
 import { Tag } from 'primereact/tag';
@@ -18,6 +20,8 @@ export const Estoque = () => {
     const [loading, setLoading] = useState(false);
     const [filtroProdutoId, setFiltroProdutoId] = useState(null);
     const [saldoConsulta, setSaldoConsulta] = useState(null);
+    const [ajusteVisible, setAjusteVisible] = useState(false);
+    const [ajuste, setAjuste] = useState({ depositoId: '', produtoId: '', quantidadeDelta: '', motivo: '' });
 
     const empresaId = user?.empresaId;
 
@@ -69,6 +73,25 @@ export const Estoque = () => {
         }
     };
 
+    const realizarAjuste = async () => {
+        const depositoId = Number(ajuste.depositoId);
+        const produtoId = Number(ajuste.produtoId);
+        const quantidadeDelta = Number(String(ajuste.quantidadeDelta).replace(',', '.'));
+        if (!depositoId || !produtoId || !quantidadeDelta || !ajuste.motivo.trim()) {
+            toast.current?.show({ severity: 'warn', summary: t('common.warning'), detail: 'Informe depósito, produto, quantidade e motivo.', life: 3000 });
+            return;
+        }
+        try {
+            await EstoqueService.ajustarSaldo(empresaId, { depositoId, produtoId, quantidadeDelta, motivo: ajuste.motivo.trim() });
+            toast.current?.show({ severity: 'success', summary: t('common.success'), detail: 'Ajuste de inventário realizado.', life: 3000 });
+            setAjusteVisible(false);
+            setAjuste({ depositoId: '', produtoId: '', quantidadeDelta: '', motivo: '' });
+            await carregarSaldos();
+        } catch (err) {
+            toast.current?.show({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || 'Não foi possível realizar o ajuste.', life: 4000 });
+        }
+    };
+
     const qtdBody = (row) => {
         const q = Number(row.quantidade) || 0;
         const severity = q <= 0 ? 'danger' : q < 10 ? 'warning' : 'success';
@@ -78,7 +101,21 @@ export const Estoque = () => {
     return (
         <div>
             <Toast ref={toast} />
+            <Dialog header="Ajuste de inventário" visible={ajusteVisible} style={{ width: 'min(520px, 95vw)' }} onHide={() => setAjusteVisible(false)}
+                footer={<div><Button label="Cancelar" text onClick={() => setAjusteVisible(false)} /><Button label="Aplicar ajuste" icon="pi pi-check" onClick={realizarAjuste} /></div>}>
+                <div className="flex flex-column gap-3">
+                    <div><label className="block mb-1">Depósito</label><InputNumber value={ajuste.depositoId} onValueChange={(e) => setAjuste(a => ({ ...a, depositoId: e.value ?? '' }))} useGrouping={false} className="w-full" /></div>
+                    <div><label className="block mb-1">Produto</label><InputNumber value={ajuste.produtoId} onValueChange={(e) => setAjuste(a => ({ ...a, produtoId: e.value ?? '' }))} useGrouping={false} className="w-full" /></div>
+                    <div><label className="block mb-1">Quantidade (+ entrada / − saída)</label><InputNumber value={ajuste.quantidadeDelta} onValueChange={(e) => setAjuste(a => ({ ...a, quantidadeDelta: e.value ?? '' }))} minFractionDigits={3} className="w-full" /></div>
+                    <div><label className="block mb-1">Motivo</label><InputTextarea value={ajuste.motivo} onChange={(e) => setAjuste(a => ({ ...a, motivo: e.target.value }))} rows={3} autoResize className="w-full" /></div>
+                </div>
+            </Dialog>
+
             <Card title={t('inventory.title')}>
+                <div className="flex justify-content-between align-items-center mb-3">
+                    <p className="text-color-secondary m-0">{t('inventory.description')}</p>
+                    <Button icon="pi pi-sliders-h" label="Ajustar inventário" onClick={() => setAjusteVisible(true)} />
+                </div>
                 <p className="text-color-secondary mb-3">
                     {t('inventory.description')}
                 </p>
