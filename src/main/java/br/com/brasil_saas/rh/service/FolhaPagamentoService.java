@@ -12,4 +12,5 @@ public interface FolhaPagamentoService {
     void excluir(Long empresaId, Long id);
     void processar(Long empresaId, Long id);
     void cancelar(Long empresaId, Long id);
+    br.com.brasil_saas.rh.dto.FolhaPagamentoResponse importarPonto(Long empresaId, Long id, Long funcionarioId, Integer ano, Integer mes);
 }

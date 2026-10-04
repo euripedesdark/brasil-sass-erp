@@ -63,6 +63,12 @@ public class FolhaPagamentoController {
         return ResponseEntity.ok().build();
     }
 
+    public record ImportarPontoReq(Long funcionarioId, Integer ano, Integer mes) {}
+    @PostMapping("/{id}/importar-ponto")
+    @PreAuthorize("hasAuthority('rh:folha:escrita')")
+    public ResponseEntity<?> importarPonto(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody ImportarPontoReq r) {
+        return ResponseEntity.ok(service.importarPonto(u.getEmpresaId(), id, r.funcionarioId(), r.ano(), r.mes()));
+    }
     @PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAuthority('rh:folha:escrita')")
     public ResponseEntity<Void> cancelar(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u) {

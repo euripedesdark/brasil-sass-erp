@@ -5,6 +5,7 @@ import { Card } from 'primereact/card';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dropdown } from 'primereact/dropdown';
+import { Dialog } from 'primereact/dialog';
 import { InputNumber } from 'primereact/inputnumber';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
@@ -35,6 +36,23 @@ export const Ponto = () => {
         if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Dia já fechado ou funcionário inativo', life: 4000 }); return; }
         ver(funcId);
     };
+    const [dlgFolha, setDlgFolha] = useState(false);
+    const [folhas, setFolhas] = useState([]);
+    const [folhaId, setFolhaId] = useState(null);
+    const abrirEnvio = async () => {
+        if (!funcId) return;
+        const r = await apiFetch('/api/rh/folhas').then(js).catch(() => []);
+        setFolhas(r.filter((f) => f.status === 'ABERTA'));
+        setFolhaId(null);
+        setDlgFolha(true);
+    };
+    const enviarFolha = async () => {
+        if (!folhaId) return;
+        const r = await apiFetch('/api/rh/folhas/' + folhaId + '/importar-ponto', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ funcionarioId: funcId, ano, mes }) });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Importação recusada', life: 4000 }); return; }
+        toast.current?.show({ severity: 'success', summary: 'Horas lançadas na folha', life: 3000 });
+        setDlgFolha(false);
+    };
     const falta = async () => {
         if (!funcId) return;
         await apiFetch(BASE + '/falta?funcionarioId=' + funcId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
@@ -54,10 +72,17 @@ export const Ponto = () => {
                 <Button label='Bater ponto' icon='pi pi-clock' severity='success' onClick={bater} />
                 <Button label='Falta' icon='pi pi-ban' severity='danger' outlined onClick={falta} />
             </div>
+                <Button label='Enviar p/ folha' icon='pi pi-send' severity='help' outlined onClick={abrirEnvio} />
             <div className='grid mb-3'>
                 <div className='bc-form-col-6 col-12 md:col-6'><Card><small>Horas no mês</small><div className='text-2xl font-bold'>{totHoras.toFixed(2)}h</div></Card></div>
                 <div className='bc-form-col-6 col-12 md:col-6'><Card><small>Faltas</small><div className='text-2xl font-bold'>{faltas}</div></Card></div>
             </div>
+            <Dialog visible={dlgFolha} onHide={() => setDlgFolha(false)} header='Enviar horas para folha' modal style={{ width: 'min(96vw, 440px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>Folha aberta</label><Dropdown value={folhaId} options={folhas.map((f) => ({ label: (f.competencia || f.id) + ' (' + (f.status || '') + ')', value: f.id }))} onChange={(e) => setFolhaId(e.value)} placeholder='Selecione' /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgFolha(false)} /><Button label='Enviar' icon='pi pi-check' onClick={enviarFolha} /></div>
+            </Dialog>
             <DataTable value={rows} loading={loading} paginator rows={15} emptyMessage='Sem registros.' responsiveLayout='scroll' dataKey='id'>
                 <Column field='data' header='Data' style={{ width: '8rem' }} />
                 <Column field='e1' header='E1' /><Column field='s1' header='S1' /><Column field='e2' header='E2' /><Column field='s2' header='S2' />

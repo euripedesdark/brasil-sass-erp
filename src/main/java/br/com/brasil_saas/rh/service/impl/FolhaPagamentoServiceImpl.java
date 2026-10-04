@@ -25,6 +25,8 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
 
     private final FolhaPagamentoRepository folhaRepository;
     private final TituloRepository tituloRepository;
+    private final br.com.brasil_saas.rh.repository.PontoRepository pontoRepository;
+    private final br.com.brasil_saas.rh.repository.FuncionarioRepository funcionarioRepository;
 
     @Override
     @Transactional
@@ -172,6 +174,32 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
 
     @Override
     @Transactional
+    public br.com.brasil_saas.rh.dto.FolhaPagamentoResponse importarPonto(Long empresaId, Long id, Long funcionarioId, Integer ano, Integer mes) {
+        FolhaPagamento folha = folhaRepository.findById(id).filter(f -> empresaId.equals(f.getEmpresaId())).orElseThrow(() -> new br.com.brasil_saas.shared.exception.ResourceNotFoundException("Folha inexistente"));
+        if ("PAGA".equals(folha.getStatus()) || "CANCELADA".equals(folha.getStatus())) throw new br.com.brasil_saas.shared.exception.BusinessException("Folha fechada");
+        var func = funcionarioRepository.findById(funcionarioId).orElseThrow(() -> new br.com.brasil_saas.shared.exception.ResourceNotFoundException("Funcionario inexistente"));
+        java.math.BigDecimal horas = java.math.BigDecimal.ZERO;
+        for (var pt : pontoRepository.findByEmpresaIdAndFuncionarioIdAndDeletedAtIsNullOrderByDataDesc(empresaId, funcionarioId)) {
+            if (Boolean.TRUE.equals(pt.getFalta())) continue;
+            if (pt.getData() == null) continue;
+            if (ano != null && (pt.getData().getYear() != ano || pt.getData().getMonthValue() != mes)) continue;
+            horas = horas.add(pt.getHorasTrabalhadas() == null ? java.math.BigDecimal.ZERO : pt.getHorasTrabalhadas());
+        }
+        java.math.BigDecimal sal = func.getSalario() == null ? java.math.BigDecimal.ZERO : func.getSalario();
+        java.math.BigDecimal valorHora = sal.divide(new java.math.BigDecimal(220), 4, java.math.RoundingMode.HALF_UP);
+        java.math.BigDecimal valor = horas.multiply(valorHora).setScale(2, java.math.RoundingMode.HALF_UP);
+        ItemFolhaPagamento item = new ItemFolhaPagamento();
+        item.setFolha(folha);
+        item.setEmpresaId(empresaId);
+        item.setFuncionarioId(funcionarioId);
+        item.setTipo("PROVENTO");
+        item.setDescricao("Horas ponto");
+        item.setValor(valor);
+        folha.getItens().add(item);
+        java.math.BigDecimal tot = folha.getValorTotal() == null ? java.math.BigDecimal.ZERO : folha.getValorTotal();
+        folha.setValorTotal(tot.add(valor));
+        return br.com.brasil_saas.rh.dto.FolhaPagamentoResponse.from(folhaRepository.save(folha));
+    }
     public void cancelar(Long empresaId, Long id) {
         FolhaPagamento folha = folhaRepository.findById(id)
             .filter(f -> f.getEmpresaId().equals(empresaId))
