@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface ReservaEstoqueRepository extends JpaRepository<ReservaEstoque, Long> {
     List<ReservaEstoque> findByEmpresaIdAndDeletedAtIsNullOrderByDataReservaDesc(Long empresaId);
     List<ReservaEstoque> findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(Long empresaId, Long pedidoVendaId);
+    List<ReservaEstoque> findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(Long empresaId, Long pedidoVendaId);
+
     Optional<ReservaEstoque> findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndDeletedAtIsNull(
             Long empresaId, Long pedidoVendaId, Long depositoId, Long produtoId);
 
