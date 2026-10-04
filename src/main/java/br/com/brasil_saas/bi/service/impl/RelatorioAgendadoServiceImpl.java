@@ -10,12 +10,14 @@ import br.com.brasil_saas.bi.service.RelatorioService;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -31,6 +33,7 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
     @Override
     @Transactional
     public RelatorioAgendado criar(Long empresaId, RelatorioAgendadoRequest request) {
+        validarAgendamento(request);
         Relatorio relatorio = relatorioRepository.findById(request.relatorioId())
                 .orElseThrow(() -> new ResourceNotFoundException("Relatorio nao encontrado"));
 
@@ -58,6 +61,7 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
     @Override
     @Transactional
     public RelatorioAgendado atualizar(Long empresaId, Long id, RelatorioAgendadoRequest request) {
+        validarAgendamento(request);
         RelatorioAgendado agendado = relatorioAgendadoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Relatorio agendado nao encontrado"));
 
@@ -143,6 +147,7 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
                     parametros
             );
 
+            if (agendado.getFormato() == null || agendado.getFormato().isBlank()) throw new IllegalArgumentException("Formato do relatório é obrigatório");
             // Gerar arquivo
             ByteArrayOutputStream output = switch (agendado.getFormato().toUpperCase()) {
                 case "PDF" -> relatorioService.gerarPdf(empresaId, agendado.getRelatorio().getId(), parametros);
@@ -218,16 +223,36 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
 
     private void enviarEmail(RelatorioAgendado agendado, ByteArrayOutputStream output) {
         try {
-            String[] emails = agendado.getEmailDestinatarios().split(",");
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(emails);
-            message.setSubject("Relatorio: " + agendado.getNome());
-            message.setText("Segue em anexo o relatorio: " + agendado.getDescricao());
-            // TODO: Adicionar anexo (requer MimeMessage)
+            String[] emails = Arrays.stream(agendado.getEmailDestinatarios().split(","))
+                    .map(String::trim).filter(s -> !s.isBlank()).toArray(String[]::new);
+            if (emails.length == 0) throw new IllegalArgumentException("Nenhum destinatário válido");
+            var message = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setTo(emails);
+            helper.setSubject("Relatório: " + agendado.getNome());
+            helper.setText("Segue o relatório agendado: " + Objects.toString(agendado.getDescricao(), ""), false);
+            String extensao = "EXCEL".equalsIgnoreCase(agendado.getFormato()) ? "xlsx"
+                    : agendado.getFormato().toLowerCase(Locale.ROOT);
+            helper.addAttachment("relatorio-" + agendado.getId() + "." + extensao,
+                    new org.springframework.core.io.ByteArrayResource(output.toByteArray()));
             mailSender.send(message);
         } catch (Exception e) {
-            System.err.println("Erro ao enviar email: " + e.getMessage());
+            throw new IllegalStateException("Erro ao enviar relatório agendado por e-mail", e);
         }
+    }
+
+    private void validarAgendamento(RelatorioAgendadoRequest request) {
+        if (request == null) throw new IllegalArgumentException("Dados do agendamento são obrigatórios");
+        if (request.relatorioId() == null) throw new IllegalArgumentException("Relatório é obrigatório");
+        if (request.nome() == null || request.nome().isBlank()) throw new IllegalArgumentException("Nome do agendamento é obrigatório");
+        if (request.frequencia() == null || request.frequencia().isBlank()) throw new IllegalArgumentException("Frequência é obrigatória");
+        String frequencia = request.frequencia().toUpperCase(Locale.ROOT);
+        Set<String> permitidas = Set.of("DIARIO","SEMANAL","QUINZENAL","MENSAL","TRIMESTRAL","ANUAL","CUSTOM");
+        if (!permitidas.contains(frequencia)) throw new IllegalArgumentException("Frequência inválida: " + request.frequencia());
+        if ("CUSTOM".equals(frequencia) && (request.intervaloDias() == null || request.intervaloDias() <= 0)) throw new IllegalArgumentException("Intervalo CUSTOM deve ser maior que zero");
+        if (request.proximaExecucao() != null && request.proximaExecucao().isBefore(LocalDateTime.now())) throw new IllegalArgumentException("Próxima execução não pode estar no passado");
+        if (request.formato() == null || !Set.of("PDF","EXCEL","CSV").contains(request.formato().toUpperCase(Locale.ROOT))) throw new IllegalArgumentException("Formato deve ser PDF, EXCEL ou CSV");
+        if (request.ativo() && (request.emailDestinatarios() == null || request.emailDestinatarios().isBlank())) throw new IllegalArgumentException("Agendamento ativo exige destinatários de e-mail");
     }
 
     private String objectToJson(Map<String, Object> map) {
