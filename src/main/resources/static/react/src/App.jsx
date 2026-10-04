@@ -58,6 +58,7 @@ import ConfigurarEmpresa from './components/core/ConfigurarEmpresa';
 import Sobre from './components/core/Sobre';
 
 import { Nfse } from './components/fiscal/Nfse';
+import { NFe } from './components/fiscal/NFe';
 import { Ncm } from './components/fiscal/Ncm';
 import { Cfop } from './components/fiscal/Cfop';
 import { Cest } from './components/fiscal/Cest';
@@ -238,6 +239,7 @@ function App() {
                     <Route path="financeiro/tipos-pagamento" element={<TipoPagamento />} />
 
                     <Route path="fiscal" element={<FiscalHub />} />
+                    <Route path="fiscal/nfe" element={<NFe />} />
                     <Route path="fiscal/nfse" element={<Nfse />} />
                     <Route path="fiscal/ncm" element={<Ncm />} />
                     <Route path="fiscal/cfop" element={<Cfop />} />
