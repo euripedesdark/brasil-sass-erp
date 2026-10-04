@@ -186,7 +186,8 @@
     "devolucoes": "Échanges et retours",
     "ponto": "Pointage",
     "rescisao": "Licenciement",
-    "credito": "Crédit"
+    "credito": "Crédit",
+    "fluxoCaixa": "Flux de trésorerie"
   },
   "stock": {
     "default": "Standard",

@@ -186,7 +186,8 @@
     "devolucoes": "Cambios y devoluciones",
     "ponto": "Fichaje",
     "rescisao": "Despido",
-    "credito": "Crédito"
+    "credito": "Crédito",
+    "fluxoCaixa": "Flujo de caja"
   },
   "stock": {
     "default": "Estándar",

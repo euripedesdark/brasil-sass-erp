@@ -180,6 +180,7 @@ export const Layout = () => {
                     item('menu.budget', 'pi pi-chart-bar', '/financeiro/orcamento'),
                     item('menu.loans', 'pi pi-building-columns', '/financeiro/emprestimos'),
                     item('menu.credito', 'pi pi-shield', '/financeiro/credito'),
+                    item('menu.fluxoCaixa', 'pi pi-chart-line', '/financeiro/fluxo-caixa'),
                     item('menu.cobranca', 'pi pi-phone', '/financeiro/cobranca')
                 ]
             },

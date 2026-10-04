@@ -186,7 +186,8 @@
     "devolucoes": "Trocas e devoluções",
     "ponto": "Ponto",
     "rescisao": "Rescisão",
-    "credito": "Crédito"
+    "credito": "Crédito",
+    "fluxoCaixa": "Fluxo de caixa"
   },
   "stock": {
     "default": "Padrão",

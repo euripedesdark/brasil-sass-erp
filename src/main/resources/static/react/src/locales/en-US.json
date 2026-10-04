@@ -186,7 +186,8 @@
     "devolucoes": "Exchanges and returns",
     "ponto": "Time tracking",
     "rescisao": "Termination",
-    "credito": "Credit"
+    "credito": "Credit",
+    "fluxoCaixa": "Cash flow"
   },
   "stock": {
     "default": "Default",

@@ -41,6 +41,7 @@ import { Renegociacao } from './components/financeiro/Renegociacao';
 import { Orcamento } from './components/financeiro/Orcamento';
 import { Emprestimos } from './components/financeiro/Emprestimos';
 import { Credito } from './components/financeiro/Credito';
+import { FluxoCaixa } from './components/financeiro/FluxoCaixa';
 import { Cobranca } from './components/financeiro/Cobranca';
 import AprovacoesTitulos from './components/financeiro/AprovacoesTitulos';
 import Caixa from './components/Caixa';
@@ -211,6 +212,7 @@ function App() {
                     <Route path="financeiro/orcamento" element={<Orcamento />} />
                     <Route path="financeiro/emprestimos" element={<Emprestimos />} />
                     <Route path="financeiro/credito" element={<Credito />} />
+                    <Route path="financeiro/fluxo-caixa" element={<FluxoCaixa />} />
                     <Route path="financeiro/cobranca" element={<Cobranca />} />
                     <Route path="financeiro/aprovacoes-titulos" element={<AprovacoesTitulos />} />
                     <Route path="financeiro/comissoes" element={<Comissoes />} />
