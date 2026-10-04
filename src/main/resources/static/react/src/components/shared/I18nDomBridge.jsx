@@ -35,7 +35,7 @@ const buildReverseDictionary = language => {
   return reverse;
 };
 
-const escapeRegex = value => value.replace(/[.*+?^${}()|[\\]\\]/g, '\\const escapeRegex = value => value.replace(/[.*+?^$()|[\\]{}]/g, '\\$&');');
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
 const translateTemplate = (text, reverse) => {
   const exact = reverse.get(text.trim());
   if (exact) return text.startsWith(' ') ? ' ' + exact : exact;
