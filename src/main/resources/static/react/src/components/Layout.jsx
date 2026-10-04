@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ApiConfig, { apiFetch } from '../services/ApiConfig';
 import './Layout.css';
 import { ErrorBoundary } from './shared/ErrorBoundary';
+import RecentUpdates from './RecentUpdates';
 import { ExigeEmpresa } from './core/ExigeEmpresa';
 import { useTranslation } from 'react-i18next';
 
@@ -442,7 +443,7 @@ export const Layout = () => {
                         <div className="current-page-info">
                             <h2 className="page-title">{t('app.managementTitle')}</h2>
                         </div>
-                        <div className="header-actions"></div>
+                        <div className="header-actions"><RecentUpdates /></div>
                     </div>
                 </header>
 
