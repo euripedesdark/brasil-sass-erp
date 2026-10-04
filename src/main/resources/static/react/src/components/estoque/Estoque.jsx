@@ -116,9 +116,6 @@ export const Estoque = () => {
                     <p className="text-color-secondary m-0">{t('inventory.description')}</p>
                     <Button icon="pi pi-sliders-h" label="Ajustar inventário" onClick={() => setAjusteVisible(true)} />
                 </div>
-                <p className="text-color-secondary mb-3">
-                    {t('inventory.description')}
-                </p>
 
                 <div className="flex flex-wrap gap-2 align-items-end mb-4">
                     <div className="field m-0">
