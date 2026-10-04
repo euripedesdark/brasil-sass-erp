@@ -49,6 +49,7 @@ public class DevolucaoService {
             BigDecimal qtd = e.getValue() == null ? BigDecimal.ZERO : e.getValue();
             if (qtd.signum() <= 0 || qtd.compareTo(vendida) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida para o produto " + e.getKey());
             VenDevolucaoItem i = new VenDevolucaoItem();
+            i.setEmpresaId(empresaId);
             i.setDevolucaoId(d.getId());
             i.setProdutoId(e.getKey());
             i.setQuantidade(qtd);
