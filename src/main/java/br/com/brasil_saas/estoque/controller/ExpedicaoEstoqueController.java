@@ -99,6 +99,9 @@ public class ExpedicaoEstoqueController {
     public ExpedicaoEstoque expedir(@AuthenticationPrincipal AuthenticatedUser user,@PathVariable Long id){
         ExpedicaoEstoque e=get(user,id);
         if(!"EMBALAGEM".equals(e.getStatus())) throw new BusinessException("Expedicao precisa estar em EMBALAGEM");
+        var itens = itemRepository.findByEmpresaIdAndExpedicaoIdOrderByIdAsc(user.getEmpresaId(), id);
+        if (itens.isEmpty()) throw new BusinessException("Expedicao sem itens");
+        if (itens.stream().anyMatch(i -> !"SEPARADO".equals(i.getStatus()) && !"EMBALADO".equals(i.getStatus()))) throw new BusinessException("Todos os itens precisam estar separados antes da expedicao");
         e.setStatus("EXPEDIDA"); e.setDataExpedicao(LocalDateTime.now());
         for(ExpedicaoEstoqueItem i:itemRepository.findByEmpresaIdAndExpedicaoIdOrderByIdAsc(user.getEmpresaId(),id)){
             i.setStatus("EXPEDIDO"); itemRepository.save(i);
