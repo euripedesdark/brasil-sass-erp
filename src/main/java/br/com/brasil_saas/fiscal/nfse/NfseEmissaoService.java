@@ -192,6 +192,10 @@ public class NfseEmissaoService {
         corpo.put("complementoPrestador", empresa.getComplemento());
         corpo.put("bairroPrestador", empresa.getBairro());
         corpo.put("cepPrestador", empresa.getCep());
+        String codigoTributacaoNacional = servico.getCodigoTributacaoNacional();
+        if (nacional && (codigoTributacaoNacional == null || !codigoTributacaoNacional.matches("\\d{6}"))) {
+            throw new BusinessException("Servico sem codigo de tributacao nacional valido (6 digitos).");
+        }
         corpo.put("codigoTributacaoNacional", servico.getCodigoTributacaoNacional());
         corpo.put("codigoNbs", servico.getNbs());
         corpo.put("codigoMunicipioPrestacao", empresa.getCodigoIbge());
