@@ -185,7 +185,8 @@
     "cobranca": "Collections",
     "devolucoes": "Exchanges and returns",
     "ponto": "Time tracking",
-    "rescisao": "Termination"
+    "rescisao": "Termination",
+    "credito": "Credit"
   },
   "stock": {
     "default": "Default",

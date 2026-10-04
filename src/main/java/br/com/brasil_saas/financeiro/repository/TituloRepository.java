@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 public interface TituloRepository extends JpaRepository<Titulo, Long> {
     List<Titulo> findByEmpresaIdAndDeletedAtIsNullOrderByDataVencimento(Long empresaId);
+    List<Titulo> findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(Long empresaId, Long pessoaId);
     List<Titulo> findByEmpresaIdAndStatusAndDeletedAtIsNullOrderByDataVencimento(Long empresaId, String status);
     Optional<Titulo> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
 

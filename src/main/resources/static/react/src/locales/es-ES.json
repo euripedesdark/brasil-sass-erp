@@ -185,7 +185,8 @@
     "cobranca": "Cobranza",
     "devolucoes": "Cambios y devoluciones",
     "ponto": "Fichaje",
-    "rescisao": "Despido"
+    "rescisao": "Despido",
+    "credito": "Crédito"
   },
   "stock": {
     "default": "Estándar",
