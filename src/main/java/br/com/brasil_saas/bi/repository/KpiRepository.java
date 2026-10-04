@@ -19,4 +19,6 @@ public interface KpiRepository extends JpaRepository<Kpi, Long> {
     Page<Kpi> findByEmpresaId(Long empresaId, Pageable pageable);
     
     List<Kpi> findByEmpresaIdAndKpiTypeIn(Long empresaId, List<String> kpiTypes);
+
+    List<Kpi> findByEmpresaIdOrderByNameAsc(Long empresaId);
 }
