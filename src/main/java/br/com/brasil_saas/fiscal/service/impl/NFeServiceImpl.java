@@ -13,7 +13,7 @@ import br.com.brasil_saas.fiscal.service.NFeEmissaoValidator;
 import br.com.brasil_saas.fiscal.service.NFeService;
 import br.com.brasil_saas.fiscal.service.NFeXmlBuilder;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
-import br.com.swconsultoria.nfe.Nfe;
+import br.com.brasil_saas.fiscal.model.Nfe;
 import br.com.swconsultoria.nfe.dom.ConfiguracoesNfe;
 import br.com.swconsultoria.nfe.dom.Evento;
 import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
@@ -72,9 +72,9 @@ public class NFeServiceImpl implements NFeService {
         int numero = proximoNumero(empresaId, serie);
 
         TEnviNFe enviNFe = nfeXmlBuilder.build(config, empresa, pedido, serie, numero);
-        enviNFe = Nfe.montaNfe(config, enviNFe, true);
+        enviNFe = br.com.swconsultoria.nfe.Nfe.montaNfe(config, enviNFe, true);
 
-        TRetEnviNFe retorno = Nfe.enviarNfe(config, enviNFe, DocumentoEnum.NFE);
+        TRetEnviNFe retorno = br.com.swconsultoria.nfe.Nfe.enviarNfe(config, enviNFe, DocumentoEnum.NFE);
         TNFe nfeXml = enviNFe.getNFe().get(0);
 
         String xmlFinal;
@@ -86,7 +86,7 @@ public class NFeServiceImpl implements NFeService {
             TRetConsReciNFe retornoNfe = null;
 
             for (int tentativa = 0; tentativa < 15; tentativa++) {
-                retornoNfe = Nfe.consultaRecibo(config, recibo, DocumentoEnum.NFE);
+                retornoNfe = br.com.swconsultoria.nfe.Nfe.consultaRecibo(config, recibo, DocumentoEnum.NFE);
                 if (!StatusEnum.LOTE_EM_PROCESSAMENTO.getCodigo().equals(retornoNfe.getCStat())) {
                     break;
                 }
@@ -113,7 +113,7 @@ public class NFeServiceImpl implements NFeService {
             throw new IllegalStateException("SEFAZ autorizou a NF-e sem protocolo/chave de acesso validos");
         }
 
-        br.com.brasil_saas.fiscal.model.Nfe nota = new br.com.brasil_saas.fiscal.model.Nfe();
+        Nfe nota = new Nfe();
         nota.setEmpresaId(empresaId);
         nota.setPedidoVendaId(pedido.getId());
         nota.setDocumentoOrigemTipo("PEDIDO_VENDA");
@@ -208,7 +208,7 @@ public class NFeServiceImpl implements NFeService {
         evento.setDataEvento(LocalDateTime.now());
 
         TEnvEventoCancelamento enviEvento = CancelamentoUtil.montaCancelamento(evento, config);
-        TRetEnvEventoCancelamento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
+        TRetEnvEventoCancelamento retorno = br.com.swconsultoria.nfe.Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
         RetornoUtil.validaCancelamento(retorno);
 
         if (retorno.getRetEvento() == null || retorno.getRetEvento().isEmpty()
@@ -242,13 +242,13 @@ public class NFeServiceImpl implements NFeService {
             throw new IllegalArgumentException("Chave de acesso deve conter 44 digitos");
         }
         ConfiguracoesNfe config = carregarConfiguracoes(empresaId);
-        TRetConsSitNFe retorno = Nfe.consultaXml(config, chaveAcesso, DocumentoEnum.NFE);
+        TRetConsSitNFe retorno = br.com.swconsultoria.nfe.Nfe.consultaXml(config, chaveAcesso, DocumentoEnum.NFE);
         return XmlNfeUtil.objectToXml(retorno);
     }
 
     private int proximoNumero(Long empresaId, int serie) {
         return nfeRepository.findTopByEmpresaIdAndSerieAndDeletedAtIsNullOrderByNumeroDesc(empresaId, String.valueOf(serie))
-                .map(br.com.brasil_saas.fiscal.model.Nfe::getNumero)
+                .map(Nfe::getNumero)
                 .map(n -> Math.toIntExact(n + 1))
                 .orElse(1);
     }
