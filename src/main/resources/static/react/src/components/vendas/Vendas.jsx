@@ -14,6 +14,7 @@ import { Tag } from 'primereact/tag';
 import { Message } from 'primereact/message';
 import { AutoComplete } from 'primereact/autocomplete';
 import { Dropdown } from 'primereact/dropdown';
+import { InputTextarea } from 'primereact/inputtextarea';
 import PedidoVendaService from '../../services/PedidoVendaService';
 import ClienteService from '../../services/ClienteService';
 import ProdutoService from '../../services/ProdutoService';
@@ -275,6 +276,19 @@ export const Vendas = () => {
         }
     };
 
+    const [dlgPos, setDlgPos] = useState(false);
+    const [posId, setPosId] = useState(null);
+    const [posMotivo, setPosMotivo] = useState('');
+    const [posEquip, setPosEquip] = useState('');
+    const abrirPosvenda = (row) => { setPosId(row.id); setPosMotivo(''); setPosEquip(''); setDlgPos(true); };
+    const confirmarPosvenda = async () => {
+        if (!posMotivo.trim()) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Informe o motivo', life: 3000 }); return; }
+        try {
+            const r = await PedidoVendaService.posvenda(posId, { motivo: posMotivo, equipamento: posEquip || null });
+            toast.current?.show({ severity: 'success', summary: 'OS aberta', detail: 'OS ' + (r.data?.osNumero ?? r.data?.osId ?? ''), life: 4000 });
+            setDlgPos(false);
+        } catch (err) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: getApiErrorMessage(err, 'Falha ao abrir OS'), life: 4000 }); }
+    };
     const cancelar = async (id) => {
         try {
             await PedidoVendaService.cancelar(id);
@@ -286,6 +300,19 @@ export const Vendas = () => {
         }
     };
 
+    const [dlgPos, setDlgPos] = useState(false);
+    const [posId, setPosId] = useState(null);
+    const [posMotivo, setPosMotivo] = useState('');
+    const [posEquip, setPosEquip] = useState('');
+    const abrirPosvenda = (row) => { setPosId(row.id); setPosMotivo(''); setPosEquip(''); setDlgPos(true); };
+    const confirmarPosvenda = async () => {
+        if (!posMotivo.trim()) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Informe o motivo', life: 3000 }); return; }
+        try {
+            const r = await PedidoVendaService.posvenda(posId, { motivo: posMotivo, equipamento: posEquip || null });
+            toast.current?.show({ severity: 'success', summary: 'OS aberta', detail: 'OS ' + ((r.data && (r.data.osNumero || r.data.osId)) || ''), life: 4000 });
+            setDlgPos(false);
+        } catch (err) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: getApiErrorMessage(err, 'Falha ao abrir OS'), life: 4000 }); }
+    };
     const abrirNovo = () => {
         setForm(emptyForm()); setItemAtual(emptyItem()); setError('');
         setSomenteLeitura(false); setDialogVisible(true);
@@ -334,6 +361,8 @@ export const Vendas = () => {
                     <Button icon="pi pi-times" className="p-button-text p-button-danger p-button-sm"
                         tooltip="Cancelar pedido" onClick={() => cancelar(row.id)} />
                 </>
+            {row.status === 'FATURADO' && (
+                                    <Button icon='pi pi-wrench' className='p-button-text p-button-help p-button-sm' tooltip='Pós-venda (abrir OS)' onClick={() => abrirPosvenda(row)} />
             )}
         </div>
     );
@@ -452,4 +481,11 @@ export const Vendas = () => {
     );
 };
 
+            <Dialog visible={dlgPos} onHide={() => setDlgPos(false)} header='Pós-venda: abrir OS' modal style={{ width: 'min(96vw, 480px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>Equipamento (opcional)</label><InputText value={posEquip} onChange={(e) => setPosEquip(e.target.value)} /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Motivo *</label><InputTextarea rows={3} value={posMotivo} onChange={(e) => setPosMotivo(e.target.value)} /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgPos(false)} /><Button label='Abrir OS' icon='pi pi-check' onClick={confirmarPosvenda} /></div>
+            </Dialog>
 export default Vendas;

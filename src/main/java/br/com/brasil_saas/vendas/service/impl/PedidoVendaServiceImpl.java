@@ -13,6 +13,7 @@ import br.com.brasil_saas.financeiro.repository.ComissaoRepository;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
 import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import br.com.brasil_saas.cadastro.repository.ClienteRepository;
+import br.com.brasil_saas.servicos.service.OrdemServicoService;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.vendas.dto.PedidoVendaRequest;
@@ -32,7 +33,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +44,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
 
     private final PedidoVendaRepository pedidoRepository;
     private final ClienteRepository clienteRepository;
+    private final OrdemServicoService osService;
     private final SaldoEstoqueRepository saldoEstoqueRepository;
     private final DepositoRepository depositoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
@@ -250,6 +255,16 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
 
     @Override
     @Transactional
+    public Map<String, Object> abrirPosVenda(Long id, Long empresaId, Long usuarioId, String motivo, String equipamento) {
+        PedidoVenda pedido = pedidoBloqueado(id, empresaId);
+        if ("FATURADO".equals(pedido.getStatus()) == false) throw new BusinessException("Somente pedido faturado gera pos-venda");
+        if (motivo == null || motivo.isBlank()) throw new BusinessException("Motivo obrigatorio");
+        var os = osService.abrir(empresaId, usuarioId, new OrdemServicoService.AberturaReq(pedido.getClienteId(), equipamento == null || equipamento.isBlank() ? "Pos-venda pedido " + pedido.getNumero() : equipamento, "Pos-venda do pedido " + pedido.getNumero() + ": " + motivo, null));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("osId", os.id());
+        m.put("osNumero", os.numero());
+        return m;
+    }
     public void cancelar(Long id, Long empresaId) {
         PedidoVenda pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de venda nao encontrado"));

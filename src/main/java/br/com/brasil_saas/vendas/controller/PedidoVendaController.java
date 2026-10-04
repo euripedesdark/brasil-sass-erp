@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/vendas/pedidos")
@@ -84,7 +85,13 @@ public class PedidoVendaController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/{id}/cancelar")
+        public record PosVendaReq(String motivo, String equipamento) {}
+    @PostMapping("/{id}/posvenda")
+    @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
+    public ResponseEntity<Map<String, Object>> posvenda(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser user, @RequestBody PosVendaReq r) {
+        return ResponseEntity.ok(service.abrirPosVenda(id, empresaDoToken(user), user.getId(), r.motivo(), r.equipamento()));
+    }
+@PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
     public ResponseEntity<Void> cancelar(
             @PathVariable Long id,
