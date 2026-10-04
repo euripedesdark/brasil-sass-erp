@@ -70,6 +70,9 @@ public class SaldoEstoqueController {
             @Valid @RequestBody AjusteRequest request) {
 
         Long empresaId = user.getEmpresaId();
+        if (request.quantidadeDelta().signum() == 0) {
+            throw new BusinessException("Ajuste deve ser diferente de zero");
+        }
         depositoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.depositoId(), empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Deposito nao encontrado"));
         produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.produtoId(), empresaId)
@@ -115,7 +118,7 @@ public class SaldoEstoqueController {
     public record AjusteRequest(
             @NotNull Long depositoId,
             @NotNull Long produtoId,
-            @NotNull @DecimalMin(value = "0.001", inclusive = false) BigDecimal quantidadeDelta,
+            @NotNull BigDecimal quantidadeDelta,
             @NotNull String motivo) {}
 
     public record SaldoResponse(Long empresaId, Long produtoId, BigDecimal quantidade) {
