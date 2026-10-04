@@ -13,7 +13,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Page<Cliente> findByEmpresaIdAndDeletedAtIsNull(Long empresaId, Pageable pageable);
     Optional<Cliente> findByPessoaIdAndDeletedAtIsNull(Long pessoaId);
     Optional<Cliente> findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(Long empresaId, Long pessoaId);
-    boolean existsByPessoaIdAndDeletedAtIsNull(Long pessoaId);
+\n    @Query("select c from Cliente c join fetch c.pessoa p where c.id = :id and c.empresaId = :empresaId and c.deletedAt is null")\n    Optional<Cliente> findByIdAndEmpresaIdAndDeletedAtIsNullWithPessoa(@Param("id") Long id, @Param("empresaId") Long empresaId);\n    boolean existsByPessoaIdAndDeletedAtIsNull(Long pessoaId);
 
     /**
      * Nome do cliente direto do banco, em uma consulta so.
