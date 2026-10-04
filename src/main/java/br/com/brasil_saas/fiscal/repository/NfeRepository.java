@@ -14,7 +14,8 @@ public interface NfeRepository extends JpaRepository<Nfe, Long> {
     Page<Nfe> findByEmpresaIdOrderByDataEmissaoDesc(Long empresaId, Pageable pageable);
     java.util.Optional<br.com.brasil_saas.fiscal.model.Nfe> findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(Long empresaId, String chaveAcesso);
     org.springframework.data.domain.Page<br.com.brasil_saas.fiscal.model.Nfe> findByEmpresaIdAndTipoOperacaoAndDeletedAtIsNull(Long empresaId, String tipoOperacao, org.springframework.data.domain.Pageable pageable);
-    java.util.Optional<br.com.brasil_saas.fiscal.model.Nfe> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);\n    java.util.Optional<Nfe> findTopByEmpresaIdAndSerieAndDeletedAtIsNullOrderByNumeroDesc(Long empresaId, String serie);
+    java.util.Optional<br.com.brasil_saas.fiscal.model.Nfe> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
+    java.util.Optional<Nfe> findTopByEmpresaIdAndSerieAndDeletedAtIsNullOrderByNumeroDesc(Long empresaId, String serie);
 
     @Query(value = "select pg_advisory_xact_lock(hashtext(concat('brasil_saas:nfe:', :empresaId, ':', :serie)))", nativeQuery = true)
     void lockSequence(@Param("empresaId") Long empresaId, @Param("serie") String serie);
