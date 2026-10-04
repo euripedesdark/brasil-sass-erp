@@ -38,3 +38,15 @@ void i18n
     });
 
 export default i18n;
+
+
+export const syncDocumentLanguage = language => {
+    if (typeof document === 'undefined') return;
+    const code = supportedLanguages.some(item => item.code === language)
+        ? language
+        : 'pt-BR';
+    document.documentElement.lang = code;
+};
+
+syncDocumentLanguage(i18n.resolvedLanguage || i18n.language);
+i18n.on('languageChanged', syncDocumentLanguage);
