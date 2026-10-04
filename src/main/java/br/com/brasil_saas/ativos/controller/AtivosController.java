@@ -46,6 +46,45 @@ public class AtivosController {
             a.setStatus("BAIXADO"); return ativos.save(a);
         }).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
+    @GetMapping("/{id}/depreciacao")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> depreciacao(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        AtivoImobilizado a = ativos.findById(id)
+                .filter(x -> u.getEmpresaId().equals(x.getEmpresaId()) && x.getDeletedAt() == null)
+                .orElseThrow(() -> new BusinessException("Ativo não encontrado"));
+        if (a.getDataAquisicao() == null) throw new BusinessException("Ativo sem data de aquisição");
+        if (a.getVidaUtilMeses() == null || a.getVidaUtilMeses() <= 0) throw new BusinessException("Vida útil do ativo inválida");
+        java.math.BigDecimal base = a.getValorAquisicao().subtract(a.getValorResidual()).max(java.math.BigDecimal.ZERO);
+        java.math.BigDecimal mensal = base.divide(java.math.BigDecimal.valueOf(a.getVidaUtilMeses()), 2, java.math.RoundingMode.HALF_UP);
+        long meses = java.time.temporal.ChronoUnit.MONTHS.between(
+                a.getDataAquisicao().withDayOfMonth(1),
+                java.time.LocalDate.now().withDayOfMonth(1));
+        long mesesDep = Math.max(0, Math.min(a.getVidaUtilMeses(), meses + 1));
+        java.math.BigDecimal acumulada = mensal.multiply(java.math.BigDecimal.valueOf(mesesDep)).min(base);
+        java.math.BigDecimal valorContabil = a.getValorAquisicao().subtract(acumulada).max(a.getValorResidual());
+        return ResponseEntity.ok(java.util.Map.of(
+                "ativoId", a.getId(), "codigo", a.getCodigo(), "mesesDepreciaveis", a.getVidaUtilMeses(),
+                "mesesDecorridos", mesesDep, "depreciacaoMensal", mensal,
+                "depreciacaoAcumuladaCalculada", acumulada, "valorContabilCalculado", valorContabil));
+    }
+
+    @PostMapping("/{id}/depreciar")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> depreciar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        AtivoImobilizado a = ativos.findById(id)
+                .filter(x -> u.getEmpresaId().equals(x.getEmpresaId()) && x.getDeletedAt() == null)
+                .orElseThrow(() -> new BusinessException("Ativo não encontrado"));
+        if (!"ATIVO".equals(a.getStatus())) throw new BusinessException("Somente ativos em situação ATIVO podem ser depreciados");
+        if (a.getDataAquisicao() == null || a.getVidaUtilMeses() == null || a.getVidaUtilMeses() <= 0) throw new BusinessException("Dados de depreciação incompletos");
+        java.math.BigDecimal base = a.getValorAquisicao().subtract(a.getValorResidual()).max(java.math.BigDecimal.ZERO);
+        long meses = Math.max(0, Math.min(a.getVidaUtilMeses(), java.time.temporal.ChronoUnit.MONTHS.between(
+                a.getDataAquisicao().withDayOfMonth(1), java.time.LocalDate.now().withDayOfMonth(1)) + 1));
+        java.math.BigDecimal acumulada = base.divide(java.math.BigDecimal.valueOf(a.getVidaUtilMeses()), 2, java.math.RoundingMode.HALF_UP)
+                .multiply(java.math.BigDecimal.valueOf(meses)).min(base);
+        a.setValorDepreciado(acumulada);
+        return ResponseEntity.ok(ativos.save(a));
+    }
+
     @GetMapping("/manutencoes")
     @PreAuthorize("isAuthenticated()")
     public List<Manutencao> manutencoes(@AuthenticationPrincipal AuthenticatedUser u){
