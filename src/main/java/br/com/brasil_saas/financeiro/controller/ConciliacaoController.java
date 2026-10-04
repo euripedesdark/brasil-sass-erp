@@ -114,6 +114,7 @@ public class ConciliacaoController {
             Baixa b = baixaRepository.findById(r.baixaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Baixa não encontrada"));
             if (!u.getEmpresaId().equals(b.getEmpresaId())) throw new BusinessException("Baixa não pertence à empresa");
+            if (b.getDataBaixa() == null || b.getDataBaixa().isBefore(c.getDataInicio()) || b.getDataBaixa().isAfter(c.getDataFim())) throw new BusinessException("Baixa fora do período da conciliação");
         }
 
         ConciliacaoItem item = new ConciliacaoItem();
@@ -134,6 +135,7 @@ public class ConciliacaoController {
         ConciliacaoBancaria c = conciliacaoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, u.getEmpresaId())
             .orElseThrow(() -> new ResourceNotFoundException("Conciliação não encontrada"));
         if (!"EM_ABERTO".equals(c.getStatus())) throw new BusinessException("Conciliação já fechada");
+        if (toleranciaDias < 0 || toleranciaDias > 30) throw new BusinessException("Tolerância deve estar entre 0 e 30 dias");
         List<ConciliacaoItem> existentes = itemRepository.findByConciliacaoIdAndDeletedAtIsNullOrderByIdAsc(id);
         Set<Long> baixasUsadas = new HashSet<>();
         for (ConciliacaoItem it : existentes) if (it.getBaixaId() != null) baixasUsadas.add(it.getBaixaId());
