@@ -2,6 +2,15 @@ package br.com.brasil_saas.estoque.controller;
 
 import br.com.brasil_saas.estoque.model.SaldoEstoque;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
+import br.com.brasil_saas.estoque.repository.DepositoRepository;
+import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.shared.exception.BusinessException;
+import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +23,7 @@ import br.com.brasil_saas.shared.security.AuthenticatedUser;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/estoque/saldos")
@@ -21,6 +31,9 @@ import java.util.List;
 public class SaldoEstoqueController {
 
     private final SaldoEstoqueRepository repository;
+    private final DepositoRepository depositoRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoRepository;
+    private final ProdutoRepository produtoRepository;
 
     /**
      * Com produtoId: saldo de um produto.
@@ -43,6 +56,67 @@ public class SaldoEstoqueController {
                 .toList();
         return ResponseEntity.ok(lista);
     }
+
+    /**
+     * Ajuste manual de inventario. O valor informado e um delta: positivo
+     * adiciona estoque; negativo baixa estoque. Toda alteracao gera
+     * movimentacao auditavel e respeita o tenant do token.
+     */
+    @PostMapping("/ajustes")
+    @Transactional
+    @PreAuthorize("hasAuthority('estoque:ajuste:escrita')")
+    public ResponseEntity<SaldoResponse> ajustar(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @Valid @RequestBody AjusteRequest request) {
+
+        Long empresaId = user.getEmpresaId();
+        depositoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.depositoId(), empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Deposito nao encontrado"));
+        produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.produtoId(), empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Produto nao encontrado"));
+
+        SaldoEstoque saldo = repository.findForUpdate(empresaId, request.depositoId(), request.produtoId())
+                .orElseGet(() -> {
+                    SaldoEstoque novo = new SaldoEstoque();
+                    novo.setEmpresaId(empresaId);
+                    novo.setDepositoId(request.depositoId());
+                    novo.setProdutoId(request.produtoId());
+                    novo.setQuantidade(BigDecimal.ZERO);
+                    novo.setAtualizadoEm(LocalDateTime.now());
+                    return novo;
+                });
+
+        BigDecimal anterior = saldo.getQuantidade() == null ? BigDecimal.ZERO : saldo.getQuantidade();
+        BigDecimal novo = anterior.add(request.quantidadeDelta());
+        if (novo.signum() < 0) {
+            throw new BusinessException("Ajuste deixaria o estoque negativo. Saldo atual: " + anterior);
+        }
+
+        saldo.setQuantidade(novo);
+        saldo.setAtualizadoEm(LocalDateTime.now());
+        SaldoEstoque salvo = repository.save(saldo);
+
+        MovimentacaoEstoque mov = new MovimentacaoEstoque();
+        mov.setEmpresaId(empresaId);
+        mov.setProdutoId(request.produtoId());
+        mov.setDepositoId(request.depositoId());
+        mov.setTipo(request.quantidadeDelta().signum() >= 0 ? "AJUSTE_ENTRADA" : "AJUSTE_SAIDA");
+        mov.setOrigem("INVENTARIO_MANUAL");
+        mov.setOrigemId(null);
+        mov.setQuantidade(request.quantidadeDelta());
+        mov.setSaldoApos(novo);
+        mov.setDataMovimento(LocalDateTime.now());
+        mov.setObservacao(request.motivo());
+        movimentacaoRepository.save(mov);
+
+        return ResponseEntity.ok(SaldoResponse.from(salvo));
+    }
+
+    public record AjusteRequest(
+            @NotNull Long depositoId,
+            @NotNull Long produtoId,
+            @NotNull @DecimalMin(value = "0.001", inclusive = false) BigDecimal quantidadeDelta,
+            @NotNull String motivo) {}
 
     public record SaldoResponse(Long empresaId, Long produtoId, BigDecimal quantidade) {
         static SaldoResponse from(SaldoEstoque saldo) {
