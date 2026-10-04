@@ -6,6 +6,8 @@ import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
+import { InputNumber } from 'primereact/inputnumber';
+import { Checkbox } from 'primereact/checkbox';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
@@ -25,6 +27,14 @@ export const Workflow = () => {
     const [dlgAbrir, setDlgAbrir] = useState(false);
     const [fDef, setFDef] = useState({ codigo: '', nome: '', entidadeAlvo: '', descricao: '' });
     const [fAbrir, setFAbrir] = useState({ definitionId: null, entidadeTipo: '', entidadeId: '', observacao: '' });
+    const STAGE_VAZIA = { nome: '', tipo: 'APROVACAO', slaHoras: 48, aprovadores: '', exigeTodos: false };
+    const [dlgStages, setDlgStages] = useState(false);
+    const [defSel, setDefSel] = useState(null);
+    const [stages, setStages] = useState([]);
+    const [fStage, setFStage] = useState(STAGE_VAZIA);
+    const [dlgTasks, setDlgTasks] = useState(false);
+    const [instSel, setInstSel] = useState(null);
+    const [tasks, setTasks] = useState([]);
 
     const carregar = useCallback(async () => {
         setLoading(true);
@@ -65,6 +75,50 @@ export const Workflow = () => {
         await apiFetch(BASE + '/instances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fAbrir, entidadeId: Number(fAbrir.entidadeId) }) });
         setDlgAbrir(false);
         carregar();
+    };
+
+    const lista = (j) => (Array.isArray(j) ? j : (j?.data ?? []));
+    const msgErro = async (r, padrao) => { const j = await r.json().catch(() => null); return j?.message || j?.errors?.[0]?.message || padrao; };
+
+    const carregarStages = async (id) => {
+        const r = await apiFetch(BASE + '/definitions/' + id + '/stages');
+        if (r.ok) setStages(lista(await r.json().catch(() => [])));
+    };
+    const abrirStages = async (d) => {
+        setDefSel(d);
+        setStages([]);
+        setFStage(STAGE_VAZIA);
+        setDlgStages(true);
+        await carregarStages(d.id);
+    };
+    const salvarStage = async () => {
+        if (!fStage.nome?.trim() || !fStage.aprovadores?.trim()) {
+            toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Nome e aprovadores são obrigatórios', life: 3000 });
+            return;
+        }
+        const ordem = stages.length ? Math.max(...stages.map((s) => Number(s.ordem || 0))) + 1 : 1;
+        const r = await apiFetch(BASE + '/definitions/' + defSel.id + '/stages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...fStage, ordem, definitionId: defSel.id, slaHoras: Number(fStage.slaHoras || 48) })
+        });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Não foi possível adicionar a etapa'), life: 4000 }); return; }
+        setFStage(STAGE_VAZIA);
+        carregarStages(defSel.id);
+    };
+    const inativar = async (d) => {
+        if (!window.confirm('Inativar a definição ' + d.codigo + '? Novas instâncias não poderão usá-la.')) return;
+        const r = await apiFetch(BASE + '/definitions/' + d.id + '/inativar', { method: 'POST' });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Não foi possível inativar'), life: 4000 }); return; }
+        toast.current?.show({ severity: 'success', summary: 'Definição inativada', life: 2500 });
+        carregar();
+    };
+    const verTarefas = async (i) => {
+        setInstSel(i);
+        setTasks([]);
+        setDlgTasks(true);
+        const r = await apiFetch(BASE + '/instances/' + i.id + '/tasks');
+        if (r.ok) setTasks(lista(await r.json().catch(() => [])));
     };
 
     const decidir = async (id, aprovar) => {
@@ -109,6 +163,7 @@ export const Workflow = () => {
                         <Column field='entidadeId' header='ID' style={{ width: '6rem' }} />
                         <Column field='etapaAtual' header='Etapa' style={{ width: '6rem' }} />
                         <Column header='Status' body={(r) => <Tag value={r.status} severity={sev(r.status)} />} style={{ width: '10rem' }} />
+                        <Column header='' body={(r) => (<Button label='Tarefas' icon='pi pi-list' size='small' text onClick={() => verTarefas(r)} />)} style={{ width: '8rem' }} />
                     </DataTable>
                 </TabPanel>
                 <TabPanel header='Definições'>
@@ -117,6 +172,10 @@ export const Workflow = () => {
                         <Column field='nome' header='Nome' />
                         <Column field='entidadeAlvo' header='Entidade alvo' />
                         <Column header='Ativa' body={(r) => <Tag value={r.ativo ? 'Sim' : 'Não'} severity={r.ativo ? 'success' : 'secondary'} />} style={{ width: '7rem' }} />
+                        <Column header='' body={(r) => (<div className='flex gap-1'>
+                            <Button label='Etapas' icon='pi pi-sitemap' size='small' outlined onClick={() => abrirStages(r)} />
+                            {r.ativo && <Button label='Inativar' icon='pi pi-ban' size='small' severity='danger' text onClick={() => inativar(r)} />}
+                        </div>)} style={{ width: '15rem' }} />
                     </DataTable>
                 </TabPanel>
             </TabView>
@@ -147,6 +206,39 @@ export const Workflow = () => {
                     <Button label='Cancelar' text severity='secondary' onClick={() => setDlgAbrir(false)} />
                     <Button label='Abrir' icon='pi pi-play' onClick={abrirInst} />
                 </div>
+            </Dialog>
+
+            <Dialog visible={dlgStages} onHide={() => setDlgStages(false)} header={'Etapas — ' + (defSel ? defSel.codigo : '')} modal style={{ width: 'min(96vw, 760px)' }}>
+                <DataTable value={stages} size='small' emptyMessage='Nenhuma etapa. Sem etapas a definição não gera tarefas de aprovação.' responsiveLayout='scroll' dataKey='id'>
+                    <Column field='ordem' header='#' style={{ width: '3rem' }} />
+                    <Column field='nome' header='Etapa' />
+                    <Column field='tipo' header='Tipo' style={{ width: '8rem' }} />
+                    <Column field='aprovadores' header='Aprovadores' />
+                    <Column field='slaHoras' header='SLA (h)' style={{ width: '5rem' }} />
+                    <Column header='Todos' body={(r) => (r.exigeTodos ? 'Sim' : 'Não')} style={{ width: '5rem' }} />
+                </DataTable>
+                <h4 className='mt-3 mb-2'>Nova etapa</h4>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-8'><label className='bc-label'>Nome *</label><InputText value={fStage.nome} onChange={(e) => setFStage({ ...fStage, nome: e.target.value })} /></div>
+                    <div className='bc-form-col-4'><label className='bc-label'>SLA (horas)</label><InputNumber value={fStage.slaHoras} onValueChange={(e) => setFStage({ ...fStage, slaHoras: e.value })} min={1} useGrouping={false} /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Aprovadores * (usuário ou perfil)</label><InputText value={fStage.aprovadores} onChange={(e) => setFStage({ ...fStage, aprovadores: e.target.value })} /></div>
+                    <div className='bc-form-col-12 flex align-items-center gap-2'><Checkbox inputId='wkfExigeTodos' checked={!!fStage.exigeTodos} onChange={(e) => setFStage({ ...fStage, exigeTodos: e.checked })} /><label htmlFor='wkfExigeTodos'>Exige a aprovação de todos</label></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'>
+                    <Button label='Fechar' text severity='secondary' onClick={() => setDlgStages(false)} />
+                    <Button label='Adicionar etapa' icon='pi pi-plus' onClick={salvarStage} />
+                </div>
+            </Dialog>
+
+            <Dialog visible={dlgTasks} onHide={() => setDlgTasks(false)} header={'Tarefas — instância ' + (instSel ? instSel.id : '')} modal style={{ width: 'min(96vw, 760px)' }}>
+                <DataTable value={tasks} size='small' emptyMessage='Nenhuma tarefa nesta instância.' responsiveLayout='scroll' dataKey='id'>
+                    <Column field='stageId' header='Etapa' style={{ width: '5rem' }} />
+                    <Column field='responsavel' header='Responsável' />
+                    <Column header='Status' body={(r) => <Tag value={r.status} severity={sev(r.status)} />} style={{ width: '9rem' }} />
+                    <Column field='slaLimite' header='SLA até' />
+                    <Column field='decidedAt' header='Decidido em' />
+                    <Column field='comentario' header='Comentário' />
+                </DataTable>
             </Dialog>
         </div>
     );
