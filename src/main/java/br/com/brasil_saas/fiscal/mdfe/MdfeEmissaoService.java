@@ -138,8 +138,16 @@ public class MdfeEmissaoService {
             dados.put("recibo", numeroRecibo);
             dados.put("retorno", String.valueOf(ret));
 
+            // O retorno da lib nao e interpretado aqui: cStat e protocolo
+            // ainda nao sao extraidos. Por isso sucesso fica null ("nao deu
+            // para saber") e nao true -- afirmar sucesso sem ler a resposta
+            // faria o chamador tratar como autorizado um MDF-e que a SVRS
+            // pode ter rejeitado ou ainda estar processando.
             return RespostaMdfePadrao.resposta(
-                    true, 100, "Recibo consultado", "recibo", ms, dados);
+                    null, 0,
+                    "Retorno bruto da SVRS. Confira cStat e protocolo em 'dados.retorno' "
+                            + "antes de considerar o MDF-e autorizado.",
+                    "recibo", ms, dados);
         } catch (Exception e) {
             long ms = Duration.between(inicio, Instant.now()).toMillis();
             log.warn("consulta de recibo falhou: {}", e.getMessage());
