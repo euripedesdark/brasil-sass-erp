@@ -4,9 +4,6 @@ import br.com.brasil_saas.cadastro.model.Produto;
 import br.com.brasil_saas.fiscal.model.RegraTributaria;
 import br.com.brasil_saas.fiscal.repository.RegraTributariaRepository;
 import br.com.brasil_saas.core.model.Empresa;
-import br.com.brasil_saas.cadastro.model.Cliente;
-import br.com.brasil_saas.cadastro.model.Pessoa;
-import br.com.brasil_saas.cadastro.model.Endereco;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
