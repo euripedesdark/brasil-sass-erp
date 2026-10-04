@@ -145,6 +145,13 @@ public class NfseEmissaoService {
                 .orElseThrow(() -> new BusinessException(
                         "Servico " + req.getServicoId() + " nao encontrado no cadastro."));
         NfseEmissaoDtos.exigirCodigoMunicipal(servico);
+        boolean nacional = !IBGE_RONDONOPOLIS.equals(empresa.getCodigoIbge())
+                && !IBGE_SAO_PAULO.equals(empresa.getCodigoIbge());
+        if (nacional && (servico.getCodigoTributacaoNacional() == null
+                || servico.getCodigoTributacaoNacional().length() != 6)) {
+            throw new BusinessException("O servico '" + servico.getNome()
+                    + "' precisa de codigo de tributacao nacional com 6 digitos para emissao pela SEFIN Nacional.");
+        }
 
         String inscricaoMunicipal = empresa.getInscricaoMunicipal() != null
                 && !empresa.getInscricaoMunicipal().isBlank()
