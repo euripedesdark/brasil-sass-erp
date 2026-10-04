@@ -54,6 +54,9 @@ public class ConferenciaFaturaCompraController {
 
         BigDecimal valorPedido = pedido.getValorTotal() == null ? BigDecimal.ZERO : pedido.getValorTotal();
 
+        if (request.recebimentoId() == null) throw new BusinessException("O 3-way match exige um recebimento");
+        if (request.nfeId() == null) throw new BusinessException("O 3-way match exige o documento fiscal de entrada");
+
         RecebimentoCompra recebimento = null;
         if (request.recebimentoId() != null) {
             recebimento = recebimentoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(
@@ -83,6 +86,7 @@ public class ConferenciaFaturaCompraController {
                     .orElseThrow(() -> new ResourceNotFoundException("Documento fiscal nao encontrado"));
             if (!"E".equalsIgnoreCase(nfe.getTipoOperacao())) throw new BusinessException("Documento fiscal deve ser de entrada");
             if (nfe.getPedidoCompraId() != null && !pedido.getId().equals(nfe.getPedidoCompraId())) throw new BusinessException("Documento fiscal vinculado a outro pedido");
+            if (nfe.getStatus() != null && !("AUTORIZADA".equalsIgnoreCase(nfe.getStatus()) || "AUTORIZADO".equalsIgnoreCase(nfe.getStatus()))) throw new BusinessException("Documento fiscal ainda nao esta autorizado");
         }
 
         if (request.tituloId() != null) {
