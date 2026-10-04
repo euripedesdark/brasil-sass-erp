@@ -57,6 +57,40 @@ export const WMS = () => {
     const concluir = async (id) => { const r = await apiFetch(BASE + '/ondas/' + id + '/concluir', { method: 'POST' }); if (!r.ok) toast.current?.show({ severity: 'warn', summary: 'Pendente', detail: 'Há itens não separados', life: 3500 }); carregar(); };
     const sugerir = async () => { const r = await apiFetch(BASE + '/putaway?depositoId=' + depId + '&produtoId=' + prodId); setSug(await r.json().catch(() => null)); };
     const carregarVols = async () => { if (!expId) return; setVols(await apiFetch(BASE + '/volumes?expedicaoId=' + expId).then(js)); };
+    const [dlgEmb, setDlgEmb] = useState(false);
+    const [volEmb, setVolEmb] = useState(null);
+    const [fEmb, setFEmb] = useState({ produtoId: '', quantidade: null });
+    const abrirEmbalar = (v) => { setVolEmb(v); setFEmb({ produtoId: '', quantidade: null }); setDlgEmb(true); };
+    const embalar = async () => {
+        if (!fEmb.produtoId || !fEmb.quantidade || fEmb.quantidade <= 0) {
+            toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Informe o produto e uma quantidade maior que zero', life: 3500 });
+            return;
+        }
+        const r = await apiFetch(BASE + '/volumes/' + volEmb.id + '/itens', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ produtoId: Number(fEmb.produtoId), quantidade: fEmb.quantidade })
+        });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: j?.message || j?.errors?.[0]?.message || 'Item recusado (volume fechado ou fora da expedição)', life: 4500 });
+            return;
+        }
+        toast.current?.show({ severity: 'success', summary: 'Item embalado', life: 2500 });
+        setDlgEmb(false);
+        carregarVols();
+    };
+    const fecharVolume = async (v) => {
+        if (!window.confirm('Fechar o volume ' + (v.codigo || v.id) + '? Depois de fechado não recebe mais itens.')) return;
+        const r = await apiFetch(BASE + '/volumes/' + v.id + '/fechar', { method: 'POST' });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: j?.message || j?.errors?.[0]?.message || 'Não foi possível fechar o volume', life: 4000 });
+            return;
+        }
+        toast.current?.show({ severity: 'success', summary: 'Volume fechado', life: 2500 });
+        carregarVols();
+    };
     const conferir = async () => { if (!expId) return; const r = await apiFetch(BASE + '/expedicoes/' + expId + '/conferencia'); setConf(await r.json().catch(() => null)); };
     const finalizar = async () => { const r = await apiFetch(BASE + '/expedicoes/' + expId + '/finalizar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); if (!r.ok) toast.current?.show({ severity: 'error', summary: 'Divergência', detail: 'Conferência com diferença', life: 4000 }); };
 
@@ -103,6 +137,10 @@ export const WMS = () => {
                     <DataTable value={vols} paginator rows={8} emptyMessage='Informe a expedição.' responsiveLayout='scroll' dataKey='id'>
                         <Column field='codigo' header='Volume' />
                         <Column field='status' header='Status' />
+                        <Column header='' body={(v) => (v.status === 'ABERTO' ? (<div className='flex gap-1'>
+                            <Button label='Embalar' icon='pi pi-plus' size='small' outlined onClick={() => abrirEmbalar(v)} />
+                            <Button label='Fechar' icon='pi pi-lock' size='small' severity='warning' outlined onClick={() => fecharVolume(v)} />
+                        </div>) : null)} style={{ width: '13rem' }} />
                     </DataTable>
                 </TabPanel>
             </TabView>
@@ -120,6 +158,16 @@ export const WMS = () => {
                     <div className='bc-form-col-6'><label className='bc-label'>Qtd *</label><InputNumber value={fItem.qtd} onValueChange={(e) => setFItem({ ...fItem, qtd: e.value })} minFractionDigits={3} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgItem(false)} /><Button label='Adicionar' icon='pi pi-check' onClick={salvarItem} /></div>
+            </Dialog>
+            <Dialog visible={dlgEmb} onHide={() => setDlgEmb(false)} header={'Embalar no volume ' + (volEmb ? (volEmb.codigo || volEmb.id) : '')} modal style={{ width: 'min(96vw, 420px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-6'><label className='bc-label'>Produto ID *</label><InputText keyfilter='int' value={fEmb.produtoId} onChange={(e) => setFEmb({ ...fEmb, produtoId: e.target.value })} /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Quantidade *</label><InputNumber value={fEmb.quantidade} onValueChange={(e) => setFEmb({ ...fEmb, quantidade: e.value })} minFractionDigits={0} maxFractionDigits={3} min={0} /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'>
+                    <Button label='Cancelar' text severity='secondary' onClick={() => setDlgEmb(false)} />
+                    <Button label='Embalar' icon='pi pi-check' onClick={embalar} />
+                </div>
             </Dialog>
         </div>
     );

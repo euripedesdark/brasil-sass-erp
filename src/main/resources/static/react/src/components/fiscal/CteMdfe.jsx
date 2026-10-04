@@ -7,6 +7,7 @@ import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Dialog } from 'primereact/dialog';
 
 export const CteMdfe = () => {
     const toast = useRef(null);
@@ -18,6 +19,8 @@ export const CteMdfe = () => {
     const [ctes, setCtes] = useState([]);
     const [mdfes, setMdfes] = useState([]);
     const [carregandoDocs, setCarregandoDocs] = useState(false);
+    const [detalhe, setDetalhe] = useState(null);
+    const [tipoDetalhe, setTipoDetalhe] = useState('');
     const js = async (r) => r.json().catch(() => ({}));
     const carregar = async () => {
         setErro('');
@@ -36,6 +39,21 @@ export const CteMdfe = () => {
         finally { setCarregandoDocs(false); }
     };
     useEffect(() => { carregarDocumentos(); }, []);
+    const abrirDetalhe = async (tipo, id) => {
+        const r = await apiFetch('/api/fiscal/' + tipo + '/' + id);
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Documento não encontrado', life: 3500 }); return; }
+        setTipoDetalhe(tipo === 'cte' ? 'CT-e' : 'MDF-e');
+        setDetalhe(await r.json().catch(() => null));
+    };
+    const baixarXml = () => {
+        if (!detalhe?.xml) return;
+        const blob = new Blob([detalhe.xml], { type: 'application/xml' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (detalhe.chaveAcesso || (tipoDetalhe + '-' + detalhe.id)) + '.xml';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    };
     const fmtData = (v) => v ? new Date(v).toLocaleString('pt-BR') : '-';
     const fmtMoeda = (v) => v == null ? '-' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const consultar = async () => {
@@ -70,6 +88,7 @@ export const CteMdfe = () => {
                     <Column field='dataEmissao' header='Emissão' body={(r) => fmtData(r.dataEmissao)} />
                     <Column field='valorFrete' header='Frete' body={(r) => fmtMoeda(r.valorFrete)} />
                     <Column field='chaveAcesso' header='Chave de acesso' />
+                    <Column header='' body={(r) => (<Button icon='pi pi-eye' rounded text tooltip='Detalhes e XML' onClick={() => abrirDetalhe('cte', r.id)} />)} style={{ width: '4rem' }} />
                 </DataTable>
             </Card>
             <Card title='MDF-e emitidos' className='mt-3'>
@@ -81,8 +100,22 @@ export const CteMdfe = () => {
                     <Column field='ufInicio' header='UF início' />
                     <Column field='ufFim' header='UF fim' />
                     <Column field='chaveAcesso' header='Chave de acesso' />
+                    <Column header='' body={(r) => (<Button icon='pi pi-eye' rounded text tooltip='Detalhes e XML' onClick={() => abrirDetalhe('mdfe', r.id)} />)} style={{ width: '4rem' }} />
                 </DataTable>
             </Card>
+            <Dialog visible={!!detalhe} onHide={() => setDetalhe(null)} header={tipoDetalhe + (detalhe ? ' nº ' + (detalhe.numero ?? detalhe.id) : '')} modal style={{ width: 'min(96vw, 760px)' }}>
+                {detalhe && (<div>
+                    {kv({ serie: detalhe.serie, status: detalhe.status, emissao: fmtData(detalhe.dataEmissao), chaveAcesso: detalhe.chaveAcesso })}
+                    <h4 className='mt-3 mb-2'>XML</h4>
+                    {detalhe.xml
+                        ? (<pre style={{ maxHeight: '45vh', overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{detalhe.xml}</pre>)
+                        : (<span className='bc-muted'>Sem XML gravado para este documento.</span>)}
+                </div>)}
+                <div className='flex justify-end gap-2 mt-3'>
+                    <Button label='Baixar XML' icon='pi pi-download' outlined disabled={!detalhe?.xml} onClick={baixarXml} />
+                    <Button label='Fechar' text severity='secondary' onClick={() => setDetalhe(null)} />
+                </div>
+            </Dialog>
         </div>
     );
 };

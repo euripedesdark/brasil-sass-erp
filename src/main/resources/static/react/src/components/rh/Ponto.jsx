@@ -7,6 +7,7 @@ import { DataTable } from 'primereact/datatable';
 import { Dropdown } from 'primereact/dropdown';
 import { Dialog } from 'primereact/dialog';
 import { InputNumber } from 'primereact/inputnumber';
+import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 
@@ -20,6 +21,8 @@ export const Ponto = () => {
     const [loading, setLoading] = useState(false);
     const [ano, setAno] = useState(new Date().getFullYear());
     const [mes, setMes] = useState(new Date().getMonth() + 1);
+    const [dlgAj, setDlgAj] = useState(false);
+    const [aj, setAj] = useState({ id: null, data: '', e1: '', s1: '', e2: '', s2: '', observacao: '' });
     const js = async (r) => { const j = await r.json().catch(() => null); return Array.isArray(j) ? j : (j?.data ?? j ?? []); };
     useEffect(() => { apiFetch('/api/rh/funcionarios').then(js).then((l) => setFuncs(l)).catch(() => {}); }, []);
     const ver = async (id) => {
@@ -58,6 +61,36 @@ export const Ponto = () => {
         await apiFetch(BASE + '/falta?funcionarioId=' + funcId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
         ver(funcId);
     };
+    const hhmm = (v) => (v ? String(v).slice(0, 5) : '');
+    const abrirAjuste = (r) => {
+        setAj({ id: r.id, data: r.data, e1: hhmm(r.e1), s1: hhmm(r.s1), e2: hhmm(r.e2), s2: hhmm(r.s2), observacao: '' });
+        setDlgAj(true);
+    };
+    const salvarAjuste = async () => {
+        const ok = (v) => v === '' || /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+        if (![aj.e1, aj.s1, aj.e2, aj.s2].every(ok)) {
+            toast.current?.show({ severity: 'warn', summary: 'Horário inválido', detail: 'Use o formato HH:mm (ex.: 08:00)', life: 3500 });
+            return;
+        }
+        if (!aj.observacao.trim()) {
+            toast.current?.show({ severity: 'warn', summary: 'Justificativa', detail: 'Informe o motivo do ajuste', life: 3500 });
+            return;
+        }
+        const nulo = (v) => (v === '' ? null : v);
+        const r = await apiFetch(BASE + '/' + aj.id + '/ajustar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ e1: nulo(aj.e1), s1: nulo(aj.s1), e2: nulo(aj.e2), s2: nulo(aj.s2), observacao: aj.observacao.trim() })
+        });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: j?.message || j?.errors?.[0]?.message || 'Ajuste recusado (dia fechado na folha?)', life: 4500 });
+            return;
+        }
+        toast.current?.show({ severity: 'success', summary: 'Ponto ajustado', life: 2500 });
+        setDlgAj(false);
+        ver(funcId);
+    };
     const totHoras = rows.filter((r) => !r.falta).reduce((s, r) => s + Number(r.horasTrabalhadas || 0), 0);
     const faltas = rows.filter((r) => r.falta).length;
     return (
@@ -83,11 +116,25 @@ export const Ponto = () => {
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgFolha(false)} /><Button label='Enviar' icon='pi pi-check' onClick={enviarFolha} /></div>
             </Dialog>
+            <Dialog visible={dlgAj} onHide={() => setDlgAj(false)} header={'Ajustar ponto — ' + (aj.data || '')} modal style={{ width: 'min(96vw, 460px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-6'><label className='bc-label'>Entrada 1</label><InputText placeholder='HH:mm' maxLength={5} value={aj.e1} onChange={(e) => setAj({ ...aj, e1: e.target.value })} /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Saída 1</label><InputText placeholder='HH:mm' maxLength={5} value={aj.s1} onChange={(e) => setAj({ ...aj, s1: e.target.value })} /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Entrada 2</label><InputText placeholder='HH:mm' maxLength={5} value={aj.e2} onChange={(e) => setAj({ ...aj, e2: e.target.value })} /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Saída 2</label><InputText placeholder='HH:mm' maxLength={5} value={aj.s2} onChange={(e) => setAj({ ...aj, s2: e.target.value })} /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Justificativa *</label><InputText value={aj.observacao} onChange={(e) => setAj({ ...aj, observacao: e.target.value })} /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'>
+                    <Button label='Cancelar' text severity='secondary' onClick={() => setDlgAj(false)} />
+                    <Button label='Salvar ajuste' icon='pi pi-check' onClick={salvarAjuste} />
+                </div>
+            </Dialog>
             <DataTable value={rows} loading={loading} paginator rows={15} emptyMessage='Sem registros.' responsiveLayout='scroll' dataKey='id'>
                 <Column field='data' header='Data' style={{ width: '8rem' }} />
                 <Column field='e1' header='E1' /><Column field='s1' header='S1' /><Column field='e2' header='E2' /><Column field='s2' header='S2' />
                 <Column field='horasTrabalhadas' header='Horas' style={{ width: '6rem' }} />
                 <Column header='Falta' body={(r) => (r.falta ? <Tag value='Falta' severity='danger' /> : null)} style={{ width: '6rem' }} />
+                <Column header='' body={(r) => (<Button icon='pi pi-pencil' rounded text tooltip='Ajustar batidas' onClick={() => abrirAjuste(r)} />)} style={{ width: '4rem' }} />
             </DataTable>
         </div>
     );

@@ -75,6 +75,11 @@ for base, _, arqs in os.walk(REACT):
         # URL como `${ApiConfig.BASE_URL || ''}/api/...`; sem neutralizar isso
         # aqui, a constante nao vira literal e o endpoint inteiro aparecia como
         # "sem tela" — foi o caso do TituloService, que tem tela e service.
+        # Services com `const BASE_URL = ApiConfig.API_BASE_URL` (Folha, EntradaNota...):
+        # ai BASE_URL vale '/api', e apagar o prefixo escondia todas as chamadas.
+        if re.search(r"(?:const|let|var)\s+(?:BASE_URL|API_BASE_URL)\s*=\s*(?:ApiConfig\.)?API_BASE_URL", src):
+            src = re.sub(r"\$\{\s*(?:ApiConfig\.)?(?:API_BASE_URL|BASE_URL)\s*\}", "/api", src)
+            src = re.sub(r"\b(?:ApiConfig\.)?(?:API_BASE_URL|BASE_URL)\s*\+\s*(?=['\"`])", "'/api' + ", src)
         src = re.sub(r"\$\{\s*ApiConfig\.BASE_URL\s*(\|\|(\s*'[^']*'\s*)?)*\}", "", src)
         src = re.sub(r"\$\{\s*(?:ApiConfig\.)?(?:API_BASE_URL|BASE_URL)\s*(\|\|(\s*'[^']*'\s*)?)*\}", "", src)
 

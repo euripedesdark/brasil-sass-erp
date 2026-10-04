@@ -33,6 +33,18 @@ export const DMS = () => {
         finally { setLoading(false); }
     }, []);
     useEffect(() => { carregar(); }, [carregar]);
+    const excluir = async (d) => {
+        if (!window.confirm('Excluir o documento ' + (d.codigo || d.id) + '? Esta ação remove também o acesso às versões.')) return;
+        const r = await apiFetch(BASE + '/documentos/' + d.id, { method: 'DELETE' });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: j?.message || j?.errors?.[0]?.message || 'Não foi possível excluir o documento', life: 4000 });
+            return;
+        }
+        if (sel && sel.id === d.id) { setSel(null); setVers([]); setAprovs([]); }
+        toast.current?.show({ severity: 'success', summary: 'Documento excluído', life: 2500 });
+        carregar();
+    };
     const ver = async (d) => { setSel(d); setVers(await apiFetch(BASE + '/documentos/' + d.id + '/versoes').then(js)); setAprovs(await apiFetch(BASE + '/documentos/' + d.id + '/aprovacoes').then(js)); };
     const salvar = async () => {
         if (!f.codigo?.trim() || !f.titulo?.trim()) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Código e título obrigatórios', life: 3000 }); return; }
@@ -78,6 +90,7 @@ export const DMS = () => {
                         <Column field='codigo' header='Código' style={{ width: '7rem' }} />
                         <Column field='titulo' header='Título' />
                         <Column field='status' header='Status' body={(r) => <Tag value={r.status} severity={r.status === 'APROVADO' ? 'success' : 'info'} />} style={{ width: '8rem' }} />
+                        <Column header='' body={(r) => (<Button icon='pi pi-trash' rounded text severity='danger' tooltip='Excluir' onClick={(e) => { e.stopPropagation(); excluir(r); }} />)} style={{ width: '4rem' }} />
                     </DataTable>
                 </div>
                 <div className='bc-form-col-6 col-12 md:col-6'>

@@ -21,6 +21,9 @@ export const Projetos = () => {
     const [projs, setProjs] = useState([]);
     const [sel, setSel] = useState(null);
     const [etapas, setEtapas] = useState([]);
+    const [dlgAv, setDlgAv] = useState(false);
+    const [avEtapa, setAvEtapa] = useState(null);
+    const [avPct, setAvPct] = useState(0);
     const [movs, setMovs] = useState([]);
     const [riscos, setRiscos] = useState([]);
     const [muds, setMuds] = useState([]);
@@ -62,6 +65,26 @@ export const Projetos = () => {
         setDlg(false); setF({}); carregar();
     };
     const salvarEtapa = async () => { await apiFetch(BASE + '/' + sel.id + '/etapas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fEtapa, ordem: Number(fEtapa.ordem || 1) }) }); setDlgEtapa(false); setFEtapa({}); ver(sel); };
+    const abrirAvanco = (e) => { setAvEtapa(e); setAvPct(Number(e.pctConcluido || 0)); setDlgAv(true); };
+    const avancarEtapa = async () => {
+        if (avPct == null || avPct < 0 || avPct > 100) {
+            toast.current?.show({ severity: 'warn', summary: 'Percentual inválido', detail: 'Informe um valor entre 0 e 100', life: 3500 });
+            return;
+        }
+        const r = await apiFetch(BASE + '/' + sel.id + '/etapas/' + avEtapa.id + '/avancar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ percentual: Number(avPct) })
+        });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: j?.message || j?.errors?.[0]?.message || 'Não foi possível atualizar a etapa', life: 4000 });
+            return;
+        }
+        toast.current?.show({ severity: 'success', summary: 'Etapa atualizada', detail: avPct + '%', life: 2500 });
+        setDlgAv(false);
+        ver(sel);
+    };
     const salvarMov = async () => { await apiFetch(BASE + '/' + sel.id + '/movimentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fMov, valor: Number(fMov.valor || 0), data: fMov.data ? fMov.data.toISOString().slice(0, 10) : null }) }); setDlgMov(false); setFMov({ tipo: 'CUSTO' }); ver(sel); };
     const decidir = async (id, aprovar) => { await apiFetch(BASE + '/' + sel.id + '/mudancas/' + id + '/decidir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aprovar }) }); ver(sel); };
     const [dlgFat, setDlgFat] = useState(false);
@@ -101,6 +124,7 @@ export const Projetos = () => {
                                 <Column field='nome' header='Etapa' />
                                 <Column field='pctConcluido' header='%' style={{ width: '4rem' }} />
                                 <Column field='status' header='Status' style={{ width: '9rem' }} />
+                                <Column header='' body={(r) => (<Button label='Avançar' icon='pi pi-forward' size='small' text disabled={Number(r.pctConcluido || 0) >= 100} onClick={() => abrirAvanco(r)} />)} style={{ width: '8rem' }} />
                             </DataTable>
                         </TabPanel>
                         <TabPanel header='Custos/Receitas'>
@@ -173,6 +197,15 @@ export const Projetos = () => {
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgFat(false)} /><Button label='Faturar' icon='pi pi-check' severity='success' onClick={confirmarFat} /></div>
             </Dialog>
+            </Dialog>
+            <Dialog visible={dlgAv} onHide={() => setDlgAv(false)} header={'Avançar etapa' + (avEtapa ? ' — ' + (avEtapa.nome || '') : '')} modal style={{ width: 'min(96vw, 400px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>Percentual concluído (%)</label><InputNumber value={avPct} onValueChange={(e) => setAvPct(e.value)} min={0} max={100} suffix='%' /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'>
+                    <Button label='Cancelar' text severity='secondary' onClick={() => setDlgAv(false)} />
+                    <Button label='Atualizar' icon='pi pi-check' onClick={avancarEtapa} />
+                </div>
             </Dialog>
         </div>
     );
