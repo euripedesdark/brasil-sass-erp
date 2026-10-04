@@ -26,6 +26,9 @@ export function NFe() {
     const [loading, setLoading] = useState(false);
     const [emitindo, setEmitindo] = useState(null);
     const [erro, setErro] = useState('');
+    const [notasPage, setNotasPage] = useState(0);
+    const [notasTotal, setNotasTotal] = useState(0);
+    const [notasLoading, setNotasLoading] = useState(false);
 
     const empresaId = user?.empresaId;
 
@@ -40,7 +43,25 @@ export function NFe() {
         }
     };
 
-    useEffect(() => { carregarPedidos(); }, [empresaId]);
+    const carregarNotas = async (page = 0) => {
+        if (!empresaId) return;
+        setNotasLoading(true);
+        try {
+            const r = await apiFetch(BASE + '?page=' + page + '&size=20');
+            const body = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(body.message || body.erro || 'Falha ao carregar NF-e.');
+            setNotas(body?.content || []);
+            setNotasTotal(body?.totalElements || 0);
+        } catch (e) {
+            setNotas([]);
+            setNotasTotal(0);
+            setErro(e.message || 'Falha ao carregar NF-e.');
+        } finally {
+            setNotasLoading(false);
+        }
+    };
+
+    useEffect(() => { carregarPedidos(); carregarNotas(0); }, [empresaId]);
 
     const emitir = async () => {
         if (!pedidoId) {
@@ -56,6 +77,7 @@ export function NFe() {
             toast.current?.show({ severity: 'success', summary: 'NF-e transmitida', detail: `Protocolo: ${body.protocolo || 'retornado pela SEFAZ'}`, life: 6000 });
             setPedidoId(null);
             carregarPedidos();
+            carregarNotas(notasPage);
         } catch (e) {
             setErro(e.message || 'Falha ao transmitir NF-e.');
         } finally {
@@ -192,6 +214,30 @@ export function NFe() {
                 <Column field="clienteId" header="Cliente" />
                 <Column field="valorTotal" header="Total" body={r => Number(r.valorTotal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
                 <Column body={r => <Button icon="pi pi-send" text tooltip="Selecionar para emissão" onClick={() => setPedidoId(r.id)} />} />
+            </DataTable>
+        </Card>
+        <Card title="NF-e emitidas nesta empresa" className="mt-3">
+            <DataTable value={notas} loading={notasLoading} lazy paginator first={notasPage * 20}
+                rows={20} totalRecords={notasTotal}
+                onPage={e => { setNotasPage(e.page); carregarNotas(e.page); }}
+                size="small" emptyMessage="Nenhuma NF-e persistida.">
+                <Column field="numero" header="Número" />
+                <Column field="serie" header="Série" />
+                <Column field="status" header="Status" />
+                <Column field="chaveAcesso" header="Chave" />
+                <Column field="valorTotal" header="Total"
+                    body={r => Number(r.valorTotal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+                <Column field="dataEmissao" header="Emissão" />
+                <Column body={r => <Button icon="pi pi-download" text tooltip="Baixar XML" disabled={!r.xml}
+                    onClick={async () => {
+                        const response = await apiFetch(BASE + '/xml/' + r.id);
+                        if (!response.ok) { setErro('XML não disponível para esta NF-e.'); return; }
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url; a.download = 'nfe-' + (r.numero || r.id) + '.xml';
+                        a.click(); URL.revokeObjectURL(url);
+                    }} />} />
             </DataTable>
         </Card>
     </div>;
