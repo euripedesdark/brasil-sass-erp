@@ -13,7 +13,7 @@ const items=[
  // NFS-e em primeiro: e o unico modulo fiscal que EMITE documento contra a
  // prefeitura, e a tela tinha o codigo pronto sem estar neste menu nem no
  // router. A rota agora existe em App.jsx.
- ['fiscal.nfe','fiscal.nfeDesc','pi pi-file-check','/fiscal/nfe'],
+ ['NF-e','Emissão, consulta e cancelamento de NF-e','pi pi-file-check','/fiscal/nfe'],
  ['fiscal.nfse','fiscal.nfseDesc','pi pi-send','/fiscal/nfse'],
  ['menu.taxEntries','fiscal.entriesDesc','pi pi-download','/fiscal/entradas'],
  ['menu.ncm','fiscal.ncmDesc','pi pi-list','/fiscal/ncm'],
