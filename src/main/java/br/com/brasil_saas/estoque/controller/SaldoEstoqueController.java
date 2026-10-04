@@ -1,6 +1,7 @@
 package br.com.brasil_saas.estoque.controller;
 
 import br.com.brasil_saas.estoque.model.SaldoEstoque;
+import br.com.brasil_saas.estoque.model.MovimentacaoEstoque;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
 import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
