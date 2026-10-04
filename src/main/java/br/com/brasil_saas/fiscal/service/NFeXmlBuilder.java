@@ -4,7 +4,7 @@ import br.com.brasil_saas.cadastro.model.Cliente;
 import br.com.brasil_saas.cadastro.model.Endereco;
 import br.com.brasil_saas.cadastro.model.Produto;
 import br.com.brasil_saas.cadastro.repository.ClienteRepository;
-import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;\nimport br.com.brasil_saas.cadastro.repository.MunicipioRepository;
 import br.com.brasil_saas.core.model.Empresa;
 import br.com.brasil_saas.fiscal.model.RegraTributaria;
 import br.com.brasil_saas.vendas.model.ItemPedidoVenda;
@@ -48,7 +48,7 @@ public class NFeXmlBuilder {
 
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
-    private final RegraTributariaService regraTributariaService;
+    private final RegraTributariaService regraTributariaService;\n    private final MunicipioRepository municipioRepository;
 
     public TEnviNFe build(ConfiguracoesNfe config, Empresa empresa, PedidoVenda pedido,
                           int serie, int numero) {
@@ -171,7 +171,7 @@ public class NFeXmlBuilder {
         e.setXCpl(empresa.getComplemento());
         e.setXBairro(required(empresa.getBairro(), "Bairro da empresa"));
         e.setCMun(required(empresa.getCodigoIbge(), "Codigo IBGE da empresa"));
-        e.setXMun("NAO INFORMADO");
+        e.setXMun(municipioRepository.findByCodigoIbge(required(empresa.getCodigoIbge(), "Codigo IBGE da empresa"))\n                .orElseThrow(() -> new IllegalStateException("Municipio do emitente nao encontrado pelo codigo IBGE"))\n                .getNome());
         e.setUF(TUfEmi.valueOf(empresa.getUf().trim().toUpperCase()));
         e.setCEP(digits(empresa.getCep()));
         e.setCPais("1058");
