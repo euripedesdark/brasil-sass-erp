@@ -35,6 +35,7 @@ public class DevolucaoService {
         if ("FATURADO".equals(p.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente pedido faturado");
         if (motivo == null || motivo.isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo obrigatorio");
         VenDevolucao d = new VenDevolucao();
+        d.setEmpresaId(empresaId);
         d.setPedidoId(pedidoId);
         d.setMotivo(motivo);
         d.setStatus("SOLICITADA");
