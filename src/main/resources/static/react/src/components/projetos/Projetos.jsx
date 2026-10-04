@@ -62,8 +62,15 @@ export const Projetos = () => {
     const salvarEtapa = async () => { await apiFetch(BASE + '/' + sel.id + '/etapas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fEtapa, ordem: Number(fEtapa.ordem || 1) }) }); setDlgEtapa(false); setFEtapa({}); ver(sel); };
     const salvarMov = async () => { await apiFetch(BASE + '/' + sel.id + '/movimentos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...fMov, valor: Number(fMov.valor || 0), data: fMov.data ? fMov.data.toISOString().slice(0, 10) : null }) }); setDlgMov(false); setFMov({ tipo: 'CUSTO' }); ver(sel); };
     const decidir = async (id, aprovar) => { await apiFetch(BASE + '/' + sel.id + '/mudancas/' + id + '/decidir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aprovar }) }); ver(sel); };
-    const faturar = async (id) => { await apiFetch(BASE + '/' + sel.id + '/faturamentos/' + id + '/faturar', { method: 'POST' }); ver(sel); };
-
+    const [dlgFat, setDlgFat] = useState(false);
+    const [fatId, setFatId] = useState(null);
+    const [fServ, setFServ] = useState([]);
+    const [selServ, setSelServ] = useState(null);
+    const [selCli, setSelCli] = useState('');
+    const abrirFat = async (id) => { setFatId(id); setSelServ(null); setSelCli(''); try { const r = await apiFetch('/api/cadastro/servicos'); const j = await r.json().catch(() => []); setFServ(Array.isArray(j) ? j : (j?.data ?? j?.content ?? [])); } catch (e) {} setDlgFat(true); };
+    const confirmarFat = async () => {
+        const r = await apiFetch(BASE + '/' + sel.id + '/faturamentos/' + fatId + '/faturar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ servicoId: selServ, clienteId: selCli ? Number(selCli) : null }) });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha ao faturar (verifique serviço/cliente)', life: 4500 }); return; } toast.current?.show({ severity: 'success', summary: 'Faturado', detail: 'Título gerado', life: 3000 }); setDlgFat(false); ver(sel); };
     return (
         <div className='p-4'>
             <Toast ref={toast} />
@@ -122,7 +129,7 @@ export const Projetos = () => {
                                 <Column header='Valor' body={(r) => fmt(r.valor)} style={{ width: '9rem' }} />
                                 <Column field='status' header='Status' style={{ width: '8rem' }} />
                                 <Column field='tituloId' header='Título' style={{ width: '6rem' }} />
-                                <Column header='' body={(r) => (r.status === 'PREVISTO' ? (<Button label='Faturar' size='small' onClick={() => faturar(r.id)} />) : null)} style={{ width: '7rem' }} />
+                                <Column header='' body={(r) => (r.status === 'PREVISTO' ? (<Button label='Faturar' size='small' onClick={() => abrirFat(r.id)} />) : null)} style={{ width: '7rem' }} />
                             </DataTable>
                         </TabPanel>
                     </TabView>)}
@@ -154,6 +161,14 @@ export const Projetos = () => {
                     <div className='bc-form-col-12'><label className='bc-label'>Descrição *</label><InputText value={fMov.descricao || ''} onChange={(e) => setFMov({ ...fMov, descricao: e.target.value })} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgMov(false)} /><Button label='Lançar' icon='pi pi-check' onClick={salvarMov} /></div>
+            <Dialog visible={dlgFat} onHide={() => setDlgFat(false)} header='Faturar marco' modal style={{ width: 'min(96vw, 480px)' }}>
+                <p className='bc-muted'>Gera título a receber. Com serviço + cliente, emite NFS-e de verdade na prefeitura.</p>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>Serviço (p/ NFS-e, opcional)</label><Dropdown value={selServ} options={fServ.map((s) => ({ label: (s.codigo || s.id) + ' - ' + (s.descricao || s.nome || ''), value: s.id }))} onChange={(e) => setSelServ(e.value)} placeholder='Somente título' showClear filter /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Cliente ID (p/ NFS-e, opcional)</label><InputText value={selCli} onChange={(e) => setSelCli(e.target.value)} keyfilter='int' /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgFat(false)} /><Button label='Faturar' icon='pi pi-check' severity='success' onClick={confirmarFat} /></div>
+            </Dialog>
             </Dialog>
         </div>
     );

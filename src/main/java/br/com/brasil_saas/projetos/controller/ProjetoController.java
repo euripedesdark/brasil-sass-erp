@@ -45,6 +45,7 @@ public class ProjetoController {
     public List<PrjFaturamento> faturamentos(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) { return svc.faturamentos(u.getEmpresaId(), id); }
     @PostMapping("/{id}/faturamentos") @PreAuthorize("hasAuthority('projetos:escrita')")
     public ResponseEntity<PrjFaturamento> salvarFat(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody PrjFaturamento f) { return ResponseEntity.status(HttpStatus.CREATED).body(svc.salvarFaturamento(u.getEmpresaId(), id, f)); }
+    public record FaturarReq(Long servicoId, Long clienteId) {}
     @PostMapping("/{pid}/faturamentos/{fid}/faturar") @PreAuthorize("hasAuthority('projetos:escrita')")
-    public PrjFaturamento faturar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long pid, @PathVariable Long fid) { return svc.faturar(u.getEmpresaId(), pid, fid); }
+    public PrjFaturamento faturar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long pid, @PathVariable Long fid, @RequestBody(required = false) FaturarReq r) { return svc.faturar(u.getEmpresaId(), pid, fid, r == null ? null : r.servicoId(), r == null ? null : r.clienteId()); }
 }

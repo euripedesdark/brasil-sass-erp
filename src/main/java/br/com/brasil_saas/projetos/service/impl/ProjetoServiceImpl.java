@@ -2,6 +2,14 @@ package br.com.brasil_saas.projetos.service.impl;
 import br.com.brasil_saas.projetos.model.*;
 import br.com.brasil_saas.projetos.repository.*;
 import br.com.brasil_saas.projetos.service.ProjetoService;
+import br.com.brasil_saas.cadastro.model.Cliente;
+import br.com.brasil_saas.cadastro.model.Pessoa;
+import br.com.brasil_saas.cadastro.repository.ClienteRepository;
+import br.com.brasil_saas.cadastro.repository.PessoaRepository;
+import br.com.brasil_saas.cadastro.repository.ServicoRepository;
+import br.com.brasil_saas.fiscal.nfse.NfseEmissaoDtos;
+import br.com.brasil_saas.fiscal.nfse.NfseEmissaoService;
+import br.com.brasil_saas.fiscal.repository.NfseRepository;
 import br.com.brasil_saas.workflow.model.WkfDefinition;
 import br.com.brasil_saas.workflow.model.WkfInstance;
 import br.com.brasil_saas.workflow.model.WkfStage;
@@ -29,6 +37,11 @@ public class ProjetoServiceImpl implements ProjetoService {
     private final PrjFaturamentoRepository faturamentos;
     private final WorkflowService workflow;
     private final TituloRepository titulos;
+    private final NfseEmissaoService nfseEmissao;
+    private final NfseRepository nfseRepo;
+    private final ServicoRepository servicos;
+    private final ClienteRepository clientes;
+    private final PessoaRepository pessoas;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -145,7 +158,13 @@ public class ProjetoServiceImpl implements ProjetoService {
         if (f.getStatus() == null) f.setStatus("PREVISTO");
         return faturamentos.save(f);
     }
+    @Override @Transactional public PrjFaturamento faturar(Long empresaId, Long projetoId, Long faturamentoId, Long servicoId, Long clienteId) {
+        return faturarComNfse(empresaId, projetoId, faturamentoId, servicoId, clienteId);
+    }
     @Override @Transactional public PrjFaturamento faturar(Long empresaId, Long projetoId, Long faturamentoId) {
+        return faturarComNfse(empresaId, projetoId, faturamentoId, null, null);
+    }
+    private PrjFaturamento faturarComNfse(Long empresaId, Long projetoId, Long faturamentoId, Long servicoId, Long clienteId) {
         exigirProjeto(empresaId, projetoId);
         PrjFaturamento f = exigir(faturamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(faturamentoId, empresaId), "Faturamento inexistente");
         if (f.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Faturamento de outro projeto");
@@ -159,9 +178,35 @@ public class ProjetoServiceImpl implements ProjetoService {
         t.setStatus("ABERTO");
         t = titulos.save(t);
         f.setTituloId(t.getId());
+        if (servicoId != null && clienteId != null) {
+            f.setNfseId(emitirNfseMarco(empresaId, f, servicoId, clienteId));
+        }
         f.setStatus("FATURADO");
         f.setDataFaturado(LocalDate.now());
         return faturamentos.save(f);
+    }
+    private Long emitirNfseMarco(Long empresaId, PrjFaturamento f, Long servicoId, Long clienteId) {
+        Cliente cli = clientes.findById(clienteId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Cliente inexistente"));
+        Pessoa pess = cli.getPessoa();
+        if (pess == null || pess.getDocumento() == null || pess.getDocumento().isBlank()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Tomador sem documento");
+        long proximoRps = 1L;
+        java.util.Optional<br.com.brasil_saas.fiscal.model.Nfse> ult = nfseRepo.findTop1ByEmpresaIdOrderByIdDesc(empresaId);
+        if (ult.isPresent() && ult.get().getNumeroRps() != null) {
+            try { proximoRps = Long.parseLong(ult.get().getNumeroRps()) + 1; } catch (NumberFormatException ignored) { proximoRps = ult.get().getId() + 1; }
+        }
+        NfseEmissaoDtos.Emitir req = NfseEmissaoDtos.Emitir.builder()
+            .empresaId(empresaId)
+            .servicoId(servicoId)
+            .clienteId(clienteId)
+            .pessoaId(pess.getId())
+            .cpfCnpjTomador(pess.getDocumento().replaceAll("[^0-9]", ""))
+            .razaoSocialTomador(pess.getNome())
+            .emailTomador(pess.getEmail())
+            .valorServicos(f.getValor())
+            .discriminacao("Projeto #" + f.getProjetoId() + " - " + f.getDescricao())
+            .numeroRps(proximoRps)
+            .build();
+        return nfseEmissao.emitir(req).nfseId();
     }
     @Override public Map<String, Object> resumo(Long empresaId, Long projetoId) {
         PrjProjeto p = exigirProjeto(empresaId, projetoId);

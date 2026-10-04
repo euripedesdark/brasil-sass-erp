@@ -10,6 +10,7 @@ public class PrjFaturamento extends TenantEntity {
     @Column(nullable=false, precision=15, scale=2) private BigDecimal valor;
     @Column(name="data_prevista") private LocalDate dataPrevista;
     @Column(name="data_faturado") private LocalDate dataFaturado;
+    @Column(name="nfse_id") private Long nfseId;
     @Column(nullable=false, length=20) private String status = "PREVISTO";
     @Column(name="titulo_id") private Long tituloId;
 }

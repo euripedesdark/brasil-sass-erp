@@ -18,5 +18,6 @@ public interface ProjetoService {
     List<PrjFaturamento> faturamentos(Long empresaId, Long projetoId);
     PrjFaturamento salvarFaturamento(Long empresaId, Long projetoId, PrjFaturamento f);
     PrjFaturamento faturar(Long empresaId, Long projetoId, Long faturamentoId);
+    PrjFaturamento faturar(Long empresaId, Long projetoId, Long faturamentoId, Long servicoId, Long clienteId);
     Map<String, Object> resumo(Long empresaId, Long projetoId);
 }

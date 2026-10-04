@@ -19,4 +19,5 @@ public interface NfseRepository extends JpaRepository<Nfse, Long> {
      * o que impede: se o id for de outra empresa, a query nao acha.
      */
     Optional<Nfse> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
+    java.util.Optional<Nfse> findTop1ByEmpresaIdOrderByIdDesc(Long empresaId);
 }
