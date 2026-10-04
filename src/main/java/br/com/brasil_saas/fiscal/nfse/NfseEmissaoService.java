@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Emissao de NFS-e municipal integrada ao ERP. O provedor é escolhido pelo município da empresa.
@@ -184,7 +185,7 @@ public class NfseEmissaoService {
         corpo.put("complementoPrestador", empresa.getComplemento());
         corpo.put("bairroPrestador", empresa.getBairro());
         corpo.put("cepPrestador", empresa.getCep());
-        corpo.put("codigoTributacaoNacional", normalizarTributacaoNacional(servico.getLc116Codigo()));
+        corpo.put("codigoTributacaoNacional", servico.getCodigoTributacaoNacional());
         corpo.put("codigoNbs", servico.getNbs());
         corpo.put("codigoMunicipioPrestacao", empresa.getCodigoIbge());
 
@@ -358,14 +359,6 @@ public class NfseEmissaoService {
         return httpNacional;
     }
 
-    private String normalizarTributacaoNacional(String lc116) {
-        if (lc116 == null || lc116.isBlank()) {
-            return "";
-        }
-        String digitos = lc116.replaceAll("\\D", "");
-        return digitos.length() >= 6 ? digitos.substring(0, 6)
-                : String.format("%6s", digitos).replace(' ', '0');
-    }
 
     /**
      * Marca o registro como falha de emissao.
