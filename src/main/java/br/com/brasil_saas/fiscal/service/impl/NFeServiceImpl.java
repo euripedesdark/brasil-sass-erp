@@ -9,7 +9,6 @@ import br.com.swconsultoria.nfe.dom.enuns.AmbienteEnum;
 import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
 import br.com.swconsultoria.nfe.dom.enuns.EstadosEnum;
 import br.com.swconsultoria.nfe.Nfe;
-import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
 import br.com.swconsultoria.nfe.dom.retornos.TRetConsSitNFe;
 import br.com.swconsultoria.nfe.util.XmlNfeUtil;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +83,7 @@ public class NFeServiceImpl implements NFeService {
                 : AmbienteEnum.HOMOLOGACAO;
 
         String certPath = "/etc/brasil-saas/certs/empresa_" + empresaId + ".pfx";
-        String certPass = System.getenv("NFSE_CERT_PASSWORD");
+        String certPass = System.getenv("NFE_CERT_PASSWORD");
         String pastaSchemas = "schemas";
 
         if (!java.nio.file.Files.exists(java.nio.file.Paths.get(certPath))) {
