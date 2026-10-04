@@ -87,9 +87,7 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
         if (l.getOrigem() != null && !l.getOrigem().isBlank()) {
             throw new BusinessException("Lançamento integrado (" + l.getOrigem() + ") não pode ser alterado manualmente");
         }
-        if (l.getOrigem() != null && !l.getOrigem().isBlank()) {
-            throw new BusinessException("Lançamento integrado (" + l.getOrigem() + ") não pode ser alterado manualmente");
-        }
+        if (r == null) throw new BusinessException("Dados do lançamento são obrigatórios");
         if (r.partidas() != null) {
             validarPartidas(r.partidas());
             partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id)
@@ -110,7 +108,10 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
         }
 
         if (r.dataLancamento() != null) l.setDataLancamento(r.dataLancamento());
-        if (r.descricaoHistorico() != null) l.setDescricaoHistorico(r.descricaoHistorico());
+        if (r.descricaoHistorico() != null) {
+            if (r.descricaoHistorico().isBlank()) throw new BusinessException("Histórico contábil não pode ser vazio");
+            l.setDescricaoHistorico(r.descricaoHistorico());
+        }
         l.setOrigem(r.origem());
         l.setIdOrigem(r.idOrigem());
         lancamentoRepository.save(l);
