@@ -200,7 +200,12 @@ export const FolhaPagamento = () => {
     const [encFolha, setEncFolha] = useState(null);
     const abrirEncargos = async (folha) => { setEncFolha(folha); setEnc(null); setDlgEnc(true); recalcEncargos(folha.id, { inss: 20, fgts: 8, rat: 2 }); };
     const recalcEncargos = async (id, a) => { try { setEnc(await FolhaPagamentoService.encargos(id, a)); } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha nos encargos', life: 4000 }); } };
-    const cancelarFolha = (folha) => {
+    const gerarDecimo = async (parcela) => {
+        const ano = new Date().getFullYear();
+        try { await FolhaPagamentoService.gerarDecimo(ano, parcela); toast.current?.show({ severity: 'success', summary: '13o gerado', life: 3000 }); fetchFolhas(); }
+        catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 }); }
+    };
+        const cancelarFolha = (folha) => {
         if (!window.confirm(`Cancelar a folha ${folha.competencia}? Ela deixa de valer para pagamento.`)) return;
         setEmAcao(folha.id);
         FolhaPagamentoService.cancelar(folha.id)
@@ -291,12 +296,16 @@ export const FolhaPagamento = () => {
                     <div className="folhapagamento-info">
                         <p className="text-muted m-0">Gestao de folhas de pagamento mensais.</p>
                     </div>
-                    <Button
+                    <span className="flex gap-2">
+                    <Button label="13o 1a parcela" icon="pi pi-gift" onClick={() => gerarDecimo(1)} className="p-button-info" />
+                    <Button label="13o 2a parcela" icon="pi pi-gift" onClick={() => gerarDecimo(2)} className="p-button-info" />
+                                        <Button
                         label="Nova Folha"
                         icon="pi pi-plus"
                         onClick={() => abrirDialog()}
                         className="p-button-success"
                     />
+                    </span>
                 </div>
 
                 <DataTable

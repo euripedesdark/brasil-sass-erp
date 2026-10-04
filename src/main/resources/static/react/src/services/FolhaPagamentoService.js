@@ -17,6 +17,13 @@ export const FolhaPagamentoService = {
         return data.data || data;
     },
 
+    async gerarDecimo(ano, parcela) {
+        const response = await apiFetch(BASE_URL + '/rh/folhas/gerar-decimo?ano=' + ano + '&parcela=' + parcela, { method: 'POST' });
+        if (!response.ok) throw new Error('Erro ao gerar 13o');
+        const data = await response.json();
+        return data.data || data;
+    },
+
     async buscarPorId(id) {
         const response = await apiFetch(`${BASE_URL}/rh/folhas/${id}`, {
             method: 'GET',

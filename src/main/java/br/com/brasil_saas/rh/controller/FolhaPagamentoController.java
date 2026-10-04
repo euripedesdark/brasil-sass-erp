@@ -20,6 +20,7 @@ import java.util.List;
 public class FolhaPagamentoController {
 
     private final FolhaPagamentoService service;
+    private final br.com.brasil_saas.rh.service.DecimoTerceiroService decimo;
 
     @PostMapping
     @PreAuthorize("hasAuthority('rh:folha:escrita')")
@@ -64,6 +65,10 @@ public class FolhaPagamentoController {
     }
 
     public record ImportarPontoReq(Long funcionarioId, Integer ano, Integer mes) {}
+    @PostMapping("/gerar-decimo")
+    @PreAuthorize("hasAuthority('rh:folha:escrita')")
+    public ResponseEntity<?> gerarDecimo(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam int ano, @RequestParam int parcela) { return ResponseEntity.ok(decimo.gerar(u.getEmpresaId(), ano, parcela)); }
+
     @PostMapping("/{id}/importar-ponto")
     @PreAuthorize("hasAuthority('rh:folha:escrita')")
     public ResponseEntity<?> importarPonto(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody ImportarPontoReq r) {
