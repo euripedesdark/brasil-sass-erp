@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import java.time.ZoneId;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -29,10 +30,16 @@ public class SefazConfig {
         Optional<CertificadoDigital> cert = certRepo.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByValidadeAtDesc(empresaId);
         if (cert.isEmpty()) throw new IllegalStateException("Nenhum certificado digital ativo cadastrado para a empresa " + empresaId);
         CertificadoDigital cd = cert.get();
+        if (cd.getValidadeAt() == null || cd.getValidadeAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("Certificado digital expirado para a empresa " + empresaId);
+        }
+        if (cd.getArquivoUrl() == null || cd.getArquivoUrl().isBlank()) {
+            throw new IllegalStateException("Caminho/identificador do certificado digital não configurado para a empresa " + empresaId);
+        }
         Certificado certificado;
         if ("A1".equalsIgnoreCase(cd.getTipo())) {
             // cd.getArquivoUrl() guarda o caminho/bytes do .pfx; senha padrão ou do certificado
-            certificado = CertificadoService.certificadoPfx(cd.getArquivoUrl(), System.getenv("NFSE_CERT_PASSWORD"));
+            certificado = CertificadoService.certificadoPfx(cd.getArquivoUrl(), System.getenv("NFE_CERT_PASSWORD"));
         } else {
             // Certificado A3 requer Provider do Java Security
             // O caminho pode conter o nome do provider (ex: "SafeNet", "Aladdin", etc.)
