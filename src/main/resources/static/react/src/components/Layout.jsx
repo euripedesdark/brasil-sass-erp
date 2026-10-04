@@ -196,6 +196,7 @@ export const Layout = () => {
                     item('menu.issqn', 'pi pi-list', '/fiscal/issqn'),
                     item('menu.taxEntries', 'pi pi-download', '/fiscal/entradas'),
                     item('menu.taxes', 'pi pi-percentage', '/fiscal/impostos'),
+                    item('Apuracao', 'pi pi-calculator', '/fiscal/apuracoes'),
                     item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz'),
                     item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
                     item('menu.obrigacoes', 'pi pi-calendar-check', '/fiscal/obrigacoes'),

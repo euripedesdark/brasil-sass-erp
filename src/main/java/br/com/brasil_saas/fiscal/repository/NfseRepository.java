@@ -20,4 +20,5 @@ public interface NfseRepository extends JpaRepository<Nfse, Long> {
      */
     Optional<Nfse> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     java.util.Optional<Nfse> findTop1ByEmpresaIdOrderByIdDesc(Long empresaId);
+    java.util.List<Nfse> findByEmpresaIdAndDataEmissaoBetweenAndDeletedAtIsNull(Long empresaId, java.time.LocalDateTime de, java.time.LocalDateTime ate);
 }

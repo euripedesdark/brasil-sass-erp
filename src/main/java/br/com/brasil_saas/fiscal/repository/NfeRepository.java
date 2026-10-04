@@ -13,4 +13,5 @@ public interface NfeRepository extends JpaRepository<Nfe, Long> {
     java.util.Optional<br.com.brasil_saas.fiscal.model.Nfe> findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(Long empresaId, String chaveAcesso);
     org.springframework.data.domain.Page<br.com.brasil_saas.fiscal.model.Nfe> findByEmpresaIdAndTipoOperacaoAndDeletedAtIsNull(Long empresaId, String tipoOperacao, org.springframework.data.domain.Pageable pageable);
     java.util.Optional<br.com.brasil_saas.fiscal.model.Nfe> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
+    java.util.List<Nfe> findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(Long empresaId, String tipoOperacao, java.time.LocalDateTime de, java.time.LocalDateTime ate);
 }

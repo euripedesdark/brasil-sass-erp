@@ -63,6 +63,7 @@ import { Cfop } from './components/fiscal/Cfop';
 import { Cest } from './components/fiscal/Cest';
 import { Issqn } from './components/fiscal/Issqn';
 import { EntradaNota } from './components/fiscal/EntradaNota';
+import { Apuracoes } from './components/fiscal/Apuracoes';
 import { CertificadoDigital } from './components/fiscal/CertificadoDigital';
 import { SefazConsulta } from './components/fiscal/SefazConsulta';
 import { Impostos } from './components/fiscal/Impostos';
@@ -240,6 +241,7 @@ function App() {
                     <Route path="fiscal/cest" element={<Cest />} />
                     <Route path="fiscal/issqn" element={<Issqn />} />
                     <Route path="fiscal/entradas" element={<EntradaNota />} />
+                    <Route path="fiscal/apuracoes" element={<Apuracoes />} />
                     {/* Certificado A1 usado na emissao de nota */}
                     <Route path="fiscal/certificados" element={<CertificadoDigital />} />
                     <Route path="fiscal/impostos" element={<Impostos />} />
