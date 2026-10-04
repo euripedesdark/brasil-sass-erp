@@ -33,6 +33,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
      * produtos podem ter o mesmo nome e o cEAN nunca casa com o errado.
      */
     Optional<Produto> findByEmpresaIdAndCodigoBarrasAndDeletedAtIsNull(Long empresaId, String codigoBarras);
+    Optional<Produto> findByEmpresaIdAndCodigoIgnoreCaseAndDeletedAtIsNull(Long empresaId, String codigo);
     boolean existsByEmpresaIdAndCodigoAndIdNotAndDeletedAtIsNull(Long empresaId, String codigo, Long id);
     Optional<Produto> findFirstByCodigoIgnoreCaseAndDeletedAtIsNull(String codigo);
     java.util.Optional<br.com.brasil_saas.cadastro.model.Produto> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
