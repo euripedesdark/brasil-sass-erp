@@ -251,11 +251,11 @@ public class NFeXmlBuilder {
         p.setNCM(required(produto.getNcm(), "NCM do produto"));
         if (produto.getCest() != null && !produto.getCest().isBlank()) p.setCEST(produto.getCest());
         p.setCFOP(required(produto.getCfopPadrao(), "CFOP do produto"));
-        p.setUCom(required(produto.getUnidadeMedida(), "Unidade do produto"));
+        p.setUCom(required(produto.getUnidadeMedida() != null ? produto.getUnidadeMedida().getSigla() : null, "Unidade do produto"));
         p.setQCom(decimal(qtd, 4));
         p.setVUnCom(decimal(unit, 4));
         p.setVProd(money(valor));
-        p.setUTrib(required(produto.getUnidadeMedida(), "Unidade tributavel do produto"));
+        p.setUTrib(required(produto.getUnidadeMedida() != null ? produto.getUnidadeMedida().getSigla() : null, "Unidade tributavel do produto"));
         p.setQTrib(decimal(qtd, 4));
         p.setVUnTrib(decimal(unit, 4));
         p.setIndTot("1");
