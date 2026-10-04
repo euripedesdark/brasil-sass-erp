@@ -25,14 +25,14 @@ public class PedidoCompraController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('compras:pedido:escrita')")
-    public ResponseEntity<PedidoCompraResponse> criar(@Valid @RequestBody PedidoCompraRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(request));
+    public ResponseEntity<PedidoCompraResponse> criar(@Valid @RequestBody PedidoCompraRequest request, @AuthenticationPrincipal AuthenticatedUser u) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(request.comEmpresaDa(u.getEmpresaId())));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('compras:pedido:leitura')")
-    public ResponseEntity<PedidoCompraResponse> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+    public ResponseEntity<PedidoCompraResponse> buscarPorId(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u) {
+        return ResponseEntity.ok(service.buscarPorId(id, u.getEmpresaId()));
     }
 
     @GetMapping
@@ -43,22 +43,22 @@ public class PedidoCompraController {
 
     @PostMapping("/{id}/receber")
     @PreAuthorize("hasAuthority('compras:pedido:escrita')")
-    public ResponseEntity<Void> receber(@PathVariable Long id) {
-        service.receber(id);
+    public ResponseEntity<Void> receber(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u) {
+        service.receber(id, u.getEmpresaId());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/receber-parcial")
     @PreAuthorize("hasAuthority('compras:pedido:escrita')")
-    public ResponseEntity<Void> receberParcial(@PathVariable Long id, @RequestBody Map<Long, BigDecimal> quantidades) {
-        service.receberParcial(id, quantidades);
+    public ResponseEntity<Void> receberParcial(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u, @RequestBody Map<Long, BigDecimal> quantidades) {
+        service.receberParcial(id, u.getEmpresaId(), quantidades);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAuthority('compras:pedido:escrita')")
-    public ResponseEntity<Void> cancelar(@PathVariable Long id) {
-        service.cancelar(id);
+    public ResponseEntity<Void> cancelar(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u) {
+        service.cancelar(id, u.getEmpresaId());
         return ResponseEntity.ok().build();
     }
 }
