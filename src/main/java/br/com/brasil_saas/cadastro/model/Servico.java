@@ -31,6 +31,9 @@ public class Servico extends TenantEntity {
     private String codigoTributacaoMunicipal;
     @Column(length = 12)
     private String nbs;
+    /** Código de tributação nacional de 6 dígitos usado pela NFS-e Nacional. */
+    @Column(name = "codigo_tributacao_nacional", length = 6)
+    private String codigoTributacaoNacional;
     @Column(name = "aliquota_iss", precision = 7, scale = 4, nullable = false)
     private BigDecimal aliquotaIss = BigDecimal.ZERO;
     @Column(precision = 15, scale = 2, nullable = false)
