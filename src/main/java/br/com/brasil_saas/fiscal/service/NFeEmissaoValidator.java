@@ -41,15 +41,10 @@ public class NFeEmissaoValidator {
         if (pedido.getClienteId() == null) {
             erros.add("Pedido sem cliente");
         } else {
-            Cliente cliente = clienteRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(
-                    empresa.getId(), pedido.getClienteId()).orElse(null);
+            Cliente cliente = clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNullWithPessoa(
+                    pedido.getClienteId(), empresa.getId()).orElse(null);
             if (cliente == null) {
-                // O campo clienteId do pedido referencia Cliente, não Pessoa.
-                cliente = clienteRepository.findById(pedido.getClienteId()).orElse(null);
-                if (cliente == null || !empresa.getId().equals(cliente.getEmpresaId())
-                        || cliente.getDeletedAt() != null) {
-                    erros.add("Cliente do pedido não pertence à empresa ou está inativo");
-                }
+                erros.add("Cliente do pedido não pertence à empresa ou foi removido");
             }
             if (cliente != null && cliente.getPessoa() != null) {
                 Pessoa pessoa = cliente.getPessoa();
