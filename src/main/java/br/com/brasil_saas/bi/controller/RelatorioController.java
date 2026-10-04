@@ -4,6 +4,8 @@ import br.com.brasil_saas.bi.dto.RelatorioRequest;
 import br.com.brasil_saas.bi.model.Relatorio;
 import br.com.brasil_saas.bi.service.RelatorioService;
 import br.com.brasil_saas.shared.dto.ApiResponse;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -25,89 +27,89 @@ public class RelatorioController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Relatorio>> criar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @RequestBody RelatorioRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.criar(empresaId, request))
+                ApiResponse.success(relatorioService.criar(u.getEmpresaId(), request))
         );
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Relatorio>> buscarPorId(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.buscarPorId(empresaId, id))
+                ApiResponse.success(relatorioService.buscarPorId(u.getEmpresaId(), id))
         );
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Relatorio>>> listarPorEmpresa(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.listarPorEmpresa(empresaId))
+                ApiResponse.success(relatorioService.listarPorEmpresa(u.getEmpresaId()))
         );
     }
 
     @GetMapping("/categoria/{categoria}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Relatorio>>> listarPorCategoria(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable String categoria) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.listarPorCategoria(empresaId, categoria))
+                ApiResponse.success(relatorioService.listarPorCategoria(u.getEmpresaId(), categoria))
         );
     }
 
     @GetMapping("/agendados")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Relatorio>>> listarAgendados(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.listarAgendados(empresaId))
+                ApiResponse.success(relatorioService.listarAgendados(u.getEmpresaId()))
         );
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Relatorio>> atualizar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestBody RelatorioRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.atualizar(empresaId, id, request))
+                ApiResponse.success(relatorioService.atualizar(u.getEmpresaId(), id, request))
         );
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> excluir(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
-        relatorioService.excluir(empresaId, id);
+        relatorioService.excluir(u.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/{id}/executar")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> executar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestBody Map<String, Object> parametros) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioService.executarRelatorio(empresaId, id, parametros))
+                ApiResponse.success(relatorioService.executarRelatorio(u.getEmpresaId(), id, parametros))
         );
     }
 
     @GetMapping("/{id}/pdf")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<byte[]> exportarPdf(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestParam(required = false) Map<String, Object> parametros) {
-        ByteArrayOutputStream output = relatorioService.gerarPdf(empresaId, id, parametros);
+        ByteArrayOutputStream output = relatorioService.gerarPdf(u.getEmpresaId(), id, parametros);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -120,10 +122,10 @@ public class RelatorioController {
     @GetMapping("/{id}/excel")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<byte[]> exportarExcel(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestParam(required = false) Map<String, Object> parametros) {
-        ByteArrayOutputStream output = relatorioService.gerarExcel(empresaId, id, parametros);
+        ByteArrayOutputStream output = relatorioService.gerarExcel(u.getEmpresaId(), id, parametros);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -136,10 +138,10 @@ public class RelatorioController {
     @GetMapping("/{id}/csv")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<byte[]> exportarCsv(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestParam(required = false) Map<String, Object> parametros) {
-        ByteArrayOutputStream output = relatorioService.gerarCsv(empresaId, id, parametros);
+        ByteArrayOutputStream output = relatorioService.gerarCsv(u.getEmpresaId(), id, parametros);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.TEXT_PLAIN);
