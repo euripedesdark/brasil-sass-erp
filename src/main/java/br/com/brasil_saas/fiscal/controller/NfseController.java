@@ -29,14 +29,14 @@ import java.util.List;
 /**
  * Emissao e cancelamento de NFS-e da Prefeitura de Sao Paulo.
  *
- * <p>Restrito ao modulo fiscal e a SUPERUSER/ADMIN, porque emite documento
+ * <p>Restrito ao modulo fiscal e aos perfis autorizados, porque emite documento
  * fiscal assinado.
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/fiscal/nfse")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPERUSER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('FINANCEIRO', 'GESTOR', 'GERENTE', 'DIRETORIA', 'ADMIN', 'SUPERUSER')")
 public class NfseController {
 
     private final NfseEmissaoService emissaoService;
@@ -68,9 +68,12 @@ public class NfseController {
     @PostMapping("/emitir")
     public ResponseEntity<?> emitir(@RequestBody NfseEmissaoDtos.Emitir requisicao,
                                     @AuthenticationPrincipal AuthenticatedUser usuario) {
-        if (requisicao.getEmpresaId() == null && usuario != null) {
-            requisicao.setEmpresaId(usuario.getEmpresaId());
+        Long empresaId = empresaDo(usuario);
+        if (requisicao == null) {
+            throw new BusinessException("Dados de emissao da NFS-e sao obrigatorios.");
         }
+        // O tenant vem sempre do token. Nunca aceitar empresaId enviado pelo cliente.
+        requisicao.setEmpresaId(empresaId);
         return ResponseEntity.ok(emissaoService.emitir(requisicao));
     }
 
