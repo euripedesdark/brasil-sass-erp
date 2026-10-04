@@ -56,6 +56,7 @@ public class NfseEmissaoService {
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private static final String IBGE_RONDONOPOLIS = "5107602";
+    private static final String IBGE_SAO_PAULO = "3550308";
 
     private final ServicoRepository servicoRepository;
     private final EmpresaRepository empresaRepository;
@@ -66,6 +67,7 @@ public class NfseEmissaoService {
     private final NfsePdfService pdfService;
     private final RestClient httpSp;
     private final RestClient httpRondonopolis;
+    private final RestClient httpNacional;
 
     private final String inscricaoMunicipalPadrao;
     private final String serieRpsPadrao;
@@ -81,7 +83,8 @@ public class NfseEmissaoService {
             @Value("${brasil-saas.fiscal.nfse.url:http://127.0.0.1:4567/api/nfse-sp}") String url,
             @Value("${brasil-saas.fiscal.nfse.inscricao-municipal:2130033}") String inscricaoMunicipal,
             @Value("${brasil-saas.fiscal.nfse.serie-rps:BC}") String serieRps,
-            @Value("${brasil-saas.fiscal.nfse.timeout-ms:60000}") long timeoutMs) {
+            @Value("${brasil-saas.fiscal.nfse.timeout-ms:60000}") long timeoutMs,
+            @Value("${brasil-saas.fiscal.nfse.nacional-url:http://127.0.0.1:4580/api/nfse-nacional}") String urlNacional) {
 
         this.servicoRepository = servicoRepository;
         this.empresaRepository = empresaRepository;
@@ -104,6 +107,8 @@ public class NfseEmissaoService {
         String rondonopolisUrl = System.getProperty("brasil-saas.fiscal.nfse.rondonopolis-url",
                 "http://127.0.0.1:4570/api/nfse-sp");
         this.httpRondonopolis = RestClient.builder().baseUrl(rondonopolisUrl)
+                .requestFactory(factory).build();
+        this.httpNacional = RestClient.builder().baseUrl(urlNacional)
                 .requestFactory(factory).build();
     }
 
@@ -169,6 +174,20 @@ public class NfseEmissaoService {
         corpo.put("unidadeGestora", System.getProperty("brasil-saas.fiscal.nfse.rondonopolis-unidade-gestora",
                 "03347101000121"));
         corpo.put("imPrestador", inscricaoMunicipal);
+        // Contrato comum do adapter NFS-e Nacional. Os dados estruturados vêm
+        // do cadastro da empresa/serviço; a tela não informa tributação fiscal.
+        corpo.put("codigoIbge", empresa.getCodigoIbge());
+        corpo.put("nomePrestador", empresa.getRazaoSocial());
+        corpo.put("telefonePrestador", empresa.getTelefone());
+        corpo.put("logradouroPrestador", empresa.getEndereco());
+        corpo.put("numeroPrestador", empresa.getNumero());
+        corpo.put("complementoPrestador", empresa.getComplemento());
+        corpo.put("bairroPrestador", empresa.getBairro());
+        corpo.put("cepPrestador", empresa.getCep());
+        corpo.put("codigoTributacaoNacional", normalizarTributacaoNacional(servico.getLc116Codigo()));
+        corpo.put("codigoNbs", servico.getNbs());
+        corpo.put("codigoMunicipioPrestacao", empresa.getCodigoIbge());
+
         corpo.put("serieRps", serie);
         corpo.put("numeroRps", String.valueOf(req.getNumeroRps()));
         corpo.put("dataEmissao", dataEmissao);
@@ -333,7 +352,19 @@ public class NfseEmissaoService {
         if (IBGE_RONDONOPOLIS.equals(empresa.getCodigoIbge())) {
             return httpRondonopolis;
         }
-        return httpSp;
+        if (IBGE_SAO_PAULO.equals(empresa.getCodigoIbge())) {
+            return httpSp;
+        }
+        return httpNacional;
+    }
+
+    private String normalizarTributacaoNacional(String lc116) {
+        if (lc116 == null || lc116.isBlank()) {
+            return "";
+        }
+        String digitos = lc116.replaceAll("\\D", "");
+        return digitos.length() >= 6 ? digitos.substring(0, 6)
+                : String.format("%6s", digitos).replace(' ', '0');
     }
 
     /**
