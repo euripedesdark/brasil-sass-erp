@@ -34,7 +34,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -188,18 +187,13 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                 // A reserva vira consumida no mesmo evento transacional da baixa física.
                 // Isso impede que a expedição tente consumir a mesma quantidade novamente.
                 reservaEstoqueRepository
-                        .findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndDeletedAtIsNull(
-                                pedido.getEmpresaId(),
-                                pedido.getId(),
-                                depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(
-                                                pedido.getEmpresaId(), "PADRAO")
-                                        .orElseThrow(() -> new BusinessException(
-                                                "Deposito PADRAO nao encontrado para a empresa "
-                                                        + pedido.getEmpresaId()))
-                                        .getId(),
-                                item.getProdutoId())
+                        .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(
+                                pedido.getEmpresaId(), pedido.getId())
+                        .stream()
+                        .filter(reserva -> item.getProdutoId().equals(reserva.getProdutoId())
+                                && "RESERVADA".equals(reserva.getStatus()))
+                        .findFirst()
                         .ifPresent(reserva -> {
-                            reserva.setQuantidade(item.getQuantidade());
                             reserva.setStatus("CONSUMIDA");
                             reservaEstoqueRepository.save(reserva);
                         });
@@ -278,6 +272,15 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         if ("FATURADO".equals(pedido.getStatus())) {
             throw new BusinessException("Pedidos FATURADOS nao podem ser cancelados diretamente");
         }
+
+        reservaEstoqueRepository
+                .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(empresaId, pedido.getId())
+                .stream()
+                .filter(r -> "RESERVADA".equals(r.getStatus()) || "SEPARACAO".equals(r.getStatus()))
+                .forEach(r -> {
+                    r.setStatus("LIBERADA");
+                    reservaEstoqueRepository.save(r);
+                });
 
         pedido.setStatus("CANCELADO");
         pedidoRepository.save(pedido);
