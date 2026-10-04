@@ -26,6 +26,10 @@ export const Producao = () => {
     const [success, setSuccess] = useState(false);
     const [produtosSugestoes, setProdutosSugestoes] = useState([]);
     const [estrutura, setEstrutura] = useState([]);
+    const [custoDialog, setCustoDialog] = useState(false);
+    const [custo, setCusto] = useState(null);
+    const [custoErro, setCustoErro] = useState('');
+    const [custoOrdem, setCustoOrdem] = useState(null);
 
     const [novoPedido, setNovoPedido] = useState({
         numero: '',
@@ -138,6 +142,29 @@ export const Producao = () => {
         }
     };
 
+    const verCusto = async (ordem) => {
+        setCustoOrdem(ordem);
+        setCusto(null);
+        setCustoErro('');
+        setCustoDialog(true);
+        try {
+            const response = await apiFetch(`${ApiConfig.BASE_URL}/api/producao/${ordem.id}/custo`);
+            if (!response.ok) {
+                let msg = 'Falha ao calcular o custo';
+                try { const j = await response.json(); msg = j?.message || j?.error || msg; } catch { /* corpo nao JSON */ }
+                throw new Error(msg);
+            }
+            const data = await response.json();
+            setCusto(data?.data ?? data);
+        } catch (err) {
+            setCustoErro(err.message || 'Falha ao calcular o custo');
+        }
+    };
+
+    const moeda = (v) => (v === null || v === undefined || v === '')
+        ? '—'
+        : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 4 });
+
     const statusTemplate = (rowData) => {
         const severity = {
             'ABERTO': 'info',
@@ -184,9 +211,52 @@ export const Producao = () => {
                     <Column field="quantidadePlanejada" header="Qtd Planejada" sortable style={{ width: '15%' }}></Column>
                     <Column field="unidadeMedida" header="Unidade" sortable style={{ width: '10%' }}></Column>
                     <Column field="status" header="Status" body={statusTemplate} sortable style={{ width: '15%' }}></Column>
-                    <Column header="Finalizar" body={finalizarTemplate} style={{ width: '10%' }}></Column>
+                    <Column header="Custo" style={{ width: '8%' }} body={(rowData) => (\n                        <Button icon="pi pi-dollar" className="p-button-text" tooltip="Ver custo da ordem"\n                                onClick={() => verCusto(rowData)} />\n                    )}></Column>\n                    <Column header="Finalizar" body={finalizarTemplate} style={{ width: '10%' }}></Column>
                 </DataTable>
             </Card>
+
+            <Dialog
+                header={`Custo da ordem ${custoOrdem?.numero || ''}`}
+                visible={custoDialog}
+                style={{ width: '60vw' }}
+                onHide={() => setCustoDialog(false)}
+            >
+                {custoErro && <Message severity="error" text={custoErro} className="w-full mb-3" />}
+                {!custo && !custoErro && <p>Calculando...</p>}
+                {custo && (
+                    <>
+                        <div className="mb-3">
+                            <b>Materiais:</b> {moeda(custo.custoMateriais)} &nbsp;|&nbsp;
+                            <b>Mão de obra:</b> {moeda(custo.custoMaoDeObra)} &nbsp;|&nbsp;
+                            <b>Total:</b> {moeda(custo.custoTotal)}
+                        </div>
+                        <div className="mb-3">
+                            <b>Apontado:</b> {custo.quantidadeApontada} &nbsp;|&nbsp;
+                            <b>Refugo:</b> {custo.quantidadeRefugo} &nbsp;|&nbsp;
+                            <b>Boas:</b> {custo.quantidadeBoa} &nbsp;|&nbsp;
+                            <b>Custo unitário:</b> {moeda(custo.custoUnitario)}
+                        </div>
+                        {(custo.alertas || []).map((a, i) => (
+                            <Message key={i} severity="warn" text={a} className="w-full mb-2" />
+                        ))}
+                        <h5>Materiais</h5>
+                        <DataTable value={custo.materiais || []} className="p-datatable-sm" emptyMessage="Sem itens">
+                            <Column field="produtoId" header="Produto" />
+                            <Column field="quantidade" header="Qtd" />
+                            <Column header="Custo unit." body={(r) => moeda(r.custoUnitario)} />
+                            <Column field="origemCusto" header="Origem" />
+                            <Column header="Total" body={(r) => moeda(r.custoTotal)} />
+                        </DataTable>
+                        <h5>Mão de obra</h5>
+                        <DataTable value={custo.maoDeObra || []} className="p-datatable-sm" emptyMessage="Sem horas apontadas">
+                            <Column field="funcionarioId" header="Funcionário" />
+                            <Column field="horas" header="Horas" />
+                            <Column header="Valor/hora" body={(r) => moeda(r.valorHora)} />
+                            <Column header="Total" body={(r) => moeda(r.custoTotal)} />
+                        </DataTable>
+                    </>
+                )}
+            </Dialog>
 
             <RomaneioProducao empresaId={user?.empresaId} ordens={ordens} />
 
