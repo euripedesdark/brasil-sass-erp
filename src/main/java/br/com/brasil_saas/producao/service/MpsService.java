@@ -26,6 +26,12 @@ public class MpsService {
         int mes = Integer.parseInt(periodo.substring(5, 7));
         LocalDate ini = LocalDate.of(ano, mes, 1);
         LocalDate fim = ini.withDayOfMonth(ini.lengthOfMonth());
+        for (MpsItem anterior : repo.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo)) {
+            if ("RASCUNHO".equals(anterior.getStatus())) {
+                anterior.setDeletedAt(java.time.LocalDateTime.now());
+                repo.save(anterior);
+            }
+        }
         Map<Long, BigDecimal> demanda = new LinkedHashMap<>();
         for (var p : pedidos.findByEmpresaIdAndPeriodo(empresaId, ini, fim)) {
             if ("ABERTO".equals(p.getStatus()) == false) continue;
@@ -41,6 +47,7 @@ public class MpsService {
             BigDecimal planejada = e.getValue().subtract(estoque);
             if (planejada.signum() < 0) planejada = BigDecimal.ZERO;
             MpsItem m = new MpsItem();
+            m.setEmpresaId(empresaId);
             m.setPeriodo(periodo);
             m.setProdutoId(e.getKey());
             m.setQtdDemandada(e.getValue());
@@ -54,6 +61,8 @@ public class MpsService {
     }
     @Transactional public MpsItem confirmar(Long empresaId, Long id) {
         MpsItem m = repo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item MPS inexistente"));
+        if ("CONFIRMADO".equals(m.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Item MPS já está confirmado");
+        if (m.getQtdPlanejada() == null || m.getQtdPlanejada().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade planejada inválida");
         m.setStatus("CONFIRMADO");
         return repo.save(m);
     }

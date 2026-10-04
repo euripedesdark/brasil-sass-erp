@@ -12,6 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
 
 import java.util.List;
 
@@ -24,73 +27,81 @@ public class KpiController {
     private final KpiService kpiService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
     @Operation(summary = "Criar KPI")
     public ResponseEntity<ApiResponse<KpiResponse>> create(
-            @RequestBody KpiRequest request,
-            @RequestParam Long empresaId) {
-        KpiResponse response = kpiService.create(request, empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u,
+            @RequestBody KpiRequest request) {
+        KpiResponse response = kpiService.create(request, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
     @Operation(summary = "Atualizar KPI")
     public ResponseEntity<ApiResponse<KpiResponse>> update(
             @PathVariable Long id,
-            @RequestBody KpiRequest request,
-            @RequestParam Long empresaId) {
-        KpiResponse response = kpiService.update(id, request, empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u,
+            @RequestBody KpiRequest request) {
+        KpiResponse response = kpiService.update(id, request, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Obter KPI por ID")
     public ResponseEntity<ApiResponse<KpiResponse>> getById(
             @PathVariable Long id,
-            @RequestParam Long empresaId) {
-        KpiResponse response = kpiService.getById(id, empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u) {
+        KpiResponse response = kpiService.getById(id, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Listar KPIs")
     public ResponseEntity<ApiResponse<PageResponse<KpiResponse>>> listAll(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PageableDefault(size = 20) Pageable pageable) {
-        PageResponse<KpiResponse> response = kpiService.listAll(empresaId, pageable);
+        PageResponse<KpiResponse> response = kpiService.listAll(u.getEmpresaId(), pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/type/{kpiType}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Listar KPIs por tipo")
     public ResponseEntity<ApiResponse<List<KpiResponse>>> listByType(
             @PathVariable String kpiType,
-            @RequestParam Long empresaId) {
-        List<KpiResponse> response = kpiService.listByType(kpiType, empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u) {
+        List<KpiResponse> response = kpiService.listByType(kpiType, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
     @Operation(summary = "Excluir KPI")
     public ResponseEntity<ApiResponse<Void>> delete(
             @PathVariable Long id,
-            @RequestParam Long empresaId) {
-        kpiService.delete(id, empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u) {
+        kpiService.delete(id, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/refresh")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
     @Operation(summary = "Atualizar valores de todos os KPIs")
-    public ResponseEntity<ApiResponse<Void>> refreshAll(@RequestParam Long empresaId) {
-        kpiService.refreshKpiValues(empresaId);
+    public ResponseEntity<ApiResponse<Void>> refreshAll(@AuthenticationPrincipal AuthenticatedUser u) {
+        kpiService.refreshKpiValues(u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/{id}/calculate")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Calcular valor de um KPI")
     public ResponseEntity<ApiResponse<Object>> calculateValue(
             @PathVariable Long id,
-            @RequestParam Long empresaId) {
-        Object value = kpiService.calculateKpiValue(id, empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u) {
+        Object value = kpiService.calculateKpiValue(id, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(value));
     }
 }

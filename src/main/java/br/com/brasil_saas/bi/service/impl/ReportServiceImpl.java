@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -109,6 +110,9 @@ public class ReportServiceImpl implements ReportService {
     public byte[] generateReport(Long reportId, Map<String, Object> parameters, String outputType, Long empresaId) {
         Report report = getById(reportId, empresaId);
         String normalizedType = normalizeOutputType(outputType, report.getOutputFormat());
+        if (!Set.of("PDF", "XLSX", "EXCEL", "CSV", "HTML").contains(normalizedType)) {
+            throw new IllegalArgumentException("Formato de saída inválido: " + outputType);
+        }
 
         Map<String, Object> effectiveParameters = new java.util.LinkedHashMap<>();
         if (parameters != null) effectiveParameters.putAll(parameters);
@@ -201,9 +205,10 @@ public class ReportServiceImpl implements ReportService {
             String key = entry.getKey();
             String parameterName = "p_" + key.replaceAll("[^A-Za-z0-9_]", "_");
             normalized = normalized
-                    .replace(" + key + ", ":" + parameterName)
                     .replace("{{" + key + "}}", ":" + parameterName)
-                    .replace("{" + key + "}", ":" + parameterName);
+                    .replace(" + key + ", ":" + parameterName)
+                    .replace("{" + key + "}", ":" + parameterName)
+                    .replace(":" + key, ":" + parameterName);
             source.addValue(parameterName, entry.getValue());
         }
 

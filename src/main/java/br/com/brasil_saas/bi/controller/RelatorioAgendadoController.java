@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -23,94 +25,94 @@ public class RelatorioAgendadoController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<RelatorioAgendado>> criar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @RequestBody RelatorioAgendadoRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioAgendadoService.criar(empresaId, request))
+                ApiResponse.success(relatorioAgendadoService.criar(u.getEmpresaId(), request))
         );
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<RelatorioAgendado>> buscarPorId(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioAgendadoService.buscarPorId(empresaId, id))
+                ApiResponse.success(relatorioAgendadoService.buscarPorId(u.getEmpresaId(), id))
         );
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<RelatorioAgendado>>> listarPorEmpresa(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioAgendadoService.listarPorEmpresa(empresaId))
+                ApiResponse.success(relatorioAgendadoService.listarPorEmpresa(u.getEmpresaId()))
         );
     }
 
     @GetMapping("/pendentes")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<RelatorioAgendado>>> listarPendentes(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioAgendadoService.listarPendentes(empresaId))
+                ApiResponse.success(relatorioAgendadoService.listarPendentes(u.getEmpresaId()))
         );
     }
 
     @GetMapping("/frequencia/{frequencia}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<RelatorioAgendado>>> listarPorFrequencia(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable String frequencia) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioAgendadoService.listarPorFrequencia(empresaId, frequencia))
+                ApiResponse.success(relatorioAgendadoService.listarPorFrequencia(u.getEmpresaId(), frequencia))
         );
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<RelatorioAgendado>> atualizar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestBody RelatorioAgendadoRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(relatorioAgendadoService.atualizar(empresaId, id, request))
+                ApiResponse.success(relatorioAgendadoService.atualizar(u.getEmpresaId(), id, request))
         );
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> excluir(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
-        relatorioAgendadoService.excluir(empresaId, id);
+        relatorioAgendadoService.excluir(u.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/{id}/executar")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> executar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
-        relatorioAgendadoService.executarAgendado(empresaId, id);
+        relatorioAgendadoService.executarAgendado(u.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/{id}/agendar")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> agendarProximaExecucao(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime proximaExecucao) {
-        relatorioAgendadoService.definirProximaExecucao(empresaId, id, proximaExecucao);
+        relatorioAgendadoService.definirProximaExecucao(u.getEmpresaId(), id, proximaExecucao);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/executar-todos")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> executarTodosPendentes(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         relatorioAgendadoService.executarPendentes();
         return ResponseEntity.ok(ApiResponse.success(null));
     }

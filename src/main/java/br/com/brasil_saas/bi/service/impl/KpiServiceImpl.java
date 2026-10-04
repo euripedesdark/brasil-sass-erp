@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -126,7 +125,7 @@ public class KpiServiceImpl implements KpiService {
     @Transactional
     public void refreshKpiValues(Long empresaId) {
         // List<Kpi> kpis = kpiRepository.findAllByEmpresaId(empresaId); // TODO: adicionar método no repository
-    List<Kpi> kpis = new ArrayList<>(); // Temporário
+    List<Kpi> kpis = kpiRepository.findByEmpresaIdOrderByNameAsc(empresaId);
         
         for (Kpi kpi : kpis) {
             Object value = calculateKpiValue(kpi.getId(), empresaId);
@@ -142,6 +141,9 @@ public class KpiServiceImpl implements KpiService {
     public Object calculateKpiValue(Long kpiId, Long empresaId) {
         Kpi kpi = kpiRepository.findById(kpiId)
             .orElseThrow(() -> new ResourceNotFoundException("KPI nao encontrado"));
+        if (!empresaId.equals(kpi.getEmpresaId())) {
+            throw new ResourceNotFoundException("KPI nao pertence a esta empresa");
+        }
         
         if (kpi.getQueryFormula() == null || kpi.getQueryFormula().isBlank()) {
             return 0;
