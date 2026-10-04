@@ -12,7 +12,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/financeiro/conciliacoes")
@@ -120,6 +125,50 @@ public class ConciliacaoController {
         e.setConciliado(true);
         extratoRepository.save(e);
         return itemRepository.save(item);
+    }
+
+    @PostMapping("/{id}/conciliar-automatico")
+    @PreAuthorize("hasAuthority('financeiro:extrato:escrita')")
+    @Transactional
+    public Map<String, Object> conciliarAutomatico(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestParam(required = false, defaultValue = "3") int toleranciaDias) {
+        ConciliacaoBancaria c = conciliacaoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, u.getEmpresaId())
+            .orElseThrow(() -> new ResourceNotFoundException("Conciliação não encontrada"));
+        if (!"EM_ABERTO".equals(c.getStatus())) throw new BusinessException("Conciliação já fechada");
+        List<ConciliacaoItem> existentes = itemRepository.findByConciliacaoIdAndDeletedAtIsNullOrderByIdAsc(id);
+        Set<Long> baixasUsadas = new HashSet<>();
+        for (ConciliacaoItem it : existentes) if (it.getBaixaId() != null) baixasUsadas.add(it.getBaixaId());
+        List<Baixa> baixas = baixaRepository.findByContaPeriodo(u.getEmpresaId(), c.getContaBancariaId(), c.getDataInicio(), c.getDataFim()).stream()
+            .filter(b -> b.getDataBaixa() != null && b.getValorBaixa() != null && !baixasUsadas.contains(b.getId())).toList();
+        int vinculados = 0; int semMatch = 0;
+        for (Extrato e : extratoRepository.findByEmpresaIdAndConciliadoFalseAndDeletedAtIsNull(u.getEmpresaId())) {
+            if (!c.getContaBancariaId().equals(e.getContaBancariaId())) continue;
+            if (e.getDataMovimento() == null || e.getDataMovimento().isBefore(c.getDataInicio()) || e.getDataMovimento().isAfter(c.getDataFim())) continue;
+            if (e.getValor() == null) { semMatch++; continue; }
+            if (itemRepository.existsByConciliacaoIdAndExtratoIdAndDeletedAtIsNull(id, e.getId())) continue;
+            Baixa melhor = null;
+            for (Baixa b : baixas) {
+                if (baixasUsadas.contains(b.getId())) continue;
+                if (b.getValorBaixa().abs().compareTo(e.getValor().abs()) != 0) continue;
+                long dias = Math.abs(java.time.temporal.ChronoUnit.DAYS.between(b.getDataBaixa(), e.getDataMovimento()));
+                if (dias > toleranciaDias) continue;
+                melhor = b; break;
+            }
+            if (melhor == null) { semMatch++; continue; }
+            ConciliacaoItem item = new ConciliacaoItem();
+            item.setEmpresaId(u.getEmpresaId());
+            item.setConciliacaoId(id);
+            item.setExtratoId(e.getId());
+            item.setBaixaId(melhor.getId());
+            item.setStatus("CONCILIADO");
+            e.setConciliado(true);
+            extratoRepository.save(e);
+            itemRepository.save(item);
+            baixasUsadas.add(melhor.getId());
+            vinculados++;
+        }
+        Map<String, Object> r = new LinkedHashMap<>();
+        r.put("vinculados", vinculados); r.put("semMatch", semMatch);
+        return r;
     }
 
     @PostMapping("/{id}/fechar")

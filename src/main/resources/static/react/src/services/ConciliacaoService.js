@@ -10,7 +10,8 @@ class ConciliacaoService {
     pendentes(id) { return axios.get(`${API_URL}/${id}/pendentes`, { withCredentials: true }); }
     baixas(id) { return axios.get(`${API_URL}/${id}/baixas`, { withCredentials: true }); }
     vincular(id, body) { return axios.post(`${API_URL}/${id}/vincular`, body, { withCredentials: true }); }
-    fechar(id) { return axios.post(`${API_URL}/${id}/fechar`, {}, { withCredentials: true }); }
+    conciliarAutomatico(id) { return axios.post(API_URL + '/' + id + '/conciliar-automatico', {}, { withCredentials: true }); }
+        fechar(id) { return axios.post(`${API_URL}/${id}/fechar`, {}, { withCredentials: true }); }
 }
 
 export default new ConciliacaoService();

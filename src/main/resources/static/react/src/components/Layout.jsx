@@ -137,7 +137,8 @@ export const Layout = () => {
                     item('menu.purchaseOrders', 'pi pi-file-import', '/compras'),
                     item('menu.supplyChain', 'pi pi-sitemap', '/compras/supply-chain'),
                     item('menu.receipts', 'pi pi-download', '/compras/recebimentos'),
-                    item('menu.threeWayMatch', 'pi pi-check-square', '/compras/conferencia-faturas')
+                    item('menu.threeWayMatch', 'pi pi-check-square', '/compras/conferencia-faturas'),
+                    item('Devolucoes de compra', 'pi pi-undo', '/compras/devolucoes')
                 ]
             },
             {

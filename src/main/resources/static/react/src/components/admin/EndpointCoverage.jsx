@@ -46,6 +46,7 @@ const UI_HINTS = [
     { prefix: '/api/ativos', route: '/ativos', label: 'Ativos' },
     { prefix: '/api/contabilidade/ecd', route: '/contabilidade', label: 'ECD' },
     { prefix: '/api/rh/ferias', route: '/rh/ferias', label: 'Ferias' },
+    { prefix: '/api/compras/devolucoes', route: '/compras/devolucoes', label: 'Devolucoes de compra' },
     { prefix: '/api/financeiro/comissoes', route: '/financeiro/comissoes', label: 'Comissões' },
     { prefix: '/api/financeiro/caixas', route: '/financeiro/caixa', label: 'Caixa' },
     { prefix: '/api/financeiro/titulos', route: '/financeiro/titulos', label: 'Títulos' },

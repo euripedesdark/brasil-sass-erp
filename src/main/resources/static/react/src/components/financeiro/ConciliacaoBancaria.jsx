@@ -102,7 +102,16 @@ export default function ConciliacaoBancaria() {
         } finally { setLoading(false); }
     };
 
-    const fechar = async () => {
+    const conciliarAutomatico = async () => {
+        setLoading(true);
+        try {
+            const r = await ConciliacaoService.conciliarAutomatico(selecionada.id);
+            toast.current?.show({ severity: 'success', summary: 'Conciliacao automatica', detail: (r?.data?.vinculados ?? 0) + ' vinculados, ' + (r?.data?.semMatch ?? 0) + ' sem match', life: 4000 });
+            await selecionar(selecionada);
+        } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', life: 3000 }); }
+        finally { setLoading(false); }
+    };
+        const fechar = async () => {
         setLoading(true);
         try {
             await ConciliacaoService.fechar(selecionada.id);
@@ -126,6 +135,7 @@ export default function ConciliacaoBancaria() {
             <div className="flex flex-wrap gap-2 mb-3">
                 <Button label="Nova conciliação" icon="pi pi-plus" onClick={() => { setErro(''); setDialog(true); }} />
                 <Button label="Atualizar" icon="pi pi-refresh" outlined onClick={carregar} />
+                <Button label="Conciliar automatico" icon="pi pi-bolt" outlined onClick={conciliarAutomatico} disabled={!selecionada || selecionada.status !== 'EM_ABERTO'} />
             </div>
             <DataTable value={conciliacoes} loading={loading} paginator rows={10} selection={selecionada} onSelectionChange={e => e.value && selecionar(e.value)} dataKey="id" emptyMessage="Nenhuma conciliação criada">
                 <Column selectionMode="single" style={{ width: '3rem' }} />
