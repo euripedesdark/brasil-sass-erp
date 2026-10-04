@@ -52,6 +52,10 @@ public class PedidoVendaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(seguro));
     }
 
+    @GetMapping("/clientes/{clienteId}/credito")
+    @PreAuthorize("hasAuthority('vendas:pedido:leitura')")
+    public Map<String, Object> credito(@PathVariable Long clienteId, @AuthenticationPrincipal AuthenticatedUser user) { return service.credito(empresaDoToken(user), clienteId); }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('vendas:pedido:leitura')")
     public ResponseEntity<PedidoVendaResponse> buscarPorId(

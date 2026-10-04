@@ -17,6 +17,8 @@ import br.com.brasil_saas.fiscal.model.Apuracao;
 import br.com.brasil_saas.fiscal.model.Imposto;
 import br.com.brasil_saas.fiscal.repository.ApuracaoRepository;
 import br.com.brasil_saas.fiscal.repository.ImpostoRepository;
+import br.com.brasil_saas.fiscal.model.SpedContribuicoes;
+import br.com.brasil_saas.fiscal.repository.SpedContribuicoesRepository;
 import br.com.brasil_saas.fiscal.sped.SpedEfdController.PedidoEfd;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import java.util.Map;
 public class EfdContribService {
     private final ApuracaoRepository apuracoes;
     private final ImpostoRepository impostos;
+    private final SpedContribuicoesRepository historico;
     @Transactional(readOnly = true)
     public Map<String, Object> gerarPeriodo(Long empresaId, PedidoEfd pedido) {
         LocalDate ini = inicio(pedido.competencia());
@@ -113,6 +116,10 @@ public class EfdContribService {
         saida.put("cofinsStatus", cofins.getStatus());
         saida.put("totalLinhas", linhas.size());
         saida.put("conteudo", conteudo);
+        SpedContribuicoes reg = historico.findByEmpresaIdAndCompetencia(empresaId, pedido.competencia()).orElse(null);
+        if (reg == null) { reg = new SpedContribuicoes(); reg.setEmpresaId(empresaId); reg.setCompetencia(pedido.competencia()); }
+        reg.setStatus("GERADO"); reg.setGeradoAt(java.time.LocalDateTime.now());
+        historico.save(reg);
         return saida;
     }
     private Apuracao apuracao(Long empresaId, String competencia, String sigla) {

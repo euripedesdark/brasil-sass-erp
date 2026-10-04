@@ -12,6 +12,8 @@ import br.com.brasil_saas.fiscal.model.Nfe;
 import br.com.brasil_saas.fiscal.model.NfeItem;
 import br.com.brasil_saas.fiscal.repository.NfeItemRepository;
 import br.com.brasil_saas.fiscal.repository.NfeRepository;
+import br.com.brasil_saas.fiscal.model.SpedFiscal;
+import br.com.brasil_saas.fiscal.repository.SpedFiscalRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class EfdPeriodoService {
     private final NfeItemRepository itens;
     private final PessoaRepository pessoas;
     private final SpedEfdIcmsService efd;
+    private final SpedFiscalRepository historico;
     private static final DateTimeFormatter DIA = DateTimeFormatter.ofPattern("ddMMyyyy");
     @Transactional(readOnly = true)
     public Map<String, Object> gerarPeriodo(Long empresaId, PedidoEfd pedido) {
@@ -124,6 +127,10 @@ public class EfdPeriodoService {
         saida.put("ignoradas", ignoradas);
         saida.put("totalLinhas", linhas.size());
         saida.put("conteudo", conteudo);
+        SpedFiscal reg = historico.findByEmpresaIdAndCompetencia(empresaId, pedido.competencia()).orElse(null);
+        if (reg == null) { reg = new SpedFiscal(); reg.setEmpresaId(empresaId); reg.setCompetencia(pedido.competencia()); }
+        reg.setStatus("GERADO"); reg.setGeradoAt(java.time.LocalDateTime.now());
+        historico.save(reg);
         return saida;
     }
     private LocalDate inicio(String competencia) {

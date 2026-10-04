@@ -46,7 +46,7 @@ export const Contabilidade = () => {
         } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar', life: 4000 }); }
         finally { setLoading(false); }
     }, []);
-    useEffect(() => { carregar(); }, [carregar]);
+    useEffect(() => { carregar(); carregarEcdHist(); }, [carregar]);
 
     const contaLabel = (id) => { const c = contas.find(x => x.id === id); return c ? ((c.codigo || '') + ' - ' + (c.descricao || c.nome || '')) : id; };
     const iso = (d) => d ? d.toISOString().slice(0, 10) : '';
@@ -62,6 +62,8 @@ export const Contabilidade = () => {
     const buscarBalancete = async () => { if (!de || !ate) return; setBalancete(await apiFetch(BASE + '/balancete?de=' + iso(de) + '&ate=' + iso(ate)).then(js)); };
     const [dre, setDre] = useState([]);
     const [ecd, setEcd] = useState(null);
+    const [ecdHist, setEcdHist] = useState([]);
+    const carregarEcdHist = async () => { try { const r = await apiFetch(BASE + '/ecd/historico'); setEcdHist(await r.json().catch(() => [])); } catch (e) { } };
     const [ecdCnpj, setEcdCnpj] = useState('');
     const [ecdNome, setEcdNome] = useState('');
     const buscarDre = async () => { const r = await apiFetch(BASE + '/dre?exercicio=' + exercicio); setDre(await r.json().catch(() => [])); };
@@ -71,6 +73,7 @@ export const Contabilidade = () => {
             const j = await r.json().catch(() => null);
             setEcd(j);
             toast.current?.show({ severity: 'success', summary: 'ECD gerada', life: 3000 });
+            carregarEcdHist();
         } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', life: 3000 }); }
     };
     const baixarEcd = () => {
@@ -168,6 +171,7 @@ export const Contabilidade = () => {
                         <span><label className='bc-label'>Nome empresarial</label><InputText value={ecdNome} onChange={(e) => setEcdNome(e.target.value)} style={{ width: '20rem' }} /></span>
                         <Button label='Gerar ECD (Diario)' icon='pi pi-file' onClick={gerarEcd} /></div>
                     {ecd && <div className='surface-50 border-round p-3 mb-3'><strong>ECD gerada:</strong> {ecd.lancamentos} lancamentos, {ecd.contas} contas, {ecd.totalLinhas} linhas. Demonstracoes (J100/J150): {ecd.demonstracoes}. Confira no PVA antes de entregar.
+                        {ecdHist.length > 0 && <div className='mt-2'><small>Geradas: </small>{ecdHist.map((h) => h.exercicio + ' (' + h.status + ')').join('; ')}</div>}
                         <div className='mt-2'><Button label='Baixar .txt' icon='pi pi-download' severity='secondary' outlined onClick={baixarEcd} /></div></div>}
                 </TabPanel>
             </TabView>

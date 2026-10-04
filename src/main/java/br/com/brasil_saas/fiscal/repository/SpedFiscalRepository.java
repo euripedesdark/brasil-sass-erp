@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface SpedFiscalRepository extends JpaRepository<SpedFiscal, Long> {
     Optional<SpedFiscal> findByEmpresaIdAndCompetencia(Long empresaId, String competencia);
+    java.util.List<SpedFiscal> findByEmpresaIdOrderByCompetenciaDesc(Long empresaId);
 }

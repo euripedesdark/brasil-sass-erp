@@ -40,6 +40,10 @@ export const SpedService = {
         });
     },
 
+    historico() {
+        return jsonRequest(BASE_URL + '/historico');
+    },
+
     exemplo() {
         return jsonRequest(`${BASE_URL}/efd/exemplo`);
     }

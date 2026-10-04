@@ -9,6 +9,9 @@ import java.util.Map;
 @RestController @RequestMapping("/api/contabilidade/ecd") @RequiredArgsConstructor
 public class EcdController {
     private final EcdService svc;
+    private final br.com.brasil_saas.fiscal.repository.EcdRepository historico;
     @PostMapping("/gerar") @PreAuthorize("hasAuthority('contabilidade:leitura')")
     public Map<String, Object> gerar(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam int exercicio, @RequestParam String cnpj, @RequestParam String nome, @RequestParam(required = false) String uf, @RequestParam(required = false) String codMun) { return svc.gerar(u.getEmpresaId(), exercicio, cnpj, nome, uf, codMun); }
+    @GetMapping("/historico") @PreAuthorize("hasAuthority('contabilidade:leitura')")
+    public java.util.List<br.com.brasil_saas.fiscal.model.Ecd> historico(@AuthenticationPrincipal AuthenticatedUser u) { return historico.findByEmpresaIdOrderByExercicioDesc(u.getEmpresaId()); }
 }

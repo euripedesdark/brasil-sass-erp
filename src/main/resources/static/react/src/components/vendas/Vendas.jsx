@@ -50,6 +50,8 @@ export const Vendas = () => {
     const [error, setError] = useState('');
     const [somenteLeitura, setSomenteLeitura] = useState(false);
     const [clientes, setClientes] = useState([]);
+    const [creditoCli, setCreditoCli] = useState(null);
+    const buscarCredito = async (clienteId) => { setCreditoCli(null); if (!clienteId) return; try { const r = await PedidoVendaService.credito(clienteId); setCreditoCli(r?.data ?? null); } catch (e) { setCreditoCli(null); } };
     const [clientesSugestoes, setClientesSugestoes] = useState([]);
     const [vendedores, setVendedores] = useState([]);
     const [condicoesPagamento, setCondicoesPagamento] = useState([]);
@@ -398,8 +400,9 @@ export const Vendas = () => {
                             suggestions={clientesSugestoes} completeMethod={buscarClientes}
                             itemTemplate={c => <div><strong>{c?.pessoa?.nome || 'Cliente'}</strong><small className="ml-2 text-color-secondary">{c?.pessoa?.documento || c?.codigo || c?.id}</small></div>}
                             selectedItemTemplate={clienteLabel}
-                            onChange={(e) => setForm({ ...form, clienteId: e.value?.id || null })}
+                            onChange={(e) => { setForm({ ...form, clienteId: e.value?.id || null }); buscarCredito(e.value?.id); }}
                             placeholder="Nome, CPF/CNPJ ou código" disabled={somenteLeitura} />
+                            {creditoCli && <small className="text-color-secondary">Limite {Number(creditoCli.limite ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · em aberto {Number(creditoCli.emAberto ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · disponivel {Number(creditoCli.disponivel ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</small>}
                     </div>
                     <div className="col-12 md:col-4 field"><label className="font-bold">Vendedor</label>
                         <Dropdown value={form.vendedorId} options={vendedores}

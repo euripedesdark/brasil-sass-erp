@@ -22,6 +22,7 @@ public interface PedidoVendaService {
 
     void faturar(Long id, Long empresaId);
     void faturar(Long id, Long empresaId, boolean forcar);
+    java.util.Map<String, Object> credito(Long empresaId, Long clienteId);
 
     void cancelar(Long id, Long empresaId);
     java.util.Map<String, Object> abrirPosVenda(Long id, Long empresaId, Long usuarioId, String motivo, String equipamento);

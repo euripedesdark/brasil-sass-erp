@@ -290,18 +290,32 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
      * devolvia o pedido de outra empresa e so depois seDiscoveria o erro.
      */
 
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Object> credito(Long empresaId, Long clienteId) {
+        java.math.BigDecimal[] v = somarCredito(empresaId, clienteId);
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("limite", v[0]); m.put("emAberto", v[1]); m.put("disponivel", v[0].subtract(v[1]));
+        return m;
+    }
+    private java.math.BigDecimal[] somarCredito(Long empresaId, Long clienteId) {
+        var cli = clienteRepository.findById(clienteId).orElse(null);
+        java.math.BigDecimal limite = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal emAberto = java.math.BigDecimal.ZERO;
+        if (cli != null && cli.getPessoa() != null && cli.getPessoa().getId() != null) {
+            limite = cli.getLimiteCredito() == null ? java.math.BigDecimal.ZERO : cli.getLimiteCredito();
+            for (var x : tituloRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, cli.getPessoa().getId())) {
+                if ("ABERTO".equals(x.getStatus()) == false && "PARCIAL".equals(x.getStatus()) == false) continue;
+                emAberto = emAberto.add(x.getValorSaldo() == null ? java.math.BigDecimal.ZERO : x.getValorSaldo());
+            }
+        }
+        return new java.math.BigDecimal[]{limite, emAberto};
+    }
     private void validarCredito(br.com.brasil_saas.vendas.model.PedidoVenda pedido) {
         if (pedido.getClienteId() == null) return;
-        var cli = clienteRepository.findById(pedido.getClienteId()).orElse(null);
-        if (cli == null || cli.getPessoa() == null || cli.getPessoa().getId() == null) return;
-        java.math.BigDecimal limite = cli.getLimiteCredito() == null ? java.math.BigDecimal.ZERO : cli.getLimiteCredito();
-        java.math.BigDecimal emAberto = java.math.BigDecimal.ZERO;
-        for (var x : tituloRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(pedido.getEmpresaId(), cli.getPessoa().getId())) {
-            if ("ABERTO".equals(x.getStatus()) == false && "PARCIAL".equals(x.getStatus()) == false) continue;
-            emAberto = emAberto.add(x.getValorSaldo() == null ? java.math.BigDecimal.ZERO : x.getValorSaldo());
-        }
-        java.math.BigDecimal pedido_valor = pedido.getValorTotal() == null ? java.math.BigDecimal.ZERO : pedido.getValorTotal();
-        if (emAberto.add(pedido_valor).compareTo(limite) > 0) throw new BusinessException("Limite de crédito estourado: disponível " + limite.subtract(emAberto));
+        java.math.BigDecimal[] v = somarCredito(pedido.getEmpresaId(), pedido.getClienteId());
+        java.math.BigDecimal pedidoValor = pedido.getValorTotal() == null ? java.math.BigDecimal.ZERO : pedido.getValorTotal();
+        if (v[1].add(pedidoValor).compareTo(v[0]) > 0) throw new BusinessException("Limite de credito estourado: disponivel " + v[0].subtract(v[1]));
     }
     private PedidoVenda pedidoBloqueado(Long id, Long empresaId) {
         return pedidoRepository.findByIdForUpdateAndEmpresaId(id, empresaId)

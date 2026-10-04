@@ -43,6 +43,8 @@ public class SpedEfdController {
     private final SpedEfdIcmsService efd;
     private final EfdPeriodoService periodo;
     private final EfdContribService contrib;
+    private final br.com.brasil_saas.fiscal.repository.SpedFiscalRepository histEfd;
+    private final br.com.brasil_saas.fiscal.repository.SpedContribuicoesRepository histContrib;
 
     /**
      * Gera o arquivo EFD a partir de cabecalho, participantes e produtos.
@@ -145,6 +147,10 @@ public class SpedEfdController {
         }
         return contagem;
     }
+    @Operation(summary = "Lista arquivos SPED gerados")
+    @GetMapping("/historico")
+    @PreAuthorize("hasAuthority('fiscal:sped:gerar')")
+    public Map<String, Object> historico(@AuthenticationPrincipal AuthenticatedUser u) { Map<String, Object> m = new LinkedHashMap<>(); m.put("efd", histEfd.findByEmpresaIdOrderByCompetenciaDesc(u.getEmpresaId())); m.put("contribuicoes", histContrib.findByEmpresaIdOrderByCompetenciaDesc(u.getEmpresaId())); return m; }
 
     /** Corpo do pedido. Records, para nao ter 20 campos em classe. */
     public record PedidoEfd(

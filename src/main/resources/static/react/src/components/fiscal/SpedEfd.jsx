@@ -6,6 +6,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Toast } from 'primereact/toast';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { SpedService } from '../../services/SpedService';
+
 import { useTranslation } from 'react-i18next';
 
 const initialForm = {
@@ -48,6 +49,9 @@ export const SpedEfd = () => {
     const toast = useRef(null);
     const [form, setForm] = useState(initialForm);
     const [resultado, setResultado] = useState(null);
+    const [hist, setHist] = useState({ efd: [], contribuicoes: [] });
+    const carregarHist = async () => { try { const r = await SpedService.historico(); setHist(r); } catch (e) { } };
+    React.useEffect(() => { carregarHist(); }, []);
     const [loading, setLoading] = useState(false);
 
     const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
@@ -62,6 +66,7 @@ export const SpedEfd = () => {
         try {
             const resposta = acao === 'exemplo' ? await SpedService.exemplo() : acao === 'contrib' ? await SpedService.gerarContribPeriodo({ ...form, produtos: [], participantes: [] }) : acao === 'periodo' ? await SpedService.gerarPeriodo({ ...form, produtos: [], participantes: [] }) : await SpedService.gerar({ ...form, produtos: [], participantes: [] });
             setResultado(resposta);
+            carregarHist();
             toast.current?.show({ severity: 'success', summary: t('sped.generated'), detail: t('sped.linesGenerated', { count: resposta.totalLinhas || 0 }), life: 3500 });
         } catch (error) {
             toast.current?.show({ severity: 'error', summary: t('sped.generationFailed'), detail: error.message, life: 5000 });
@@ -126,6 +131,13 @@ export const SpedEfd = () => {
                     {loading && <ProgressSpinner style={{ width: '24px', height: '24px' }} strokeWidth="4" />}
                     {resultado && <Button label={t('sped.downloadTxt')} icon="pi pi-download" severity="secondary" outlined onClick={() => downloadText(resultado.conteudo, resultado.competencia)} />}
                 </div>
+                {(hist.efd.length > 0 || hist.contribuicoes.length > 0) && (
+                    <div className='mt-3 surface-50 border-round p-3'>
+                        <strong>Arquivos gerados</strong>
+                        {hist.efd.length > 0 && <div className='mt-2'><small>EFD ICMS/IPI:</small> {hist.efd.map((h) => h.competencia + ' (' + h.status + ')').join('; ')}</div>}
+                        {hist.contribuicoes.length > 0 && <div className='mt-2'><small>EFD Contribuicoes:</small> {hist.contribuicoes.map((h) => h.competencia + ' (' + h.status + ')').join('; ')}</div>}
+                    </div>
+                )}
                 {resultado && (
                     <div className="mt-3 surface-50 border-round p-3">
                         <strong>{t('sped.fileReady')}</strong>

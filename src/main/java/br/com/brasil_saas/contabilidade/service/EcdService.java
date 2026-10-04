@@ -5,6 +5,8 @@ import br.com.brasil_saas.contabilidade.repository.CtbLancamentoRepository;
 import br.com.brasil_saas.contabilidade.repository.CtbPartidaRepository;
 import br.com.brasil_saas.financeiro.model.PlanoContas;
 import br.com.brasil_saas.financeiro.repository.PlanoContasRepository;
+import br.com.brasil_saas.fiscal.model.Ecd;
+import br.com.brasil_saas.fiscal.repository.EcdRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ public class EcdService {
     private final CtbLancamentoRepository lancamentos;
     private final CtbPartidaRepository partidas;
     private final PlanoContasRepository contas;
+    private final EcdRepository historico;
     private static final DateTimeFormatter DIA = DateTimeFormatter.ofPattern("ddMMyyyy");
     @Transactional(readOnly = true)
     public Map<String, Object> gerar(Long empresaId, int exercicio, String cnpj, String nome, String uf, String codMun) {
@@ -101,6 +104,11 @@ public class EcdService {
         saida.put("totalLinhas", total);
         saida.put("demonstracoes", "PENDENTE");
         saida.put("conteudo", String.join("\n", arq));
+        String exercicioStr = String.valueOf(exercicio);
+        Ecd reg = historico.findByEmpresaIdAndExercicio(empresaId, exercicioStr).orElse(null);
+        if (reg == null) { reg = new Ecd(); reg.setEmpresaId(empresaId); reg.setExercicio(exercicioStr); }
+        reg.setStatus("GERADA");
+        historico.save(reg);
         return saida;
     }
     private String lin(String reg, Object... campos) {
