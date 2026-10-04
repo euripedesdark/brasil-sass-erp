@@ -1,3 +1,8 @@
+> ⏳ **Registro histórico** — este documento é um retrato pontual da data
+> do arquivo e **não reflete o estado atual** do sistema. Para o estado
+> atual, veja [`README.pt-BR.md`](../README.pt-BR.md) e
+> [`docs/INDICE.md`](INDICE.md).
+
 # Mapa de cobertura de frontend — levantamento histórico
 
 > **STATUS HISTÓRICO — 30/09/2026:** este documento foi produzido antes das correções de cobertura de `ComissaoController`, `CaixaController` e da sincronização da tela fiscal com a API NFS-e. **Não use os números 212 nem as afirmações de que Comissão/Caixa não possuem backend como estado atual.** O levantamento vigente está em `docs/auditorias/MAPA_COBERTURA_FRONTEND_ATUAL_2026-09-30.md`.

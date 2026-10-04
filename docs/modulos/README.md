@@ -1,3 +1,5 @@
+> Atualizado em 04/10/2026 — inventário verificado no código, banco e smoke test.
+
 # Mapa de módulos — menu, função e cobertura
 
 Uma visão por módulo do que existe no menu, o que está em código no backend e o

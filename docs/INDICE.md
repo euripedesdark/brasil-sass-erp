@@ -1,60 +1,79 @@
-# Documentacao
+# Documentação — Brasil SaaS ERP
 
-A raiz do repositorio tem so o `README.md`. Tudo mais esta aqui, organizado por
-assunto.
+> Atualizado em 04/10/2026 — inventário verificado no código, banco e smoke test.
 
-## Onde procurar
+A raiz do repositório tem o `README.md` (ponte para os 4 idiomas) e os
+READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 
-| assunto | pasta |
-|---|---|
-| relatorios de teste e de sessao | [`relatorios/`](relatorios/) |
-| auditorias e mapas de cobertura | [`auditorias/`](auditorias/) |
-| plano de trabalho | [`roadmap/`](roadmap/) |
-| frontend React | [`frontend/`](frontend/) |
-| build, deploy, restore, microsservicos | [`infra/`](infra/) |
-| changelog e tarefas | [`guia/`](guia/) |
-| pesquisa e quem investigates | [`pesquisa/`](pesquisa/) |
-| incidentes e coordenao entre IAs | [`incidentes/`](incidentes/) |
-| decisao fiscal pendente: NCM ambiguos e inexistentes | [`RELATORIO-NCM-PENDENTES.md`](RELATORIO-NCM-PENDENTES.md) |
-| decisoes de arquitetura fechadas | [`ARQUITETURA-IDENTIDADE.md`](ARQUITETURA-IDENTIDADE.md) |
-| geracao de menus | [`modulos/`](modulos/) |
-| referencia de API | [`api/`](api/) |
+## Documentação principal (4 idiomas)
 
-## Leitura obrigatoria antes de mexer
+| Idioma | Arquivo |
+|--------|---------|
+| 🇧🇷 Português (Brasil) | [`../README.pt-BR.md`](../README.pt-BR.md) |
+| 🇺🇸 English | [`../README.en-US.md`](../README.en-US.md) |
+| 🇪🇸 Español | [`../README.es-ES.md`](../README.es-ES.md) |
+| 🇫🇷 Français | [`../README.fr-FR.md`](../README.fr-FR.md) |
 
-- [`relatorios/TESTE-SUITE-E-RENAME-INPI.md`](relatorios/TESTE-SUITE-E-RENAME-INPI.md) — o rename para o INPI, as duas armadilhas que derrubaram o boot, e a suite de testes
-- [`ISSQN-PDFS-PENDENTE.md`](ISSQN-PDFS-PENDENTE.md) — os dois PDFs de ISSQN estao no repo e os dados **nao** estao no banco
-- [`infra/RESTAURAR.md`](infra/RESTAURAR.md) — como restaurar o banco
+## Docs vivos (estado atual do sistema)
 
-## Nome: porque o banco tem hifen e o schema nao
+| Documento | Conteúdo |
+|-----------|----------|
+| [`modulos/`](modulos/) | Um arquivo por módulo — endpoints, tabelas, features |
+| [`modulos/README.md`](modulos/README.md) | Índice dos módulos |
+| [`navegacao.md`](navegacao.md) | Rotas do frontend e estrutura de menus |
+| [`roadmap.md`](roadmap.md) | Fases concluídas e próximas |
+| [`arquitetura.md`](arquitetura.md) | Arquitetura do sistema |
+| [`modelo-dados.md`](modelo-dados.md) | Modelo de dados (204 tabelas) |
+| [`autenticacao.md`](autenticacao.md) | Autenticação e autorização |
+| [`cadastro.md`](cadastro.md) | Módulo de cadastros |
+| [`INSTRUCOES-DO-DONO.md`](../INSTRUCOES-DO-DONO.md) | Instruções do dono do sistema |
+| [`infra/`](infra/) | Build, deploy, restore, microsserviços |
+| [`infra/README_MODULES.md`](infra/README_MODULES.md) | Módulos do sistema |
+| [`infra/README_MICROSSERVICOS.md`](infra/README_MICROSSERVICOS.md) | Microsserviços fiscais |
+| [`infra/BUILD.md`](infra/BUILD.md) | Como buildar |
+| [`infra/MIGRATION.md`](infra/MIGRATION.md) | Migrations Flyway |
+| [`infra/RESTAURAR.md`](infra/RESTAURAR.md) | Como restaurar o banco |
+| [`perfis/`](perfis/) | Regras de perfil |
+| [`guia/CHANGELOG.md`](guia/CHANGELOG.md) | Changelog |
 
-```
-banco    brasil-saas      o hifen e seguro: vive na URL do JDBC e no pg_hba
-schema   brasil_saas      o hifen nao e: '-' nao e identificador SQL valido
-datalake brasil_saas_dl   e exigiria aspas em 88 migrations e em todo SQL
-Mongo    brasil-saas      nome de banco do Mongo, nao e identificador SQL
-pacote   br.com.brasil_saas   Java nao aceita hifen em pacote
-```
+## Auditorias e relatórios (registros históricos)
 
-## Coerencia de nomes
+> ⚠️ Os documentos abaixo são **retratos pontuais** da data do arquivo.
+> Não refletem o estado atual do sistema. Para o estado atual, veja os
+> READMEs e os docs vivos acima.
 
-| | nome |
-|---|---|
-| razao social | `SRVCLOUD CONSULTORIA LTDA` — titular do registro, **nao** a marca |
-| nome fantasia / marca | `Brasil SaaS` |
-| titulo da aba | `Brasil SaaS ERP` |
-| rodape do PDF | `Gerado por Brasil SaaS ERP` |
+| Documento | Data | Conteúdo |
+|-----------|------|----------|
+| [`auditorias/`](auditorias/) | 22–30/09/2026 | Auditorias e mapas de cobertura |
+| [`relatorios/`](relatorios/) | 21–25/09/2026 | Relatórios de teste e diagnóstico |
+| [`incidentes/`](incidentes/) | — | Incidentes e coordenação |
+| [`AUDITORIA_AUTENTICACAO_FRONTEND_BACKEND_24-09-2026.md`](AUDITORIA_AUTENTICACAO_FRONTEND_BACKEND_24-09-2026.md) | 24/09/2026 | Auditoria de autenticação |
+| [`RELATORIO_PARIDADE_FUNCIONAL_ERP_25-09-2026.md`](RELATORIO_PARIDADE_FUNCIONAL_ERP_25-09-2026.md) | 25/09/2026 | Paridade funcional |
 
-Antes de um replace de nome, procure o nome em tres lugares que **nao sao nome**:
-caminho de disco, regex escapada (`br\\.com\\.brasil-saas`) e URL. Nenhum dos
-tres aparece num grep do nome, e qualquer um dos tres derruba o boot. Ver secao
-2 do relatorio.
+## Pesquisa (referência)
 
-## Pendencias conhecidas
+| Documento | Conteúdo |
+|-----------|----------|
+| [`pesquisa/`](pesquisa/) | Pesquisas técnicas e análises |
+| [`pesquisa/MEGA-MANUAL-API-FISCAL.md`](pesquisa/MEGA-MANUAL-API-FISCAL.md) | Manual da API fiscal |
+| [`pesquisa/APIS-DE-TRANSPORTE-SPED-MDFE-CTE.md`](pesquisa/APIS-DE-TRANSPORTE-SPED-MDFE-CTE.md) | APIs de transporte |
+| [`pesquisa/IMPORTACAO-NFE-POR-XML.md`](pesquisa/IMPORTACAO-NFE-POR-XML.md) | Importação de NF-e por XML |
+| [`pesquisa/REGISTRO-da-prefeitura-NFSE.md`](pesquisa/REGISTRO-da-prefeitura-NFSE.md) | Registro na prefeitura |
+| [`pesquisa/contrato-nfse-unico.md`](pesquisa/contrato-nfse-unico.md) | Contrato único de resposta |
 
-| | |
-|---|---|
-| `LazyInitializationException` em `/api/rh/funcionarios` e `/api/producao/romaneios` | correcao e `join fetch`, **nao** `EAGER` |
-| `bc_fis_regra_tributaria` com 58 linhas falsas do seed | limpar e pôr em `NUNCA_SEMEAR` |
-| PDFs de ISSQN | dados nao carregados, ver [`ISSQN-PDFS-PENDENTE.md`](ISSQN-PDFS-PENDENTE.md) |
-| pasta em disco | continua `BRASIL-SAAS-ERP`; renomear afeta git remote, `WorkingDirectory` e OneDrive |
+## Decisões de arquitetura
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [`ARQUITETURA-IDENTIDADE.md`](ARQUITETURA-IDENTIDADE.md) | Arquitetura de identidade |
+| [`IDENTIDADE-AD.md`](IDENTIDADE-AD.md) | Identidade com Active Directory |
+| [`MAPA-MICROSERVICIOS-FISCAIS.md`](MAPA-MICROSERVICIOS-FISCAIS.md) | Mapa dos microsserviços fiscais |
+| [`MAPA-NFCE.md`](MAPA-NFCE.md) | Mapa da NFC-e |
+
+## Relatórios pendentes
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [`RELATORIO-NCM-PENDENTES.md`](RELATORIO-NCM-PENDENTES.md) | NCMs pendentes |
+| [`ISSQN-PDFS-PENDENTE.md`](ISSQN-PDFS-PENDENTE.md) | PDFs de ISSQN pendentes |
+| [`FAILOVER-4567-PENDENTE.md`](FAILOVER-4567-PENDENTE.md) | Failover 4567 pendente |

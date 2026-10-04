@@ -1,3 +1,5 @@
+> Atualizado em 04/10/2026 — inventário verificado no código, banco e smoke test.
+
 # Serviços
 
 Gerado a partir do código: menu lateral, rotas do `App.jsx`, controllers e as

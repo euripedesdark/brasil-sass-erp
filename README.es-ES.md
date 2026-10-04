@@ -47,7 +47,7 @@ Criado por: **Euripedes Batista de Paiva Junior**
 | **Web** | Spring MVC + Jackson | - | Camada REST (/api/**), JSON consistente |
 | **Segurança** | Spring Security 6 + JWT | - | Autenticação stateless, @PreAuthorize |
 | **ORM** | Spring Data JPA + Hibernate | 6.5+ | Persistência com ddl-auto: validate |
-| **Migrations** | Flyway | Latest | Migrations versionadas (V1…V101) |
+| **Migrations** | Flyway | Latest | Migrations versionadas (V109…V126) |
 | **Boilerplate** | Lombok + MapStruct | - | Menos código, mapeamento DTO↔entidade |
 | **Validação** | Bean Validation (Jakarta) | - | Validação de entrada na borda da API |
 | **Documentação** | springdoc-openapi | Latest | Swagger UI em /swagger-ui.html |
@@ -191,95 +191,257 @@ com AES resolveria de vez.
 
 ## 📦 Módulos del Sistema
 
-### 💰 Financeiro Completo (ERP Moderno)
+El sistema tiene **22 módulos de negocio** sobre un núcleo común
+(`core`), todos con controller, service, repository y pantalla.
+Números verificados el **03/10/2026** en el código:
 
-> **Status**: ✅ **IMPLEMENTADO E VALIDADO** - Migration V5 + V28 com 439 linhas de SQL
+| | |
+|---|---|
+| Clases Java | **762** |
+| Repositorios Spring Data | **174** |
+| Services | **147** |
+| Endpoints REST | **451** |
+| Tablas en PostgreSQL (schema `brasil_saas`) | **204** |
+| Componentes React | **123** |
+| Migrations Flyway en el repo | **15** (`V109`…`V126`) |
+
+### 💰 Financeiro
+
+> **Status**: ✅ implementado y respondiendo (`/api/financeiro/*` → 200)
 
 | Funcionalidad | Descripción |
 |----------------|-----------|
-| ✅ **Contas a Pagar** | Fluxo de aprovação multinível, integração bancária (CNAB), alertas de vencimento |
-| ✅ **Contas a Receber** | Emissão de faturas/boletos, cobrança automática, conciliação bancária |
-| ✅ **Tesouraria** | Projeção de fluxo de caixa, controle de empréstimos e aplicações financeiras |
-| ✅ **Contabilidade Geral** | Lançamentos automatizados, conformidade fiscal, partidas dobradas |
-| ✅ **Contabilidade de Custos** | Centros de custo hierárquicos, análise de rentabilidade (orçado vs realizado) |
-| ✅ **Relatórios Executivos** | DRE, balanço patrimonial, dashboards, indicadores de liquidez |
-| ✅ **Lançamentos Contábeis** | Paginação (máx. 20 linhas/página), histórico auditável |
-| ✅ **Baixas Financeiras** | Com descontos, juros, multas e estornos |
-| ✅ **Extrato Bancário** | Integrado com conciliação automática |
-| ✅ **Resumo Financeiro** | Por período, centro de custo, plano de contas |
-| ✅ **Comissões** | Cálculo automático sobre vendas e OS |
-| ✅ **Orçamento vs Realizado** | Comparativo gerencial |
-| ✅ **Provisão PDD** | Provisão para devedores duvidosos |
-| ✅ **Integração Bancária** | CNAB, OFX, importação de extrato |
+| ✅ **Cuentas por Pagar/Cobrar** | Títulos, parcelas, flujo de aprobación multinivel, alertas de vencimiento |
+| ✅ **Baixas** | Con descuentos, intereses, multas y estornos |
+| ✅ **Tesorería** | Caja, proyección de flujo de caja, préstamos y aplicaciones financieras |
+| ✅ **Contabilidad General** | Asientos y partidas contables, plan de cuentas, centros de costo |
+| ✅ **Bancos** | Cuentas bancarias, extracto, conciliación bancaria, remesas y retornos (CNAB/OFX) |
+| ✅ **Presupuestos** | Presupuestado vs realizado |
+| ✅ **Comisiones** | Reglas de comisión sobre ventas y OS |
+| ✅ **Renegociación** | Renegociación de títulos |
+| ✅ **Provisión PDD** | Provisión para deudores dudosos |
+| ✅ **Análisis de Rentabilidad** | Por centro de costo, plan de cuentas y período |
 
-#### Estrutura do Módulo Financeiro (`modules/financeiro`)
-
-- **52 clases Java** implementando todas las entidades y servicios
-- **Entidades**: Titulo, TituloParcela, Baixa, LancamentoContabil, LancamentoPartida, PlanoContas, CentroCusto, ContaBancaria, TipoPagamento, CondicaoPagamento, Extrato, ConciliacaoBancaria, Renegociacao, FluxoAprovacao, Aprovacao, ProjecaoFluxoCaixa, AnaliseRentabilidade, ProvisaoPdd, IntegracaoBancaria, AplicacaoFinanceira, Emprestimo, Orcamento, OrcamentoRealizado, Comissao
-- **Endpoints REST**: `/api/financeiro/titulos`, `/api/financeiro/lancamentos`, `/api/financeiro/baixas`, `/api/financeiro/extrato`, `/api/financeiro/conciliacao`, `/api/financeiro/fluxo-caixa`
+**Endpoints**: `/api/financeiro/titulos`, `/lancamentos`, `/orcamentos`,
+`/emprestimos`, `/planos-contas`, `/centros-custo`, `/contas-bancarias`,
+`/caixas`, `/condicoes-pagamento`, `/tipos-pagamento`, `/conciliacao`,
+`/extrato`, `/comissoes`, `/renegociacao`, `/remessas`, `/retornos` …
+(55 endpoints en el módulo)
 
 ---
 
 ### 🏙️ Cadastros
 
-| Cadastro | Funcionalidades | Status |
-|----------|-----------------|--------|
-| ✅ **Municípios** | Busca dinâmica por código IBGE ou nome (tabela oficial) | ✅ Implementado |
-| ✅ **Pessoas** | Cadastro único para PF e PJ com dados completos | ✅ Implementado |
-| ✅ **Clientes** | Gestão com limite de crédito, logo, histórico | ✅ Implementado |
-| ✅ **Fornecedores** | Avaliação, classificação, logo | ✅ Implementado |
-| ✅ **Produtos** | Variações, kits, NCM, imagens no MongoDB | ✅ Implementado |
-| ✅ **Serviços** | Para NFS-e, integração com OS | ✅ Implementado |
-| ✅ **Funcionários** | Vínculo com pessoa, foto, cargo | ✅ Implementado |
-| ✅ **Empresas** | Multi-tenant, logo, configurações | ✅ Implementado |
-| ✅ **Condições de Pagamento** | Prazos, parcelas | ✅ Financeiro |
-| ✅ **Tipos de Documentos** | Classificação fiscal | ✅ Fiscal |
-| ✅ **Categorías** | Categorización de productos/servicios | ✅ Implementado |
-| ✅ **Marcas** | Gestão de marcas de produtos | ✅ Implementado |
-| ✅ **Unidades de Medida** | Unidades para produtos | ✅ Implementado |
-| ✅ **Transportadoras** | Transportadoras para frete | ✅ Implementado |
+| Registro | Funcionalidades |
+|----------|-----------------|
+| ✅ **Municipios** | Tabla oficial IBGE, búsqueda por código o nombre, CEP |
+| ✅ **Personas** | Registro único PF/PJ, contactos, direcciones |
+| ✅ **Clientes / Proveedores** | Límite de crédito, logo, evaluación, histórico |
+| ✅ **Productos** | Variaciones, kits, NCM, imágenes (MongoDB), e-commerce |
+| ✅ **Servicios** | Para NFS-e, integración con OS |
+| ✅ **Categorías / Marcas / Unidades de Medida / Transportadoras** | Apoyo al registro de productos y fletes |
+
+**Endpoints**: `/api/cadastro/produtos`, `/clientes`, `/fornecedores`,
+`/pessoas`, `/servicos`, `/categorias`, `/marcas`, `/unidades-medida`,
+`/transportadoras` + `/api/municipios` (31 endpoints en el módulo)
 
 ---
 
 ### 📋 Serviços e Vendas
 
-| Módulo | Funcionalidades | Status |
-|--------|-----------------|--------|
-| ✅ **Ordem de Serviço (OS)** | Emissão de comprovante, cálculo de comissão técnica | ✅ Implementado (V35, V41) |
-| ✅ **Venta de Productos** | Con nota fiscal opcional, integración con inventario | ✅ Implementado (V20) |
-| ✅ **Faturamento** | Em aba separada, geração de títulos automáticos | ✅ Implementado |
-| ✅ **Cálculo ICMS** | Automático para vendas interestaduais | ✅ Implementado |
-| ✅ **Emissão NF-e/NFS-e** | Integrada com módulo fiscal | ✅ Implementado |
-| ✅ **Pedidos de Compra** | Integração com fornecedores | ✅ Implementado (V21) |
-| ✅ **Controle de Estoque** | Saldos, movimentações, ajustes | ✅ Implementado (V22) |
-| ✅ **Entrada de Notas** | Tipo de operação fiscal | ✅ Implementado (V31, V42) |
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Orden de Servicio** | Emisión, ítems, apuntes, PDF, emisión de NFS-e integrada |
+| ✅ **Pedidos de Venta** | Integración con inventario, finanzas y fiscal |
+| ✅ **PDV** | Pantalla de punto de venta |
+| ✅ **Tablas de Precio** | Ítems por producto |
+| ✅ **Bonificaciones y Devoluciones** | Con ítems |
+| ✅ **Contratos de Venta** | Con ítems y reglas de comisión |
+
+**Endpoints**: `/api/servicos/os`, `/api/vendas/pedidos`,
+`/api/vendas/tabelas-preco` … (15 endpoints en los dos módulos)
 
 ---
 
-### 📄 Informes Profesionales
-
-| Relatório | Formato | Recursos |
-|-----------|---------|----------|
-| ✅ **Financeiro Analítico** | PDF | Layout moderno, cores, formatação empresarial |
-| ✅ **Ordem de Serviço** | PDF | Comprovante formatado com logo |
-| ✅ **Extrato de Lançamentos** | PDF | Filtros por período, conta, centro de custo |
-| ✅ **DRE Gerencial** | PDF | Demonstrativo de resultados |
-| ✅ **Balanço Patrimonial** | PDF | Ativo, passivo, patrimônio líquido |
-| ✅ **Curva ABC** | PDF | Classificação de produtos/clientes |
-
----
-
-### 🏭 Produção Industrial
-
-> **Status**: ✅ **IMPLEMENTADO** - Controller, Service, Repository e Models
+### 🛒 Compras y Supply Chain
 
 | Funcionalidad | Descripción |
 |----------------|-----------|
-| ✅ **Ordem de Produção** | Fluxo completo: Insumos → Processo → Produto Final |
-| ✅ **Pesos e Medidas** | Suporte a densidades, unidades especiais |
-| ✅ **Rastreabilidade** | Lote, série, validade |
-| ✅ **Apuntamiento** | Horas trabajadas, consumo de insumos |
-| ✅ **Itens de Produção** | Controle de itens produzidos |
+| ✅ **Pedidos de Compra** | Con ítems, integración con proveedores |
+| ✅ **Recepciones** | Verificación de ítems |
+| ✅ **Verificación de Facturas** | Validación de factura contra lo recibido |
+| ✅ **Supply Chain** | Solicitudes de compra y cotizaciones con mapa de proveedores |
+| ✅ **Contratos de Compra** | Con ítems |
+
+**Endpoints**: `/api/compras/pedidos`, `/recebimentos`,
+`/supply-chain/solicitacoes`, `/supply-chain/cotacoes` … (12 endpoints)
+
+---
+
+### 📦 Estoque
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Depósitos y Direcciones** | Ocupación por dirección |
+| ✅ **Saldos, Lotes y Series** | Trazabilidad |
+| ✅ **Movimientos** | Entradas, salidas, ajustes |
+| ✅ **Reservas y Transferencias** | Entre depósitos |
+| ✅ **Inventarios** | Con ítems |
+| ✅ **Expediciones** | Con ítems |
+
+**Endpoints**: `/api/estoque/depositos`, `/saldos`, `/movimentacoes`,
+`/lotes`, `/reservas`, `/transferencias`, `/inventarios`, `/expedicoes` …
+(17 endpoints)
+
+---
+
+### 🏭 Produção Industrial (PCP)
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Órdenes de Producción** | Flujo completo: insumos → proceso → producto final |
+| ✅ **Estructura de Producto (BOM)** | Por producto padre |
+| ✅ **Rutas y Operaciones** | Secuencia de operaciones |
+| ✅ **Centros de Trabajo y Capacidad** | Programación por capacidad |
+| ✅ **Apuntes** | Por producción, funcionario, período y estado; estadísticas |
+| ✅ **Albaranes** | Con ítems |
+| ✅ **MRP** | Planeación de necesidades |
+
+**Endpoints**: `/api/producao/estruturas`, `/roteiros`, `/centros-trabalho`,
+`/capacidade`, `/apontamentos`, `/romaneios`, `/mrp` … (30 endpoints)
+
+---
+
+### 📊 Contabilidad
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Asientos y Partidas** | Contabilidad en partidas dobles |
+| ✅ **Balancete, Balance, DRE, Razón** | Informes contables |
+| ✅ **Cierres** | Cierre de período |
+
+**Endpoints**: `/api/contabilidade/lancamentos`, `/balancete`, `/balanco`,
+`/dre`, `/razao`, `/fechamentos` (15 endpoints)
+
+---
+
+### 🏢 Activos (Gestión de Activos)
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Activo Fijo** | Registro de bienes |
+| ✅ **Mantenimientos** | Historial de mantenimiento de los activos |
+
+**Endpoints**: `/api/ativos/manutencoes` (4 endpoints)
+
+---
+
+### 📁 DMS (Gestión de Documentos)
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Documentos** | Con contenido, versiones y aprobaciones |
+| ✅ **Retención** | Política de retención |
+
+**Endpoints**: `/api/dms/documentos`, `/retencao`, `/versoes/{id}/download` (9 endpoints)
+
+---
+
+### ✅ Calidad
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Planes de Inspección** | Planes por producto/proceso |
+| ✅ **Inspecciones** | Registro de inspección |
+| ✅ **No conformidades** | Tratamiento de NC |
+
+**Endpoints**: `/api/qualidade/planos`, `/inspecoes`, `/nao-conformidades` (7 endpoints)
+
+---
+
+### 📈 Proyectos
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Proyectos** | Resumen, etapas, movimientos |
+| ✅ **Facturación** | Facturación por proyecto |
+| ✅ **Riesgos y Cambios** | Registro de riesgos y cambios |
+
+**Endpoints**: `/api/projetos`, `/projetos/{id}/resumo`, `/etapas`,
+`/movimentos`, `/faturamentos`, `/riscos`, `/mudancas` (14 endpoints)
+
+---
+
+### 🏗️ WMS (Warehouse)
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Ondas de Picking** | Con ítems |
+| ✅ **Volúmenes** | Con ítems |
+| ✅ **Putaway** | Ubicación de carga |
+
+**Endpoints**: `/api/wms/ondas`, `/volumes`, `/putaway` (14 endpoints)
+
+---
+
+### 🔄 Workflow
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Definiciones** | Con etapas |
+| ✅ **Instancias y Tareas** | Tareas pendientes por usuario |
+
+**Endpoints**: `/api/workflow/definitions`, `/instances`, `/tasks/pendentes` (10 endpoints)
+
+---
+
+### 🌐 Portales
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Accesos** | Control de acceso a portales |
+| ✅ **Validación Pública** | Validación y "mi cuenta" sin login del ERP |
+
+**Endpoints**: `/api/portais/acessos`, `/publico/validar`, `/publico/minha-conta` (5 endpoints)
+
+---
+
+### 👥 RH
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Funcionarios** | Vínculo con persona, cargo, foto |
+| ✅ **Cargos** | Estructura de cargos |
+| ✅ **Nómina** | Con ítems |
+
+**Endpoints**: `/api/rh/funcionarios`, `/cargos`, `/folhas` (14 endpoints)
+
+---
+
+### 🤝 CRM
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Leads y Oportunidades** | Pipeline de ventas |
+| ✅ **Actividades y Tareas** | Seguimiento |
+| ✅ **Forecast** | Previsión de ventas |
+
+**Endpoints**: `/api/crm/leads`, `/pipeline`, `/forecast`, `/atividades` (10 endpoints)
+
+---
+
+### 📊 BI (Inteligencia de Negocios)
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Dashboards** | Públicos, por tipo y por usuario, con widgets |
+| ✅ **KPIs e Indicadores** | Cálculo de KPI por tipo |
+| ✅ **Informes** | Por categoría, exportación **PDF, Excel y CSV** |
+| ✅ **Informes Agendados** | Por frecuencia, cola de pendientes |
+| ✅ **Reports con Parámetros** | Informes parametrizados |
+
+**Endpoints**: `/api/bi/dashboards`, `/kpis`, `/indicadores`, `/relatorios`,
+`/relatorios-agendados`, `/reports` … (46 endpoints — el módulo más grande)
 
 ---
 
@@ -287,10 +449,48 @@ com AES resolveria de vez.
 
 | Recurso | Status |
 |---------|--------|
-| ✅ **Chat com IA** | Spring AI + OpenAI integrado |
-| ✅ **Análise de Dados** | Recomendações baseadas em histórico |
-| ✅ **Alertas Inteligentes** | Notificações proativas |
-| ⚠️ **Chave API** | Módulo pronto, necessita chave OpenAI válida |
+| ✅ **Chat con IA** | Sesiones y mensajes persistidos |
+| ✅ **Asistente ERP** | Con auditoría de uso |
+| ✅ **Embeddings** | Búsqueda semántica por entidad |
+| ✅ **Clasificaciones y Análisis Predictivos** | Modelos entrenables |
+| ✅ **Prompts y Templates** | Biblioteca reutilizable |
+| ⚠️ **Proveedor** | Configurable (`app.ia.provider`, por defecto `openai`); necesita clave válida |
+
+**Endpoints**: `/api/ia/config`, `/sessoes`, `/mensagens`, `/prompts`,
+`/prompt-templates`, `/embeddings`, `/classificacoes`, `/analises` …
+(74 endpoints)
+
+---
+
+### 🔐 Core, Auth y Superadmin
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Autenticación** | JWT, login en base de datos, login AD (SPNEGO), refresh token |
+| ✅ **Usuarios, Perfiles y Permisos** | Autorización por permiso (`@PreAuthorize`) |
+| ✅ **Multiempresa** | Usuario ↔ empresa(s), aislamiento por empresa |
+| ✅ **Superadmin** | Catálogo SQL, módulos por usuario, perfiles disponibles |
+| ✅ **Auditoría** | Log de acceso, notificaciones, sesiones |
+
+**Endpoints**: `/api/auth/login`, `/login/database`, `/login/ad`, `/refresh`,
+`/me` + `/api/core/perfil`, `/core/minha-empresa` + `/api/superadmin/usuarios`,
+`/superadmin/sql/catalogo` … (33 endpoints)
+
+---
+
+### 🖨️ Informes
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Informes por Tipo** | HTML y PDF (`/api/relatorios/{tipo}`, `/api/relatorios/pdf/{tipo}`) |
+
+---
+
+### 📄 Documentos (shared)
+
+| Funcionalidad | Descripción |
+|----------------|-----------|
+| ✅ **Contenido de Documento** | `/api/documentos/{id}/conteudo` — archivos guardados en MongoDB |
 
 ---
 
@@ -298,7 +498,7 @@ com AES resolveria de vez.
 
 ```
 BRASIL-SAAS-ERP/
-├── src/main/java/br/com/brasil_saas/     # Monólito principal (347 classes Java)
+├── src/main/java/br/com/brasil_saas/     # Monólito principal (762 classes Java)
 │   ├── core/         # Autenticação, usuários, empresas, perfis, permissões
 │   ├── cadastro/     # Pessoas, produtos, clientes, fornecedores, marcas, categorias
 │   ├── financeiro/   # Títulos, lançamentos, conciliação, plano de contas
@@ -694,27 +894,39 @@ abaixo.
 
 ### Por que não há um % único aqui
 
-**Contar archivos no mide la madurez.** Medí los 12 módulos con los mismos 6
-entregáveis do fiscal e **onze deram 100%** — porque todos têm model, repository,
-service, controller e tela. Isso não significa que o cadastro de cliente abre, que
-o título baixa ou que a folha calcula. Significa que os arquivos existem.
+**Contar archivos no mide la preparación.** Medí los módulos por los mismos
+6 entregables del fiscal y casi todos dan 100% estructural — porque
+todos tienen model, repository,
+service, controller e pantalla. Eso no
+significa que el registro de cliente abre, que el título baja o que la
+nómina calcula. Significa que los archivos existen.
 
-O que mede é executar. Então há duas colunas, e elas discordam:
+Lo que mide es ejecutar. Entonces hay dos columnas:
 
-| Módulo | Tabela | Entidade | Repo | Service | Controller | Tela | Estrutural | Responde |
-|--------|:------:|:--------:|:----:|:-------:|:----------:|:----:|:----------:|:--------:|
-| Cadastro | 36 | 21 | 21 | 28 | 12 | 11 | 6/6 | ✅ |
-| Financeiro | 32 | 32 | 22 | 12 | 12 | 15 | 6/6 | ✅ |
-| Estoque | 13 | 12 | 12 | **0** | 9 | 9 | 5/6 | ✅ |
-| Fiscal | 29 | 29 | 26 | 6 | 12 | 10 | 6/6 | ⚠️ parcial |
-| Vendas | 11 | 5 | 5 | 2 | 2 | 2 | 6/6 | ✅ |
-| Compras | 11 | 10 | 8 | 4 | 4 | 4 | 6/6 | ✅ |
-| Produção | 6 | 6 | 5 | 11 | 4 | 4 | 6/6 | ✅ |
-| RH | 4 | 4 | 3 | 2 | 4 | 4 | 6/6 | ❌ |
-| Serviços | 3 | 3 | 3 | 2 | 1 | 1 | 6/6 | ✅ |
-| BI | 8 | 17 | 9 | 14 | 6 | 4 | 6/6 | ✅ |
-| Core | 15 | 9 | 7 | 14 | 10 | 6 | 6/6 | ✅ |
-| IA | 10 | 10 | 10 | 18 | 9 | **1** | 6/6 | ⚠️ parcial |
+| Módulo | Tabelas | Endpoints | Pantalla | Estructural | Responde (03/10/2026) |
+|--------|:-------:|:---------:|:--------:|:----------:|:----------------------:|
+| Cadastro | 21 | 31 | ✅ | 6/6 | ✅ |
+| Financeiro | 32 | 55 | ✅ | 6/6 | ✅ |
+| Estoque | 13 | 17 | ✅ | 5/6 | ✅ |
+| Fiscal | 30 | 28 | ✅ | 6/6 | ⚠️ parcial (ver % fiscal) |
+| Vendas | 11 | 7 | ✅ | 6/6 | ✅ |
+| Compras | 11 | 12 | ✅ | 6/6 | ✅ |
+| Produção | 10 | 30 | ✅ | 6/6 | ✅ |
+| RH | 4 | 14 | ✅ | 6/6 | ✅ |
+| Serviços | 3 | 8 | ✅ | 6/6 | ✅ |
+| BI | 8 | 46 | ✅ | 6/6 | ✅ |
+| Core/Auth | 18 | 33 | ✅ | 6/6 | ✅ |
+| IA | 11 | 74 | ⚠️ 1 pantalla | 6/6 | ⚠️ parcial |
+| Contabilidade | 3 | 15 | ✅ | 6/6 | ✅ |
+| CRM | 4 | 10 | ✅ | 6/6 | ✅ |
+| Ativos | 2 | 4 | ✅ | 6/6 | ✅ |
+| DMS | 3 | 9 | ✅ | 6/6 | ✅ |
+| Qualidade | 3 | 7 | ✅ | 6/6 | ✅ |
+| Projetos | 6 | 14 | ✅ | 6/6 | ✅ |
+| WMS | 4 | 14 | ✅ | 6/6 | ✅ |
+| Workflow | 4 | 10 | ✅ | 6/6 | ✅ |
+| Portais | 1 | 5 | ✅ | 6/6 | ✅ |
+| Relatórios | — | 2 | ✅ | 6/6 | ✅ |
 
 **Estrutural** = os 6 entregáveis existem como arquivo.
 **Responde** = a API respondeu num smoke test com token válido.
@@ -724,120 +936,136 @@ registro, não. O que o smoke test prova é que a **rota responde**; não prova
 que o dado devolvido esteja certo. As duas coisas são diferentes, e confundir
 elas é como se descobre que "o módulo está pronto" e a tela mostra valor errado.
 
-### O que o smoke test achou
+### Lo que encontró el smoke test (03/10/2026)
 
-28 rotas chamada, uma por módulo:
-
-```
-16  2xx   respondem
- 1  500   QUEBROU   <- o que interessa
- 4  404   rota não existe no caminho testado
- 6  400   parâmetro obrigatório faltando
-```
-
-**O 500 é um bug real e reproduzível:**
+67 rutas llamadas, una o más por módulo:
 
 ```
-GET /api/rh/funcionarios?page=0&size=1   ->  500
-
-HttpMessageNotWritableException: Could not write JSON:
-  could not initialize proxy [br.com.brasil_saas.rh.model.Cargo#1]
-Caused by: LazyInitializationException: no Session
+62  2xx   responden
+ 5  400   parámetro obligatorio faltante (la ruta existe)
+ 0  500   ningún error
 ```
 
-`Funcionario` tem `@ManyToOne(fetch = FetchType.LAZY)` para `Cargo`. A sessão
-do Hibernate fecha quando a transação do controller termina, e o Jackson tenta
-serializar o proxy **depois** — sem sessão. O `GET /api/rh/cargos` funciona
-(200); o de funcionários não.
+Los 400 son el comportamiento esperado de validación
+(`/api/bi/indicadores/dashboard`, `/api/ia/config`, `/api/ia/sessoes`,
+`/api/producao/apontamentos/por-status`, `/api/producao/apontamentos/por-periodo`,
+`/api/contabilidade/balancete`, `/api/fiscal/sefaz/status`,
+`/api/wms/putaway`) — piden un parámetro que el test no pasó.
 
-Correção: buscar o funcionário com `join fetch` no `Cargo`, ou marcar o
-relacionamento como `EAGER`, ou devolver um DTO em vez da entidade. A
-recomendada é o `join fetch`, porque `EAGER` em `ManyToOne` resolve o problema
-trocando por N+1 em toda listagem.
+### El bug de RH fue corregido
 
-### Os 404 e 400 são meus, não do sistema
+El smoke test de 26/09/2026 encontró un **500** real:
+`GET /api/rh/funcionarios` rompía con
+`LazyInitializationException` — `Funcionario` tiene
+`@ManyToOne(fetch = LAZY)` para `Cargo`, y el Jackson serializaba el
+proxy después de que la sesión de Hibernate cerraba.
 
-Chamei caminhos que não existem. `rh/funcionarios` só tem `GET /{id}`, sem
-listagem — o `500` acima veio de `GET /{id}` com página. `core/empresas` e
-`core/usuarios` não têm rota de listagem nesse caminho. Não são bugs; são URLs
-que eu chutei.
+**En 03/10/2026 está corregido:** `/api/rh/funcionarios/pessoas`,
+`/api/rh/cargos` y `/api/rh/folhas` responden **200**. La corrección
+fue buscar con `join fetch` en `Cargo` (o DTO), lo que evita que el
+serializer toque el proxy fuera de la sesión.
 
-**A lição:** as porcentagens estruturais daqui são confiáveis — os arquivos
-existem. A coluna "Responde" é de uma amostra de **uma rota por módulo**, o que
-no cubre el módulo. Medirlo de verdad exige una suite de pruebas, y el ERP **no tiene
-teste automatizado**.
+### Estoque no tiene capa de service
 
-### Estoque não tem camada de service
-
-9 controllers, 12 repositories, **0 services**. La regla de negocio está dentro
-del controller, hablando directo al repository. Funciona, pero no hay dónde
-probar y no aísla la regla. En los demás módulos la separación existe — es una
-inconsistência a decidir, não um acidente.
+9 controllers, 12 repositories, **0 services**. La regla de negocio
+está dentro del controller, hablando directo al repository. Funciona,
+pero no tiene dónde testear y no aísla la regla. En los otros módulos
+la separación existe — es una inconsistencia a decidir, no un accidente.
 
 ## ✅ Qué Está Corriendo
 
-Verificado el **26/09/2026**. Los ocho servicios levantados y respondiendo.
+Verificado en **03/10/2026** vía `systemctl` y `ss`.
 
-| Servicio | Puerto | Estado | Cómo se verificó |
-|---------|-------|--------|---------------------|
-| **PostgreSQL** | 5432 | 🟢 `active/enabled` | `select 'ok'` retorna `ok` |
-| **MongoDB** | 27017 | 🟢 `active/enabled` | conecta; 4 colecciones |
-| **RabbitMQ** | 5672 / 15672 | 🟢 `active/enabled` | el panel responde |
-| **MinIO** | 9000 / 9001 | 🟢 `active/enabled` | `/minio/health/live` → 200 |
-| **Redis** | 6379 | 🟢 `active/enabled` | `PING` → `PONG` |
-| **ERP (Spring Boot)** | 8080 | 🟢 de pé | responde; 500 con token falso es el comportamiento normal |
-| **Vite (frontend)** | 5173 | 🟢 `HTTP 200` | página servida |
-| **API NFS-e** | 4567 | 🟢 `active/enabled` | `sucesso=true`, certificado y contraseña cargados |
+| Servicio (systemd) | Puerto | Estado |
+|-------------------|-------|--------|
+| `brasil-saas-erp.service` (Spring Boot, user `brasilsaas`) | 8080 | 🟢 running |
+| `nfse-sp-api.service` (Java, primaria) | 4568 | 🟢 running |
+| `nfse-sp-bridge.service` (Ruby, fallback) | 4569 | 🟢 running |
+| `brasil_saas-watchdog.service` (verificación de contrato) | — | 🟢 running |
+| `brasil_saas-minio.service` | 9000 / 9001 | 🟢 running |
+| `auth-service.service` | 8081/8082 | 🟢 running |
+| PostgreSQL (schema `brasil_saas`) | 5432 | 🟢 up |
+| MongoDB | 27017 | 🟢 up (4 colecciones) |
+| RabbitMQ | 5672 / 15672 | 🟢 up |
+| Redis | 6379 | 🟢 up |
+| nginx (proxy del dominio) | 80 / 443 | 🟢 up |
 
-### Apagados a propósito
+El ERP corre del jar
+`/opt/brasil-saas-erp/brasil-saas-erp-1.0.0-SNAPSHOT.jar`
+(unit `brasil-saas-erp.service`). Los microservicios de NF-e corren de
+los jars dentro de `src/main/resources/microservices/` — **atención**:
+en el servidor, los jars activos están en
+`/home/euripedes/BrasilCloudERP/src/main/resources/microservices/`
+(otro checkout), no en este repo.
 
-| Servicio | Por qué |
-|---------|---------|
-| `nfse-sp-bridge` (Ruby) | **Una sola API, sin fallback automático.** Un fallback que cambia de implementación cuando la llamada expira emite una nota duplicada — se pierde la respuesta, el ERP reemite y el ayuntamiento acaba con dos. El bridge sigue en disco; el contrato `contrato_nfse` es el mismo de los dos lados. |
-| `nfse-watchdog` | Usaba `consulta-cnpj` como health check, que va al ayuntamiento y tarda 1,27 s. Tiró abajo la API Java **3 veces** mientras el ERP emitía por ella. No volver a encenderlo como estaba. |
-| `nginx` | Reemplazado por la API única. El proxy leía el cuerpo HTTP del socket y solo sabía leerlo con `Content-Length`; el ERP manda `Transfer-Encoding: chunked`, así que el cuerpo se descartaba. |
+### ⚠️ El proxy failover de NFS-e (4567) está caído
 
-### Lo que el ERP valida por su cuenta
+El ERP llama la emisión de NFS-e en
+`brasil-saas.fiscal.nfse.url`, que por defecto es
+`http://127.0.0.1:4567/api/nfse-sp` — el **proxy failover**. En
+03/10/2026 **nada escucha en 4567** (conexión rechazada), aunque las
+dos implementaciones (4568 Java, 4569 Ruby) y el watchdog estén de
+pie.
 
-| Verificación | Resultado |
-|-------------|-----------|
-| `GET /api/fiscal/nfse/status` (via 4567) | `sucesso=true` |
-| `POST /api/fiscal/mdfe/status` → SVRS | **`cStat 107`** "Servicio en Operación" *(literal devuelto por la SEFAZ)* |
-| `GET /api/fiscal/cte/status` → SEFAZ de SP | **`cStat 107`** "Servicio en Operación." *(literal devuelto por la SEFAZ)* |
-| `GET /api/fiscal/sped/efd/exemplo` | archivo válido, 19 líneas, contadores verificados |
+Consecuencia: a menos que `/etc/brasil-saas/erp.env` (archivo del
+usuario `brasilsaas`, ilegible sin sudo) sobrescriba la URL hacia la
+4568, **la emisión de NFS-e está rota ahora**. Evidencia: la última
+NFS-e en la base es de **26/09/2026** (nota 33), con 4 registros
+`FALHA_EMISSAO` en ese día y ningún intento desde entonces.
 
-O MDF-e é atendido pela **SVRS** (`ufAtendente: RS`) e o CT-e pelo **portal de
-SP** (`ufAtendente: SP`), com o **mesmo A1**. São autorizadores diferentes, não
-certificados distintos.
+Acción: levantar el proxy de la 4567 (o apuntar
+`brasil-saas.fiscal.nfse.url` directamente a
+`http://127.0.0.1:4568/api/nfse-sp`), y registrar en `erp.env` qué
+URL está en uso.
+
+### Lo que el ERP valida solo
+
+| Verificación | Resultado (03/10/2026) |
+|-------------|------------------------|
+| `GET /api/fiscal/mdfe/status` → SVRS | **200** (`cStat 107`) |
+| `GET /api/fiscal/cte/status` → SEFAZ SP | **200** (`cStat 107`) |
+| `GET /api/fiscal/sped/efd/exemplo` | **200** (archivo válido) |
+| `GET /api/fiscal/nfse/retornos/recusas` y `/para-conferir` | **200** |
+
+El MDF-e es atendido por la **SVRS** (`ufAtendente: RS`) y el CT-e por el
+**portal de SP** (`ufAtendente: SP`), con el **mismo A1**. Son
+autorizadores diferentes, no certificados diferentes.
 
 ### Lo que aún no está listo
 
-| Ítem | Situación |
+| Item | Situación |
 |------|----------|
-| **NF-e / NFC-e** | `NFeServiceImpl` tem 89 linhas e **3 TODOs**. A interface promete `emitirNFe`, `cancelarNFe` e `consultarSituacao`; nenhuma das três é implementada. |
-| **IA (Spring AI)** | Módulo presente e conectado, com embeddings, chat e classifications. Não foi validado nesta rodada. |
-| **Emisión de MDF-e** | La conexión con la SVRS está lista y probada (`cStat 107`), y el certificado firma. **A montagem do documento não existe ainda**: `MdfeEmissaoService` tem só `statusServico` e `consultarRecibo`. Falta construir o XML com emitente, veículo, motorista, LAC, municípios e CIOT. |
-| **Emissão de CT-e** | Idem. Só `statusServico`. |
-| **SPED EFD Contribuciones** | La biblioteca resuelve en `pom.xml`, pero **no hay endpoint** — solo ICMS/IPI lo tiene. |
-| **Producción (SEFAZ)** | Nunca probada. La biblioteca devuelve `HOMOLOGACAO` fijo; la configuración lo sobrescribe, y sobrescribirlo no es lo mismo que funcione. |
-| **Pestaña de retorno en la pantalla** | Los datos están en Mongo y el endpoint existe; falta la pestaña en `Nfse.jsx`. |
-| **Validación del CIOT** | `cStat 684` entra en producción en la SEFAZ el **23/11/2026**. `infCIOT` ya está en el XSD; falta la validación en el emisor. |
+| **Proxy failover 4567** | Caído; URL por defecto del ERP. Ver arriba. |
+| **NF-e / NFC-e** | `NFeServiceImpl` tiene **3 TODOs**. La interfaz promete `emitirNFe`, `cancelarNFe` y `consultarSituacao`; ninguna de las tres está implementada. |
+| **Emisión de MDF-e** | La conexión con la SVRS está lista (`cStat 107`) y el certificado firma. **El montaje del documento no existe**: `MdfeEmissaoService` tiene solo `statusServico` y `consultarRecibo`. |
+| **Emisión de CT-e** | Ídem. `CteEmissaoService` tiene solo `statusServico`. |
+| **SPED EFD Contribuciones** | La biblioteca resuelve en el `pom.xml`, pero **no hay endpoint** — solo el ICMS/IPI tiene. |
+| **IA (Spring AI)** | Módulo presente (74 endpoints), con embeddings, chat y classifications. No fue validado funcionalmente; necesita clave de API válida. |
+| **Pantalla de la IA** | 1 pantalla solo (`IaAssistWidget`); los 74 endpoints no tienen pantalla equivalente. |
+| **Validación del CIOT** | `cStat 684` entra en producción en la SEFAZ en **23/11/2026**. El `infCIOT` ya está en el XSD; falta la validación en el emisor. |
 
-**Por que o MDF-e e o CT-e não estão na lista de "prontos" apesar de
-respondan `cStat 107`:** el `cStat 107` es el *estado del servicio*, y prueba que la
-cadena TLS, el certificado del cliente y el sobre SOAP están correctos. **No
-prova que o XML do documento esteja**, porque nenhum documento foi montado nem
-enviado. São duas coisas diferentes, e o README separa por isso.
+**Por qué el MDF-e y el CT-e no están en la lista de "listos" a pesar de
+responder `cStat 107`:** el `cStat 107` es el *status del servicio*, y
+prueba que la cadena TLS, el certificado del cliente y el envelope SOAP
+están correctos. **No prueba que el XML del documento esté**, porque
+ningún documento fue montado ni enviado. Son dos cosas diferentes, y
+el README las separa por eso.
 
 ---
 
 ## 📡 Endpoints de la API
+
+El backend expone **451 endpoints REST** (`/api/**`). La lista
+completa está en [`docs/INDICE.md`](docs/INDICE.md) y en
+el Swagger UI: <http://localhost:8080/swagger-ui.html>.
 
 ### Municípios
 
 ```
 GET    /api/municipios/paginado?page=0&size=20&sort=nome,asc
 GET    /api/municipios/buscar?termo={codigo_ou_nome}
+GET    /api/municipios/codigo/{codigoIbge}
+GET    /api/municipios/{id}
 POST   /api/municipios
 PUT    /api/municipios/{id}
 DELETE /api/municipios/{id}
@@ -856,90 +1084,158 @@ DELETE /api/financeiro/titulos/{id}/estornar
 GET    /api/financeiro/extrato/{idConta}
 GET    /api/financeiro/conciliacao
 GET    /api/financeiro/fluxo-caixa
+GET    /api/financeiro/orcamentos
+GET    /api/financeiro/emprestimos
+GET    /api/financeiro/planos-contas
+GET    /api/financeiro/centros-custo
+GET    /api/financeiro/contas-bancarias
+GET    /api/financeiro/caixas
+GET    /api/financeiro/condicoes-pagamento
+GET    /api/financeiro/tipos-pagamento
+GET    /api/financeiro/remessas
+GET    /api/financeiro/retornos
 ```
 
-### Ordem de Serviço
+### Orden de Servicio
 
 ```
-GET    /api/servicos/ordens/paginado
-POST   /api/servicos/ordens
-PUT    /api/servicos/ordens/{id}
-POST   /api/servicos/ordens/{id}/emitir-nota
-POST   /api/servicos/ordens/{id}/fechar
-GET    /api/servicos/ordens/{id}/pdf
+GET    /api/servicos/os/{id}
+GET    /api/servicos/os/{id}/itens
+GET    /api/servicos/os/{id}/pdf
+POST   /api/servicos/os
+PUT    /api/servicos/os/{id}
+POST   /api/servicos/os/{id}/emitir-nota
+POST   /api/servicos/os/{id}/fechar
 ```
 
 ### Relatórios
 
 ```
-GET    /api/relatorios/financeiro-pdf?inicio=YYYY-MM-DD&fim=YYYY-MM-DD
+GET    /api/relatorios/{tipo}
+GET    /api/relatorios/pdf/{tipo}
+GET    /api/relatorios/financeiro?inicio=YYYY-MM-DD&fim=YYYY-MM-DD
 GET    /api/relatorios/os-pdf/{id}
 GET    /api/relatorios/dre?competencia=YYYY-MM
 ```
 
+### BI
+
+```
+GET    /api/bi/dashboards                      /dashboards/publicos   /dashboards/tipo/{tipo}
+GET    /api/bi/kpis/{id}/calculate             /bi/kpis/type/{kpiType}
+GET    /api/indicadores                     /indicadores/categoria/{categoria}
+GET    /api/relatorios/{id}                 /relatorios/{id}/pdf  /excel  /csv
+GET    /api/relatorios-agendados            /relatorios-agendados/pendentes
+GET    /api/reports/{id}                    /reports/category/{category}
+```
+
 ### Fiscal — NFS-e São Paulo
 
-La API de emisión es un servicio separado, en el puerto **4567**. El ERP habla con ella por
-`brasil-saas.fiscal.nfse.url`. É **uma API só, sem fallback automático** — o
-bridge Ruby e o nginx estão desligados de propósito, porque um fallback que
-troca de implementação em produção emite nota duplicada quando a resposta se
-perde.
+La emisión la hace una API separada. El ERP llama
+`brasil-saas.fiscal.nfse.url` (por defecto
+`http://127.0.0.1:4567/api/nfse-sp`, el proxy failover —
+ver el aviso en "Qué Está Corriendo"). Las implementaciones
+activas son la **Java en la 4568** (primaria) y la **Ruby en la 4569**
+(fallback), vigiladas por el `brasil_saas-watchdog`, que chequea el
+**contrato** de respuesta, no solo el puerto.
 
 ```
 POST   /api/fiscal/nfse/emitir
 POST   /api/fiscal/nfse/{id}/cancelar
+GET    /api/fiscal/nfse
 GET    /api/fiscal/nfse/{id}/xml
 GET    /api/fiscal/nfse/{id}/pdf
-GET    /api/fiscal/nfse/retornos                   conversas com a prefeitura
-GET    /api/fiscal/nfse/retornos/recusas           só as recusadas
-GET    /api/fiscal/nfse/retornos/para-conferir     as que não deu para saber
+GET    /api/fiscal/nfse/{id}/retornos
+GET    /api/fiscal/nfse/{id}/retornos/{retornoId}/bruto
+GET    /api/fiscal/nfse/retornos/recusas           solo las recusadas
+GET    /api/fiscal/nfse/retornos/para-conferir     las que no se pudo saber
 ```
 
-El motivo del rechazo del ayuntamiento se graba **antes** de que la excepción suba, con el
-`cStat` e o corpo bruto no Mongo. A tela de erro é uma parede; o registro não.
+El motivo del rechazo de la prefectura se graba **antes** de que la
+excepción suba, con el `cStat` y el cuerpo bruto en Mongo. La
+pantalla de error es una pared; el registro no.
 
-### Fiscal — MDF-e e CT-e
+### Fiscal — MDF-e y CT-e
 
 ```
-GET    /api/fiscal/mdfe/status                     cStat 107 se a SVRS estiver de pé
-GET    /api/fiscal/mdfe/recibo?numero={recibo}     2ª chamada: do recibo para a chave
-GET    /api/fiscal/cte/status                      cStat 107 se a SEFAZ estiver de pé
+GET    /api/fiscal/mdfe/status                     cStat 107 si la SVRS está de pie
+GET    /api/fiscal/mdfe/recibo?numero={recibo}     2ª llamada: del recibo a la clave
+GET    /api/fiscal/cte/status                      cStat 107 si la SEFAZ está de pie
 ```
 
-Os dois usam o mesmo contrato de resposta, com os **três estados** de
-`sucesso`: `true` (autorizado), `false` (recusado, com `cStat` e motivo) e
-`null` (**não deu para saber**). O terceiro estado existe para não duplicar
-documento: a SVRS rejeita chave natural repetida, e reemitir no escuro é
-exatamente o que cria a duplicidade.
+Los dos usan el mismo contrato de respuesta, con los **tres
+estados** de `sucesso`: `true` (autorizado), `false`
+(recusado, con `cStat` y motivo) y `null` (**no se pudo
+saber**). El tercer estado existe para no duplicar
+documento: la SVRS rechaza clave natural repetida, y reemitir
+a ciegas es exactamente lo que crea la duplicidad.
 
-O MDF-e devolve **recibo** na primeira chamada e **protocolo** na segunda.
-Ler a chave na resposta do envio dá NPE — o método não existe.
+El MDF-e devuelve **recibo** en la primera llamada y
+**protocolo** en la segunda. Leer la clave en la respuesta del
+envío da NPE — el método no existe.
 
 ### Fiscal — SPED EFD ICMS/IPI
 
 ```
-POST   /api/fiscal/sped/efd/gerar                  gera o arquivo EFD
-GET    /api/fiscal/sped/efd/exemplo                gera o de exemplo, para conferir o formato
+POST   /api/fiscal/sped/efd/gerar                  genera el archivo EFD
+GET    /api/fiscal/sped/efd/exemplo                genera el de ejemplo, para conferir el formato
 ```
 
-**EFD não se envia para ninguém.** O arquivo é gerado, assinado e guardado; quem
-busca depois é a SEFAZ ou a Receita. Sem web service, sem protocolo, sem fila.
+**EFD no se envía a nadie.** El archivo se genera,
+firma y guarda; quien busca después es la SEFAZ o la
+Receita. Sin web service, sin protocolo, sin fila.
 
-### Fiscal — tabelas e cadastros
+### Fiscal — consulta y distribución
 
 ```
-GET    /api/fiscal/cest?busca={termo}              busca por código, descrição ou NCM
+GET    /api/fiscal/sefaz/status
+GET    /api/fiscal/sefaz/consultar
+GET    /api/fiscal/sefaz/distribuicao
+```
+
+### Fiscal — tablas y registros
+
+```
+GET    /api/fiscal/cest?busca={termo}              búsqueda por código, descripción o NCM
 GET    /api/fiscal/cfop?tipoOperacao=ENTRADA|SAIDA
 GET    /api/fiscal/ncm
+GET    /api/fiscal/ncm/{codigo}
 GET    /api/fiscal/issqn
 GET    /api/fiscal/impostos
 GET    /api/fiscal/certificados
 ```
 
-`GET /api/cadastro/servicos?nome={termo}` alimenta o autocomplete do nome do
-servicio, que sugiere un servicio ya cadastrado mientras la persona escribe. Dos
-cadastros com nome parecido e código municipal diferente é a causa mais comum
-de rechazo en el ayuntamiento.
+`GET /api/cadastro/servicos?nome={termo}` alimenta el
+autocomplete del nombre del servicio, que sugiere servicio ya
+registrado mientras la persona escribe. Dos registros con nombre
+parecido y código municipal diferente es la causa más común de
+rechazo en la prefectura.
+
+### Demais módulos (raíces)
+
+```
+GET    /api/cadastro/produtos      /clientes   /fornecedores   /pessoas   /servicos
+GET    /api/estoque/depositos      /saldos     /movimentacoes  /lotes     /reservas
+       /estoque/transferencias     /inventarios /expedicoes
+GET    /api/vendas/pedidos         /vendas/tabelas-preco
+GET    /api/compras/pedidos        /compras/recebimentos
+       /compras/supply-chain/solicitacoes
+GET    /api/producao/estruturas    /producao/roteiros  /producao/centros-trabalho
+       /producao/apontamentos      /producao/romaneios
+GET    /api/contabilidade/lancamentos /contabilidade/balancete /contabilidade/dre
+GET    /api/rh/funcionarios/pessoas /rh/cargos /rh/folhas
+GET    /api/crm/leads              /crm/pipeline   /crm/forecast  /crm/atividades
+GET    /api/ativos/manutencoes
+GET    /api/dms/documentos         /dms/retencao
+GET    /api/qualidade/planos       /qualidade/inspecoes /qualidade/nao-conformidades
+GET    /api/projetos               /projetos/{id}/resumo /projetos/{id}/etapas
+GET    /api/wms/ondas              /wms/putaway
+GET    /api/workflow/definitions   /workflow/instances /workflow/tasks/pendentes
+GET    /api/portais/acessos        /portais/publico/validar
+GET    /api/ia/config              /ia/sessoes   /ia/prompts   /ia/embeddings
+GET    /api/core/perfil            /core/minha-empresa  /core/recent/updates
+GET    /api/superadmin/usuarios    /superadmin/sql/catalogo
+```
 
 ---
 

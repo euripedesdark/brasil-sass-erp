@@ -1,3 +1,8 @@
+> ⏳ **Registro histórico** — este documento é um retrato pontual da data
+> do arquivo e **não reflete o estado atual** do sistema. Para o estado
+> atual, veja [`README.pt-BR.md`](../README.pt-BR.md) e
+> [`docs/INDICE.md`](INDICE.md).
+
 # NFS-e Nacional — API (AGILIBlue / Rondonópolis)
 
 API nova em Java que emite NFS-e pelo WebService do **AGILIBlue**, o mesmo que
