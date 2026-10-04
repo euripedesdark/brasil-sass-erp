@@ -237,7 +237,6 @@ public class NfseEmissaoService {
         nfse.setNumeroRps(String.valueOf(req.getNumeroRps()));
         nfse.setLc116Codigo(servico.getLc116Codigo());
         nfse.setCodigoTributacaoMunicipal(servico.getCodigoTributacaoMunicipal());
-        nfse.setChaveNotaNacional(nacional ? "DPS:" + serie + "-" + req.getNumeroRps() : null);
         nfse.setDataEmissao(LocalDateTime.now());
         nfse.setStatus("EMITINDO");
         nfse.setBaseCalculo(base.setScale(2, RoundingMode.HALF_UP));
