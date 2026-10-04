@@ -32,6 +32,8 @@ export const Contabilidade = () => {
     const [ate, setAte] = useState(null);
     const [exercicio, setExercicio] = useState(new Date().getFullYear());
     const [periodoFech, setPeriodoFech] = useState('');
+    const [dlgTitulo, setDlgTitulo] = useState(false);
+    const [tit, setTit] = useState({ tituloId: null, contaDebitoId: null, contaCreditoId: null });
 
     const js = async (r) => { const j = await r.json().catch(() => null); return Array.isArray(j) ? j : (j?.data ?? j ?? []); };
     const carregar = useCallback(async () => {
@@ -86,14 +88,51 @@ export const Contabilidade = () => {
         URL.revokeObjectURL(link.href);
     };
         const buscarBalanco = async () => { const r = await apiFetch(BASE + '/balanco?exercicio=' + exercicio); setBalanco(await r.json().catch(() => null)); };
-    const fechar = async () => { if (!periodoFech) return; await apiFetch(BASE + '/fechamentos/' + periodoFech + '/fechar', { method: 'POST' }); setPeriodoFech(''); carregar(); };
+    const msgErro = async (r, padrao) => { const j = await r.json().catch(() => null); return j?.message || j?.errors?.[0]?.message || padrao; };
+    const fechar = async () => {
+        if (!periodoFech) return;
+        const r = await apiFetch(BASE + '/fechamentos/' + periodoFech + '/fechar', { method: 'POST' });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Não foi possível fechar o período'), life: 4000 }); return; }
+        setPeriodoFech('');
+        carregar();
+    };
+    const reabrir = async (periodo) => {
+        if (!window.confirm('Reabrir o período ' + periodo + '? Lançamentos desse período poderão voltar a ser alterados.')) return;
+        const r = await apiFetch(BASE + '/fechamentos/' + periodo + '/reabrir', { method: 'POST' });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Não foi possível reabrir o período'), life: 4000 }); return; }
+        toast.current?.show({ severity: 'success', summary: 'Período reaberto', detail: periodo, life: 3000 });
+        carregar();
+    };
+    const gerarDeTitulo = async () => {
+        if (!tit.tituloId || !tit.contaDebitoId || !tit.contaCreditoId) {
+            toast.current?.show({ severity: 'warn', summary: 'Campos obrigatórios', detail: 'Informe o título e as contas de débito e crédito', life: 3500 });
+            return;
+        }
+        if (tit.contaDebitoId === tit.contaCreditoId) {
+            toast.current?.show({ severity: 'warn', summary: 'Contas iguais', detail: 'Débito e crédito devem ser contas diferentes', life: 3500 });
+            return;
+        }
+        const r = await apiFetch(BASE + '/lancamentos/gerar-titulo/' + tit.tituloId, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contaDebitoId: tit.contaDebitoId, contaCreditoId: tit.contaCreditoId })
+        });
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Não foi possível gerar o lançamento do título'), life: 4500 }); return; }
+        toast.current?.show({ severity: 'success', summary: 'Lançamento gerado', detail: 'Criado a partir do título ' + tit.tituloId, life: 3000 });
+        setDlgTitulo(false);
+        setTit({ tituloId: null, contaDebitoId: null, contaCreditoId: null });
+        carregar();
+    };
 
     return (
         <div className='p-4'>
             <Toast ref={toast} />
             <div className='flex justify-content-between align-items-center mb-3 flex-wrap gap-2'>
                 <div><h2 className='m-0'>Contabilidade</h2><span className='bc-muted'>Diário, razão, balancete, balanço e fechamento</span></div>
-                <Button label='Novo lançamento' icon='pi pi-plus' onClick={() => setDlg(true)} />
+                <div className='flex gap-2 flex-wrap'>
+                    <Button label='Gerar de título' icon='pi pi-file-import' severity='secondary' outlined onClick={() => setDlgTitulo(true)} />
+                    <Button label='Novo lançamento' icon='pi pi-plus' onClick={() => setDlg(true)} />
+                </div>
             </div>
             <TabView>
                 <TabPanel header='Lançamentos'>
@@ -153,6 +192,7 @@ export const Contabilidade = () => {
                         <Column field='periodo' header='Período' />
                         <Column field='status' header='Status' />
                         <Column field='fechadoEm' header='Fechado em' />
+                        <Column header='' body={(r) => r.status === 'FECHADO' && (<Button label='Reabrir' icon='pi pi-lock-open' size='small' severity='warning' outlined onClick={() => reabrir(r.periodo)} />)} style={{ width: '9rem' }} />
                     </DataTable>
                 </TabPanel>
                 <TabPanel header='DRE'>
@@ -183,6 +223,17 @@ export const Contabilidade = () => {
                 <div className='flex justify-end gap-2 mt-3'>
                     <Button label='Cancelar' text severity='secondary' onClick={() => setDlg(false)} />
                     <Button label='Salvar rascunho' icon='pi pi-check' onClick={salvar} />
+                </div>
+            </Dialog>
+            <Dialog visible={dlgTitulo} onHide={() => setDlgTitulo(false)} header='Gerar lançamento de título' modal style={{ width: 'min(96vw, 520px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>ID do título *</label><InputNumber value={tit.tituloId} onValueChange={(e) => setTit({ ...tit, tituloId: e.value })} useGrouping={false} /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Conta de débito *</label><Dropdown value={tit.contaDebitoId} options={contas.map(c => ({ label: (c.codigo || '') + ' - ' + (c.descricao || c.nome || ''), value: c.id }))} onChange={(e) => setTit({ ...tit, contaDebitoId: e.value })} filter placeholder='Selecione' /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Conta de crédito *</label><Dropdown value={tit.contaCreditoId} options={contas.map(c => ({ label: (c.codigo || '') + ' - ' + (c.descricao || c.nome || ''), value: c.id }))} onChange={(e) => setTit({ ...tit, contaCreditoId: e.value })} filter placeholder='Selecione' /></div>
+                </div>
+                <div className='flex justify-end gap-2 mt-3'>
+                    <Button label='Cancelar' text severity='secondary' onClick={() => setDlgTitulo(false)} />
+                    <Button label='Gerar lançamento' icon='pi pi-check' onClick={gerarDeTitulo} />
                 </div>
             </Dialog>
         </div>

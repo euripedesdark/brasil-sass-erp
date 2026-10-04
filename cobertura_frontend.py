@@ -16,7 +16,7 @@ BASE de um service como se fosse a rota chamada. Aqui:
 import os, re, json
 from collections import defaultdict
 
-RAIZ = "/home/euripedes/OneDrive/python/projetos-leno/GIT Repos/BRASIL-SAAS-ERP"
+RAIZ = os.environ.get("BRASIL_SAAS_RAIZ") or os.path.dirname(os.path.abspath(__file__))
 JAVA = os.path.join(RAIZ, "src/main/java")
 REACT = os.path.join(RAIZ, "src/main/resources/static/react/src")
 
@@ -54,6 +54,10 @@ padrao_api = re.compile(r"""['"`](/api[A-Za-z0-9_\-/{}$.]*)['"`]""")
 padrao_metodo = re.compile(
     r"\.\s*(get|post|put|delete|patch)\s*\(\s*['\"`](/[^'\"`]*)['\"`]", re.I)
 # c) template com interpolacao:  `${BASE}/foo/${id}`
+TOKEN = re.compile(r"""'[^']*'|"[^"]*"|`[^`]*`|[A-Za-z_$][\w$.]*(?:\([^()]*\))?""")
+_TK = TOKEN.pattern
+CADEIA = re.compile(r"\b([A-Za-z_]\w*)\s*\+\s*((?:" + _TK + r")(?:\s*\+\s*(?:" + _TK + r"))*)")
+CADEIA_LIT = re.compile(r"""(['"])(/api[^'"]*)\1\s*\+\s*((?:""" + _TK + r""")(?:\s*\+\s*(?:""" + _TK + r"""))*)""")
 padrao_template = re.compile(
     r"\.\s*(get|post|put|delete|patch)\s*\(\s*`([^`]*)`", re.I)
 
@@ -83,7 +87,7 @@ for base, _, arqs in os.walk(REACT):
                 r"(?:const|let|var)\s+([A-Z_][A-Z0-9_]*)\s*=\s*ApiConfig\.(API_BASE_URL|BASE_URL)", src):
             bases[mb.group(1)] = "/api" if mb.group(2) == "API_BASE_URL" else ""
         for mb in re.finditer(
-                r"(?:const|let|var)\s+([A-Z_][A-Z0-9_]*)\s*=\s*['\"](/[^'\"]*)['\"]", src):
+                r"(?:const|let|var)\s+([A-Za-z_]\w*)\s*=\s*['\"`](/[^'\"`]*)['\"`]", src):
             bases[mb.group(1)] = mb.group(2)
 
         # c) apiFetch(`...`) e QUALQUER template que contenha /api.
@@ -109,6 +113,44 @@ for base, _, arqs in os.walk(REACT):
             if re.match(r"^/api", bruto):
                 chamadas[bruto].add(rel)
 
+        # e) qualquer template iniciado por ${CONST}: apiFetch(`${BASE}/x/${id}`)
+        for mt in re.finditer(r"`\$\{(\w+)\}([^`]*)`", src):
+            if mt.group(1) in bases:
+                resto = re.sub(r"\$\{[^}]*\}", "*", mt.group(2))
+                full = bases[mt.group(1)] + resto
+                if full.startswith("/api"):
+                    chamadas[full].add(rel)
+
+        # f) literal /api iniciando a cadeia: '/api/x/' + r.id + '/acao'
+        for ml in CADEIA_LIT.finditer(src):
+            caminho_cat = ml.group(2)
+            for tk in TOKEN.findall(ml.group(3)):
+                if tk[0] in "'\"":
+                    caminho_cat += tk[1:-1]
+                elif tk[0] == "`":
+                    caminho_cat += re.sub(r"\$\{[^}]*\}", "*", tk[1:-1])
+                else:
+                    caminho_cat += "*"
+            chamadas[caminho_cat].add(rel)
+
+        # d) concatenacao:  BASE + '/lancamentos/' + id + '/lancar'
+        #    O script so resolvia ${BASE}; telas que montam a URL com '+'
+        #    (Contabilidade, WMS, Projetos...) apareciam como "sem tela".
+        for mc in CADEIA.finditer(src):
+            nome, resto = mc.group(1), mc.group(2)
+            if nome not in bases:
+                continue
+            caminho_cat = bases[nome]
+            for tk in TOKEN.findall(resto):
+                if tk[0] in "'\"":
+                    caminho_cat += tk[1:-1]
+                elif tk[0] == "`":
+                    caminho_cat += re.sub(r"\$\{[^}]*\}", "*", tk[1:-1])
+                else:
+                    caminho_cat += "*"
+            if caminho_cat.startswith("/api"):
+                chamadas[caminho_cat].add(rel)
+
 # as constantes de base tambem contam, por causa dos services que usam
 # axios.get(API_URL) sem template
 for base, _, arqs in os.walk(REACT):
@@ -121,7 +163,7 @@ for base, _, arqs in os.walk(REACT):
         rel = os.path.relpath(caminho, REACT)
         src = open(caminho, encoding="utf-8", errors="replace").read()
         for mb in re.finditer(
-                r"(?:const|let|var)\s+([A-Z_][A-Z0-9_]*)\s*=\s*['\"](/api[^'\"]*)['\"]", src):
+                r"(?:const|let|var)\s+([A-Za-z_]\w*)\s*=\s*['\"`](/api[^'\"`]*)['\"`]", src):
             chamadas[mb.group(2)].add(rel + " (constante)")
 
 # --------------------------------------------------------------- 3. normalizar
@@ -187,4 +229,4 @@ json.dump(
      "sem_acesso": {c: ["%s %s" % e for e in f] for c, _, f in sem_acesso},
      "total_sem_acesso": total_sem,
      "total_endpoints": total_sem + total_com},
-    open("/tmp/opencode/cobertura.json", "w"), indent=1, ensure_ascii=False)
+    open(os.path.join(os.environ.get("TMPDIR", "/tmp"), "cobertura.json"), "w"), indent=1, ensure_ascii=False)
