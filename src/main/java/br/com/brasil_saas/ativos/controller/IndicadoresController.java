@@ -11,4 +11,5 @@ public class IndicadoresController {
     private final IndicadoresService svc;
     @GetMapping
     public List<Map<String, Object>> indicadores(@AuthenticationPrincipal AuthenticatedUser u) { return svc.indicadores(u.getEmpresaId()); }
+    @PostMapping("/gerar-preventivas") public List<Map<String, Object>> gerar(@AuthenticationPrincipal AuthenticatedUser u) { return svc.gerarPreventivas(u.getEmpresaId()); }
 }

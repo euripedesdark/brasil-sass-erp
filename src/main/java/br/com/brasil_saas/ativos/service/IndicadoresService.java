@@ -41,8 +41,46 @@ public class IndicadoresService {
             m.put("diasSemFalha", diasSemFalha);
             m.put("mttrDias", BigDecimal.valueOf(mttr).setScale(1, RoundingMode.HALF_UP));
             m.put("mtbfDias", BigDecimal.valueOf(mtbf).setScale(1, RoundingMode.HALF_UP));
+            m.put("proximaPreventiva", proximaPreventiva(ultimaFalha, mtbf));
             out.add(m);
         }
         return out;
+    }
+
+    @Transactional public java.util.List<java.util.Map<String, Object>> gerarPreventivas(Long empresaId) {
+        java.util.List<java.util.Map<String, Object>> criadas = new java.util.ArrayList<>();
+        java.util.Map<Long, java.util.List<Manutencao>> porAtivo = new java.util.LinkedHashMap<>();
+        for (Manutencao m : manutencoes.findAllByEmpresaIdAndDeletedAtIsNullOrderByDataProgramadaAsc(empresaId)) {
+            if (m.getAtivoId() == null) continue;
+            porAtivo.computeIfAbsent(m.getAtivoId(), k -> new java.util.ArrayList<>()).add(m);
+        }
+        for (AtivoImobilizado a : ativos.findAllByEmpresaIdAndDeletedAtIsNullOrderByCodigo(empresaId)) {
+            java.util.List<Manutencao> ms = porAtivo.getOrDefault(a.getId(), java.util.List.of());
+            java.util.List<LocalDate> falhas = ms.stream().filter(m -> "CORRETIVA".equals(m.getTipo()) && m.getDataConclusao() != null).map(Manutencao::getDataConclusao).sorted().toList();
+            if (falhas.size() <= 1) continue;
+            long mtbf = Math.round((double) ChronoUnit.DAYS.between(falhas.get(0), falhas.get(falhas.size() - 1)) / (falhas.size() - 1));
+            if (mtbf <= 0) continue;
+            boolean aberta = ms.stream().anyMatch(m -> "PREVENTIVA".equals(m.getTipo()) && "CONCLUIDA".equals(m.getStatus()) == false && "CANCELADA".equals(m.getStatus()) == false);
+            if (aberta) continue;
+            LocalDate ultima = falhas.get(falhas.size() - 1);
+            LocalDate prevista = ultima.plusDays(mtbf);
+            if (prevista.isBefore(LocalDate.now())) prevista = LocalDate.now();
+            Manutencao n = new Manutencao();
+            n.setEmpresaId(empresaId);
+            n.setAtivoId(a.getId());
+            n.setNumero("PREV-" + a.getId() + "-" + prevista.toString());
+            n.setTipo("PREVENTIVA"); n.setStatus("ABERTA"); n.setPrioridade("MEDIA");
+            n.setDescricao("Preventiva gerada pelo MTBF");
+            n.setDataProgramada(prevista);
+            manutencoes.save(n);
+            java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("ativoId", a.getId()); r.put("codigo", a.getCodigo()); r.put("dataProgramada", prevista.toString());
+            criadas.add(r);
+        }
+        return criadas;
+    }
+    private String proximaPreventiva(LocalDate ultimaFalha, double mtbf) {
+        if (ultimaFalha == null || mtbf <= 0) return null;
+        return ultimaFalha.plusDays(Math.round(mtbf)).toString();
     }
 }
