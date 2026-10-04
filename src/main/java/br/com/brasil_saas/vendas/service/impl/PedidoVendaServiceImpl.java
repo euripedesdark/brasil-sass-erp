@@ -168,11 +168,17 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     @Override
     @Transactional
     public void faturar(Long id, Long empresaId) {
+        faturar(id, empresaId, false);
+    }
+    @Override
+    @Transactional
+    public void faturar(Long id, Long empresaId, boolean forcar) {
         PedidoVenda pedido = pedidoBloqueado(id, empresaId);
 
         if (!"ABERTO".equals(pedido.getStatus()) || !"PEDIDO".equalsIgnoreCase(pedido.getTipo())) {
             throw new BusinessException("Somente pedidos ABERTOS podem ser faturados");
         }
+        if (forcar == false) validarCredito(pedido);
 
         for (ItemPedidoVenda item : pedido.getItens()) {
             if (item.getProdutoId() != null && !Boolean.TRUE.equals(item.getCriadoEstoque())) {
@@ -283,6 +289,20 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
      * Filtrar depois de buscar seria tarde: o `orElseThrow` do findById puro
      * devolvia o pedido de outra empresa e so depois seDiscoveria o erro.
      */
+
+    private void validarCredito(br.com.brasil_saas.vendas.model.PedidoVenda pedido) {
+        if (pedido.getClienteId() == null) return;
+        var cli = clienteRepository.findById(pedido.getClienteId()).orElse(null);
+        if (cli == null || cli.getPessoa() == null || cli.getPessoa().getId() == null) return;
+        java.math.BigDecimal limite = cli.getLimiteCredito() == null ? java.math.BigDecimal.ZERO : cli.getLimiteCredito();
+        java.math.BigDecimal emAberto = java.math.BigDecimal.ZERO;
+        for (var x : tituloRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(pedido.getEmpresaId(), cli.getPessoa().getId())) {
+            if ("ABERTO".equals(x.getStatus()) == false && "PARCIAL".equals(x.getStatus()) == false) continue;
+            emAberto = emAberto.add(x.getValorSaldo() == null ? java.math.BigDecimal.ZERO : x.getValorSaldo());
+        }
+        java.math.BigDecimal pedido_valor = pedido.getValorTotal() == null ? java.math.BigDecimal.ZERO : pedido.getValorTotal();
+        if (emAberto.add(pedido_valor).compareTo(limite) > 0) throw new BusinessException("Limite de crédito estourado: disponível " + limite.subtract(emAberto));
+    }
     private PedidoVenda pedidoBloqueado(Long id, Long empresaId) {
         return pedidoRepository.findByIdForUpdateAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de venda nao encontrado"));

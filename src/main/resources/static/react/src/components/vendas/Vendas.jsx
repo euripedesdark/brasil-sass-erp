@@ -243,11 +243,11 @@ export const Vendas = () => {
         });
     };
 
-    const faturar = async (id) => {
+    const faturar = async (id, forcar) => {
         setEmAcao(id);
 
         try {
-            await PedidoVendaService.faturar(id);
+            await PedidoVendaService.faturar(id, forcar);
             toast.current?.show({
                 severity: 'success', summary: 'Faturado',
                 detail: 'Estoque baixado, titulo e comissao gerados', life: 3500,
@@ -257,6 +257,7 @@ export const Vendas = () => {
             const msg = getApiErrorMessage(err, t('legacyUi.vendasLegacy.billError'));
             setError(msg);
             toast.current?.show({ severity: 'error', summary: 'Erro', detail: msg, life: 4000 });
+            if (!forcar && /credito|limite/i.test(msg || '')) { confirmDialog.require({ header: 'Limite estourado', accept: () => faturar(id, true) }); return; }
         } finally {
             setEmAcao(null);
         }

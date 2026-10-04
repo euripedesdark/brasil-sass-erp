@@ -80,8 +80,9 @@ public class PedidoVendaController {
     @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
     public ResponseEntity<Void> faturar(
             @PathVariable Long id,
-            @AuthenticationPrincipal AuthenticatedUser user) {
-        service.faturar(id, empresaDoToken(user));
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @RequestParam(required = false, defaultValue = "false") boolean forcar) {
+        service.faturar(id, empresaDoToken(user), forcar);
         return ResponseEntity.ok().build();
     }
 

@@ -20,8 +20,8 @@ class PedidoVendaService {
         return axios.post(`${API_URL}/${id}/confirmar`);
     }
 
-    faturar(id) {
-        return axios.post(`${API_URL}/${id}/faturar`);
+    faturar(id, forcar) {
+        return axios.post(`${API_URL}/${id}/faturar` + (forcar ? '?forcar=true' : ''));
     }
 
     posvenda(id, body) {
