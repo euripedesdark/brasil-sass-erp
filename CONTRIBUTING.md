@@ -6,10 +6,10 @@ Obrigado pelo interesse em contribuir com o Brasil SaaS ERP!
 
 | Idioma | Documento |
 |--------|-----------|
-| 🇧🇷 Português (Brasil) | [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md) |
-| 🇺🇸 English | [CONTRIBUTING.en-US.md](CONTRIBUTING.en-US.md) |
-| 🇪🇸 Español | [CONTRIBUTING.es-ES.md](CONTRIBUTING.es-ES.md) |
-| 🇫🇷 Français | [CONTRIBUTING.fr-FR.md](CONTRIBUTING.fr-FR.md) |
+| 🇧🇷 Português (Brasil) | [CONTRIBUTING.pt-BR.md](docs/i18n/CONTRIBUTING.pt-BR.md) |
+| 🇺🇸 English | [CONTRIBUTING.en-US.md](docs/i18n/CONTRIBUTING.en-US.md) |
+| 🇪🇸 Español | [CONTRIBUTING.es-ES.md](docs/i18n/CONTRIBUTING.es-ES.md) |
+| 🇫🇷 Français | [CONTRIBUTING.fr-FR.md](docs/i18n/CONTRIBUTING.fr-FR.md) |
 
 ---
 

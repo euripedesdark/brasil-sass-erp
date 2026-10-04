@@ -6,10 +6,10 @@ A segurança do Brasil SaaS ERP é levada a sério.
 
 | Idioma | Documento |
 |--------|-----------|
-| 🇧🇷 Português (Brasil) | [SECURITY.pt-BR.md](SECURITY.pt-BR.md) |
-| 🇺🇸 English | [SECURITY.en-US.md](SECURITY.en-US.md) |
-| 🇪🇸 Español | [SECURITY.es-ES.md](SECURITY.es-ES.md) |
-| 🇫🇷 Français | [SECURITY.fr-FR.md](SECURITY.fr-FR.md) |
+| 🇧🇷 Português (Brasil) | [SECURITY.pt-BR.md](docs/i18n/SECURITY.pt-BR.md) |
+| 🇺🇸 English | [SECURITY.en-US.md](docs/i18n/SECURITY.en-US.md) |
+| 🇪🇸 Español | [SECURITY.es-ES.md](docs/i18n/SECURITY.es-ES.md) |
+| 🇫🇷 Français | [SECURITY.fr-FR.md](docs/i18n/SECURITY.fr-FR.md) |
 
 ---
 

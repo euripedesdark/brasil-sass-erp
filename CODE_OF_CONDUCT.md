@@ -6,10 +6,10 @@ Este projeto segue o [Contributor Covenant](https://www.contributor-covenant.org
 
 | Idioma | Documento |
 |--------|-----------|
-| 🇧🇷 Português (Brasil) | [CODE_OF_CONDUCT.pt-BR.md](CODE_OF_CONDUCT.pt-BR.md) |
-| 🇺🇸 English | [CODE_OF_CONDUCT.en-US.md](CODE_OF_CONDUCT.en-US.md) |
-| 🇪🇸 Español | [CODE_OF_CONDUCT.es-ES.md](CODE_OF_CONDUCT.es-ES.md) |
-| 🇫🇷 Français | [CODE_OF_CONDUCT.fr-FR.md](CODE_OF_CONDUCT.fr-FR.md) |
+| 🇧🇷 Português (Brasil) | [CODE_OF_CONDUCT.pt-BR.md](docs/i18n/CODE_OF_CONDUCT.pt-BR.md) |
+| 🇺🇸 English | [CODE_OF_CONDUCT.en-US.md](docs/i18n/CODE_OF_CONDUCT.en-US.md) |
+| 🇪🇸 Español | [CODE_OF_CONDUCT.es-ES.md](docs/i18n/CODE_OF_CONDUCT.es-ES.md) |
+| 🇫🇷 Français | [CODE_OF_CONDUCT.fr-FR.md](docs/i18n/CODE_OF_CONDUCT.fr-FR.md) |
 
 ---
 

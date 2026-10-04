@@ -6,7 +6,7 @@ cobertura fiscal e arquitetura modular.
 Este projeto está sob **GNU AGPL v3**. Ver [`LICENSE.md`](LICENSE.md), e os créditos
 de terceiros em [`NOTICE.md`](NOTICE.md).
 
-📖 **Documentação completa em português:** [`README.pt-BR.md`](README.pt-BR.md)
+📖 **Documentação completa em português:** [`README.pt-BR.md`](docs/i18n/README.pt-BR.md)
 
 ---
 
@@ -14,15 +14,15 @@ de terceiros em [`NOTICE.md`](NOTICE.md).
 
 | | Idioma | Documentação |
 |---|--------|--------------|
-| 🇧🇷 | **Português (Brasil)** | [README.pt-BR.md](README.pt-BR.md) |
-| 🇺🇸 | **English** | [README.en-US.md](README.en-US.md) |
-| 🇪🇸 | **Español** | [README.es-ES.md](README.es-ES.md) |
-| 🇫🇷 | **Français** | [README.fr-FR.md](README.fr-FR.md) |
+| 🇧🇷 | **Português (Brasil)** | [README.pt-BR.md](docs/i18n/README.pt-BR.md) |
+| 🇺🇸 | **English** | [README.en-US.md](docs/i18n/README.en-US.md) |
+| 🇪🇸 | **Español** | [README.es-ES.md](docs/i18n/README.es-ES.md) |
+| 🇫🇷 | **Français** | [README.fr-FR.md](docs/i18n/README.fr-FR.md) |
 
-🇧🇷 [Português](README.pt-BR.md) ·
-🇺🇸 [English](README.en-US.md) ·
-🇪🇸 [Español](README.es-ES.md) ·
-🇫🇷 [Français](README.fr-FR.md)
+🇧🇷 [Português](docs/i18n/README.pt-BR.md) ·
+🇺🇸 [English](docs/i18n/README.en-US.md) ·
+🇪🇸 [Español](docs/i18n/README.es-ES.md) ·
+🇫🇷 [Français](docs/i18n/README.fr-FR.md)
 
 ---
 
@@ -53,8 +53,8 @@ doméstica; **de qualquer outro lugar**, faça uma transferência internacional 
 
 Os dados completos, com as instruções em quatro idiomas, estão nos READMEs:
 
-🇧🇷 [`README.pt-BR.md`](README.pt-BR.md) · 🇺🇸 [`README.en-US.md`](README.en-US.md) ·
-🇪🇸 [`README.es-ES.md`](README.es-ES.md) · 🇫🇷 [`README.fr-FR.md`](README.fr-FR.md)
+🇧🇷 [`README.pt-BR.md`](docs/i18n/README.pt-BR.md) · 🇺🇸 [`README.en-US.md`](docs/i18n/README.en-US.md) ·
+🇪🇸 [`README.es-ES.md`](docs/i18n/README.es-ES.md) · 🇫🇷 [`README.fr-FR.md`](docs/i18n/README.fr-FR.md)
 
 ---
 
