@@ -361,6 +361,10 @@ public class NfseEmissaoService {
         Nfse nfse = nfseRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(nfseId, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("NFS-e " + nfseId + " nao encontrada."));
 
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa " + empresaId + " nao encontrada."));
+        RestClient http = clienteNfse(empresa);
+
         if ("CANCELADA".equals(nfse.getStatus())) {
             throw new BusinessException("A NFS-e " + nfse.getNumero() + " ja esta cancelada.");
         }
@@ -374,7 +378,9 @@ public class NfseEmissaoService {
         // cancelamento so com IM + numero. Isso importa porque e o que permite
         // recuperar uma nota cuja gravacao local falhou depois da emissao.
         Map<String, Object> detalhe = new LinkedHashMap<>();
-        detalhe.put("inscricaoPrestador", "2130033");
+        detalhe.put("inscricaoPrestador", empresa.getInscricaoMunicipal() != null
+                && !empresa.getInscricaoMunicipal().isBlank()
+                ? empresa.getInscricaoMunicipal() : inscricaoMunicipalPadrao);
         detalhe.put("numeroNfe", String.valueOf(nfse.getNumero()));
         if (nfse.getCodigoVerificacao() != null && !nfse.getCodigoVerificacao().isBlank()) {
             detalhe.put("codigoVerificacao", nfse.getCodigoVerificacao());
