@@ -194,6 +194,12 @@ export const FolhaPagamento = () => {
             .finally(() => setEmAcao(null));
     };
 
+    const [dlgEnc, setDlgEnc] = useState(false);
+    const [enc, setEnc] = useState(null);
+    const [aliq, setAliq] = useState({ inss: 20, fgts: 8, rat: 2 });
+    const [encFolha, setEncFolha] = useState(null);
+    const abrirEncargos = async (folha) => { setEncFolha(folha); setEnc(null); setDlgEnc(true); recalcEncargos(folha.id, { inss: 20, fgts: 8, rat: 2 }); };
+    const recalcEncargos = async (id, a) => { try { setEnc(await FolhaPagamentoService.encargos(id, a)); } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha nos encargos', life: 4000 }); } };
     const cancelarFolha = (folha) => {
         if (!window.confirm(`Cancelar a folha ${folha.competencia}? Ela deixa de valer para pagamento.`)) return;
         setEmAcao(folha.id);
@@ -244,6 +250,12 @@ export const FolhaPagamento = () => {
                     className="p-button-danger p-button-sm p-button-text"
                     onClick={() => excluirFolha(rowData.id)}
                     tooltip="Excluir"
+                />
+                <Button
+                    icon="pi pi-calculator"
+                    className="p-button-help p-button-sm p-button-text"
+                    onClick={() => abrirEncargos(rowData)}
+                    tooltip="Encargos"
                 />
             </div>
         );
@@ -368,6 +380,15 @@ export const FolhaPagamento = () => {
                         </div>
                     </div>
                 </div>
+            </Dialog>
+            <Dialog visible={dlgEnc} onHide={() => setDlgEnc(false)} header='Encargos patronais' modal style={{ width: 'min(96vw, 520px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-4'><label className='bc-label'>INSS %</label><InputNumber value={aliq.inss} onValueChange={(e) => { const a = { ...aliq, inss: e.value }; setAliq(a); if (encFolha) recalcEncargos(encFolha.id, a); }} suffix=' %' minFractionDigits={2} /></div>
+                    <div className='bc-form-col-4'><label className='bc-label'>FGTS %</label><InputNumber value={aliq.fgts} onValueChange={(e) => { const a = { ...aliq, fgts: e.value }; setAliq(a); if (encFolha) recalcEncargos(encFolha.id, a); }} suffix=' %' minFractionDigits={2} /></div>
+                    <div className='bc-form-col-4'><label className='bc-label'>RAT %</label><InputNumber value={aliq.rat} onValueChange={(e) => { const a = { ...aliq, rat: e.value }; setAliq(a); if (encFolha) recalcEncargos(encFolha.id, a); }} suffix=' %' minFractionDigits={2} /></div>
+                </div>
+                {enc && (<div className='mt-3'><p>Base: <strong>{Number(enc.base ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>INSS: <strong>{Number(enc.inssPatronal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>FGTS: <strong>{Number(enc.fgts ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>RAT: <strong>{Number(enc.rat ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>Total: <strong>{Number(enc.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p></div>)}
+                <div className='flex justify-end mt-3'><Button label='Fechar' text onClick={() => setDlgEnc(false)} /></div>
             </Dialog>
         </div>
     );

@@ -45,6 +45,14 @@ export const FolhaPagamentoService = {
         return true;
     },
 
+    async encargos(id, a) {
+        let url = BASE_URL + '/rh/encargos/folha/' + id;
+        if (a) url += '?aliqInss=' + (a.inss ?? 20) + '&aliqFgts=' + (a.fgts ?? 8) + '&aliqRat=' + (a.rat ?? 2);
+        const response = await apiFetch(url);
+        if (!response.ok) throw new Error('Falha nos encargos');
+        return response.json();
+    },
+
     async cancelar(id) {
         const response = await apiFetch(`${BASE_URL}/rh/folhas/${id}/cancelar`, { method: 'POST' });
         if (!response.ok) {
