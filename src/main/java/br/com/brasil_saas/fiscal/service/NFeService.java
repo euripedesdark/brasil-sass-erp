@@ -1,6 +1,7 @@
 package br.com.brasil_saas.fiscal.service;
 
 import br.com.brasil_saas.vendas.model.PedidoVenda;
+import br.com.brasil_saas.fiscal.model.Nfe;
 import java.math.BigDecimal;
 
 public interface NFeService {
@@ -28,4 +29,6 @@ public interface NFeService {
      * Consulta a situação de uma NFe na SEFAZ.
      */
     String consultarSituacao(Long empresaId, String chaveAcesso) throws Exception;
+
+    Nfe consultarPersistida(Long empresaId, String chaveAcesso);
 }
