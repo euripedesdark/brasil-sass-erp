@@ -105,7 +105,7 @@ public class NFeServiceImpl implements NFeService {
             xmlFinal = XmlNfeUtil.criaNfeProc(enviNFe, retorno.getProtNFe());
         }
 
-        if (protocolo == null || protocolo.isBlank() || chave == null || !chave.matches("\d{44}")) {
+        if (protocolo == null || protocolo.isBlank() || chave == null || !chave.matches("\\d{44}")) {
             throw new IllegalStateException("SEFAZ autorizou a NF-e sem protocolo/chave de acesso validos");
         }
 
@@ -168,7 +168,7 @@ public class NFeServiceImpl implements NFeService {
 
     @Override
     public String cancelarNFe(Long empresaId, String chaveAcesso, String motivo) throws Exception {
-        if (chaveAcesso == null || !chaveAcesso.matches("\d{44}")) {
+        if (chaveAcesso == null || !chaveAcesso.matches("\\d{44}")) {
             throw new IllegalArgumentException("Chave de acesso deve conter 44 digitos");
         }
         if (motivo == null || motivo.trim().length() < 15 || motivo.trim().length() > 255) {
@@ -230,7 +230,7 @@ public class NFeServiceImpl implements NFeService {
 
     @Override
     public Nfe consultarPersistida(Long empresaId, String chaveAcesso) {
-        if (chaveAcesso == null || !chaveAcesso.matches("\d{44}")) {
+        if (chaveAcesso == null || !chaveAcesso.matches("\\d{44}")) {
             throw new IllegalArgumentException("Chave de acesso deve conter 44 digitos");
         }
         return nfeRepository.findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, chaveAcesso)
@@ -240,7 +240,7 @@ public class NFeServiceImpl implements NFeService {
 
     @Override
     public String consultarSituacao(Long empresaId, String chaveAcesso) throws Exception {
-        if (chaveAcesso == null || !chaveAcesso.matches("\d{44}")) {
+        if (chaveAcesso == null || !chaveAcesso.matches("\\d{44}")) {
             throw new IllegalArgumentException("Chave de acesso deve conter 44 digitos");
         }
         ConfiguracoesNfe config = carregarConfiguracoes(empresaId);
@@ -257,7 +257,7 @@ public class NFeServiceImpl implements NFeService {
 
     private String normalizarDocumento(String documento, int tamanho) {
         if (documento == null) throw new IllegalArgumentException("CNPJ do emitente nao cadastrado");
-        String digitos = documento.replaceAll("\D", "");
+        String digitos = documento.replaceAll("\\D", "");
         if (digitos.length() != tamanho) throw new IllegalStateException("CNPJ do emitente invalido");
         return digitos;
     }
