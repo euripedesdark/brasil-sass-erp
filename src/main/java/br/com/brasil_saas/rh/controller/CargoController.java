@@ -11,6 +11,7 @@ import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
+import br.com.brasil_saas.shared.exception.BusinessException;
 
 @RestController
 @RequestMapping("/api/rh/cargos")
@@ -42,6 +43,8 @@ public class CargoController {
         // cadastro respondia 409 com mensagem de integridade, sem relação com
         // o que o usuário fez.
         c.setEmpresaId(u.getEmpresaId());
+        if (c.getNome() == null || c.getNome().isBlank()) throw new BusinessException("Nome do cargo é obrigatório");
+        if (c.getSalarioBase() != null && c.getSalarioBase().signum() < 0) throw new BusinessException("Salário base não pode ser negativo");
         if (c.getAtivo() == null) {
             c.setAtivo(true);
         }
@@ -56,6 +59,8 @@ public class CargoController {
             .filter(c -> c.getEmpresaId().equals(u.getEmpresaId()))
             .orElseThrow(() -> new ResourceNotFoundException("Cargo não encontrado"));
 
+        if (payload.getNome() != null && payload.getNome().isBlank()) throw new BusinessException("Nome do cargo é obrigatório");
+        if (payload.getSalarioBase() != null && payload.getSalarioBase().signum() < 0) throw new BusinessException("Salário base não pode ser negativo");
         existente.setNome(payload.getNome());
         existente.setSalarioBase(payload.getSalarioBase());
         if (payload.getAtivo() != null) {
