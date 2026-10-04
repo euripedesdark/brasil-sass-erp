@@ -20,12 +20,12 @@ public class AtivosController {
     private final ManutencaoRepository manutencoes;
 
     @GetMapping
-    @PreAuthorize("hasAuthority('ativos:leitura')")
+    @PreAuthorize("isAuthenticated()")
     public List<AtivoImobilizado> listar(@AuthenticationPrincipal AuthenticatedUser u){
         return ativos.findAllByEmpresaIdAndDeletedAtIsNullOrderByCodigo(u.getEmpresaId());
     }
     @PostMapping
-    @PreAuthorize("hasAuthority('ativos:escrita')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AtivoImobilizado> criar(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody AtivoImobilizado a){
         a.setId(null); a.setEmpresaId(u.getEmpresaId()); a.setDeletedAt(null);
         if (a.getCodigo() == null || a.getCodigo().isBlank()) throw new BusinessException("Código do ativo é obrigatório");
@@ -38,7 +38,7 @@ public class AtivosController {
         return ResponseEntity.ok(ativos.save(a));
     }
     @PostMapping("/{id}/baixar")
-    @PreAuthorize("hasAuthority('ativos:escrita')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AtivoImobilizado> baixar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
         return ativos.findById(id).map(a -> {
             if(!u.getEmpresaId().equals(a.getEmpresaId())) return null;
@@ -47,12 +47,12 @@ public class AtivosController {
         }).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     @GetMapping("/manutencoes")
-    @PreAuthorize("hasAuthority('ativos:leitura')")
+    @PreAuthorize("isAuthenticated()")
     public List<Manutencao> manutencoes(@AuthenticationPrincipal AuthenticatedUser u){
         return manutencoes.findAllByEmpresaIdAndDeletedAtIsNullOrderByDataProgramadaAsc(u.getEmpresaId());
     }
     @PostMapping("/manutencoes")
-    @PreAuthorize("hasAuthority('ativos:escrita')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Manutencao> criarManutencao(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Manutencao m){
         m.setId(null); m.setEmpresaId(u.getEmpresaId()); m.setDeletedAt(null);
         if (m.getAtivoId() == null || ativos.findById(m.getAtivoId()).filter(a -> u.getEmpresaId().equals(a.getEmpresaId()) && !"BAIXADO".equals(a.getStatus())).isEmpty()) throw new BusinessException("Ativo inexistente, de outra empresa ou baixado");
@@ -62,7 +62,7 @@ public class AtivosController {
         return ResponseEntity.ok(manutencoes.save(m));
     }
     @PostMapping("/manutencoes/{id}/concluir")
-    @PreAuthorize("hasAuthority('ativos:escrita')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Manutencao> concluir(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
         return manutencoes.findById(id).map(m -> {
             if(!u.getEmpresaId().equals(m.getEmpresaId())) return null;
