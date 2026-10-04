@@ -8,6 +8,7 @@ import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
 import br.com.brasil_saas.core.model.Empresa;
 import br.com.brasil_saas.vendas.model.ItemPedidoVenda;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
+import br.com.brasil_saas.fiscal.model.RegraTributaria;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +22,7 @@ public class NFeEmissaoValidator {
 
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
+    private final RegraTributariaService regraTributariaService;
 
     public void validar(Empresa empresa, PedidoVenda pedido) {
         List<String> erros = new ArrayList<>();
@@ -79,6 +81,14 @@ public class NFeEmissaoValidator {
                 String cfop = produto.getCfopPadrao();
                 if (cfop == null || !cfop.matches("\\d{4}")) {
                     erros.add("Produto " + produto.getCodigo() + " sem CFOP padrão de 4 dígitos");
+                }
+                try {
+                    RegraTributaria regra = regraTributariaService.resolver(empresa, produto);
+                    if (regra.getCstIcms() == null || regra.getCstIcms().isBlank()) {
+                        erros.add("Produto " + produto.getCodigo() + " sem CST de ICMS na regra tributária");
+                    }
+                } catch (IllegalStateException ex) {
+                    erros.add(ex.getMessage());
                 }
                 if (item.getQuantidade() == null || item.getQuantidade().compareTo(BigDecimal.ZERO) <= 0) {
                     erros.add("Item " + item.getNumeroItem() + " com quantidade inválida");
