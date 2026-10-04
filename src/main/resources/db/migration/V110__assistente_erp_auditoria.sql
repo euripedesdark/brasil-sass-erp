@@ -23,6 +23,36 @@
 -- ============================================================================
 SET search_path TO brasil_saas, public;
 
+-- A configuracao de IA e consumida pelo assistente e precisa existir antes
+-- da auditoria atualizar o modelo por empresa. Em instalacoes novas esta
+-- tabela nao pode depender de uma carga manual ou de uma migration anterior.
+CREATE TABLE IF NOT EXISTS bc_ia_config (
+    id                  BIGSERIAL PRIMARY KEY,
+    uuid                UUID NOT NULL DEFAULT gen_random_uuid(),
+    empresa_id          BIGINT NOT NULL,
+    api_key             TEXT,
+    api_endpoint        VARCHAR(500) DEFAULT 'https://api.openai.com/v1',
+    default_model       VARCHAR(100) DEFAULT 'gpt-4',
+    temperature         DOUBLE PRECISION DEFAULT 0.7,
+    max_tokens          INTEGER DEFAULT 4000,
+    timeout_seconds     INTEGER DEFAULT 60,
+    is_enabled          BOOLEAN NOT NULL DEFAULT FALSE,
+    max_daily_tokens    BIGINT DEFAULT 100000,
+    daily_token_usage   BIGINT DEFAULT 0,
+    last_reset_date     DATE,
+    created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMP,
+    deleted_at          TIMESTAMP,
+    created_by          BIGINT,
+    updated_by          BIGINT,
+    CONSTRAINT uk_bc_ia_config_uuid UNIQUE (uuid),
+    CONSTRAINT fk_bc_ia_config_empresa
+        FOREIGN KEY (empresa_id) REFERENCES bc_core_empresa(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bc_ia_config_empresa
+    ON bc_ia_config (empresa_id) WHERE deleted_at IS NULL;
+
 CREATE TABLE IF NOT EXISTS bc_ia_assistente_auditoria (
     id             BIGSERIAL PRIMARY KEY,
     uuid           UUID NOT NULL DEFAULT gen_random_uuid(),
