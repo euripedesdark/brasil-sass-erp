@@ -453,6 +453,15 @@ public class NfseEmissaoService {
             }
 
             resposta = RespostaNfse.ler(resposta);
+            String chaveRetorno = texto(resposta.get("chave_nota_nacional"));
+            if (chaveRetorno != null && !chaveRetorno.isBlank()) {
+                nfse.setChaveNotaNacional(chaveRetorno);
+                String idDps = texto(resposta.get("id_dps"));
+                String protocolo = texto(resposta.get("protocolo"));
+                if (idDps != null) nfse.setIdDps(idDps);
+                if (protocolo != null) nfse.setProtocoloNacional(protocolo);
+                nfseRepository.save(nfse);
+            }
             Boolean confirmado = RespostaNfse.confirmado(resposta);
             if (Boolean.FALSE.equals(confirmado)) {
                 throw new BusinessException("A SEFIN Nacional recusou o cancelamento: "
