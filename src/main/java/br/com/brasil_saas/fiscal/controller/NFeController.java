@@ -52,6 +52,14 @@ public class NFeController {
         ));
     }
 
+    @GetMapping("/documento/{chaveAcesso}")
+    @PreAuthorize("hasAnyRole('FINANCEIRO','GESTOR','GERENTE','DIRETORIA','ADMIN','SUPERUSER')")
+    public ResponseEntity<br.com.brasil_saas.fiscal.model.Nfe> documento(
+            @RequestHeader("X-Empresa-Id") Long empresaId,
+            @PathVariable String chaveAcesso) {
+        return ResponseEntity.ok(nfeService.consultarPersistida(empresaId, chaveAcesso));
+    }
+
     @GetMapping(value = "/consultar/{chaveAcesso}", produces = MediaType.APPLICATION_XML_VALUE)
     @PreAuthorize("hasAnyRole('FINANCEIRO','GESTOR','GERENTE','DIRETORIA','ADMIN','SUPERUSER')")
     public ResponseEntity<String> consultar(
