@@ -300,19 +300,6 @@ export const Vendas = () => {
         }
     };
 
-    const [dlgPos, setDlgPos] = useState(false);
-    const [posId, setPosId] = useState(null);
-    const [posMotivo, setPosMotivo] = useState('');
-    const [posEquip, setPosEquip] = useState('');
-    const abrirPosvenda = (row) => { setPosId(row.id); setPosMotivo(''); setPosEquip(''); setDlgPos(true); };
-    const confirmarPosvenda = async () => {
-        if (!posMotivo.trim()) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Informe o motivo', life: 3000 }); return; }
-        try {
-            const r = await PedidoVendaService.posvenda(posId, { motivo: posMotivo, equipamento: posEquip || null });
-            toast.current?.show({ severity: 'success', summary: 'OS aberta', detail: 'OS ' + ((r.data && (r.data.osNumero || r.data.osId)) || ''), life: 4000 });
-            setDlgPos(false);
-        } catch (err) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: getApiErrorMessage(err, 'Falha ao abrir OS'), life: 4000 }); }
-    };
     const abrirNovo = () => {
         setForm(emptyForm()); setItemAtual(emptyItem()); setError('');
         setSomenteLeitura(false); setDialogVisible(true);
@@ -361,8 +348,9 @@ export const Vendas = () => {
                     <Button icon="pi pi-times" className="p-button-text p-button-danger p-button-sm"
                         tooltip="Cancelar pedido" onClick={() => cancelar(row.id)} />
                 </>
+            )}
             {row.status === 'FATURADO' && (
-                                    <Button icon='pi pi-wrench' className='p-button-text p-button-help p-button-sm' tooltip='Pós-venda (abrir OS)' onClick={() => abrirPosvenda(row)} />
+                <Button icon='pi pi-wrench' className='p-button-text p-button-help p-button-sm' tooltip='Pós-venda (abrir OS)' onClick={() => abrirPosvenda(row)} />
             )}
         </div>
     );

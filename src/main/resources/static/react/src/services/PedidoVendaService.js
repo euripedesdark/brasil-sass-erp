@@ -26,7 +26,7 @@ class PedidoVendaService {
 
     posvenda(id, body) {
         return axios.post(`${API_URL}/${id}/posvenda`, body);
-    },
+    }
     cancelar(id) {
         return axios.post(`${API_URL}/${id}/cancelar`);
     }
