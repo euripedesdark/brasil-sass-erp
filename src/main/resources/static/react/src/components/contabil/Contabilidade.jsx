@@ -61,8 +61,28 @@ export const Contabilidade = () => {
     const buscarRazao = async () => { if (!filtroConta || !de || !ate) return; setRazao(await apiFetch(BASE + '/razao?contaId=' + filtroConta + '&de=' + iso(de) + '&ate=' + iso(ate)).then(js)); };
     const buscarBalancete = async () => { if (!de || !ate) return; setBalancete(await apiFetch(BASE + '/balancete?de=' + iso(de) + '&ate=' + iso(ate)).then(js)); };
     const [dre, setDre] = useState([]);
+    const [ecd, setEcd] = useState(null);
+    const [ecdCnpj, setEcdCnpj] = useState('');
+    const [ecdNome, setEcdNome] = useState('');
     const buscarDre = async () => { const r = await apiFetch(BASE + '/dre?exercicio=' + exercicio); setDre(await r.json().catch(() => [])); };
-    const buscarBalanco = async () => { const r = await apiFetch(BASE + '/balanco?exercicio=' + exercicio); setBalanco(await r.json().catch(() => null)); };
+    const gerarEcd = async () => {
+        try {
+            const r = await apiFetch(BASE + '/ecd/gerar?exercicio=' + exercicio + '&cnpj=' + encodeURIComponent(ecdCnpj) + '&nome=' + encodeURIComponent(ecdNome), { method: 'POST' });
+            const j = await r.json().catch(() => null);
+            setEcd(j);
+            toast.current?.show({ severity: 'success', summary: 'ECD gerada', life: 3000 });
+        } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', life: 3000 }); }
+    };
+    const baixarEcd = () => {
+        if (!ecd?.conteudo) return;
+        const blob = new Blob([ecd.conteudo], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'ECD-' + ecd.exercicio + '.txt';
+        link.click();
+        URL.revokeObjectURL(link.href);
+    };
+        const buscarBalanco = async () => { const r = await apiFetch(BASE + '/balanco?exercicio=' + exercicio); setBalanco(await r.json().catch(() => null)); };
     const fechar = async () => { if (!periodoFech) return; await apiFetch(BASE + '/fechamentos/' + periodoFech + '/fechar', { method: 'POST' }); setPeriodoFech(''); carregar(); };
 
     return (
@@ -131,6 +151,7 @@ export const Contabilidade = () => {
                         <Column field='status' header='Status' />
                         <Column field='fechadoEm' header='Fechado em' />
                     </DataTable>
+                </TabPanel>
                 <TabPanel header='DRE'>
                     <div className='flex gap-2 mb-3 flex-wrap'><InputNumber value={exercicio} onValueChange={(e) => setExercicio(e.value)} useGrouping={false} /><Button label='Calcular DRE' icon='pi pi-calculator' onClick={buscarDre} /></div>
                     <DataTable value={dre} paginator rows={12} emptyMessage='Calcule por exercício.' responsiveLayout='scroll'>
@@ -140,6 +161,14 @@ export const Contabilidade = () => {
                         <Column header='Resultado' body={(r) => fmt(r.resultado)} />
                     </DataTable>
                 </TabPanel>
+                <TabPanel header='ECD'>
+                    <div className='flex gap-2 mb-3 flex-wrap align-items-end'>
+                        <span><label className='bc-label'>Exercicio</label><InputNumber value={exercicio} onValueChange={(e) => setExercicio(e.value)} useGrouping={false} /></span>
+                        <span><label className='bc-label'>CNPJ</label><InputText value={ecdCnpj} onChange={(e) => setEcdCnpj(e.target.value)} placeholder='somente numeros' /></span>
+                        <span><label className='bc-label'>Nome empresarial</label><InputText value={ecdNome} onChange={(e) => setEcdNome(e.target.value)} style={{ width: '20rem' }} /></span>
+                        <Button label='Gerar ECD (Diario)' icon='pi pi-file' onClick={gerarEcd} /></div>
+                    {ecd && <div className='surface-50 border-round p-3 mb-3'><strong>ECD gerada:</strong> {ecd.lancamentos} lancamentos, {ecd.contas} contas, {ecd.totalLinhas} linhas. Demonstracoes (J100/J150): {ecd.demonstracoes}. Confira no PVA antes de entregar.
+                        <div className='mt-2'><Button label='Baixar .txt' icon='pi pi-download' severity='secondary' outlined onClick={baixarEcd} /></div></div>}
                 </TabPanel>
             </TabView>
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Novo lançamento' modal style={{ width: 'min(96vw, 520px)' }}>
