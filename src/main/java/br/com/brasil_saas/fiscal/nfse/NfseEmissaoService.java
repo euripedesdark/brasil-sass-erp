@@ -2,6 +2,8 @@ package br.com.brasil_saas.fiscal.nfse;
 
 import br.com.brasil_saas.cadastro.model.Servico;
 import br.com.brasil_saas.cadastro.repository.ServicoRepository;
+import br.com.brasil_saas.core.model.Empresa;
+import br.com.brasil_saas.core.repository.EmpresaRepository;
 import br.com.brasil_saas.fiscal.model.Nfse;
 import br.com.brasil_saas.fiscal.model.NfseItem;
 import br.com.brasil_saas.fiscal.model.NfseRetorno;
@@ -53,19 +55,24 @@ public class NfseEmissaoService {
 
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
 
+    private static final String IBGE_RONDONOPOLIS = "5107602";
+
     private final ServicoRepository servicoRepository;
+    private final EmpresaRepository empresaRepository;
     private final NfseRepository nfseRepository;
     private final NfseItemRepository nfseItemRepository;
     private final NfseArquivoService arquivoService;
     private final NfseRetornoService retornoService;
     private final NfsePdfService pdfService;
-    private final RestClient http;
+    private final RestClient httpSp;
+    private final RestClient httpRondonopolis;
 
     private final String inscricaoMunicipalPadrao;
     private final String serieRpsPadrao;
 
     public NfseEmissaoService(
             ServicoRepository servicoRepository,
+            EmpresaRepository empresaRepository,
             NfseRepository nfseRepository,
             NfseItemRepository nfseItemRepository,
             NfseArquivoService arquivoService,
@@ -77,6 +84,7 @@ public class NfseEmissaoService {
             @Value("${brasil-saas.fiscal.nfse.timeout-ms:60000}") long timeoutMs) {
 
         this.servicoRepository = servicoRepository;
+        this.empresaRepository = empresaRepository;
         this.nfseRepository = nfseRepository;
         this.nfseItemRepository = nfseItemRepository;
         this.arquivoService = arquivoService;
@@ -91,7 +99,12 @@ public class NfseEmissaoService {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout((int) timeoutMs);
         factory.setReadTimeout((int) timeoutMs);
-        this.http = RestClient.builder().baseUrl(url).requestFactory(factory).build();
+        this.httpSp = RestClient.builder().baseUrl(url).requestFactory(factory).build();
+
+        String rondonopolisUrl = System.getProperty("brasil-saas.fiscal.nfse.rondonopolis-url",
+                "http://127.0.0.1:4570/api/nfse-sp");
+        this.httpRondonopolis = RestClient.builder().baseUrl(rondonopolisUrl)
+                .requestFactory(factory).build();
     }
 
     /**
@@ -118,13 +131,18 @@ public class NfseEmissaoService {
      * do RPS ainda permite recuperar e cancelar a nota.
      */
     public Resultado emitir(Emitir req) {
+        Empresa empresa = empresaRepository.findById(req.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa " + req.getEmpresaId() + " nao encontrada."));
+        RestClient http = clienteNfse(empresa);
+
         Servico servico = servicoRepository.findById(req.getServicoId())
                 .orElseThrow(() -> new BusinessException(
                         "Servico " + req.getServicoId() + " nao encontrado no cadastro."));
         NfseEmissaoDtos.exigirCodigoMunicipal(servico);
 
-        String inscricaoMunicipal = inscricaoMunicipalPadrao.isBlank()
-                ? "2130033"
+        String inscricaoMunicipal = empresa.getInscricaoMunicipal() != null
+                && !empresa.getInscricaoMunicipal().isBlank()
+                ? empresa.getInscricaoMunicipal()
                 : inscricaoMunicipalPadrao;
         String serie = req.getSerieRps() == null || req.getSerieRps().isBlank()
                 ? serieRpsPadrao : req.getSerieRps();
@@ -292,6 +310,24 @@ public class NfseEmissaoService {
                 salva.getCodigoVerificacao(), salva.getChaveNotaNacional(),
                 inscricaoMunicipal, salva.getStatus(), xmlId, salva.getPdfDocumentoId(),
                 alertas(resposta));
+    }
+
+    /**
+     * Seleciona o emissor municipal conforme o cadastro da empresa.
+     *
+     * <p>São Paulo continua no contrato da API 4567. Rondonópolis usa a
+     * implementação Java AGILIBlue em 4570, que já foi construída e testada
+     * separadamente no repositório. O ERP passa a escolher o provedor pelo
+     * município, sem duplicar a tela, persistência ou fluxo fiscal.
+     *
+     * <p>5107602 é o código IBGE oficial de Rondonópolis. Não inferimos o
+     * município pelo texto do endereço: o código IBGE é a fonte estruturada.
+     */
+    private RestClient clienteNfse(Empresa empresa) {
+        if (IBGE_RONDONOPOLIS.equals(empresa.getCodigoIbge())) {
+            return httpRondonopolis;
+        }
+        return httpSp;
     }
 
     /**
