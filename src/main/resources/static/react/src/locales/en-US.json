@@ -182,7 +182,8 @@
     "loans": "Loans",
     "buscaFiscal": "Tax search",
     "banks": "Banks",
-    "cobranca": "Collections"
+    "cobranca": "Collections",
+    "devolucoes": "Exchanges and returns"
   },
   "stock": {
     "default": "Default",

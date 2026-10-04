@@ -124,7 +124,8 @@ export const Layout = () => {
                 items: [
                     item('menu.salesOrders', 'pi pi-file', '/vendas'),
                     item('menu.pos', 'pi pi-shopping-cart', '/vendas/pdv'),
-                    item('menu.priceTables', 'pi pi-tags', '/vendas/tabelas-preco')
+                    item('menu.priceTables', 'pi pi-tags', '/vendas/tabelas-preco'),
+                    item('menu.devolucoes', 'pi pi-undo', '/vendas/devolucoes')
                 ]
             },
             {

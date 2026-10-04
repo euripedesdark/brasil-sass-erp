@@ -182,7 +182,8 @@
     "loans": "Emprunts",
     "buscaFiscal": "Recherche fiscale",
     "banks": "Banques",
-    "cobranca": "Recouvrement"
+    "cobranca": "Recouvrement",
+    "devolucoes": "Échanges et retours"
   },
   "stock": {
     "default": "Standard",

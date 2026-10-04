@@ -77,6 +77,7 @@ import { FuncionarioFoto } from './components/rh/FuncionarioFoto';
 import { Vendas } from './components/vendas/Vendas';
 import { TabelasPreco } from './components/vendas/TabelasPreco'
 import { Pdv } from './components/vendas/Pdv';
+import { Devolucoes } from './components/vendas/Devolucoes';
 import { Compras } from './components/compras/Compras';
 import SupplyChainCompras from './components/compras/SupplyChainCompras';
 import RecebimentosCompra from './components/compras/RecebimentosCompra';
@@ -181,6 +182,7 @@ function App() {
                     <Route path="vendas/*" element={<Vendas />} />
                     <Route path="vendas/pdv" element={<Pdv />} />
                     <Route path="vendas/tabelas-preco" element={<TabelasPreco />} />
+                    <Route path="vendas/devolucoes" element={<Devolucoes />} />
                     <Route path="compras/*" element={<Compras />} />
                     <Route path="compras/supply-chain" element={<SupplyChainCompras />} />
                     <Route path="compras/recebimentos" element={<RecebimentosCompra />} />

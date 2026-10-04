@@ -182,7 +182,8 @@
     "loans": "Préstamos",
     "buscaFiscal": "Búsqueda fiscal",
     "banks": "Bancos",
-    "cobranca": "Cobranza"
+    "cobranca": "Cobranza",
+    "devolucoes": "Cambios y devoluciones"
   },
   "stock": {
     "default": "Estándar",
