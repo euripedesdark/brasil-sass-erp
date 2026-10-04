@@ -512,6 +512,17 @@ export const ServicoCadastro = () => {
                             />
                         </div>
                         <div className="col-12 md:col-4 field">
+                            <label className="font-bold mb-2 block">Tributacao Nacional NFS-e</label>
+                            <InputText
+                                value={novoServico.codigoTributacaoNacional}
+                                onChange={(e) => setNovoServico({...novoServico, codigoTributacaoNacional: e.target.value.replace(/\D/g, '').slice(0, 6)})}
+                                placeholder="010700"
+                                maxLength={6}
+                                keyfilter="int"
+                            />
+                            <small className="text-color-secondary">6 digitos. Obrigatorio para SEFIN Nacional.</small>
+                        </div>
+                        <div className="col-12 md:col-4 field">
                             <label className="font-bold mb-2 block">NBS</label>
                             <InputText
                                 value={novoServico.nbs}
