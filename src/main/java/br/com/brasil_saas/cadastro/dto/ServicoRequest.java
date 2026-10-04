@@ -11,6 +11,7 @@ public record ServicoRequest(
     @Size(max = 10) String lc116Codigo,
     /** Codigo municipal de São Paulo, 4 digitos. Ex.: 2919. Ver a migration V92. */
     @Size(max = 10) String codigoTributacaoMunicipal,
+    @Size(max = 6) String codigoTributacaoNacional,
     @Size(max = 12) String nbs,
     BigDecimal aliquotaIss,
     BigDecimal preco,
