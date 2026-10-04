@@ -8,6 +8,10 @@ import br.com.swconsultoria.nfe.dom.ConfiguracoesNfe;
 import br.com.swconsultoria.nfe.dom.enuns.AmbienteEnum;
 import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
 import br.com.swconsultoria.nfe.dom.enuns.EstadosEnum;
+import br.com.swconsultoria.nfe.Nfe;
+import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
+import br.com.swconsultoria.nfe.dom.retornos.TRetConsSitNFe;
+import br.com.swconsultoria.nfe.util.XmlNfeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,8 +68,11 @@ public class NFeServiceImpl implements NFeService {
         log.info("Consultando situação da NFe chave: {}", chaveAcesso);
         ConfiguracoesNfe config = carregarConfiguracoes(empresaId);
         log.info("Configurações SEFAZ carregadas para consulta");
-        // TODO: chamar br.com.swconsultoria.nfe.Nfe.consultaXml
-        return "SITUACAO-SIMULADA-" + chaveAcesso;
+        if (chaveAcesso == null || !chaveAcesso.matches("\\d{44}"))
+            throw new IllegalArgumentException("Chave de acesso deve conter 44 dígitos");
+
+        TRetConsSitNFe retorno = Nfe.consultaXml(config, chaveAcesso, DocumentoEnum.NFE);
+        return XmlNfeUtil.objectToXml(retorno);
     }
 
     private ConfiguracoesNfe carregarConfiguracoes(Long empresaId) throws Exception {
