@@ -58,6 +58,7 @@ public class ApontamentoProducao extends TenantEntity {
     @Column(name = "observacoes", columnDefinition = "TEXT")
     private String observacoes;
 
+    @Column(name = "operacao_roteiro_id") private Long operacaoRoteiroId;
     @Column(name = "maquina_equipamento_id")
     private Long maquinaEquipamentoId;
 

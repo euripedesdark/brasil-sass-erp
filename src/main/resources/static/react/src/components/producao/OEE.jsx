@@ -24,20 +24,21 @@ export const OEE = () => {
         finally { setLoading(false); }
     };
     useEffect(() => { carregar(); }, []);
-    const media = (k) => (rows.length ? (rows.reduce((s, r) => s + Number(r[k] || 0), 0) / rows.length).toFixed(1) : '-');
+    const media = (k) => { const v = rows.map((r) => r[k]).filter((x) => x !== null && x !== undefined && x !== ''); return v.length ? (v.reduce((s, x) => s + Number(x), 0) / v.length).toFixed(1) : '-'; };
     return (
         <div className='p-4'>
             <Toast ref={toast} />
-            <div className='mb-3'><h2 className='m-0'>Eficiência Operacional</h2><span className='bc-muted'>Disponibilidade × qualidade por dia (sem performance: apontamento não vincula operação)</span></div>
+            <div className='mb-3'><h2 className='m-0'>Eficiência Operacional</h2><span className='bc-muted'>Disponibilidade x performance x qualidade (OEE) por dia</span></div>
             <div className='flex gap-2 mb-3 flex-wrap align-items-end'>
                 <span><label className='bc-label'>De</label><Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat='dd/mm/yy' showIcon /></span>
                 <span><label className='bc-label'>Até</label><Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat='dd/mm/yy' showIcon /></span>
                 <Button label='Atualizar' icon='pi pi-refresh' onClick={carregar} />
             </div>
             <div className='grid mb-3'>
-                <div className='bc-form-col-4 col-12 md:col-4'><Card><small>Disponibilidade média %</small><div className='text-2xl font-bold'>{media('disponibilidade')}</div></Card></div>
-                <div className='bc-form-col-4 col-12 md:col-4'><Card><small>Qualidade média %</small><div className='text-2xl font-bold'>{media('qualidade')}</div></Card></div>
-                <div className='bc-form-col-4 col-12 md:col-4'><Card><small>Dias com apontamento</small><div className='text-2xl font-bold'>{rows.length}</div></Card></div>
+                <div className='bc-form-col-3 col-12 md:col-3'><Card><small>Disponibilidade média %</small><div className='text-2xl font-bold'>{media('disponibilidade')}</div></Card></div>
+                <div className='bc-form-col-3 col-12 md:col-3'><Card><small>Qualidade média %</small><div className='text-2xl font-bold'>{media('qualidade')}</div></Card></div>
+                <div className='bc-form-col-3 col-12 md:col-3'><Card><small>OEE medio %</small><div className='text-2xl font-bold'>{media('oee')}</div></Card></div>
+                <div className='bc-form-col-3 col-12 md:col-3'><Card><small>Dias com apontamento</small><div className='text-2xl font-bold'>{rows.length}</div></Card></div>
             </div>
             <DataTable value={rows} loading={loading} paginator rows={15} emptyMessage='Sem apontamentos no período.' responsiveLayout='scroll'>
                 <Column field='dia' header='Dia' style={{ width: '8rem' }} />
@@ -47,6 +48,8 @@ export const OEE = () => {
                 <Column field='refugo' header='Refugo' />
                 <Column field='qualidade' header='Qual. %' />
                 <Column field='pecasHora' header='Peças/h' />
+                <Column field='performance' header='Perf. %' />
+                <Column field='oee' header='OEE %' />
             </DataTable>
         </div>
     );

@@ -57,7 +57,7 @@ const listaDe = (r) => {
 const vazio = () => ({
     producaoId: null, itemProducaoId: null, funcionarioId: null,
     horasTrabalhadas: 0, quantidadeProduzida: 0, quantidadeRefugo: 0,
-    observacoes: '', maquinaEquipamentoId: null, turno: 'MANHA'
+    observacoes: '', maquinaEquipamentoId: null, turno: 'MANHA', operacaoRoteiroId: null
 });
 
 /**
@@ -77,6 +77,21 @@ export const ApontamentosProducao = () => {
     const toast = React.useRef(null);
 
     const [producoes, setProducoes] = useState([]);
+    const [operacoes, setOperacoes] = useState([]);
+    const carregarOperacoes = async (producaoId) => {
+        setOperacoes([]);
+        if (!producaoId) return;
+        try {
+            const prod = producoes.find((x) => x.id === producaoId);
+            if (!prod || !prod.produtoFinalId) return;
+            const rr = await apiFetch('/api/producao/roteiros?produtoId=' + prod.produtoFinalId);
+            const rots = await rr.json().catch(() => []);
+            if (!Array.isArray(rots) || !rots.length) return;
+            const ro = await apiFetch('/api/producao/roteiros/' + rots[0].id + '/operacoes');
+            const ops = await ro.json().catch(() => []);
+            setOperacoes(Array.isArray(ops) ? ops : []);
+        } catch (e) { setOperacoes([]); }
+    };
     const [funcionarios, setFuncionarios] = useState([]);
     const [apontamentos, setApontamentos] = useState([]);
     const [stats, setStats] = useState(null);
@@ -359,9 +374,15 @@ export const ApontamentosProducao = () => {
                     {campo('aprod', 'Ordem de produção *',
                         <Dropdown id="aprod" value={form.producaoId} options={producoesOpts}
                                   placeholder="Escolha a ordem" filter
-                                  onChange={(e) => setForm({ ...form, producaoId: e.value })} />, 'col-12')}
+                                  onChange={(e) => { setForm({ ...form, producaoId: e.value, operacaoRoteiroId: null }); carregarOperacoes(e.value); }} />, 'col-12')}
 
-                    {campo('afunc', 'Funcionário (id)',
+                    
+                    {operacoes.length > 0 && campo('aop', 'Operacao do roteiro',
+                        <Dropdown id="aop" value={form.operacaoRoteiroId} options={operacoes.map((o) => ({ label: (o.sequencia ?? "") + ' - ' + (o.descricao || o.nome || ('Op ' + o.id)), value: o.id }))}
+                                  placeholder="Escolha a operacao" showClear
+                                  onChange={(e) => setForm({ ...form, operacaoRoteiroId: e.value ?? null })} />)}
+
+{campo('afunc', 'Funcionário (id)',
                         <InputNumber id="afunc" value={form.funcionarioId} useGrouping={false}
                                      onValueChange={(e) => setForm({ ...form, funcionarioId: e.value })} />)}
 
