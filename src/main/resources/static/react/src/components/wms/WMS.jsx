@@ -42,7 +42,17 @@ export const WMS = () => {
     const verItens = async (o) => { setOndaSel(o); setItens(await apiFetch(BASE + '/ondas/' + o.id + '/itens').then(js)); };
     const salvarOnda = async () => { await apiFetch(BASE + '/ondas', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ depositoId: Number(fOnda.depositoId), codigo: fOnda.codigo, responsavel: fOnda.responsavel }) }); setDlgOnda(false); setFOnda({}); carregar(); };
     const salvarItem = async () => { await apiFetch(BASE + '/ondas/' + ondaSel.id + '/itens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ produtoId: Number(fItem.produtoId), qtdSolicitada: Number(fItem.qtd || 0) }) }); setDlgItem(false); setFItem({}); verItens(ondaSel); };
-    const liberar = async (id) => { await apiFetch(BASE + '/ondas/' + id + '/liberar', { method: 'POST' }); carregar(); };
+    const gerarDeReservas = async () => {
+        if (!depId) { toast.current?.show({ severity: 'warn', summary: 'Informe o deposito', detail: 'Use o campo Deposito ID da aba put-away ou digite aqui.', life: 4000 }); return; }
+        try {
+            const r = await apiFetch(BASE + '/ondas/gerar-de-reservas?depositoId=' + depId, { method: 'POST' });
+            const j = await r.json().catch(() => null);
+            if (!r.ok) throw new Error(j?.message || 'Falhou');
+            toast.current?.show({ severity: 'success', summary: 'Onda ' + (j?.codigo || j?.data?.codigo) + ' criada', detail: (j?.itens ?? j?.data?.itens ?? 0) + ' itens de reservas', life: 4000 });
+            carregar();
+        } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 }); }
+    };
+        const liberar = async (id) => { await apiFetch(BASE + '/ondas/' + id + '/liberar', { method: 'POST' }); carregar(); };
     const separar = async (iid, qtd) => { await apiFetch(BASE + '/ondas/' + ondaSel.id + '/itens/' + iid + '/separar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantidade: Number(qtd || 0) }) }); verItens(ondaSel); };
     const concluir = async (id) => { const r = await apiFetch(BASE + '/ondas/' + id + '/concluir', { method: 'POST' }); if (!r.ok) toast.current?.show({ severity: 'warn', summary: 'Pendente', detail: 'Há itens não separados', life: 3500 }); carregar(); };
     const sugerir = async () => { const r = await apiFetch(BASE + '/putaway?depositoId=' + depId + '&produtoId=' + prodId); setSug(await r.json().catch(() => null)); };
@@ -55,7 +65,11 @@ export const WMS = () => {
             <Toast ref={toast} />
             <div className='flex justify-content-between align-items-center mb-3 flex-wrap gap-2'>
                 <div><h2 className='m-0'>WMS</h2><span className='bc-muted'>Ondas, packing, put-away e expedição avançada</span></div>
+                
+                <span className='flex gap-2'>
+                <Button label='Onda de reservas' icon='pi pi-bolt' outlined onClick={gerarDeReservas} tooltip='Gera onda das reservas do deposito (campo Deposito ID abaixo)' />
                 <Button label='Nova onda' icon='pi pi-plus' onClick={() => { setFOnda({}); setDlgOnda(true); }} />
+                </span>
             </div>
             <TabView>
                 <TabPanel header='Ondas'>

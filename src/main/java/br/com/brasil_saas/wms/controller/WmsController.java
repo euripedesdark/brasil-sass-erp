@@ -18,7 +18,9 @@ public class WmsController {
     public record FinalizarReq(String codigoRastreio) {}
     @GetMapping("/ondas") @PreAuthorize("hasAuthority('wms:leitura')")
     public List<WmsOnda> ondas(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam(required = false) String status) { return svc.ondas(u.getEmpresaId(), status); }
-    @PostMapping("/ondas") @PreAuthorize("hasAuthority('wms:escrita')")
+    @PostMapping("/ondas/gerar-de-reservas") @PreAuthorize("hasAuthority('wms:escrita')")
+    public Map<String, Object> gerarDeReservas(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam Long depositoId) { return svc.gerarOndaDeReservas(u.getEmpresaId(), depositoId); }
+        @PostMapping("/ondas") @PreAuthorize("hasAuthority('wms:escrita')")
     public ResponseEntity<WmsOnda> criar(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody WmsOnda o) { return ResponseEntity.status(HttpStatus.CREATED).body(svc.criarOnda(u.getEmpresaId(), o)); }
     @PostMapping("/ondas/{id}/itens") @PreAuthorize("hasAuthority('wms:escrita')")
     public ResponseEntity<WmsOndaItem> addItem(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody WmsOndaItem i) { return ResponseEntity.status(HttpStatus.CREATED).body(svc.addItem(u.getEmpresaId(), id, i)); }

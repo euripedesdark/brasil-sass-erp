@@ -7,6 +7,7 @@ public interface WmsService {
     List<WmsOnda> ondas(Long empresaId, String status);
     WmsOnda criarOnda(Long empresaId, WmsOnda o);
     WmsOndaItem addItem(Long empresaId, Long ondaId, WmsOndaItem i);
+    java.util.Map<String, Object> gerarOndaDeReservas(Long empresaId, Long depositoId);
     List<WmsOndaItem> itens(Long empresaId, Long ondaId);
     WmsOnda liberar(Long empresaId, Long id);
     WmsOndaItem separar(Long empresaId, Long ondaId, Long itemId, BigDecimal qtd, Long enderecoId);

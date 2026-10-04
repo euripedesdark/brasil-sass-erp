@@ -2,9 +2,11 @@ package br.com.brasil_saas.wms.service.impl;
 import br.com.brasil_saas.estoque.model.EnderecoEstoque;
 import br.com.brasil_saas.estoque.model.ExpedicaoEstoque;
 import br.com.brasil_saas.estoque.model.ExpedicaoEstoqueItem;
+import br.com.brasil_saas.estoque.model.ReservaEstoque;
 import br.com.brasil_saas.estoque.repository.EnderecoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.ExpedicaoEstoqueItemRepository;
 import br.com.brasil_saas.estoque.repository.ExpedicaoEstoqueRepository;
+import br.com.brasil_saas.estoque.repository.ReservaEstoqueRepository;
 import br.com.brasil_saas.wms.model.*;
 import br.com.brasil_saas.wms.repository.*;
 import br.com.brasil_saas.wms.service.WmsService;
@@ -25,6 +27,7 @@ public class WmsServiceImpl implements WmsService {
     private final EnderecoEstoqueRepository enderecos;
     private final ExpedicaoEstoqueRepository expedicoes;
     private final ExpedicaoEstoqueItemRepository expedicaoItens;
+    private final ReservaEstoqueRepository reservas;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -48,6 +51,38 @@ public class WmsServiceImpl implements WmsService {
         i.setQtdSeparada(BigDecimal.ZERO);
         i.setStatus("PENDENTE");
         return itens.save(i);
+    }
+    @Override @Transactional public java.util.Map<String, Object> gerarOndaDeReservas(Long empresaId, Long depositoId) {
+        List<ReservaEstoque> rs = reservas.findByEmpresaIdAndDeletedAtIsNullOrderByDataReservaDesc(empresaId).stream()
+            .filter(r -> "RESERVADA".equals(r.getStatus()) && depositoId.equals(r.getDepositoId()) && r.getProdutoId() != null && r.getQuantidade() != null && r.getQuantidade().signum() > 0).toList();
+        java.util.Set<Long> emOnda = new java.util.HashSet<>();
+        for (WmsOndaItem i : itens.findByEmpresaIdAndDeletedAtIsNull(empresaId)) {
+            if ("RESERVA".equals(i.getOrigemTipo()) && i.getOrigemId() != null && "SEPARADO".equals(i.getStatus()) == false) emOnda.add(i.getOrigemId());
+        }
+        List<ReservaEstoque> novas = rs.stream().filter(r -> emOnda.contains(r.getId()) == false).toList();
+        if (novas.isEmpty()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem reservas pendentes no deposito");
+        WmsOnda o = new WmsOnda();
+        o.setDepositoId(depositoId);
+        o.setCodigo("ONDA-" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")));
+        o = ondas.save(o);
+        int n = 0;
+        for (ReservaEstoque r : novas) {
+            WmsOndaItem i = new WmsOndaItem();
+            i.setOndaId(o.getId());
+            i.setOrigemTipo("RESERVA");
+            i.setOrigemId(r.getId());
+            i.setProdutoId(r.getProdutoId());
+            i.setQtdSolicitada(r.getQuantidade());
+            i.setQtdSeparada(java.math.BigDecimal.ZERO);
+            i.setStatus("PENDENTE");
+            i.setEnderecoId(r.getEnderecoId());
+            i.setEmpresaId(empresaId);
+            itens.save(i);
+            n++;
+        }
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("ondaId", o.getId()); m.put("codigo", o.getCodigo()); m.put("itens", n);
+        return m;
     }
     @Override public List<WmsOndaItem> itens(Long empresaId, Long ondaId) {
         exigirOnda(empresaId, ondaId);
