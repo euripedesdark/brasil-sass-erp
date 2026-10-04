@@ -162,7 +162,7 @@ public class NfseEmissaoService {
 
         // ---- 1) chamada a API Java ------------------------------------
         Map<String, Object> corpo = new LinkedHashMap<>();
-        corpo.put("imPrestador", inscricaoMunicipal);
+        // O provedor de Rondonópolis aceita o prestador no próprio contrato;\n        // enviamos os dados da empresa para não deixar CNPJ/IM fixos no microserviço.\n        corpo.put("inscricaoMunicipalPrestador", inscricaoMunicipal);\n        corpo.put("cnpjPrestador", somenteDigitos(empresa.getCnpj()));\n        corpo.put("unidadeGestora", System.getProperty("brasil-saas.fiscal.nfse.rondonopolis-unidade-gestora",\n                "03347101000121"));\n        corpo.put("imPrestador", inscricaoMunicipal);
         corpo.put("serieRps", serie);
         corpo.put("numeroRps", String.valueOf(req.getNumeroRps()));
         corpo.put("dataEmissao", dataEmissao);
