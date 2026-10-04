@@ -148,7 +148,7 @@ public class NfseEmissaoService {
         boolean nacional = !IBGE_RONDONOPOLIS.equals(empresa.getCodigoIbge())
                 && !IBGE_SAO_PAULO.equals(empresa.getCodigoIbge());
         if (nacional && (servico.getCodigoTributacaoNacional() == null
-                || servico.getCodigoTributacaoNacional().length() != 6)) {
+                || !servico.getCodigoTributacaoNacional().matches("\\d{6}"))) {
             throw new BusinessException("O servico '" + servico.getNome()
                     + "' precisa de codigo de tributacao nacional com 6 digitos para emissao pela SEFIN Nacional.");
         }
@@ -237,6 +237,7 @@ public class NfseEmissaoService {
         nfse.setNumeroRps(String.valueOf(req.getNumeroRps()));
         nfse.setLc116Codigo(servico.getLc116Codigo());
         nfse.setCodigoTributacaoMunicipal(servico.getCodigoTributacaoMunicipal());
+        nfse.setChaveNotaNacional(nacional ? "DPS:" + serie + "-" + req.getNumeroRps() : null);
         nfse.setDataEmissao(LocalDateTime.now());
         nfse.setStatus("EMITINDO");
         nfse.setBaseCalculo(base.setScale(2, RoundingMode.HALF_UP));
