@@ -411,6 +411,65 @@ public class NfseEmissaoService {
                             + "prefeitura nao confirmou a emissao. Confira o status antes de cancelar.");
         }
 
+        boolean nacional = !IBGE_RONDONOPOLIS.equals(empresa.getCodigoIbge())
+                && !IBGE_SAO_PAULO.equals(empresa.getCodigoIbge());
+
+        // O padrao nacional cancela pela chave de acesso e registra um evento
+        // assinado. SP/Rondonopolis continuam no contrato municipal legado.
+        if (nacional) {
+            Map<String, Object> resposta;
+            Integer httpStatus = null;
+            Long duracaoMs = null;
+            RuntimeException falha = null;
+            long inicio = System.nanoTime();
+            try {
+                var respostaBruta = http.post()
+                        .uri("/cancelar")
+                        .body(Map.of(
+                                "chaveNfse", Optional.ofNullable(nfse.getChaveNotaNacional())
+                                        .orElseThrow(() -> new BusinessException(
+                                                "NFS-e Nacional sem chave de acesso; nao e seguro cancelar.")),
+                                "cnpjAutor", somenteDigitos(empresa.getCnpj()),
+                                "motivo", "Cancelamento solicitado pelo contribuinte"))
+                        .retrieve()
+                        .toEntity(Map.class);
+                resposta = respostaBruta.getBody();
+                httpStatus = respostaBruta.getStatusCode().value();
+            } catch (RuntimeException e) {
+                falha = e;
+                resposta = null;
+                httpStatus = statusDaExcecao(e);
+            }
+            duracaoMs = (System.nanoTime() - inicio) / 1_000_000;
+
+            retornoService.registrar(nfse.getEmpresaId(), nfse,
+                    NfseRetorno.OPERACAO_CANCELAMENTO, resposta, httpStatus, duracaoMs, falha);
+
+            if (falha != null) {
+                throw new BusinessException(
+                        "A SEFIN Nacional recusou o cancelamento: " + mensagemDoErro(falha), "NFS_E_ERRO");
+            }
+
+            resposta = RespostaNfse.ler(resposta);
+            Boolean confirmado = RespostaNfse.confirmado(resposta);
+            if (Boolean.FALSE.equals(confirmado)) {
+                throw new BusinessException("A SEFIN Nacional recusou o cancelamento: "
+                        + RespostaNfse.motivo(resposta), "NFS_E_ERRO");
+            }
+            if (confirmado == null) {
+                throw new BusinessException(
+                        "A SEFIN Nacional respondeu em formato desconhecido. Confira a nota antes "
+                                + "de tentar cancelar novamente.", "NFS_E_CONFIRMAR");
+            }
+
+            nfse.setStatus("CANCELADA");
+            nfseRepository.save(nfse);
+            return new Resultado(nfse.getId(), String.valueOf(nfse.getNumero()),
+                    nfse.getCodigoVerificacao(), nfse.getChaveNotaNacional(),
+                    empresa.getInscricaoMunicipal(), nfse.getStatus(),
+                    nfse.getXmlDocumentoId(), nfse.getPdfDocumentoId(), alertas(resposta));
+        }
+
         // O codigo de verificacao e 0-1 no XSD: a prefeitura aceita o
         // cancelamento so com IM + numero. Isso importa porque e o que permite
         // recuperar uma nota cuja gravacao local falhou depois da emissao.
