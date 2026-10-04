@@ -64,7 +64,7 @@ public class SaldoEstoqueController {
      */
     @PostMapping("/ajustes")
     @Transactional
-    @PreAuthorize("hasAuthority('estoque:ajuste:escrita')")
+    @PreAuthorize("hasAnyRole('ESTOQUE', 'GESTOR', 'GERENTE', 'DIRETORIA', 'ADMIN', 'SUPERUSER')")
     public ResponseEntity<SaldoResponse> ajustar(
             @AuthenticationPrincipal AuthenticatedUser user,
             @Valid @RequestBody AjusteRequest request) {
