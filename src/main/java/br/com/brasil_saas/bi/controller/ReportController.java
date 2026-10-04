@@ -89,6 +89,7 @@ public class ReportController {
     }
 
     @PostMapping("/{id}/generate")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Gerar relatrio")
     public ResponseEntity<byte[]> generateReport(
             @PathVariable Long id,
@@ -107,16 +108,17 @@ public class ReportController {
     @Operation(summary = "Agendar relatrio")
     public ResponseEntity<ApiResponse<Void>> scheduleReport(
             @PathVariable Long id,
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         reportService.scheduleReport(id, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/{id}/unschedule")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
     @Operation(summary = "Desagendar relatrio")
     public ResponseEntity<ApiResponse<Void>> unscheduleReport(
             @PathVariable Long id,
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         reportService.unscheduleReport(id, u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
