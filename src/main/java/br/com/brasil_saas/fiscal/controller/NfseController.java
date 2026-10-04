@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Emissao e cancelamento de NFS-e da Prefeitura de Sao Paulo.
+ * Emissao, consulta e cancelamento de NFS-e pelos provedores municipais e nacional.
  *
  * <p>Restrito ao modulo fiscal e aos perfis autorizados, porque emite documento
  * fiscal assinado.
