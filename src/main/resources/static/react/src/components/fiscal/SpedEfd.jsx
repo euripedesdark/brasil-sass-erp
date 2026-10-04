@@ -60,7 +60,7 @@ export const SpedEfd = () => {
 
         setLoading(true);
         try {
-            const resposta = acao === 'exemplo' ? await SpedService.exemplo() : await SpedService.gerar({ ...form, produtos: [], participantes: [] });
+            const resposta = acao === 'exemplo' ? await SpedService.exemplo() : acao === 'periodo' ? await SpedService.gerarPeriodo({ ...form, produtos: [], participantes: [] }) : await SpedService.gerar({ ...form, produtos: [], participantes: [] });
             setResultado(resposta);
             toast.current?.show({ severity: 'success', summary: t('sped.generated'), detail: t('sped.linesGenerated', { count: resposta.totalLinhas || 0 }), life: 3500 });
         } catch (error) {
@@ -120,6 +120,7 @@ export const SpedEfd = () => {
 
             <Card title={t('sped.reviewAndGenerate')} className="mb-3">
                 <div className="flex align-items-center gap-2 flex-wrap">
+                    <Button label='Gerar do periodo (NFe)' icon="pi pi-database" onClick={() => executar('periodo')} disabled={loading} />
                     <Button label={t('sped.generateFile')} icon="pi pi-cog" onClick={() => executar('gerar')} disabled={loading} />
                     {loading && <ProgressSpinner style={{ width: '24px', height: '24px' }} strokeWidth="4" />}
                     {resultado && <Button label={t('sped.downloadTxt')} icon="pi pi-download" severity="secondary" outlined onClick={() => downloadText(resultado.conteudo, resultado.competencia)} />}

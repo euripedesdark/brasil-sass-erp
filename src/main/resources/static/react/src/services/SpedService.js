@@ -26,6 +26,13 @@ export const SpedService = {
         });
     },
 
+    gerarPeriodo(pedido) {
+        return jsonRequest(`${BASE_URL}/efd/gerar-periodo`, {
+            method: 'POST',
+            body: JSON.stringify(pedido)
+        });
+    },
+
     exemplo() {
         return jsonRequest(`${BASE_URL}/efd/exemplo`);
     }

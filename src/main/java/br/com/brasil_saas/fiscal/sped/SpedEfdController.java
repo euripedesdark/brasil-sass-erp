@@ -4,7 +4,9 @@ import br.com.swconsultoria.efd.icms.registros.EfdIcms;
 import br.com.swconsultoria.efd.icms.registros.bloco0.Bloco0;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,6 +41,7 @@ import java.util.Map;
 public class SpedEfdController {
 
     private final SpedEfdIcmsService efd;
+    private final EfdPeriodoService periodo;
 
     /**
      * Gera o arquivo EFD a partir de cabecalho, participantes e produtos.
@@ -107,6 +110,11 @@ public class SpedEfdController {
      * EFD real da biblioteca. Se divergir, o formato mudou e o contador vai
      * fazer a SEFAZ recusar.
      */
+    @Operation(summary = "Gera o EFD do periodo a partir das NFe emitidas")
+    @PostMapping("/efd/gerar-periodo")
+    @PreAuthorize("hasAuthority('fiscal:sped:gerar')")
+    public Map<String, Object> gerarPeriodo(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody PedidoEfd pedido) { return periodo.gerarPeriodo(u.getEmpresaId(), pedido); }
+
     @Operation(summary = "Gera um EFD de exemplo, para conferir o formato")
     @GetMapping("/efd/exemplo")
     @PreAuthorize("hasAuthority('fiscal:sped:leitura')")
