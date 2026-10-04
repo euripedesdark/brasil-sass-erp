@@ -314,7 +314,9 @@ public class NfseEmissaoService {
         // ---- 2) atualiza com o que so a prefeitura devolve ------------
         salva.setNumero(paraLong(resposta.get("numero_nfse")));
         salva.setCodigoVerificacao(texto(resposta.get("codigo_verificacao")));
-        salva.setChaveNotaNacional(texto(resposta.get("chave_nota_nacional")));
+        salva.setChaveNotaNacional(nacional ? texto(resposta.get("chave_nota_nacional")) : null);
+        salva.setIdDps(nacional ? texto(resposta.get("id_dps")) : null);
+        salva.setProtocoloNacional(nacional ? texto(resposta.get("protocolo")) : null);
         salva.setStatus("EMITIDA");
         salva = nfseRepository.saveAndFlush(salva);
 
