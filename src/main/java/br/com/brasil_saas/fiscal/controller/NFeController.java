@@ -1,5 +1,6 @@
 package br.com.brasil_saas.fiscal.controller;
 
+import br.com.brasil_saas.fiscal.model.Nfe;
 import br.com.brasil_saas.fiscal.service.NFeService;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
@@ -26,7 +27,7 @@ public class NFeController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('FINANCEIRO','GESTOR','GERENTE','DIRETORIA','ADMIN','SUPERUSER')")
-    public ResponseEntity<Page<br.com.brasil_saas.fiscal.model.Nfe>> listar(
+    public ResponseEntity<Page<NfeResumo>> listar(
             @RequestHeader("X-Empresa-Id") Long empresaId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -34,7 +35,10 @@ public class NFeController {
         int safeSize = Math.min(Math.max(1, size), 100);
         PageRequest pageable = PageRequest.of(
                 safePage, safeSize, Sort.by(Sort.Direction.DESC, "dataEmissao"));
-        return ResponseEntity.ok(nfeService.listar(empresaId, pageable));
+        Page<NfeResumo> resposta = nfeService.listar(empresaId, pageable).map(n -> new NfeResumo(
+                n.getId(), n.getNumero(), n.getSerie(), n.getStatus(), n.getChaveAcesso(),
+                n.getValorTotal(), n.getDataEmissao(), n.getXml() != null && !n.getXml().isBlank()));
+        return ResponseEntity.ok(resposta);
     }
 
     @GetMapping("/xml/{id}")
@@ -95,6 +99,17 @@ public class NFeController {
             @PathVariable String chaveAcesso) throws Exception {
         return ResponseEntity.ok(nfeService.consultarSituacao(empresaId, chaveAcesso));
     }
+
+    public record NfeResumo(
+            Long id,
+            Long numero,
+            String serie,
+            String status,
+            String chaveAcesso,
+            java.math.BigDecimal valorTotal,
+            java.time.LocalDateTime dataEmissao,
+            boolean xml
+    ) {}
 
     public record CancelamentoRequest(String chaveAcesso, String motivo) {}
 }
