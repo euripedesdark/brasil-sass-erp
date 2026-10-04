@@ -87,6 +87,9 @@ public class ServicoServiceImpl implements ServicoService {
         servico.setCodigoTributacaoMunicipal(
                 municipal == null || municipal.isBlank() ? null : municipal.trim());
         servico.setNbs(request.nbs());
+        String nacional = request.codigoTributacaoNacional();
+        servico.setCodigoTributacaoNacional(
+                nacional == null || nacional.isBlank() ? null : nacional.trim());
         // aliquota_iss e' NOT NULL e o default do campo (ZERO) nao sobrevive a
         // um set explicito com null — e o mapper sobrescreve sempre. Sem isto
         // o INSERT vai com a coluna nula e o banco recusa com violacao de
