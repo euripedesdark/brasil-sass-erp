@@ -211,7 +211,11 @@ export const Producao = () => {
                     <Column field="quantidadePlanejada" header="Qtd Planejada" sortable style={{ width: '15%' }}></Column>
                     <Column field="unidadeMedida" header="Unidade" sortable style={{ width: '10%' }}></Column>
                     <Column field="status" header="Status" body={statusTemplate} sortable style={{ width: '15%' }}></Column>
-                    <Column header="Custo" style={{ width: '8%' }} body={(rowData) => (\n                        <Button icon="pi pi-dollar" className="p-button-text" tooltip="Ver custo da ordem"\n                                onClick={() => verCusto(rowData)} />\n                    )}></Column>\n                    <Column header="Finalizar" body={finalizarTemplate} style={{ width: '10%' }}></Column>
+                    <Column header="Custo" style={{ width: '8%' }} body={(rowData) => (
+                        <Button icon="pi pi-dollar" className="p-button-text" tooltip="Ver custo da ordem"
+                                onClick={() => verCusto(rowData)} />
+                    )}></Column>
+                    <Column header="Finalizar" body={finalizarTemplate} style={{ width: '10%' }}></Column>
                 </DataTable>
             </Card>
 
