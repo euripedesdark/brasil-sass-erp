@@ -2,7 +2,7 @@ package br.com.brasil_saas.estoque.controller;
 
 import br.com.brasil_saas.estoque.model.*;
 import br.com.brasil_saas.estoque.repository.*;
-import br.com.brasil_saas.shared.exception.BusinessException;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -27,6 +27,8 @@ public class InventarioEstoqueController {
     private final EnderecoEstoqueRepository enderecoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
     private final SaldoEstoqueRepository saldoRepository;
+    private final ProdutoRepository produtoRepository;
+    private final ReservaEstoqueRepository reservaRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('estoque:inventario:leitura')")
@@ -47,6 +49,8 @@ public class InventarioEstoqueController {
     public ResponseEntity<InventarioEstoque> criar(@AuthenticationPrincipal AuthenticatedUser user,@Valid @RequestBody CriarRequest request) {
         depositoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.depositoId(),user.getEmpresaId())
                 .orElseThrow(() -> new BusinessException("Depósito inválido"));
+        if (inventarioRepository.existsAberto(user.getEmpresaId(), request.depositoId()))
+            throw new BusinessException("Já existe um inventário aberto para este depósito");
         InventarioEstoque i=new InventarioEstoque();
         i.setEmpresaId(user.getEmpresaId()); i.setDepositoId(request.depositoId()); i.setObservacoes(request.observacoes());
         return ResponseEntity.status(HttpStatus.CREATED).body(inventarioRepository.save(i));
@@ -59,6 +63,9 @@ public class InventarioEstoqueController {
                 .orElseThrow(() -> new BusinessException("Inventário não encontrado"));
         if(!"ABERTO".equals(inv.getStatus())) throw new BusinessException("Inventário não está aberto");
         if(request.quantidadeContada().signum()<0) throw new BusinessException("Quantidade contada não pode ser negativa");
+        produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.produtoId(), user.getEmpresaId())
+                .orElseThrow(() -> new BusinessException("Produto não encontrado"));
+
         if(request.enderecoId()!=null) {
             EnderecoEstoque e=enderecoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.enderecoId(),user.getEmpresaId())
                     .orElseThrow(() -> new BusinessException("Endereço não encontrado"));
@@ -97,6 +104,14 @@ public class InventarioEstoqueController {
         for(InventarioEstoqueItem item:itens) {
             if(item.getQuantidadeContada().signum()<0) throw new BusinessException("Contagem inválida");
             if(item.getDiferenca().signum()==0) continue;
+
+            BigDecimal reservado = item.getEnderecoId() != null
+                    ? reservaRepository.sumAtivasPorEndereco(user.getEmpresaId(), inv.getDepositoId(), item.getProdutoId(), item.getEnderecoId())
+                    : reservaRepository.sumAtivas(user.getEmpresaId(), inv.getDepositoId(), item.getProdutoId());
+            if (item.getQuantidadeContada().compareTo(reservado == null ? BigDecimal.ZERO : reservado) < 0) {
+                throw new BusinessException("Contagem abaixo da quantidade reservada para o produto " + item.getProdutoId());
+            }
+
             SaldoEstoque saldo=saldoRepository.findForUpdate(user.getEmpresaId(),inv.getDepositoId(),item.getProdutoId()).orElseGet(()->{
                 SaldoEstoque s=new SaldoEstoque(); s.setEmpresaId(user.getEmpresaId()); s.setDepositoId(inv.getDepositoId()); s.setProdutoId(item.getProdutoId()); s.setQuantidade(BigDecimal.ZERO); return s;
             });
