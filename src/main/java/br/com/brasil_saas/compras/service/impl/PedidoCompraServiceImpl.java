@@ -7,6 +7,7 @@ import br.com.brasil_saas.compras.model.PedidoCompra;
 import br.com.brasil_saas.compras.model.RecebimentoCompra;
 import br.com.brasil_saas.compras.model.RecebimentoCompraItem;
 import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
+import br.com.brasil_saas.cadastro.repository.FornecedorRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
 import br.com.brasil_saas.compras.service.PedidoCompraService;
@@ -34,6 +35,7 @@ import java.util.Map;
 public class PedidoCompraServiceImpl implements PedidoCompraService {
 
     private final PedidoCompraRepository pedidoRepository;
+    private final FornecedorRepository fornecedorRepository;
     private final RecebimentoCompraRepository recebimentoRepository;
     private final RecebimentoCompraItemRepository recebimentoItemRepository;
     private final SaldoEstoqueRepository saldoEstoqueRepository;
@@ -47,6 +49,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
     public PedidoCompraResponse criar(PedidoCompraRequest request) {
         PedidoCompra pedido = new PedidoCompra();
         pedido.setEmpresaId(request.empresaId());
+        if (request.itens() == null || request.itens().isEmpty()) throw new BusinessException("O pedido de compra precisa possuir ao menos um item");
+        if (!fornecedorRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.fornecedorId(), request.empresaId()).isPresent()) throw new ResourceNotFoundException("Fornecedor nao encontrado para a empresa");
         pedido.setFornecedorId(request.fornecedorId());
         String numero = request.numero();
         if (numero == null || numero.isBlank()) numero = "PC-" + System.currentTimeMillis();
@@ -68,6 +72,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
                 item.setNumeroItem(itemReq.numeroItem() != null ? itemReq.numeroItem() : num++);
                 item.setProdutoId(itemReq.produtoId());
                 item.setDescricao(itemReq.descricao());
+                if (itemReq.quantidade() == null || itemReq.quantidade().signum() <= 0) throw new BusinessException("Quantidade deve ser maior que zero");
+                if (itemReq.valorUnitario() == null || itemReq.valorUnitario().signum() < 0) throw new BusinessException("Valor unitario invalido");
                 item.setQuantidade(itemReq.quantidade());
                 item.setUnidade(itemReq.unidade());
                 item.setValorUnitario(itemReq.valorUnitario());
@@ -90,8 +96,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
 
     @Override
     @Transactional(readOnly = true)
-    public PedidoCompraResponse buscarPorId(Long id) {
-        PedidoCompra pedido = pedidoRepository.findById(id)
+    public PedidoCompraResponse buscarPorId(Long id, Long empresaId) {
+        PedidoCompra pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
         return PedidoCompraResponse.from(pedido);
     }
@@ -106,8 +112,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
 
     @Override
     @Transactional
-    public void receber(Long id) {
-        PedidoCompra pedido = pedidoRepository.findByIdForUpdate(id)
+    public void receber(Long id, Long empresaId) {
+        PedidoCompra pedido = pedidoRepository.findByIdForUpdateAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
         if (!"ABERTO".equals(pedido.getStatus())) {
             throw new BusinessException("Apenas pedidos ABERTOS podem ser recebidos");
@@ -133,8 +139,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
 
     @Override
     @Transactional
-    public void receberParcial(Long id, Map<Long, BigDecimal> quantidades) {
-        PedidoCompra pedido = pedidoRepository.findByIdForUpdate(id)
+    public void receberParcial(Long id, Long empresaId, Map<Long, BigDecimal> quantidades) {
+        PedidoCompra pedido = pedidoRepository.findByIdForUpdateAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
         if ("CANCELADO".equals(pedido.getStatus()) || "RECEBIDO".equals(pedido.getStatus())) {
             throw new BusinessException("Pedido nao pode receber novas quantidades no status " + pedido.getStatus());
@@ -190,8 +196,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
 
     @Override
     @Transactional
-    public void cancelar(Long id) {
-        PedidoCompra pedido = pedidoRepository.findById(id)
+    public void cancelar(Long id, Long empresaId) {
+        PedidoCompra pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
         if ("RECEBIDO".equals(pedido.getStatus())) {
             throw new BusinessException("Pedidos RECEBIDOS nao podem ser cancelados diretamente");
@@ -206,7 +212,10 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         titulo.setTipo("P");
         titulo.setNumeroDocumento(pedido.getNumero());
         titulo.setDescricao("Compra - Pedido " + pedido.getNumero());
-        titulo.setPessoaId(pedido.getFornecedorId());
+        Long pessoaId = fornecedorRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(pedido.getFornecedorId(), pedido.getEmpresaId())
+                .map(f -> f.getPessoa() == null ? null : f.getPessoa().getId())
+                .orElseThrow(() -> new BusinessException("Fornecedor do pedido nao possui pessoa vinculada"));
+        titulo.setPessoaId(pessoaId);
         titulo.setValorOriginal(pedido.getValorTotal());
         titulo.setValorSaldo(pedido.getValorTotal());
         titulo.setDataEmissao(LocalDate.now());

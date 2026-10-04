@@ -13,6 +13,10 @@ public interface PedidoCompraRepository extends JpaRepository<PedidoCompra, Long
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM PedidoCompra p WHERE p.id = :id")
     Optional<PedidoCompra> findByIdForUpdate(Long id);
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM PedidoCompra p WHERE p.id = :id AND p.empresaId = :empresaId")
+    Optional<PedidoCompra> findByIdForUpdateAndEmpresaId(Long id, Long empresaId);
+    Optional<PedidoCompra> findByIdAndEmpresaId(Long id, Long empresaId);
     List<PedidoCompra> findByEmpresaIdOrderByDataEmissaoDesc(Long empresaId);
     List<PedidoCompra> findByEmpresaIdAndStatus(Long empresaId, String status);
 }

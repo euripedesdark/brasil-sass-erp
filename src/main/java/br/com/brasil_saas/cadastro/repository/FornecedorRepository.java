@@ -11,5 +11,6 @@ public interface FornecedorRepository extends JpaRepository<Fornecedor, Long> {
     Page<Fornecedor> findByEmpresaIdAndDeletedAtIsNull(Long empresaId, Pageable pageable);
     Optional<Fornecedor> findByPessoaIdAndDeletedAtIsNull(Long pessoaId);
     Optional<Fornecedor> findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(Long empresaId, Long pessoaId);
+    Optional<Fornecedor> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     boolean existsByPessoaIdAndDeletedAtIsNull(Long pessoaId);
 }
