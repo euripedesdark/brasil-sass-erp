@@ -4,7 +4,6 @@ import br.com.brasil_saas.cadastro.repository.ClienteRepository;
 import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
 import br.com.brasil_saas.core.model.Empresa;
 import br.com.brasil_saas.core.repository.EmpresaRepository;
-import br.com.brasil_saas.fiscal.model.Nfe;
 import br.com.brasil_saas.fiscal.model.NfeItem;
 import br.com.brasil_saas.fiscal.repository.NfeItemRepository;
 import br.com.brasil_saas.fiscal.repository.NfeRepository;
@@ -20,13 +19,13 @@ import br.com.swconsultoria.nfe.dom.Evento;
 import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
 import br.com.swconsultoria.nfe.dom.enuns.EstadosEnum;
 import br.com.swconsultoria.nfe.dom.enuns.StatusEnum;
-import br.com.swconsultoria.nfe.schema.envEventoCancNFe.TEnvEvento;
-import br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento;
+import br.com.swconsultoria.nfe.schemas_eventos.TEnvEventoCancelamento;
+import br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoCancelamento;
 import br.com.swconsultoria.nfe.schemas.TEnviNFe;
 import br.com.swconsultoria.nfe.schemas.TNFe;
 import br.com.swconsultoria.nfe.schemas.TRetConsReciNFe;
 import br.com.swconsultoria.nfe.schemas.TRetEnviNFe;
-import br.com.swconsultoria.nfe.dom.retornos.TRetConsSitNFe;
+import br.com.swconsultoria.nfe.schemas.TRetConsSitNFe;
 import br.com.swconsultoria.nfe.util.CancelamentoUtil;
 import br.com.swconsultoria.nfe.util.RetornoUtil;
 import br.com.swconsultoria.nfe.util.XmlImpostoUtil;
@@ -57,7 +56,6 @@ public class NFeServiceImpl implements NFeService {
     private final NFeXmlBuilder nfeXmlBuilder;
 
     @Override
-    @Transactional
     @Transactional
     public String emitirNFe(Long empresaId, PedidoVenda pedido) throws Exception {
         if (pedido == null || pedido.getId() == null) {
@@ -115,7 +113,7 @@ public class NFeServiceImpl implements NFeService {
             throw new IllegalStateException("SEFAZ autorizou a NF-e sem protocolo/chave de acesso validos");
         }
 
-        Nfe nota = new Nfe();
+        br.com.brasil_saas.fiscal.model.Nfe nota = new br.com.brasil_saas.fiscal.model.Nfe();
         nota.setEmpresaId(empresaId);
         nota.setPedidoVendaId(pedido.getId());
         nota.setDocumentoOrigemTipo("PEDIDO_VENDA");
@@ -189,7 +187,7 @@ public class NFeServiceImpl implements NFeService {
                 .orElseThrow(() -> new IllegalArgumentException("Empresa nao encontrada: " + empresaId));
         ConfiguracoesNfe config = carregarConfiguracoes(empresa);
 
-        Nfe nota = nfeRepository.findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, chaveAcesso)
+        br.com.brasil_saas.fiscal.model.Nfe nota = nfeRepository.findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, chaveAcesso)
                 .orElseThrow(() -> new IllegalArgumentException("NF-e nao encontrada para a empresa: " + chaveAcesso));
 
         if (nota.getProtocolo() == null || nota.getProtocolo().isBlank()) {
@@ -209,8 +207,8 @@ public class NFeServiceImpl implements NFeService {
         evento.setMotivo(motivo.trim());
         evento.setDataEvento(LocalDateTime.now());
 
-        TEnvEvento enviEvento = CancelamentoUtil.montaCancelamento(evento, config);
-        TRetEnvEvento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
+        TEnvEventoCancelamento enviEvento = CancelamentoUtil.montaCancelamento(evento, config);
+        TRetEnvEventoCancelamento retorno = Nfe.cancelarNfe(config, enviEvento, true, DocumentoEnum.NFE);
         RetornoUtil.validaCancelamento(retorno);
 
         if (retorno.getRetEvento() == null || retorno.getRetEvento().isEmpty()
@@ -250,7 +248,7 @@ public class NFeServiceImpl implements NFeService {
 
     private int proximoNumero(Long empresaId, int serie) {
         return nfeRepository.findTopByEmpresaIdAndSerieAndDeletedAtIsNullOrderByNumeroDesc(empresaId, String.valueOf(serie))
-                .map(Nfe::getNumero)
+                .map(br.com.brasil_saas.fiscal.model.Nfe::getNumero)
                 .map(n -> Math.toIntExact(n + 1))
                 .orElse(1);
     }
