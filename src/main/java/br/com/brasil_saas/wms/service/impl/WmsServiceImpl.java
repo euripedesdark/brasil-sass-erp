@@ -209,6 +209,22 @@ public class WmsServiceImpl implements WmsService {
         Map<String, Object> conf = conferir(empresaId, expedicaoId);
         if (!Boolean.TRUE.equals(conf.get("conferido"))) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Conferencia com divergencia");
         ExpedicaoEstoque e = exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId), "Expedicao inexistente");
+        if (!"EMBALAGEM".equals(e.getStatus()) && !"EXPEDIDA".equals(e.getStatus()))
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Expedicao precisa estar em EMBALAGEM");
+        List<WmsVolume> volumesFechados = volumes.findByExpedicaoIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId);
+        if (volumesFechados.stream().anyMatch(v -> !"FECHADO".equals(v.getStatus())))
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Todos os volumes precisam estar fechados");
+        for (ExpedicaoEstoqueItem item : expedicaoItens.findByEmpresaIdAndExpedicaoIdOrderByIdAsc(empresaId, expedicaoId)) {
+            item.setStatus("EXPEDIDO");
+            expedicaoItens.save(item);
+            if (item.getReservaId() != null) {
+                reservas.findById(item.getReservaId()).ifPresent(r -> {
+                    if ("RESERVADA".equals(r.getStatus()) || "SEPARACAO".equals(r.getStatus()))
+                        r.setStatus("CONSUMIDA");
+                    reservas.save(r);
+                });
+            }
+        }
         e.setStatus("EXPEDIDA");
         e.setCodigoRastreio(codigoRastreio);
         e.setDataExpedicao(LocalDateTime.now());
