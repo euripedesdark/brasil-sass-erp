@@ -134,6 +134,7 @@ export const ServicoCadastro = () => {
         lc116Codigo: '',
         codigoTributacaoMunicipal: '',
         nbs: '',
+        codigoTributacaoNacional: '',
         aliquotaIss: 0,
         ativo: true
     });
@@ -360,6 +361,7 @@ export const ServicoCadastro = () => {
                     <Column body={valorTemplate} header="Valor Unitario" sortable style={{ width: '150px' }} />
                     <Column field="lc116Codigo" header="LC 116" sortable style={{ width: '100px' }} />
                     <Column field="codigoTributacaoMunicipal" header="Cod. SP" sortable style={{ width: '100px' }} />
+                    <Column field="codigoTributacaoNacional" header="Trib. Nacional" sortable style={{ width: '130px' }} />
                     <Column body={statusTemplate} header="Status" sortable style={{ width: '120px' }} />
                     <Column body={acoesTemplate} style={{ width: '120px' }} />
                 </DataTable>
