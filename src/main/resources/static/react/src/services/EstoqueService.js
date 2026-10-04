@@ -15,6 +15,11 @@ class EstoqueService {
         return axios.get(SALDO_URL, { params: { empresaId, produtoId } });
     }
 
+    /** Ajuste manual de inventario: delta positivo entra, negativo sai. */
+    ajustarSaldo(empresaId, payload) {
+        return axios.post(`${SALDO_URL}/ajustes`, payload, { params: { empresaId } });
+    }
+
     /** Movimentacoes da empresa ou de um produto */
     listarMovimentacoes(empresaId, produtoId) {
         const params = { empresaId };
