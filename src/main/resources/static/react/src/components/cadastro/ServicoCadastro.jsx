@@ -241,7 +241,12 @@ export const ServicoCadastro = () => {
                 nome: servico.nome || '',
                 codigo: servico.codigo || '',
                 descricao: servico.descricao || '',
-                valorUnitario: servico.valorUnitario || 0,
+                valorUnitario: servico.valorUnitario || servico.preco || 0,
+                lc116Codigo: servico.lc116Codigo || '',
+                codigoTributacaoMunicipal: servico.codigoTributacaoMunicipal || '',
+                nbs: servico.nbs || '',
+                codigoTributacaoNacional: servico.codigoTributacaoNacional || '',
+                aliquotaIss: servico.aliquotaIss || 0,
                 ativo: servico.ativo !== undefined ? servico.ativo : true
             });
         } else {
@@ -260,6 +265,7 @@ export const ServicoCadastro = () => {
             lc116Codigo: '',
             codigoTributacaoMunicipal: '',
             nbs: '',
+            codigoTributacaoNacional: '',
             aliquotaIss: 0,
             ativo: true
         });
@@ -429,7 +435,9 @@ export const ServicoCadastro = () => {
                                         nome: s.nome,
                                         codigo: s.codigo || prev.codigo,
                                         lc116Codigo: s.lc116Codigo || prev.lc116Codigo,
-                                        codigoTributacaoMunicipal: s.codigoTributacaoMunicipal || '',
+                                        codigoTributacaoMunicipal: s.codigoTributacaoMunicipal || prev.codigoTributacaoMunicipal,
+                                        codigoTributacaoNacional: s.codigoTributacaoNacional || prev.codigoTributacaoNacional,
+                                        nbs: s.nbs || prev.nbs,
                                         aliquotaIss: s.aliquotaIss != null ? s.aliquotaIss : prev.aliquotaIss,
                                         // A resposta usa valorUnitario; a coluna
                                         // do banco se chama preco. Aceitar os dois
