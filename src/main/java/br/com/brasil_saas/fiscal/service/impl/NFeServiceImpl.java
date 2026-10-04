@@ -58,6 +58,7 @@ public class NFeServiceImpl implements NFeService {
 
     @Override
     @Transactional
+    @Transactional
     public String emitirNFe(Long empresaId, PedidoVenda pedido) throws Exception {
         if (pedido == null || pedido.getId() == null) {
             throw new IllegalArgumentException("Pedido de venda obrigatorio para emissao de NF-e");
@@ -69,6 +70,7 @@ public class NFeServiceImpl implements NFeService {
 
         ConfiguracoesNfe config = carregarConfiguracoes(empresa);
         int serie = 1;
+        nfeRepository.lockSequence(empresaId, String.valueOf(serie));
         int numero = proximoNumero(empresaId, serie);
 
         TEnviNFe enviNFe = nfeXmlBuilder.build(config, empresa, pedido, serie, numero);
