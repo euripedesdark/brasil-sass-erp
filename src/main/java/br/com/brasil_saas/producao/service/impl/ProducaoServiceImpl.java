@@ -38,6 +38,9 @@ public class ProducaoServiceImpl implements ProducaoService {
     @Override
     @Transactional
     public Producao criarOrdem(Long empresaId, ProducaoRequest request) {
+        if (request.quantidadePlanejada() == null || request.quantidadePlanejada().signum() <= 0) throw new BusinessException("Quantidade planejada deve ser maior que zero");
+        if (request.produtoFinalId() == null || produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.produtoFinalId(), empresaId).isEmpty()) throw new BusinessException("Produto final nao encontrado na empresa");
+        if (request.itens() == null || request.itens().isEmpty()) throw new BusinessException("OP precisa possuir insumos");
         Producao p = new Producao();
         p.setEmpresaId(empresaId);
         p.setNumero(request.numero());
@@ -50,6 +53,8 @@ public class ProducaoServiceImpl implements ProducaoService {
 
         List<ItemProducao> itens = new ArrayList<>();
         for (var ir : request.itens()) {
+            if (ir.produtoId() == null || produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(ir.produtoId(), empresaId).isEmpty()) throw new BusinessException("Insumo nao encontrado na empresa");
+            if (ir.quantidade() == null || ir.quantidade().signum() <= 0) throw new BusinessException("Quantidade de insumo deve ser maior que zero");
             ItemProducao item = new ItemProducao();
             item.setProducao(p);
             item.setEmpresaId(empresaId);
