@@ -186,7 +186,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         return faturamentos.save(f);
     }
     private Long emitirNfseMarco(Long empresaId, PrjFaturamento f, Long servicoId, Long clienteId) {
-        Cliente cli = clientes.findById(clienteId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Cliente inexistente"));
+        Cliente cli = clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Cliente inexistente"));
         Pessoa pess = cli.getPessoa();
         if (pess == null || pess.getDocumento() == null || pess.getDocumento().isBlank()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Tomador sem documento");
         long proximoRps = 1L;
