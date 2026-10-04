@@ -27,7 +27,7 @@ export const Dashboard = () => {
             setLoading(true);
             try {
                 const res = await apiFetch(
-                    `${ApiConfig.BASE_URL}/api/bi/indicadores/dashboard?empresaId=${user.empresaId}`,
+                    `${ApiConfig.BASE_URL}/api/bi/indicadores/dashboard`,
                     { credentials: 'include' }
                 );
                 if (res.ok) {
@@ -131,7 +131,7 @@ export const Dashboard = () => {
                             if (!user?.empresaId) return;
                             try {
                                 await apiFetch(
-                                    `${ApiConfig.BASE_URL}/api/bi/indicadores/atualizar/valores?empresaId=${user.empresaId}`,
+                                    `${ApiConfig.BASE_URL}/api/bi/indicadores/atualizar/valores`,
                                     { method: 'POST', credentials: 'include' }
                                 );
                                 const res = await apiFetch(

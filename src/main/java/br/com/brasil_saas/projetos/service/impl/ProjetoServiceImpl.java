@@ -55,6 +55,9 @@ public class ProjetoServiceImpl implements ProjetoService {
     }
     @Override @Transactional public PrjProjeto salvar(Long empresaId, PrjProjeto p) {
         p.setId(null);
+        p.setEmpresaId(empresaId);
+        if (p.getNome() == null || p.getNome().isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Nome do projeto é obrigatório");
+        if (p.getOrcamentoTotal() != null && p.getOrcamentoTotal().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Orçamento não pode ser negativo");
         if (p.getStatus() == null) p.setStatus("PLANEJADO");
         return projetos.save(p);
     }
@@ -66,6 +69,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         exigirProjeto(empresaId, projetoId);
         if (e.getPaiId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(e.getPaiId(), empresaId), "Etapa pai inexistente");
         e.setId(null);
+        e.setEmpresaId(empresaId);
         e.setProjetoId(projetoId);
         if (e.getStatus() == null) e.setStatus("NAO_INICIADA");
         return etapas.save(e);
@@ -90,7 +94,9 @@ public class ProjetoServiceImpl implements ProjetoService {
         if ("CUSTO".equals(m.getTipo()) == false && "RECEITA".equals(m.getTipo()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo deve ser CUSTO ou RECEITA");
         if (m.getEtapaId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(m.getEtapaId(), empresaId), "Etapa inexistente");
         m.setId(null);
+        m.setEmpresaId(empresaId);
         m.setProjetoId(projetoId);
+        if (m.getValor() == null || m.getValor().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Valor do movimento não pode ser negativo");
         if (m.getData() == null) m.setData(LocalDate.now());
         return movimentos.save(m);
     }
@@ -101,7 +107,9 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjRisco salvarRisco(Long empresaId, Long projetoId, PrjRisco r) {
         exigirProjeto(empresaId, projetoId);
         r.setId(null);
+        r.setEmpresaId(empresaId);
         r.setProjetoId(projetoId);
+        if (r.getProbabilidade() != null && (r.getProbabilidade() < 0 || r.getProbabilidade() > 100)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Probabilidade deve estar entre 0 e 100");
         if (r.getStatus() == null) r.setStatus("ABERTO");
         return riscos.save(r);
     }
@@ -112,7 +120,9 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjMudanca solicitarMudanca(Long empresaId, Long projetoId, PrjMudanca m) {
         exigirProjeto(empresaId, projetoId);
         m.setId(null);
+        m.setEmpresaId(empresaId);
         m.setProjetoId(projetoId);
+        if (m.getDescricao() == null || m.getDescricao().isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Descrição da mudança é obrigatória");
         m.setStatus("SOLICITADA");
         return mudancas.save(m);
     }
@@ -154,7 +164,9 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjFaturamento salvarFaturamento(Long empresaId, Long projetoId, PrjFaturamento f) {
         exigirProjeto(empresaId, projetoId);
         f.setId(null);
+        f.setEmpresaId(empresaId);
         f.setProjetoId(projetoId);
+        if (f.getValor() == null || f.getValor().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Valor do faturamento não pode ser negativo");
         if (f.getStatus() == null) f.setStatus("PREVISTO");
         return faturamentos.save(f);
     }
@@ -168,7 +180,10 @@ public class ProjetoServiceImpl implements ProjetoService {
         exigirProjeto(empresaId, projetoId);
         PrjFaturamento f = exigir(faturamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(faturamentoId, empresaId), "Faturamento inexistente");
         if (f.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Faturamento de outro projeto");
+        if ("FATURADO".equalsIgnoreCase(f.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Faturamento já foi realizado");
+        if (f.getValor() == null || f.getValor().signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Faturamento deve possuir valor positivo");
         Titulo t = new Titulo();
+        t.setEmpresaId(empresaId);
         t.setDescricao("Projeto #" + f.getProjetoId() + " - " + f.getDescricao());
         t.setTipo("R");
         t.setValorOriginal(f.getValor() == null ? java.math.BigDecimal.ZERO : f.getValor());
@@ -186,7 +201,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         return faturamentos.save(f);
     }
     private Long emitirNfseMarco(Long empresaId, PrjFaturamento f, Long servicoId, Long clienteId) {
-        Cliente cli = clientes.findById(clienteId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Cliente inexistente"));
+        Cliente cli = clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Cliente inexistente"));
         Pessoa pess = cli.getPessoa();
         if (pess == null || pess.getDocumento() == null || pess.getDocumento().isBlank()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Tomador sem documento");
         long proximoRps = 1L;

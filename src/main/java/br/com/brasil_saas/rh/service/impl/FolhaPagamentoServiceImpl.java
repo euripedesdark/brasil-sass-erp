@@ -34,6 +34,9 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
         FolhaPagamento folha = new FolhaPagamento();
         // empresa do token, nunca do corpo
         folha.setEmpresaId(empresaId);
+        if (request.competencia() == null || !request.competencia().matches("\\d{4}-(0[1-9]|1[0-2])")) {
+            throw new BusinessException("Competência deve estar no formato YYYY-MM");
+        }
         folha.setCompetencia(request.competencia());
         folha.setStatus(request.status() != null ? request.status() : "ABERTA");
 
@@ -43,6 +46,10 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
 
         if (request.itens() != null) {
             for (var itemReq : request.itens()) {
+                if (itemReq.funcionarioId() == null) throw new BusinessException("Funcionário é obrigatório no item da folha");
+                if (itemReq.tipo() == null || (!"PROVENTO".equals(itemReq.tipo()) && !"DESCONTO".equals(itemReq.tipo()))) throw new BusinessException("Tipo de item de folha inválido");
+                if (itemReq.valor() == null || itemReq.valor().signum() < 0) throw new BusinessException("Valor do item de folha não pode ser negativo");
+                if (funcionarioRepository.findById(itemReq.funcionarioId()).filter(f -> empresaId.equals(f.getEmpresaId()) && Boolean.TRUE.equals(f.getAtivo())).isEmpty()) throw new BusinessException("Funcionário inexistente, inativo ou de outra empresa");
                 ItemFolhaPagamento item = new ItemFolhaPagamento();
                 item.setFolha(folha);
                 item.setEmpresaId(folha.getEmpresaId());
@@ -94,6 +101,7 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
             throw new BusinessException("Folhas PAGA ou CANCELADA não podem ser editadas");
         }
         if (request.competencia() != null && !request.competencia().isBlank()) {
+            if (!request.competencia().matches("\\d{4}-(0[1-9]|1[0-2])")) throw new BusinessException("Competência deve estar no formato YYYY-MM");
             folha.setCompetencia(request.competencia());
         }
         if (request.status() != null && !request.status().isBlank()) {
@@ -106,6 +114,10 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
             BigDecimal totalDescontos = BigDecimal.ZERO;
 
             for (var itemReq : request.itens()) {
+                if (itemReq.funcionarioId() == null) throw new BusinessException("Funcionário é obrigatório no item da folha");
+                if (itemReq.tipo() == null || (!"PROVENTO".equals(itemReq.tipo()) && !"DESCONTO".equals(itemReq.tipo()))) throw new BusinessException("Tipo de item de folha inválido");
+                if (itemReq.valor() == null || itemReq.valor().signum() < 0) throw new BusinessException("Valor do item de folha não pode ser negativo");
+                if (funcionarioRepository.findById(itemReq.funcionarioId()).filter(f -> empresaId.equals(f.getEmpresaId()) && Boolean.TRUE.equals(f.getAtivo())).isEmpty()) throw new BusinessException("Funcionário inexistente, inativo ou de outra empresa");
                 ItemFolhaPagamento item = new ItemFolhaPagamento();
                 item.setFolha(folha);
                 item.setEmpresaId(folha.getEmpresaId());
@@ -153,6 +165,8 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
         if (!"ABERTA".equals(folha.getStatus())) {
             throw new BusinessException("Apenas folhas ABERTAS podem ser processadas");
         }
+        if (folha.getItens() == null || folha.getItens().isEmpty()) throw new BusinessException("Folha sem itens não pode ser processada");
+        if (folha.getValorTotal() == null || folha.getValorTotal().signum() < 0) throw new BusinessException("Valor líquido da folha inválido");
 
         // Gerar título a pagar no financeiro
         Titulo titulo = new Titulo();
@@ -177,12 +191,12 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
     public br.com.brasil_saas.rh.dto.FolhaPagamentoResponse importarPonto(Long empresaId, Long id, Long funcionarioId, Integer ano, Integer mes) {
         FolhaPagamento folha = folhaRepository.findById(id).filter(f -> empresaId.equals(f.getEmpresaId())).orElseThrow(() -> new br.com.brasil_saas.shared.exception.ResourceNotFoundException("Folha inexistente"));
         if ("PAGA".equals(folha.getStatus()) || "CANCELADA".equals(folha.getStatus())) throw new br.com.brasil_saas.shared.exception.BusinessException("Folha fechada");
-        var func = funcionarioRepository.findById(funcionarioId).orElseThrow(() -> new br.com.brasil_saas.shared.exception.ResourceNotFoundException("Funcionario inexistente"));
+        var func = funcionarioRepository.findById(funcionarioId).filter(f -> empresaId.equals(f.getEmpresaId()) && Boolean.TRUE.equals(f.getAtivo())).orElseThrow(() -> new br.com.brasil_saas.shared.exception.ResourceNotFoundException("Funcionario inexistente"));
         java.math.BigDecimal horas = java.math.BigDecimal.ZERO;
         for (var pt : pontoRepository.findByEmpresaIdAndFuncionarioIdAndDeletedAtIsNullOrderByDataDesc(empresaId, funcionarioId)) {
             if (Boolean.TRUE.equals(pt.getFalta())) continue;
             if (pt.getData() == null) continue;
-            if (ano != null && (pt.getData().getYear() != ano || pt.getData().getMonthValue() != mes)) continue;
+            if (ano != null && (mes == null || mes < 1 || mes > 12 || pt.getData().getYear() != ano || pt.getData().getMonthValue() != mes)) continue;
             horas = horas.add(pt.getHorasTrabalhadas() == null ? java.math.BigDecimal.ZERO : pt.getHorasTrabalhadas());
         }
         java.math.BigDecimal sal = func.getSalario() == null ? java.math.BigDecimal.ZERO : func.getSalario();

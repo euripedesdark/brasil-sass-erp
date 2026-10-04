@@ -4,6 +4,8 @@ import br.com.brasil_saas.bi.dto.IndicadorRequest;
 import br.com.brasil_saas.bi.model.Indicador;
 import br.com.brasil_saas.bi.service.IndicadorService;
 import br.com.brasil_saas.shared.dto.ApiResponse;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,104 +24,104 @@ public class IndicadorController {
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Indicador>> criar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @RequestBody IndicadorRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.criar(empresaId, request))
+                ApiResponse.success(indicadorService.criar(u.getEmpresaId(), request))
         );
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Indicador>> buscarPorId(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.buscarPorId(empresaId, id))
+                ApiResponse.success(indicadorService.buscarPorId(u.getEmpresaId(), id))
         );
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Indicador>>> listarPorEmpresa(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.listarPorEmpresa(empresaId))
+                ApiResponse.success(indicadorService.listarPorEmpresa(u.getEmpresaId()))
         );
     }
 
     @GetMapping("/categoria/{categoria}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Indicador>>> listarPorCategoria(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable String categoria) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.listarPorCategoria(empresaId, categoria))
+                ApiResponse.success(indicadorService.listarPorCategoria(u.getEmpresaId(), categoria))
         );
     }
 
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<List<Indicador>>> listarVisiveisDashboard(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.listarVisiveisDashboard(empresaId))
+                ApiResponse.success(indicadorService.listarVisiveisDashboard(u.getEmpresaId()))
         );
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Indicador>> atualizar(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id,
             @RequestBody IndicadorRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.atualizar(empresaId, id, request))
+                ApiResponse.success(indicadorService.atualizar(u.getEmpresaId(), id, request))
         );
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> excluir(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
-        indicadorService.excluir(empresaId, id);
+        indicadorService.excluir(u.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/calcular/categoria/{categoria}")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> calcularPorCategoria(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable String categoria) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.calcularIndicadores(empresaId, categoria))
+                ApiResponse.success(indicadorService.calcularIndicadores(u.getEmpresaId(), categoria))
         );
     }
 
     @PostMapping("/calcular/todos")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> calcularTodos(
-            @RequestParam Long empresaId) {
+            @AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(
-                ApiResponse.success(indicadorService.calcularTodosIndicadores(empresaId))
+                ApiResponse.success(indicadorService.calcularTodosIndicadores(u.getEmpresaId()))
         );
     }
 
     @PostMapping("/atualizar/valores")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> atualizarValores(
-            @RequestParam Long empresaId) {
-        indicadorService.atualizarValores(empresaId);
+            @AuthenticationPrincipal AuthenticatedUser u) {
+        indicadorService.atualizarValores(u.getEmpresaId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping("/{id}/atualizar")
     @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
     public ResponseEntity<ApiResponse<Void>> atualizarValor(
-            @RequestParam Long empresaId,
+            @AuthenticationPrincipal AuthenticatedUser u,
             @PathVariable Long id) {
-        indicadorService.atualizarValor(empresaId, id);
+        indicadorService.atualizarValor(u.getEmpresaId(), id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

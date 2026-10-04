@@ -19,9 +19,12 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
 
     @Override @Transactional
     public LancamentoResponse criar(Long empresaId, LancamentoRequest r) {
+        if (r == null || r.dataLancamento() == null) throw new BusinessException("Data do lançamento é obrigatória");
+        if (r.descricaoHistorico() == null || r.descricaoHistorico().isBlank()) throw new BusinessException("Histórico contábil é obrigatório");
         if (r.partidas() == null || r.partidas().size() < 2) {
             throw new BusinessException("Lançamento exige ao menos 2 partidas (débito e crédito)");
         }
+        validarPartidas(r.partidas());
         BigDecimal debitos = r.partidas().stream().filter(p -> "D".equalsIgnoreCase(p.tipo()))
             .map(PartidaRequest::valor).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal creditos = r.partidas().stream().filter(p -> "C".equalsIgnoreCase(p.tipo()))
@@ -81,6 +84,10 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
         LancamentoContabil l = lancamentoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Lançamento não encontrado"));
 
+        if (l.getOrigem() != null && !l.getOrigem().isBlank()) {
+            throw new BusinessException("Lançamento integrado (" + l.getOrigem() + ") não pode ser alterado manualmente");
+        }
+        if (r == null) throw new BusinessException("Dados do lançamento são obrigatórios");
         if (r.partidas() != null) {
             validarPartidas(r.partidas());
             partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id)
@@ -101,7 +108,10 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
         }
 
         if (r.dataLancamento() != null) l.setDataLancamento(r.dataLancamento());
-        if (r.descricaoHistorico() != null) l.setDescricaoHistorico(r.descricaoHistorico());
+        if (r.descricaoHistorico() != null) {
+            if (r.descricaoHistorico().isBlank()) throw new BusinessException("Histórico contábil não pode ser vazio");
+            l.setDescricaoHistorico(r.descricaoHistorico());
+        }
         l.setOrigem(r.origem());
         l.setIdOrigem(r.idOrigem());
         lancamentoRepository.save(l);
@@ -112,14 +122,20 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
     public void excluir(Long empresaId, Long id) {
         LancamentoContabil l = lancamentoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Lançamento não encontrado"));
+        if (l.getOrigem() != null && !l.getOrigem().isBlank()) throw new BusinessException("Lançamento integrado não pode ser excluído");
         partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id)
             .forEach(partidaRepository::delete);
         lancamentoRepository.delete(l);
     }
 
     private void validarPartidas(List<PartidaRequest> partidas) {
-        if (partidas.size() < 2) {
+        if (partidas == null || partidas.size() < 2) {
             throw new BusinessException("Lançamento exige ao menos 2 partidas (débito e crédito)");
+        }
+        for (PartidaRequest p : partidas) {
+            if (p == null || p.planoContasId() == null || p.planoContasId() <= 0) throw new BusinessException("Conta contábil é obrigatória em todas as partidas");
+            if (p.valor() == null || p.valor().signum() <= 0) throw new BusinessException("Valor das partidas deve ser maior que zero");
+            if (!"D".equalsIgnoreCase(p.tipo()) && !"C".equalsIgnoreCase(p.tipo())) throw new BusinessException("Tipo de partida deve ser D ou C");
         }
         BigDecimal debitos = partidas.stream().filter(p -> "D".equalsIgnoreCase(p.tipo()))
             .map(PartidaRequest::valor).reduce(BigDecimal.ZERO, BigDecimal::add);
