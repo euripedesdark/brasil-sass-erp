@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Emissao de NFS-e da Prefeitura de Sao Paulo, integrada ao ERP.
+ * Emissao de NFS-e municipal integrada ao ERP. O provedor é escolhido pelo município da empresa.
  *
  * <p>Encadeamento de uma emissao:
  * <ol>
