@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { InputText } from 'primereact/inputtext';
 import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 
 export const CteMdfe = () => {
     const toast = useRef(null);
@@ -13,6 +15,9 @@ export const CteMdfe = () => {
     const [recibo, setRecibo] = useState('');
     const [ret, setRet] = useState(null);
     const [erro, setErro] = useState('');
+    const [ctes, setCtes] = useState([]);
+    const [mdfes, setMdfes] = useState([]);
+    const [carregandoDocs, setCarregandoDocs] = useState(false);
     const js = async (r) => r.json().catch(() => ({}));
     const carregar = async () => {
         setErro('');
@@ -21,6 +26,18 @@ export const CteMdfe = () => {
             setCte(c); setMdfe(m);
         } catch (e) { setErro('Falha ao consultar os serviços.'); }
     };
+    const carregarDocumentos = async () => {
+        setCarregandoDocs(true);
+        try {
+            const [rc, rm] = await Promise.all([apiFetch('/api/fiscal/cte?size=50'), apiFetch('/api/fiscal/mdfe?size=50')]);
+            if (rc.ok) setCtes((await rc.json().catch(() => ({}))).content || []);
+            if (rm.ok) setMdfes((await rm.json().catch(() => ({}))).content || []);
+        } catch (e) { setErro('Falha ao carregar os documentos emitidos.'); }
+        finally { setCarregandoDocs(false); }
+    };
+    useEffect(() => { carregarDocumentos(); }, []);
+    const fmtData = (v) => v ? new Date(v).toLocaleString('pt-BR') : '-';
+    const fmtMoeda = (v) => v == null ? '-' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const consultar = async () => {
         if (!recibo.trim()) return;
         const r = await apiFetch('/api/fiscal/mdfe/recibo?numero=' + encodeURIComponent(recibo.trim()));
@@ -32,7 +49,7 @@ export const CteMdfe = () => {
         <div className='p-4'>
             <Toast ref={toast} />
             <div className='flex justify-content-between align-items-center mb-3 flex-wrap gap-2'>
-                <div><h2 className='m-0'>CT-e / MDF-e</h2><span className='bc-muted'>Status dos serviços e consulta de recibo</span></div>
+                <div><h2 className='m-0'>CT-e / MDF-e</h2><span className='bc-muted'>Status dos serviços, consulta de recibo e documentos gravados</span></div>
                 <Button label='Consultar serviços' icon='pi pi-refresh' onClick={carregar} />
             </div>
             {erro && (<Message severity='error' text={erro} className='w-full mb-3' />)}
@@ -42,7 +59,29 @@ export const CteMdfe = () => {
             </div>
             <Card title='MDF-e — consultar recibo' className='mt-3'>
                 <div className='flex gap-2 flex-wrap'><InputText value={recibo} onChange={(e) => setRecibo(e.target.value)} placeholder='Número do recibo' style={{ flex: 1 }} /><Button label='Consultar' icon='pi pi-search' onClick={consultar} /></div>
+                {ret && ret.sucesso === null && (<Message severity='warn' className='w-full mt-3' text={ret.xMotivo || 'Não foi possível confirmar a autorização. Verifique antes de reemitir.'} />)}
                 {ret && (<div className='mt-3'>{kv(ret)}</div>)}
+            </Card>
+            <Card title='CT-e emitidos' className='mt-3'>
+                <DataTable value={ctes} loading={carregandoDocs} size='small' paginator rows={10} emptyMessage='Nenhum CT-e gravado.'>
+                    <Column field='numero' header='Número' />
+                    <Column field='serie' header='Série' />
+                    <Column field='status' header='Status' />
+                    <Column field='dataEmissao' header='Emissão' body={(r) => fmtData(r.dataEmissao)} />
+                    <Column field='valorFrete' header='Frete' body={(r) => fmtMoeda(r.valorFrete)} />
+                    <Column field='chaveAcesso' header='Chave de acesso' />
+                </DataTable>
+            </Card>
+            <Card title='MDF-e emitidos' className='mt-3'>
+                <DataTable value={mdfes} loading={carregandoDocs} size='small' paginator rows={10} emptyMessage='Nenhum MDF-e gravado.'>
+                    <Column field='numero' header='Número' />
+                    <Column field='serie' header='Série' />
+                    <Column field='status' header='Status' />
+                    <Column field='dataEmissao' header='Emissão' body={(r) => fmtData(r.dataEmissao)} />
+                    <Column field='ufInicio' header='UF início' />
+                    <Column field='ufFim' header='UF fim' />
+                    <Column field='chaveAcesso' header='Chave de acesso' />
+                </DataTable>
             </Card>
         </div>
     );
