@@ -43,6 +43,12 @@ public class Nfse extends TenantEntity {
     @Column(name = "chave_nota_nacional", length = 50)
     private String chaveNotaNacional;
 
+    @Column(name = "id_dps", length = 50)
+    private String idDps;
+
+    @Column(name = "protocolo_nacional", length = 100)
+    private String protocoloNacional;
+
     /**
      * Serie e numero do RPS que originou a nota.
      *
