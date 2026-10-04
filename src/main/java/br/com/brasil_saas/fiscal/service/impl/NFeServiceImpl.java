@@ -1,6 +1,9 @@
 package br.com.brasil_saas.fiscal.service.impl;
 
 import br.com.brasil_saas.fiscal.config.DynamicNFeConfig;
+import br.com.brasil_saas.fiscal.sefaz.SefazConfig;
+import br.com.brasil_saas.core.model.Empresa;
+import br.com.brasil_saas.core.repository.EmpresaRepository;
 import br.com.brasil_saas.fiscal.service.CertificateService;
 import br.com.brasil_saas.fiscal.service.NFeService;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
@@ -34,6 +37,8 @@ import java.io.FileNotFoundException;
 public class NFeServiceImpl implements NFeService {
 
     private final CertificateService certificateService;
+    private final SefazConfig sefazConfig;
+    private final EmpresaRepository empresaRepository;
 
     @Value("${brasil-saas.fiscal.sefaz.ambiente:HOMOLOGACAO}")
     private String ambienteConfig;
@@ -75,21 +80,17 @@ public class NFeServiceImpl implements NFeService {
     }
 
     private ConfiguracoesNfe carregarConfiguracoes(Long empresaId) throws Exception {
-        // Valores padrão para desenvolvimento/homologação.
-        // Em produção estes dados devem vir do cadastro da empresa.
-        EstadosEnum uf = EstadosEnum.SP;
-        AmbienteEnum ambiente = "PRODUCAO".equalsIgnoreCase(ambienteConfig)
-                ? AmbienteEnum.PRODUCAO
-                : AmbienteEnum.HOMOLOGACAO;
-
-        String certPath = "/etc/brasil-saas/certs/empresa_" + empresaId + ".pfx";
-        String certPass = System.getenv("NFE_CERT_PASSWORD");
-        String pastaSchemas = "schemas";
-
-        if (!java.nio.file.Files.exists(java.nio.file.Paths.get(certPath))) {
-            throw new FileNotFoundException("Certificado digital não encontrado: " + certPath);
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new IllegalArgumentException("Empresa não encontrada: " + empresaId));
+        if (empresa.getUf() == null || empresa.getUf().isBlank()) {
+            throw new IllegalStateException("UF da empresa não cadastrada para emissão de NF-e");
         }
-
-        return DynamicNFeConfig.criar(Integer.valueOf(uf.getCodigoUF()), ambiente.getCodigo(), certPath, certPass, pastaSchemas);
+        EstadosEnum uf;
+        try {
+            uf = EstadosEnum.valueOf(empresa.getUf().trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("UF da empresa não suportada pela biblioteca NF-e: " + empresa.getUf(), ex);
+        }
+        return sefazConfig.montar(empresaId, uf);
     }
 }
