@@ -188,7 +188,8 @@
     "rescisao": "Termination",
     "credito": "Credit",
     "fluxoCaixa": "Cash flow",
-    "esocial": "eSocial"
+    "esocial": "eSocial",
+    "obrigacoes": "Tax obligations"
   },
   "stock": {
     "default": "Default",

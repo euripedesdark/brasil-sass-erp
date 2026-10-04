@@ -198,6 +198,7 @@ export const Layout = () => {
                     item('menu.taxes', 'pi pi-percentage', '/fiscal/impostos'),
                     item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz'),
                     item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
+                    item('menu.obrigacoes', 'pi pi-calendar-check', '/fiscal/obrigacoes'),
                     item('menu.buscaFiscal', 'pi pi-search', '/fiscal/busca')
                 ]
             },

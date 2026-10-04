@@ -188,7 +188,8 @@
     "rescisao": "Despido",
     "credito": "Crédito",
     "fluxoCaixa": "Flujo de caja",
-    "esocial": "eSocial"
+    "esocial": "eSocial",
+    "obrigacoes": "Obligaciones"
   },
   "stock": {
     "default": "Estándar",

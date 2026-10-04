@@ -68,6 +68,7 @@ import { SefazConsulta } from './components/fiscal/SefazConsulta';
 import { Impostos } from './components/fiscal/Impostos';
 import { SpedEfd } from './components/fiscal/SpedEfd';
 import { CteMdfe } from './components/fiscal/CteMdfe';
+import { Obrigacoes } from './components/fiscal/Obrigacoes';
 import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
@@ -244,6 +245,7 @@ function App() {
                     <Route path="fiscal/sefaz" element={<SefazConsulta />} />
                     <Route path="fiscal/sped" element={<SpedEfd />} />
                     <Route path="fiscal/cte-mdfe" element={<CteMdfe />} />
+                    <Route path="fiscal/obrigacoes" element={<Obrigacoes />} />
                     <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />

@@ -188,7 +188,8 @@
     "rescisao": "Licenciement",
     "credito": "Crédit",
     "fluxoCaixa": "Flux de trésorerie",
-    "esocial": "eSocial"
+    "esocial": "eSocial",
+    "obrigacoes": "Obligations"
   },
   "stock": {
     "default": "Standard",
