@@ -79,7 +79,7 @@ public class EmpresaStripeService {
         }
 
         try {
-            Account account = new StripeClient(key).v1().accounts().retrieve("self");
+            Account account = Account.retrieve(null, com.stripe.net.RequestOptions.builder().setApiKey(key).build());
             e.setStripeAccountId(account.getId());
             empresaRepository.save(e);
             return new TestResponse(
