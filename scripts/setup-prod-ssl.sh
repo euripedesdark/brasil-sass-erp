@@ -1,6 +1,9 @@
 #!/bin/bash
-# Brasil SaaS ERP - Setup Production SSL Configuration
-# Configura HTTPS/SSL para todos os modulos do ERP
+# Brasil SaaS ERP - Legacy production SSL helper
+#
+# IMPORTANT: the ERP is intentionally HTTP-only on :80 in this deployment.
+# Port :443 belongs to another application. This script MUST NOT configure,
+# redirect to, or bind :443, and MUST NOT enable Spring require-ssl.
 
 set -o errexit
 set -o nounset
@@ -252,27 +255,15 @@ upstream brasil_saas_producao {
     server 127.0.0.1:8090;
 }
 
-# HTTPS Server
+# ERP HTTP entry point only
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name brasil_saas-erp.local;
+    listen 80;
+    listen [::]:80;
+    server_name _;
     
-    # SSL Configuration
-    ssl_certificate /etc/brasil_saas/ssl/brasil_saas-erp.crt;
-    ssl_certificate_key /etc/brasil_saas/ssl/brasil_saas-erp.key;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
+    # No TLS configuration here. Port 443 is intentionally untouched.
     
-    # Security Headers
-    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # No HSTS on the ERP HTTP entry point. HTTPS :443 is another service.
     
     # Proxy configurations
     location /core/ {
@@ -371,25 +362,19 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
     
-    # Static files (frontend)
+    # ERP application proxy
     location / {
-        root /opt/brasil_saas-erp/frontend;
-        try_files $uri $uri/ /index.html;
+        proxy_pass http://brasil_saas_servicos;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
-    
-    # Health check
-    location /health {
-        return 200 'OK';
-        add_header Content-Type text/plain;
-    }
-}
 
-# HTTP to HTTPS redirect
-server {
-    listen 80;
-    listen [::]:80;
-    server_name brasil_saas-erp.local;
-    return 301 https://\$host\$request_uri;
+    location /health {
+        proxy_pass http://brasil_saas_servicos/actuator/health;
+        proxy_set_header Host $host;
+    }
 }
 EOF
     
@@ -597,10 +582,10 @@ case "$COMMAND" in
     all)
         log_header "INICIANDO CONFIGURACAO SSL COMPLETA"
         
+        log_warn "ERP web TLS desativado: :80 -> :8080; :443 pertence a outra aplicação."
         generate_keystore
         configure_all_modules_ssl
         configure_nginx
-        generate_nginx_ssl
         configure_json_logs
         configure_hikaricp
         configure_rate_limiting
@@ -616,7 +601,6 @@ case "$COMMAND" in
         ;;
     nginx)
         configure_nginx
-        generate_nginx_ssl
         ;;
     logs)
         configure_json_logs
