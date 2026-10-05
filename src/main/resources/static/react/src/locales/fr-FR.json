@@ -434,7 +434,7 @@
   "donate": {
     "button": "Soutenir le Projet",
     "title": "Soutenir le Developpement",
-    "body": "Brasil SaaS ERP est un ERP open source maintenu par un seul developpeur. Si ce projet vous a aide, vous ou votre equipe, envisagez de soutenir son developpement par un don PIX."
+    "body": "Brasil SaaS ERP est un ERP open source maintenu par un seul développeur. Si ce projet vous a aidé, vous, votre entreprise ou votre équipe, envisagez de soutenir son développement par un don via PIX."
   },
   "about": {
     "subtitle": "Brasil SaaS ERP — système de gestion d’entreprise open source",
@@ -442,7 +442,7 @@
     "licenseBody": "Ce projet est sous licence GNU Affero General Public License v3.0. La clause qui compte pour un ERP accessible par navigateur est la section 13 : quiconque pointe son navigateur vers ce système a droit au code source. Le texte complet se trouve dans LICENSE.md, et les crédits des tiers dans NOTICE.md.",
     "history": "Histoire",
     "historyP1": "Brasil SaaS ERP est né d’un système de gestion écrit en Delphi et a été migré vers Java Spring Boot avec Oracle JDK 21. La migration a porté le cœur sur Spring Boot 3.3.5 en conservant la séparation des modules, et le frontend a été réécrit en React.",
-    "historyP2": "Le système est multi-entreprise par construction : chaque enregistrement porte son entreprise propriétaire, et un filtre de tenant empêche une entreprise de voir les données d’une autre. L’authentification vient d’Active Directory via l’Auth Service, et l’autorisation vient des groupes du répertoire.",
+    "historyP2": "Le système est multi-entreprise par conception : chaque enregistrement appartient à une entreprise, et un filtre de tenant empêche une entreprise d’accéder aux données d’une autre. L’authentification provient d’Active Directory via l’Auth Service et l’autorisation des groupes du répertoire.",
     "historyP3": "Il est maintenu par une seule personne, sur le temps qu’il reste.",
     "roadmap": "Feuille de route",
     "roadmapNow": "En production",
@@ -453,7 +453,7 @@
     "creditsBody": "Ce projet repose sur le travail de tiers, et la liste complète se trouve dans NOTICE.md. Les bibliothèques d’émission fiscale sont de Samuel Oliveira (Java NFe, Java MDFe, Java CTe, Java Certificat, PDF Signature et les EFD), d’Eduardo Kuhn (nfse) et d’Infosimples (intégration à la mairie). eSocial vient du TST et le gestionnaire CNAB d’Akretion est de Raphaël Valyi. Tout l’écosystème Spring vient de VMware.",
     "support": "Soutenir le Projet",
     "supportP1": "Brasil SaaS ERP est un ERP open source maintenu par un seul développeur. Si ce projet vous a aidé, vous, votre entreprise ou votre équipe, envisagez de soutenir son développement.",
-    "supportP2": "Un don, quel qu’en soit le montant, paie le serveur, le certificat numérique et les frais d’émission auprès de la mairie. Il n’achète aucune date de livraison sur une issue.",
+    "supportP2": "Un don, quel qu’en soit le montant, contribue à payer le serveur, le certificat numérique et les frais d’émission de la mairie. Il n’achète aucune garantie de délai pour une issue.",
     "roadmapNowItems": [
       "Authentification auprès d’Active Directory via l’Auth Service",
       "Référentiels multi-entreprises avec filtrage par tenant",
@@ -993,7 +993,7 @@
       "validateFail": "Payeur refusé",
       "validateFailDetail": "La banque a refusé ces données — corrigez-les avant de générer la remise.",
       "ourNumber": "Notre numéro",
-      "emitSuccess": "Effet émis",
+      "emitSuccess": "Boleto émis",
       "emitSuccessDetail": "Il est maintenant disponible dans la liste pour téléchargement.",
       "emitError": "Impossible d'émettre l'effet"
     },
@@ -1194,7 +1194,7 @@
       "finance": "Finance",
       "sales": "Ventes",
       "inventory": "Stock",
-      "tax": "Fiscal",
+      "tax": "Fiscalité",
       "production": "Production",
       "loadChats": "Erreur lors du chargement des chats",
       "loadMessages": "Erreur lors du chargement des messages",
