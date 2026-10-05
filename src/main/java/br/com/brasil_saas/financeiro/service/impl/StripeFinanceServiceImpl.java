@@ -205,7 +205,6 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
         }
 
         String type = event.getType();
-        Long empresaId = null;
 
         try {
             if (type.startsWith("checkout.session.")) {
