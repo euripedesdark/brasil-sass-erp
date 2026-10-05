@@ -43,6 +43,7 @@ import { Emprestimos } from './components/financeiro/Emprestimos';
 import { Credito } from './components/financeiro/Credito';
 import { FluxoCaixa } from './components/financeiro/FluxoCaixa';
 import { Cobranca } from './components/financeiro/Cobranca';
+import RegrasComissao from './components/financeiro/RegrasComissao';
 import AprovacoesTitulos from './components/financeiro/AprovacoesTitulos';
 import Caixa from './components/Caixa';
 import { Workflow } from "./components/workflow/Workflow";
@@ -228,6 +229,7 @@ function App() {
                     <Route path="financeiro/cobranca" element={<Cobranca />} />
                     <Route path="financeiro/aprovacoes-titulos" element={<AprovacoesTitulos />} />
                     <Route path="financeiro/comissoes" element={<Comissoes />} />
+                    <Route path="financeiro/regras-comissao" element={<RegrasComissao />} />
                     <Route path="financeiro/extrato" element={<Extrato />} />
                     <Route path="financeiro/conciliacao" element={<ConciliacaoBancaria />} />
                     <Route path="bi/auditoria-funcional" element={<AuditoriaFuncionalERP />} />
