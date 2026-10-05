@@ -167,6 +167,7 @@ export const Layout = () => {
                     item('menu.titles', 'pi pi-file', '/financeiro/titulos'),
                     item('menu.titleApprovals', 'pi pi-verified', '/financeiro/aprovacoes-titulos'),
                     item('menu.commissions', 'pi pi-percentage', '/financeiro/comissoes'),
+                    item('Regras de comissão', 'pi pi-sliders-h', '/financeiro/regras-comissao'),
                     item('menu.cash', 'pi pi-wallet', '/financeiro/caixa'),
                     item('menu.bankSlips', 'pi pi-file-pdf', '/financeiro/boletos'),
                     item('menu.statements', 'pi pi-chart-line', '/financeiro/extrato'),
@@ -191,6 +192,10 @@ export const Layout = () => {
                 modulo: 'fiscal',
                 icon: 'pi pi-file-check',
                 items: [
+                    item('menu.nfe', 'pi pi-file', '/fiscal/nfe'),
+                    item('menu.nfse', 'pi pi-file-edit', '/fiscal/nfse'),
+                    item('menu.certificates', 'pi pi-key', '/fiscal/certificados'),
+                    item('menu.sped', 'pi pi-file-export', '/fiscal/sped'),
                     item('menu.ncm', 'pi pi-list', '/fiscal/ncm'),
                     item('menu.cfop', 'pi pi-list', '/fiscal/cfop'),
                     item('menu.cest', 'pi pi-list', '/fiscal/cest'),
