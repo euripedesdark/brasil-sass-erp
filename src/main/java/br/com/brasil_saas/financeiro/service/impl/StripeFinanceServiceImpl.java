@@ -149,7 +149,7 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 .putMetadata("tituloId", String.valueOf(tituloId))
                 .build();
 
-            client().v1().invoiceItems().create(itemParams,
+            client(empresaId).v1().invoiceItems().create(itemParams,
                 RequestOptions.builder()
                     .setIdempotencyKey("erp-invoice-item-" + empresaId + "-" + tituloId)
                     .build());
@@ -167,11 +167,18 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 invoiceBuilder.setAutomaticTax(InvoiceCreateParams.AutomaticTax.builder().setEnabled(true).build());
             }
 
-            Invoice invoice = client().v1().invoices().create(
+            Invoice invoice = client(empresaId).v1().invoices().create(
                 invoiceBuilder.build(),
                 RequestOptions.builder()
                     .setIdempotencyKey("erp-invoice-" + empresaId + "-" + tituloId)
                     .build());
+
+            if (invoice.getHostedInvoiceUrl() == null) {
+                invoice = client(empresaId).v1().invoices().finalizeInvoice(invoice.getId(),
+                    RequestOptions.builder()
+                        .setIdempotencyKey("erp-invoice-finalize-" + empresaId + "-" + tituloId)
+                        .build());
+            }
 
             StripePayment payment = new StripePayment();
             payment.setEmpresaId(empresaId);
@@ -341,7 +348,7 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 .putMetadata("erp", "brasil-sass-erp")
                 .build();
 
-            var customer = client().v1().customers().create(
+            var customer = client(empresaId).v1().customers().create(
                 params,
                 RequestOptions.builder()
                     .setIdempotencyKey("erp-customer-" + empresaId + "-" + pessoa.getId())
