@@ -53,3 +53,28 @@ A única diferença de apresentação é o idioma ativo.
 O frontend passa a tratar Português, Inglês, Espanhol e Francês como idiomas completos da aplicação, em vez de o seletor de idioma existir apenas na autenticação.
 
 A manutenção futura deve adicionar qualquer nova string ao catálogo i18n; a ponte global existe como compatibilidade para o legado e não como substituição da prática de usar `useTranslation()` em componentes novos.
+
+## Revisão linguística — 2026-10-04
+
+Após a primeira implementação, foi feita uma segunda revisão focada em **qualidade de tradução**, e não apenas em existência de chaves.
+
+Foram corrigidos principalmente:
+
+- espanhol que ainda reutilizava termos portugueses;
+- terminologia de compras, vendas, estoque e recebimentos;
+- terminologia de documentos financeiros;
+- nomenclatura de WMS/picking/expedição;
+- terminologia fiscal e emissão de documentos;
+- textos de autenticação Managed/Unmanaged;
+- francês com construções literais ou pouco naturais;
+- acentuação e formulações de textos institucionais;
+- vocabulário de produção e documentos operacionais.
+
+### Regra terminológica
+
+Os nomes de produtos e padrões brasileiros que precisam permanecer reconhecíveis não são artificialmente traduzidos: **NF-e, NFS-e, CT-e, MDF-e, NCM, CFOP, CEST, ISSQN, SPED, SEFAZ, CNPJ, IBGE, PIX, eSocial, WMS e demais siglas oficiais** permanecem intactos.
+
+O restante da interface deve utilizar a terminologia natural do idioma selecionado, mantendo o significado operacional do ERP.
+
+A revisão não altera chaves, rotas, regras de negócio ou contratos de API.
+
