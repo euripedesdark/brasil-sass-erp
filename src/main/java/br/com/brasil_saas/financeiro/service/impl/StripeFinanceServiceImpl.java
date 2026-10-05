@@ -206,58 +206,56 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
 
         String type = event.getType();
 
-        try {
-            if (type.startsWith("checkout.session.")) {
-                Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
-                if (session == null) return;
+        if (type.startsWith("checkout.session.")) {
+            Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (session == null) return;
 
-                Map<String, String> metadata = session.getMetadata() == null ? Map.of() : session.getMetadata();
-                Long eventoEmpresaId = metadataLong(metadata, "empresaId");
-                if (!empresaId.equals(eventoEmpresaId)) {
-                    throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
-                }
-                Long tituloId = metadataLong(metadata, "tituloId");
-
-                if ("checkout.session.completed".equals(type)) {
-                    if ("paid".equalsIgnoreCase(session.getPaymentStatus())) {
-                        liquidarCheckout(empresaId, tituloId, session);
-                    } else {
-                        atualizarCheckout(empresaId, session.getId(), "PENDING", session.getPaymentIntent());
-                    }
-                } else if ("checkout.session.async_payment_succeeded".equals(type)) {
-                    liquidarCheckout(empresaId, tituloId, session);
-                } else if ("checkout.session.async_payment_failed".equals(type)) {
-                    atualizarCheckout(empresaId, session.getId(), "FAILED", session.getPaymentIntent());
-                }
-            } else if (type.startsWith("invoice.")) {
-                Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
-                if (invoice == null || invoice.getMetadata() == null) return;
-
-                Map<String, String> metadata = invoice.getMetadata();
-                Long eventoEmpresaId = metadataLong(metadata, "empresaId");
-                if (!empresaId.equals(eventoEmpresaId)) {
-                    throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
-                }
-                Long tituloId = metadataLong(metadata, "tituloId");
-
-                if ("invoice.paid".equals(type)) {
-                    liquidarInvoice(empresaId, tituloId, invoice);
-                } else if ("invoice.payment_failed".equals(type)) {
-                    atualizarInvoice(empresaId, invoice.getId(), "FAILED");
-                }
-            } else if ("payment_intent.payment_failed".equals(type)) {
-                PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
-                if (intent == null || intent.getMetadata() == null) return;
-
-                Map<String, String> metadata = intent.getMetadata();
-                Long eventoEmpresaId = metadataLong(metadata, "empresaId");
-                if (!empresaId.equals(eventoEmpresaId)) {
-                    throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
-                }
-                atualizarPaymentIntent(empresaId, intent.getId(), "FAILED");
-            } else {
-                return;
+            Map<String, String> metadata = session.getMetadata() == null ? Map.of() : session.getMetadata();
+            Long eventoEmpresaId = metadataLong(metadata, "empresaId");
+            if (!empresaId.equals(eventoEmpresaId)) {
+                throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
             }
+            Long tituloId = metadataLong(metadata, "tituloId");
+
+            if ("checkout.session.completed".equals(type)) {
+                if ("paid".equalsIgnoreCase(session.getPaymentStatus())) {
+                    liquidarCheckout(empresaId, tituloId, session);
+                } else {
+                    atualizarCheckout(empresaId, session.getId(), "PENDING", session.getPaymentIntent());
+                }
+            } else if ("checkout.session.async_payment_succeeded".equals(type)) {
+                liquidarCheckout(empresaId, tituloId, session);
+            } else if ("checkout.session.async_payment_failed".equals(type)) {
+                atualizarCheckout(empresaId, session.getId(), "FAILED", session.getPaymentIntent());
+            }
+        } else if (type.startsWith("invoice.")) {
+            Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (invoice == null || invoice.getMetadata() == null) return;
+
+            Map<String, String> metadata = invoice.getMetadata();
+            Long eventoEmpresaId = metadataLong(metadata, "empresaId");
+            if (!empresaId.equals(eventoEmpresaId)) {
+                throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
+            }
+            Long tituloId = metadataLong(metadata, "tituloId");
+
+            if ("invoice.paid".equals(type)) {
+                liquidarInvoice(empresaId, tituloId, invoice);
+            } else if ("invoice.payment_failed".equals(type)) {
+                atualizarInvoice(empresaId, invoice.getId(), "FAILED");
+            }
+        } else if ("payment_intent.payment_failed".equals(type)) {
+            PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (intent == null || intent.getMetadata() == null) return;
+
+            Map<String, String> metadata = intent.getMetadata();
+            Long eventoEmpresaId = metadataLong(metadata, "empresaId");
+            if (!empresaId.equals(eventoEmpresaId)) {
+                throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
+            }
+            atualizarPaymentIntent(empresaId, intent.getId(), "FAILED");
+        } else {
+            return;
         }
         StripeWebhookEvent record = new StripeWebhookEvent();
         record.setEmpresaId(empresaId);
