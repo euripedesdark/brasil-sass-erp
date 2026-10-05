@@ -29,7 +29,7 @@ public class StripeFinanceController {
         return service.criarInvoice(user.getEmpresaId(), tituloId);
     }
 
-    @PostMapping("/webhook")
+    @PostMapping("/webhook/{empresaId}")
     public ResponseEntity<WebhookResponse> webhook(
         @PathVariable Long empresaId,
         @RequestHeader(value = "Stripe-Signature", required = false) String signature,
