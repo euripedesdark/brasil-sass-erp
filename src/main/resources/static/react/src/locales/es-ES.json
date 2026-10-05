@@ -82,10 +82,10 @@
     "sessionExpired": "Tu sesión ha caducado. Entra de nuevo.",
     "language": "Idioma",
     "authMode": "Tipo de inicio de sesión",
-    "managedAd": "Managed (AD)",
-    "unmanagedDatabase": "Unmanaged (Base de datos)",
-    "managedAdHelp": "Autentica mediante Active Directory / Auth Service.",
-    "unmanagedDatabaseHelp": "Autentica con la contraseña local almacenada en la base de datos."
+    "managedAd": "Administrado (AD)",
+    "unmanagedDatabase": "No administrado (Base de datos)",
+    "managedAdHelp": "Autenticación mediante Active Directory / Auth Service.",
+    "unmanagedDatabaseHelp": "Autenticación mediante la contraseña local almacenada en la base de datos."
   },
   "nav": {
     "home": "Inicio",
@@ -163,7 +163,7 @@
     "digitalCertificate": "Certificado Digital",
     "sped": "SPED EFD",
     "productionOrders": "Órdenes de Producción",
-    "productionWaybills": "Albaranes de Producción",
+    "productionWaybills": "Notas de entrega de producción",
     "bom": "Estructura / BOM",
     "productionReports": "Partes de producción",
     "serviceCatalogFull": "Catálogo de Servicios",
@@ -1102,7 +1102,7 @@
       "deleteError": "No se pudo eliminar el cargo"
     },
     "romaneio": {
-      "title": "Albaranes de producción",
+      "title": "Notas de entrega de producción",
       "new": "Nuevo albarán",
       "empty": "No hay albaranes registrados.",
       "number": "Número",
