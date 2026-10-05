@@ -31,9 +31,10 @@ public class StripeFinanceController {
 
     @PostMapping("/webhook")
     public ResponseEntity<WebhookResponse> webhook(
+        @PathVariable Long empresaId,
         @RequestHeader(value = "Stripe-Signature", required = false) String signature,
         @RequestBody String payload) {
-        service.processarWebhook(payload, signature);
+        service.processarWebhook(empresaId, payload, signature);
         return ResponseEntity.ok(new WebhookResponse("received"));
     }
 }
