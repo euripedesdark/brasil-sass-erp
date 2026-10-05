@@ -59,8 +59,9 @@ export default defineConfig({
     }
   },
   resolve: {
-    alias: {
-      '@': '/src',
-    },
+    alias: [
+      { find: /^primereact\/datatable$/, replacement: '/src/components/shared/SafeDataTable.jsx' },
+      { find: '@', replacement: '/src' },
+    ],
   },
 });
