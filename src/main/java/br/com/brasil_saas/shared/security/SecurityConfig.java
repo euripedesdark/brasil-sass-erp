@@ -32,6 +32,7 @@ public class SecurityConfig {
                 // A API e protegida por JWT / @PreAuthorize.
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/superadmin/assets/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/financeiro/stripe/webhook").permitAll()
 
                 // O React e uma SPA: qualquer rota de interface deve conseguir
                 // carregar o shell. A autorizacao real ocorre nas APIs.
