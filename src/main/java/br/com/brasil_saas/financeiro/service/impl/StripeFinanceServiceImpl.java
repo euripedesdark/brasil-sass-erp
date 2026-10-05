@@ -258,15 +258,12 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
             } else {
                 return;
             }
-        } finally {
-            if (empresaId != null) {
-                StripeWebhookEvent record = new StripeWebhookEvent();
-                record.setEmpresaId(empresaId);
-                record.setStripeEventId(event.getId());
-                record.setEventType(type);
-                webhookRepository.save(record);
-            }
         }
+        StripeWebhookEvent record = new StripeWebhookEvent();
+        record.setEmpresaId(empresaId);
+        record.setStripeEventId(event.getId());
+        record.setEventType(type);
+        webhookRepository.save(record);
     }
 
     private void liquidarCheckout(Long empresaId, Long tituloId, Session session) {
