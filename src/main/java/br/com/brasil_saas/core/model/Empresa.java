@@ -69,4 +69,17 @@ public class Empresa extends BaseEntity {
     
     @Column(name = "logo_tamanho")
     private Long logoTamanho;
+
+    /** Credenciais Stripe da própria empresa, armazenadas cifradas. */
+    @Column(name = "stripe_secret_key_encrypted", columnDefinition = "TEXT")
+    private String stripeSecretKeyEncrypted;
+
+    @Column(name = "stripe_webhook_secret_encrypted", columnDefinition = "TEXT")
+    private String stripeWebhookSecretEncrypted;
+
+    @Column(name = "stripe_habilitada", nullable = false)
+    private Boolean stripeHabilitada = false;
+
+    @Column(name = "stripe_account_id", length = 64)
+    private String stripeAccountId;
 }
