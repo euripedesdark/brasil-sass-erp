@@ -230,6 +230,30 @@ export const Titulo = () => {
         }
     };
 
+    const cobrarComStripe = async (row, invoice = false) => {
+        setLoading(true);
+        try {
+            const res = invoice
+                ? await TituloService.criarStripeInvoice(row.id)
+                : await TituloService.criarStripeCheckout(row.id);
+            const data = res?.data?.data ?? res?.data ?? {};
+            const url = invoice ? data.hostedInvoiceUrl : data.url;
+            if (!url) throw new Error('Stripe não retornou uma URL de cobrança');
+            window.open(url, '_blank', 'noopener,noreferrer');
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Stripe',
+                detail: invoice ? 'Invoice Stripe criada.' : 'Checkout Stripe criado.',
+                life: 3000,
+            });
+        } catch (err) {
+            const msg = err?.response?.data?.message || err?.response?.data?.error || 'Falha ao criar cobrança Stripe.';
+            toast.current?.show({ severity: 'error', summary: t('common.error'), detail: msg, life: 5000 });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const verTrilha = async (row) => {
         setTituloAtual(row);
         setLoading(true);
@@ -293,6 +317,24 @@ export const Titulo = () => {
                     tooltip={t('common.details')}
                     onClick={() => verTrilha(row)}
                 />
+            )}
+            {(row.tipo === 'R' && (row.status === 'ABERTO' || Number(row.valorSaldo) > 0) && podeSolicitarAprovacao) && (
+                <>
+                    <Button
+                        icon="pi pi-credit-card"
+                        className="p-button-text p-button-sm"
+                        tooltip="Cobrar com Stripe Checkout"
+                        onClick={() => cobrarComStripe(row, false)}
+                        disabled={row.status === 'PENDENTE_APROVACAO'}
+                    />
+                    <Button
+                        icon="pi pi-file"
+                        className="p-button-text p-button-sm"
+                        tooltip="Criar Invoice Stripe"
+                        onClick={() => cobrarComStripe(row, true)}
+                        disabled={row.status === 'PENDENTE_APROVACAO'}
+                    />
+                </>
             )}
             {(row.status === 'ABERTO' || Number(row.valorSaldo) > 0) && (
                 <Button
