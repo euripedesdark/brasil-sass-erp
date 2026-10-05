@@ -249,12 +249,13 @@ export const ConfigurarEmpresa = () => {
                                         <div>
                                             <h3 className="m-0">Stripe — pagamentos da empresa</h3>
                                             <span className="bc-muted">
-                                                A credencial pertence a esta empresa. Ela é armazenada criptografada e nunca é exibida integralmente.
+                                                Configuração opcional. A empresa pode ser cadastrada e usada normalmente sem Stripe e configurada depois.
+                                                A credencial é armazenada criptografada e nunca é exibida integralmente.
                                             </span>
                                         </div>
                                         <Tag
-                                            severity={stripe.configurada && stripe.habilitada ? 'success' : 'warning'}
-                                            value={stripe.configurada && stripe.habilitada ? 'Stripe ativo' : 'Stripe não configurado'}
+                                            severity={stripe.configurada && stripe.habilitada ? 'success' : 'secondary'}
+                                            value={stripe.configurada && stripe.habilitada ? 'Stripe ativo' : 'Stripe opcional'}
                                         />
                                     </div>
                                 </div>
