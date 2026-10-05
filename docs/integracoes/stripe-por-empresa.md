@@ -108,3 +108,22 @@ Antes de ativar uma empresa:
 
 A chave Stripe exposta anteriormente no chat não deve ser reutilizada; gere/rotacione
 uma nova credencial antes de cadastrá-la no ERP.
+
+
+## Formas de pagamento
+
+O desenho atual não exige máquina de cartão.
+
+- **Cartão:** Checkout hospedado pela Stripe; o cliente pode pagar pelo próprio celular através do link/QR Code.
+- **PIX:** disponibilizado pelo Checkout conforme os métodos de pagamento habilitados/elegíveis na conta Stripe da empresa.
+- **Boleto:** disponibilizado pelo fluxo de cobrança/Invoice conforme disponibilidade da conta e configuração de métodos de pagamento.
+- **Confirmação:** o ERP considera o título pago somente após confirmação recebida pelo webhook; a URL de retorno do Checkout não realiza a baixa sozinha.
+- **Invoice:** o backend finaliza a Invoice quando necessário para garantir a geração da Hosted Invoice Page antes de devolver o link ao frontend.
+
+Não armazenamos número de cartão, CVV ou dados brutos de cartão no ERP.
+
+## NFC / Tap to Pay — futuro
+
+**NFC/Tap to Pay não faz parte do módulo web atual.** Fica reservado para o futuro **módulo App do BrasilCloud ERP**, onde o celular compatível poderá atuar como terminal de pagamento, mantendo a mesma integração financeira e reconciliação por webhook.
+
+O módulo App deverá reutilizar o motor de baixa/conciliação do financeiro; não deverá criar uma segunda regra de liquidação.
