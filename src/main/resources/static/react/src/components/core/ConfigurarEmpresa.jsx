@@ -321,7 +321,7 @@ export const ConfigurarEmpresa = () => {
                                         icon="pi pi-check-circle"
                                         outlined
                                         loading={stripeTesting}
-                                        disabled={stripeTesting || !stripe.configurada && !stripeKey.trim()}
+                                        disabled={stripeTesting || !stripe.configurada}
                                         onClick={async () => {
                                             setStripeTesting(true);
                                             try {
