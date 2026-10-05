@@ -1,141 +1,175 @@
-# Regras de perfil e o que cada um pode
+# Matriz de permissao por funcao
 
-> Escrito em 27/09/2026 porque a regra mudou e eu não registrei. Sem este
-> arquivo a próxima sessão trabalha com a regra de ontem, que é o que já
-> aconteceu.
+> Reescrito em 05/10/2026. A versao de 27/09/2026 neste mesmo arquivo esta
+> errada e foi substituida: ela tratava `bc_core_perfil_permissao` como a
+> autoridade. Hoje a autoridade e o codigo. Este arquivo e a regra; se ele e o
+> codigo divergirem, o codigo esta errado.
+
+## Por que foi reescrito
+
+As regras foram escritas quando o sistema nao tinha 22 modulos de negocio. O
+resultado medido era:
+
+```
+DIRETORIA  2 de 252 permissoes
+GERENTE    0 de 252
+GESTOR     0 de 252
+ADMIN      252 (perfil ativo=f, em desuso)
+SUPERUSER  252
+```
+
+Diretoria com 2 e GERENTE com 0 era defeito, nao escolha. Alem disso o caminho
+real de decisao nunca foi a lista de 252: sao ~450 metodos com
+`@PreAuthorize("hasAuthority('modulo:recurso:acao')")` nos 22 modulos, e 93
+linhas com `hasAnyRole(...)` concentradas em BI, producao, financeiro, fiscal e
+core. Duas fontes de verdade, nenhuma delas fechada.
 
 ## A regra
 
-**SUPERADMIN = SUPERUSER.** É o mesmo perfil, um nome só. A diferença entre os
-dois não é o perfil — é a **capacidade**:
+Quem manda e o codigo. O banco guarda o rotulo da funcao e nada mais.
 
-| quem | banco de **dentro** do sistema | banco de **fora** (comando, script, query) |
+### 1. SUPERUSER - acima de tudo
+
+| onde | o que e |
+|---|---|
+| AD | membro de `Administrators` **ou** `Domain Admins` |
+| Postgres | role com `rolsuper=true` |
+| ERP | atalho: pula toda checagem de permissao |
+
+O SUPERUSER **nao tem lista de permissao**. Nenhuma permissao do ERP se aplica a
+ele. Ele nao precisa de `bc_core_perfil_permissao` para nada, e por isso nao e
+barrado por permissao nova que nascer depois.
+
+A implementacao e um filtro que roda **antes** do `hasAuthority`. Os ~450
+metodos nao sao tocados.
+
+AD -> auth-service -> ERP: o grupo ja vem no login hoje
+(`groups: ["GRP_DIRETORIA","GRP_GESTOR","GRP_GERENTE"]` no teste com `dark`).
+O que falta e o ERP reconhecer `Administrators`/`Domain Admins` e marcar a
+sessao.
+
+### 2. FUNCAO - herda do SUPERUSER que a liberou
+
+O grupo do AD, entregue pelo auth-service, define a funcao. O alcance vem do
+codigo.
+
+| funcao (role) | grupo no AD | OU | nivel | mexe em |
+|---|---|---|---|---|
+| `SUPERUSER` | `Administrators` / `Domain Admins` | - | 0 | tudo, sem checagem |
+| `DIRETORIA` | `GRP_DIRETORIA` | `OU=Diretoria` | 1 | **todos os modulos** |
+| `GERENTE` | `GRP_GERENTE` | `OU=Gestao` | 2 | **todos os modulos** |
+| `GESTOR` | `GRP_GESTOR` | `OU=Gestao` | 2 | **todos os modulos** |
+| `FINANCEIRO` | `GRP_FINANCEIRO` | `OU=Financeiro` | 3 | financeiro, contabilidade, fiscal, cadastro, vendas |
+| `RH` | `GRP_RH` | `OU=RH` | 4 | rh, producao, financeiro (folha) |
+| `VENDEDOR` | `GRP_VENDEDOR` | `OU=Vendas` | 5 | vendas, crm, cadastro (cliente), estoque (consulta) |
+| `ESTOQUE` | `GRP_ESTOQUE` | `OU=Estoque` | 6 | estoque, wms, producao, compras, cadastro (produto) |
+| `TECNOLOGIA` | `GRP_SA` | `OU=Tecnologia` | 3 | ia, integracoes, projetos, qualidade, dms |
+| `CONSULTA` | - | - | 7 | somente leitura, sem gravar |
+| `USUARIO` | - | - | 100 | nada ate ser vinculado |
+
+DIRETORIA, GERENTE e GESTOR tem o **mesmo** alcance de dados. O que os diferencia
+nao e dado: e quem pode editar quem, pela ordem do nivel.
+
+### 3. O que sai
+
+`bc_core_perfil_permissao` sai do caminho de decisao. As 252 linhas continuam no
+banco como historico, mas nao decidem nada.
+
+`ADMIN` deixa de existir como perfil. Hoje ele e `ativo=f`, e ha 57 endpoints que
+exigem `hasRole('ADMIN')` sem o SUPERUSER. Com o filtro do superuser na frente,
+esses 57 guards passam a pedir so `SUPERUSER`. O perfil `ADMIN` sai do banco.
+
+`ERP_MODULO_*` e `ERP_EMPRESA_*` saem do codigo e do AD.
+
+## Administracao do sistema
+
+Isto e privativo do SUPERUSER, e nao e "mexer em dados":
+
+| o que | onde | por que e restrito |
 |---|---|---|
-| o superuser que **é** superadmin — o `euripedes` | **sim** | sim |
-| o superuser sozinho — o `postgres` | **não** | sim |
+| SQL arbitrario | `GerenciadorSqlController` | executa qualquer comando no banco |
+| criar/remover usuario | `SuperAdminController`, `UsuarioAdminController` | muda quem entra |
+| criar/desativar empresa | `SuperAdminController` | cria tenant |
+| armazenamento / config global | `ArmazenamentoAdminController`, `AIConfigController`, `PromptTemplateController` | muda o comportamento do sistema todo |
+| certificado digital | `CertificadoDigitalController` | chave privada da empresa |
+| relatorio agendado / BI / KPI | `bi/*` | leitura massiva cross-empresa |
 
-Ou seja: o mesmo perfil `SUPERUSER` cobre os dois. O que separa é poder mexer
-no banco **de dentro do sistema** (SQL rodado pelo próprio ERP). Quem é só
-superuser mexe no banco **por fora**, via psql, script ou query — mas não por
-dentro do sistema.
-
-O `euripedes` tem os dois perfis, SUPERUSER e ADMIN.
-
-`ADMIN` é o segundo nível e também tem acesso total hoje, mas está em
-transição: a V104 desativou o perfil ADMIN para uso geral e passou as 221
-permissões para o SUPERUSER. O perfil continua no banco com as 221 porque
-ainda há código que o exige.
-
-## Os perfis que existem no banco
-
-| Perfil | Permissões | Papel |
-|---|---|---|
-| `SUPERUSER` | 221 | Topo. Acessa todas as empresas, toda a operação e o SQL |
-| `ADMIN` | 221 | Acesso total, em desuso planejado (ver acima) |
-| `CONSULTA` | 25 | Somente leitura |
-| `FINANCEIRO` | 19 | Operação financeira |
-| `ESTOQUE` | 20 | Operação de estoque |
-| `RH` | 7 | Recursos humanos |
-| `VENDEDOR` | 5 | Vendas e atendimento |
-| `DIRETORIA` | 2 | Cria e exclui os níveis abaixo do seu |
-| `GERENTE` | 0 | Criado, sem nenhuma permissão |
-| `GESTOR` | 0 | Criado, sem nenhuma permissão |
-
-**DIRETORIA com 2 permissões e GERENTE com 0 é defeito, não escolha.** Uma
-diretora entra no sistema e não pode fazer quase nada. A matriz por nível ainda
-não foi montada.
+Os demais `hasAnyRole` (comissao, caixa, apontamento de producao, NFe, NFS-e,
+saldo de estoque) deixam de usar role e passam a ser decisao de funcao: quem
+precisa disso e quem tem a funcao que cobre o modulo.
 
 ## Isolamento entre empresas
 
-Só o **SUPERUSER** vê e altera dados de todas as empresas. Todos os outros
-só veem os dados da empresa deles. A empresa vem dentro do token e a
-`EmpresaTenantIdentifierResolver` aplica o filtro em toda query de entidade que
-estende `TenantEntity` (84 entidades), com a anotação `@TenantId`.
+Superuser acessa todas as empresas. Todos os outros so a empresa deles. A empresa
+vem do token e `EmpresaTenantIdentifierResolver` filtra as 84 `TenantEntity`.
 
-Prova: com o token da empresa 1, o banco tem 179 produtos da empresa 1 e 1 da
-empresa 5, e a API devolve só os da empresa 1. No log, 38.810 queries com
-`empresa_id`.
+A origem da empresa deixa de ser o grupo `ERP_EMPRESA_<cnpj>`. Passa a ser:
 
-## `SUPERADMIN` não existe
+1. o vinculo no banco (`bc_core_usuario.empresa_id`), ou
+2. o primeiro acesso (`POST /api/core/minha-empresa`), que ja esta escrito e
+   nunca rodou porque o login morria antes com 409 `DATA_INTEGRITY`.
 
-A palavra `SUPERADMIN` aparece em vários `@PreAuthorize`
-(`hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')`), mas **não há um perfil
-`SUPERADMIN` no banco**. A parte do SUPERADMIN não casa com ninguém. Não causa
-erro, porque `hasAnyRole` passa se **qualquer um** dos nomes casar — mas
-confundir quem lê.
+## Estado medido do AD (05/10/2026)
 
-## Quem tem o quê
-
-| Usuário | Perfis |
+| grupo | membros humanos |
 |---|---|
-| `euripedes` | **SUPERUSER e ADMIN** — os dois |
-| `sysdba` | SUPERUSER |
-| `postgres` | ADMIN |
-| `diretora.helena` | DIRETORIA |
+| `Administrators` | `Administrator` (builtin) |
+| `Domain Admins` | `Administrator` (builtin), `Administrador SRVCLOUD Conta` |
+| `GRP_DIRETORIA` | dark, marcos, saas |
+| `GRP_GERENTE` | dark, marcos |
+| `GRP_GESTOR` | dark, maria |
+| `GRP_RH` | jose, julio |
+| `GRP_FINANCEIRO` | debora, jose |
+| `GRP_VENDEDOR` | sergio |
+| `GRP_ESTOQUE` | felipe, jose |
+| `GRP_SA` | - |
 
-O `euripedes` tem os dois perfis, então passa nos guards que aceitam ADMIN.
+O `euripedes` **nao** esta em `Administrators` nem em `Domain Admins`. Para a
+regra ter alguem de teste, ele entra nos dois.
 
-## O SUPERUSER sendo barrado
+## Estado medido do Postgres
 
-**57 endpoints** têm `@PreAuthorize("hasRole('ADMIN')")`, sem o SUPERUSER. Como
-a herança de perfil é decorativa — nenhum código percorre `perfil_pai_id`, e o
-SQL de authorities lê só o perfil direto do usuário — um usuário que é **só
-SUPERUSER** é **negado** nesses 57 endpoints.
+```
+rolsuper=true  -> postgres
+rolsuper=false -> sa, euripedes, root, sysadmins, astral, astral_admin
+```
 
-O `sysdba` está exatamente nesse caso: SUPERUSER, sem ADMIN. Ele é barrado em
-57 telas que o `euripedes`, que tem os dois, usa sem problema.
+Todas passam a `rolsuper=true`. `root`, `sysadmins`, `astral`, `astral_admin`
+sao residuo do workflow de multi-banco que foi abandonado.
 
-É a contradição da regra: o SUPERUSER pode tudo, mas há 57 telas em que só o
-ADMIN passa.
+## Grupos ERP_* no AD: o que acontece
 
-**O conserto é trocar `hasRole('ADMIN')` por
-`hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')`, que é o que
-`UsuarioAdminController` já usa.** Os 15 guards que já aceitam SUPERUSER estão
-corretos.
+12 grupos `ERP_MODULO_*`, cada um com **um unico membro: `marcos`**. Eles sao
+os 12 que o codigo usava para decidir gravacao (`ModuloAcessoService.java:126`).
 
-## O nome antigo não pode mais aparecer
+Apagar e seguro: `marcos` esta direto em `GRP_DIRETORIA` e `GRP_GERENTE`, entao
+continua com acesso aos 12 modulos pela regra nova. Nenhum outro usuario e
+membro direto de qualquer `ERP_MODULO_*`.
 
-**BRASIL-SAAS é o nome. `brasilcloud` não existe mais — em nenhum lugar.**
+2 grupos `ERP_EMPRESA_*`:
 
-Isso vale para código, configuração, script, documento, nome de arquivo e nome
-de pasta. Em 27/09/2026 foram limpas as últimas ~4.000 ocorrências, que estavam
-em: chaves de `localStorage` do React (`brasilcloud_token`,
-`brasilcloud_empresa_id`, `brasilcloud_user`, `brasilcloud_refresh_token`),
-variáveis de ambiente (`BRASILCLOUD_*`), upstreams do nginx, o
-`docker-compose`, os workflows do CI, os dumps de SQL, o `README` e 94
-documentos.
+| grupo | membros |
+|---|---|
+| `ERP_EMPRESA_65527264000143` | debora, felipe, sergio, jose, euripedes, Administrador SRVCLOUD Conta |
+| `ERP_EMPRESA_11222333000181` | vazio |
 
-Regras de nome, para não voltar a errar:
+Nenhum dos dois CNPJs existe em `bc_core_empresa` (que tem 7 empresas). Esse e o
+gelo do 409 `DATA_INTEGRITY`: `empresa_id=-1` gravado na tabela.
 
-| coisa | nome | exemplo |
+## Divida tecnica
+
+| camada | arquivo | o que faz |
 |---|---|---|
-| banco de dados | `brasil-saas` | `-d brasil-saas` |
-| schema do Postgres | `brasil_saas` | `currentSchema=brasil_saas` |
-| banco do Mongo | `brasil_saas` | `27017/brasil_saas` |
-| variável de ambiente | `BRASIL_SAAS_*` | `BRASIL_SAAS_MDFE_CERT_PASS` |
-| pasta de sistema | `/etc/brasil-saas` | `/etc/brasil-saas/pki` |
-| unit do systemd | `brasil_saas-*` | `brasil_saas-erp.service` |
-| chave de `localStorage` | `brasil-saas_*` | `brasil-saas_token` |
-| container / serviço | `brasil-saas-*` | `brasil-saas-erp` |
+| filtro do superuser | novo, antes do `hasAuthority` | marca a sessao, isenta de permissao |
+| filtro de empresa | `ExigeEmpresaFilter` | ja existe, libera o primeiro acesso |
+| traducao grupo -> funcao | `AuthServiceImpl.provisionOrUpdateIdentity` | hoje so procura `ERP_EMPRESA_`; vira a unica fonte |
+| mapa de modulos | `ModuloAcessoFilter` | hoje filtra por `/api/<modulo>`; passa a ter a tabela funcao -> modulos |
+| heranca | `bc_core_perfil.hierarquia_nivel` | ja existe, vira a unica autoridade de escopo |
 
-**A pasta do repositório ainda se chama `BrasilCloudERP`** (450 ocorrências) —
-essa é a única que ficou, porque a renomeação do git é do dono.
+O `CustomUserDetailsService.java:131` (mapa de 9 grupos -> `ROLE_*`) e o
+`AuthServiceImpl.java:407` (`ROLE_<perfil do banco>`) hoje traduzem grupo em role
+em dois lugares que nao se encontram. Passam a ser um so.
 
-## Criar e remover usuário
+## Nomes
 
-Não existia rota para isso, e a tela também não tinha o botão ligado. Resolvido
-em 27/09/2026 — o detalhe está em `RETOMADA-2026-09-27.md`.
-
-    POST   /api/superadmin/usuarios             cria
-    PUT    /api/superadmin/usuarios/{id}        altera
-    PUT    /api/superadmin/usuarios/{id}/senha  troca a senha
-    DELETE /api/superadmin/usuarios/{id}        desativa
-    GET    /api/superadmin/usuarios/perfis-disponiveis
-
-`DELETE` desativa, não apaga: usuário tem histórico em nota, venda e auditoria.
-
-Duas travas: não se remove a si mesmo, e não se desativa o último SUPERUSER
-ativo. Sem elas, o sistema fica sem ninguém capaz de administrar.
-
-O SUPERUSER escolhe a empresa do usuário no corpo. O ADMIN não: só cria na
-empresa dele, e empresa diferente é recusada com mensagem.
+`BRASIL-SAAS` e o nome. `brasilcloud` nao existe mais.

@@ -469,10 +469,6 @@ export const Vendas = () => {
                 </DataTable>
                 <div className="text-right mt-3 font-bold">Subtotal itens: {moeda(totalItens())}</div>
             </Dialog>
-        </div>
-    );
-};
-
             <Dialog visible={dlgPos} onHide={() => setDlgPos(false)} header='Pós-venda: abrir OS' modal style={{ width: 'min(96vw, 480px)' }}>
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-12'><label className='bc-label'>Equipamento (opcional)</label><InputText value={posEquip} onChange={(e) => setPosEquip(e.target.value)} /></div>
@@ -480,4 +476,8 @@ export const Vendas = () => {
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgPos(false)} /><Button label='Abrir OS' icon='pi pi-check' onClick={confirmarPosvenda} /></div>
             </Dialog>
+        </div>
+    );
+};
+
 export default Vendas;

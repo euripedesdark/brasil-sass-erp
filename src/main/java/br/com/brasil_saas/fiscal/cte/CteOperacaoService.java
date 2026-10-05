@@ -45,15 +45,15 @@ public class CteOperacaoService {
             CTeEnvioRetornoDados retorno = facade.enviaCTe(nota);
             var resposta = retorno.getRetorno();
             String xmlAssinado = retorno.getLoteAssinado().toString();
-            String chave = retorno.getLoteAssinado().getInfo().getChaveAcesso();
+            String chave = retorno.getLoteAssinado().getCteNotaInfo().getChaveAcesso();
 
             Cte documento = repository.findByEmpresaIdAndChaveAcesso(empresaId, chave)
                     .orElseGet(Cte::new);
             documento.setEmpresaId(empresaId);
             documento.setChaveAcesso(chave);
-            documento.setNumero(nota.getInfo().getIdentificacao().getNumero().longValue());
-            documento.setSerie(String.valueOf(nota.getInfo().getIdentificacao().getSerie()));
-            documento.setDataEmissao(nota.getInfo().getIdentificacao().getDataEmissao().toLocalDateTime());
+            documento.setNumero(nota.getCteNotaInfo().getIdentificacao().getNumero().longValue());
+            documento.setSerie(String.valueOf(nota.getCteNotaInfo().getIdentificacao().getSerie()));
+            documento.setDataEmissao(nota.getCteNotaInfo().getIdentificacao().getDataEmissao().toLocalDateTime());
             documento.setStatus(status(resposta.getStatus()));
             documento.setTipoOperacao("S");
             documento.setXml(xmlAssinado);

@@ -71,7 +71,7 @@ public class ExpedicaoEstoqueController {
         if(!"ABERTA".equals(e.getStatus())) throw new BusinessException("Expedicao nao esta ABERTA");
         e.setStatus("SEPARACAO"); e.setDataSeparacao(LocalDateTime.now());
         for(ExpedicaoEstoqueItem i:itemRepository.findByEmpresaIdAndExpedicaoIdOrderByIdAsc(user.getEmpresaId(),id)){
-            if(i.getReservaId()!=null) reservaRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getReservaId(), user.getEmpresaId()).ifPresent(r->{
+            if(i.getReservaId()!=null) reservaRepository.findWithLockByIdAndEmpresaIdAndDeletedAtIsNull(i.getReservaId(), user.getEmpresaId()).ifPresent(r->{
                 // Se o faturamento já consumiu a reserva, a expedição é apenas logística.
                 if ("RESERVADA".equals(r.getStatus())) {
                     r.setStatus("SEPARACAO");

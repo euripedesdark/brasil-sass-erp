@@ -435,7 +435,7 @@ export const Boletos = () => {
                     </div>
                     <div className="col-12 md:col-6">
                         <label className="bc-label" htmlFor="vl">Valor</label>
-                        <InputNumber id="vl" value={form.valor} mode="currency" locale="pt-BR"
+                        <InputNumber id="vl" value={form.valor} mode="currency" currency="BRL" locale="pt-BR"
                                      onValueChange={(e) => setForm({ ...form, valor: e.value ?? 0 })} />
                     </div>
                     <div className="col-12">

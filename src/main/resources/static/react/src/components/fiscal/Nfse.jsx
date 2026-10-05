@@ -529,11 +529,11 @@ export const Nfse = () => {
                                    onChange={(e) => setForm({ ...form, emailTomador: e.target.value })} />)}
 
                     {campo('valor', 'Valor dos serviços *',
-                        <InputNumber id="valor" value={form.valorServicos} mode="currency" locale="pt-BR"
+                        <InputNumber id="valor" value={form.valorServicos} mode="currency" currency="BRL" locale="pt-BR"
                                      onValueChange={(e) => setForm({ ...form, valorServicos: e.value ?? 0 })} />)}
 
                     {campo('ded', 'Deduções',
-                        <InputNumber id="ded" value={form.valorDeducoes} mode="currency" locale="pt-BR"
+                        <InputNumber id="ded" value={form.valorDeducoes} mode="currency" currency="BRL" locale="pt-BR"
                                      onValueChange={(e) => setForm({ ...form, valorDeducoes: e.value ?? 0 })} />)}
 
                     {campo('aliq', 'Alíquota (%)',
