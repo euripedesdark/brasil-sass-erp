@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath, URL } from 'node:url';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -60,7 +61,7 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: /^primereact\/datatable$/, replacement: '/src/components/shared/SafeDataTable.jsx' },
+      { find: /^primereact\/datatable$/, replacement: fileURLToPath(new URL('./src/components/shared/SafeDataTable.jsx', import.meta.url)) },
       { find: '@', replacement: '/src' },
     ],
   },
