@@ -2,6 +2,7 @@ import axios from 'axios';
 import ApiConfig from './ApiConfig';
 
 const API_URL = `${ApiConfig.BASE_URL || ''}/api/financeiro/titulos`;
+const STRIPE_API_URL = `${ApiConfig.BASE_URL || ''}/api/financeiro/stripe`;
 
 class TituloService {
     /** status opcional: ABERTO, PENDENTE_APROVACAO, BAIXADO, CANCELADO... */
