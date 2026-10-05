@@ -45,13 +45,8 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
     private final StripePaymentRepository paymentRepository;
     private final StripeWebhookEventRepository webhookRepository;
     private final br.com.brasil_saas.financeiro.service.TituloService tituloService;
+    private final br.com.brasil_saas.core.service.EmpresaStripeService empresaStripeService;
 
-    @Value("${stripe.enabled:false}")
-    private boolean enabled;
-    @Value("${stripe.secret-key:}")
-    private String secretKey;
-    @Value("${stripe.webhook-secret:}")
-    private String webhookSecret;
     @Value("${stripe.success-url:http://localhost:8080/financeiro/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}}")
     private String successUrl;
     @Value("${stripe.cancel-url:http://localhost:8080/financeiro/stripe/cancelado}")
@@ -63,11 +58,8 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
     @Value("${stripe.invoice-days-until-due:30}")
     private long invoiceDaysUntilDue;
 
-    private StripeClient client() {
-        if (!enabled || secretKey == null || secretKey.isBlank()) {
-            throw new IllegalStateException("Stripe não está configurado: defina STRIPE_ENABLED=true e STRIPE_SECRET_KEY");
-        }
-        return new StripeClient(secretKey);
+    private StripeClient client(Long empresaId) {
+        return new StripeClient(empresaStripeService.secretKey(empresaId));
     }
 
     @Override
@@ -112,7 +104,7 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 builder.setAutomaticTax(SessionCreateParams.AutomaticTax.builder().setEnabled(true).build());
             }
 
-            Session session = client().v1().checkout().sessions().create(
+            Session session = client(empresaId).v1().checkout().sessions().create(
                 builder.build(),
                 RequestOptions.builder()
                     .setIdempotencyKey("erp-checkout-" + empresaId + "-" + tituloId)
@@ -199,14 +191,11 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
 
     @Override
     @Transactional
-    public void processarWebhook(String payload, String signature) {
-        if (webhookSecret == null || webhookSecret.isBlank()) {
-            throw new IllegalStateException("STRIPE_WEBHOOK_SECRET não configurado");
-        }
-
+    public void processarWebhook(Long empresaId, String payload, String signature) {
+        if (empresaId == null) throw new IllegalArgumentException("Empresa não informada no webhook Stripe");
         final Event event;
         try {
-            event = Webhook.constructEvent(payload, signature, webhookSecret);
+            event = Webhook.constructEvent(payload, signature, empresaStripeService.webhookSecret(empresaId));
         } catch (Exception e) {
             throw new IllegalArgumentException("Webhook Stripe inválido", e);
         }
@@ -224,7 +213,10 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 if (session == null) return;
 
                 Map<String, String> metadata = session.getMetadata() == null ? Map.of() : session.getMetadata();
-                empresaId = metadataLong(metadata, "empresaId");
+                Long eventoEmpresaId = metadataLong(metadata, "empresaId");
+                if (!empresaId.equals(eventoEmpresaId)) {
+                    throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
+                }
                 Long tituloId = metadataLong(metadata, "tituloId");
 
                 if ("checkout.session.completed".equals(type)) {
@@ -243,7 +235,10 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 if (invoice == null || invoice.getMetadata() == null) return;
 
                 Map<String, String> metadata = invoice.getMetadata();
-                empresaId = metadataLong(metadata, "empresaId");
+                Long eventoEmpresaId = metadataLong(metadata, "empresaId");
+                if (!empresaId.equals(eventoEmpresaId)) {
+                    throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
+                }
                 Long tituloId = metadataLong(metadata, "tituloId");
 
                 if ("invoice.paid".equals(type)) {
@@ -256,7 +251,10 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 if (intent == null || intent.getMetadata() == null) return;
 
                 Map<String, String> metadata = intent.getMetadata();
-                empresaId = metadataLong(metadata, "empresaId");
+                Long eventoEmpresaId = metadataLong(metadata, "empresaId");
+                if (!empresaId.equals(eventoEmpresaId)) {
+                    throw new IllegalArgumentException("Webhook Stripe não pertence à empresa da URL");
+                }
                 atualizarPaymentIntent(empresaId, intent.getId(), "FAILED");
             } else {
                 return;
