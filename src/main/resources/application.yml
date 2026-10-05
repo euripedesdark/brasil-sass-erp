@@ -200,3 +200,14 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+
+stripe:
+  enabled: ${STRIPE_ENABLED:false}
+  secret-key: ${STRIPE_SECRET_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  success-url: ${STRIPE_SUCCESS_URL:http://localhost:8080/financeiro/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}}
+  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:8080/financeiro/stripe/cancelado}
+  currency: ${STRIPE_CURRENCY:brl}
+  automatic-tax: ${STRIPE_AUTOMATIC_TAX:false}
+  invoice-days-until-due: ${STRIPE_INVOICE_DAYS_UNTIL_DUE:30}
