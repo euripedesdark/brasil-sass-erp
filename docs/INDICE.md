@@ -99,3 +99,9 @@ READMEs em 4 idiomas. Tudo mais está aqui, organizado por assunto.
 | [`./ia/RELATORIO-NCM-PENDENTES.md`](./ia/RELATORIO-NCM-PENDENTES.md) | NCMs pendentes |
 | [`./ia/ISSQN-PDFS-PENDENTE.md`](./ia/ISSQN-PDFS-PENDENTE.md) | PDFs de ISSQN pendentes |
 | [`./ia/FAILOVER-4567-PENDENTE.md`](./ia/FAILOVER-4567-PENDENTE.md) | Failover 4567 pendente |
+
+
+## Internacionalização da documentação
+
+[`i18n/MARKDOWN_I18N_COMPLETO_2026-10-04.md`](i18n/MARKDOWN_I18N_COMPLETO_2026-10-04.md) — escopo e regras para a internacionalização dos arquivos Markdown próprios do produto.
+
