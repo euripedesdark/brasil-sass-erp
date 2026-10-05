@@ -61,7 +61,7 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      { find: /^primereact\/datatable$/, replacement: fileURLToPath(new URL('./src/components/shared/SafeDataTable.jsx', import.meta.url)) },
+      { find: /^primereact\/(datatable|dropdown|multiselect|autocomplete|listbox)$/, replacement: fileURLToPath(new URL('./src/components/shared/SafePrimeReact.jsx', import.meta.url)) },
       { find: '@', replacement: '/src' },
     ],
   },
