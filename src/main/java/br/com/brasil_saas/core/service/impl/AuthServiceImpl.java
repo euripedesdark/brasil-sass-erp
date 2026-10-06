@@ -273,9 +273,15 @@ public class AuthServiceImpl implements AuthService {
 
         Set<String> permissoes = resolveEffectivePermissions(usuario);
 
-        String empresaNome = empresaRepository.findById(usuario.getEmpresaId())
-                .map(e -> e.getNomeFantasia() != null ? e.getNomeFantasia() : e.getRazaoSocial())
-                .orElse(null);
+        // Usuario sem empresa ainda (primeiro login, cadastro pendente): nao ha
+        // o que resolver. findById(null) lanca IllegalArgumentException, que o
+        // handler devolveria como 500 — e este e' exatamente o estado que a tela
+        // de configuracao precisa enxergar para obrigar o cadastro.
+        String empresaNome = usuario.getEmpresaId() == null
+                ? null
+                : empresaRepository.findById(usuario.getEmpresaId())
+                        .map(e -> e.getNomeFantasia() != null ? e.getNomeFantasia() : e.getRazaoSocial())
+                        .orElse(null);
 
         // Modulos liberados: o menu lateral e montado com isso no frontend.
         final Long idUsuario = usuario.getId();

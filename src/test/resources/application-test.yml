@@ -9,12 +9,26 @@ spring:
     hibernate:
       ddl-auto: create-drop
     open-in-view: false
+    # Depois do DDL do Hibernate: o create-drop derruba todas as tabelas
+    # mapeadas antes de recriar, entao um script anterior seria apagado no
+    # mesmo boot — e e' justamente o create que falha em bpchar/float8[].
+    defer-datasource-initialization: true
     properties:
       hibernate:
         default_schema: brasil_saas
 
   flyway:
     enabled: false
+
+  # Tabelas que o H2 nao sabe criar sozinho. O Hibernate gera DDL do
+  # columnDefinition da entidade, e 11 colunas usam bpchar(n) (tipo interno do
+  # Postgres), que o H2 responde "Unknown data type: BPCHAR"; bc_ia_embedding
+  # usa float8[], que tambem nao passa. Enquanto isso o schema de
+  # brasil_saas_dl nem existe aqui e mais 9 create table caem.
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:h2-tabelas-legadas.sql
 
   # Mail dummy para o perfil de teste (JavaMailSender é obrigatório em RelatorioAgendadoServiceImpl)
   mail:

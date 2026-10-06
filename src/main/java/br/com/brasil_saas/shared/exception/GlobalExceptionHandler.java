@@ -183,6 +183,22 @@ public class GlobalExceptionHandler {
                 "Recurso nao encontrado: " + req.getRequestURI(), "NOT_FOUND", req);
     }
 
+    /**
+     * Estado invalido do sistema impede a operacao: credencial nao configurada,
+     * empresa nao definida, titulo ja baixado. Nao e entrada invalida (400) nem
+     * queda do ERP, mas o status 500 e mantido para nao quebrar contrato com o
+     * frontend.
+     *
+     * <p>A mensagem agora chega ao usuario. Antes os 59 lancamentos caavam no
+     * catch-all e voltavam "Erro interno do servidor", escondido o motivo real
+     * (por exemplo, a chave Stripe recusada vs. a Stripe fora do ar).
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiResponse<Void>> estadoInvalido(IllegalStateException ex, HttpServletRequest req) {
+        log.warn("Estado invalido em {}: {}", req.getRequestURI(), ex.getMessage());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, mensagemLegivel(ex), "ESTADO_INVALIDO", req);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> generic(Exception ex, HttpServletRequest req) {
         log.error("Erro não tratado", ex);

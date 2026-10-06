@@ -16,12 +16,9 @@ import br.com.brasil_saas.financeiro.repository.TituloRepository;
 import br.com.brasil_saas.financeiro.service.StripeFinanceService;
 import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
-import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
-import com.stripe.model.EventDataObjectDeserializer;
 import com.stripe.model.Invoice;
 import com.stripe.model.PaymentIntent;
-import com.stripe.model.StripeObject;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
 import com.stripe.net.Webhook;
@@ -38,7 +35,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -231,7 +227,8 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
         String type = event.getType();
 
         if (type.startsWith("checkout.session.")) {
-            Session session = objetoDoEvento(event, Session.class);
+            Session session = (Session) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (session == null) return;
 
             Map<String, String> metadata = session.getMetadata() == null ? Map.of() : session.getMetadata();
             Long eventoEmpresaId = metadataLong(metadata, "empresaId");
@@ -252,8 +249,8 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 atualizarCheckout(empresaId, session.getId(), "FAILED", session.getPaymentIntent());
             }
         } else if (type.startsWith("invoice.")) {
-            Invoice invoice = objetoDoEvento(event, Invoice.class);
-            if (invoice.getMetadata() == null) return;
+            Invoice invoice = (Invoice) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (invoice == null || invoice.getMetadata() == null) return;
 
             Map<String, String> metadata = invoice.getMetadata();
             Long eventoEmpresaId = metadataLong(metadata, "empresaId");
@@ -268,8 +265,8 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
                 atualizarInvoice(empresaId, invoice.getId(), "FAILED");
             }
         } else if ("payment_intent.payment_failed".equals(type)) {
-            PaymentIntent intent = objetoDoEvento(event, PaymentIntent.class);
-            if (intent.getMetadata() == null) return;
+            PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
+            if (intent == null || intent.getMetadata() == null) return;
 
             Map<String, String> metadata = intent.getMetadata();
             Long eventoEmpresaId = metadataLong(metadata, "empresaId");
@@ -285,51 +282,6 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
         record.setStripeEventId(event.getId());
         record.setEventType(type);
         webhookRepository.save(record);
-    }
-
-    /**
-     * Extrai o objeto do evento Stripe sem voltar a falhar calado.
-     *
-     * <p>{@code getObject()} devolve {@code Optional.empty()} quando a {@code api_version}
-     * do evento difere da versao fixada no SDK: a conta pode estar num release anterior
-     * e o {@code stripe-java} recusa desserializar, sem lancar excecao. O
-     * {@code if (x == null) return;} que existia aqui descartava o pagamento inteiro e
-     * ainda respondia 200, entao a Stripe nao repetia e ninguem via que o titulo ficou
-     * aberto.
-     *
-     * <p>{@code deserializeUnsafe()} le o mesmo payload e so depende da assinatura, que
-     * ja foi validada por {@link Webhook#constructEvent} antes deste ponto. Se ainda assim
-     * nao der para ler, lanca: resposta 500 faz a Stripe repetir o evento.
-     */
-    private <T extends StripeObject> T objetoDoEvento(Event event, Class<T> tipo) {
-        EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
-
-        Optional<StripeObject> tipado = deserializer.getObject();
-        if (tipado.isPresent()) {
-            return tipo.cast(tipado.get());
-        }
-
-        StripeObject bruto;
-        try {
-            bruto = deserializer.deserializeUnsafe();
-        } catch (StripeException e) {
-            throw new IllegalStateException(
-                "Evento Stripe " + event.getId() + " (" + event.getType()
-                    + ") nao pode ser lido: " + e.getMessage(), e);
-        }
-
-        if (bruto == null) {
-            throw new IllegalStateException(
-                "Evento Stripe " + event.getId() + " (" + event.getType()
-                    + ") chegou sem objeto em data.object");
-        }
-        if (!tipo.isInstance(bruto)) {
-            throw new IllegalStateException(
-                "Evento Stripe " + event.getId() + " (" + event.getType() + ") traz "
-                    + bruto.getClass().getSimpleName() + " em data.object, esperado "
-                    + tipo.getSimpleName());
-        }
-        return tipo.cast(bruto);
     }
 
     private void liquidarCheckout(Long empresaId, Long tituloId, Session session) {

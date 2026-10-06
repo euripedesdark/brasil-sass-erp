@@ -143,20 +143,22 @@ class EmpresaTenantIdentifierResolverTest {
     }
 
     @Test
-    @DisplayName("usuario sem empresa: sem filtro e sem erro")
+    @DisplayName("usuario sem empresa: nao ve nada, e nao quebra")
     void usuarioSemEmpresaNaoQuebra() {
-        // O fluxo de empresa exige o vinculo antes da primeira gravacao, mas
-        // enquanto ele nao existe o usuario ainda navega: /configurar-empresa e
-        // /perfil sao liberadas sem empresa. Nenhuma das duas pode derrubar a
-        // aplicacao com "no session" ou IllegalStateException.
+        // O fluxo de empresa exige o vinculo antes da primeira gravacao. Enquanto
+        // ele nao existe, /configurar-empresa e /perfil continuam liberadas sem
+        // empresa — mas os dados das outras empresas ficam atras de um filtro que
+        // nao casa com nenhuma linha. "Faz login e nao ve nada" e' o que
+        // EmpresaDoUsuarioService documenta, e e' o estado que obriga o cadastro.
         autenticar(usuario(60L, "sem.empresa", null, "VENDEDOR"));
 
         Long tenant = resolver.resolveCurrentTenantIdentifier();
-        assertEquals(EmpresaTenantIdentifierResolver.SEM_FILTRO, tenant,
-                "sem empresa, nao ha tenant — e o Hibernate exige um valor na subida");
-        assertTrue(resolver.isRoot(tenant),
-                "e' o mesmo estado do superuser: sem filtro. O fluxo de empresa "
-                        + "e' que barra a operacao, nao o filtro");
+        assertEquals(EmpresaTenantIdentifierResolver.SEM_EMPRESA, tenant,
+                "sem empresa: um tenant que nenhuma linha tem. O Hibernate exige um "
+                        + "valor nao nulo na subida, mas nao pode ser um que exista");
+        assertFalse(resolver.isRoot(tenant),
+                "nao e' raiz: raiz sairia sem WHERE empresa_id, e um usuario novo "
+                        + "do dominio leria as empresas dos outros antes de cadastrar a dele");
     }
 
     @Test

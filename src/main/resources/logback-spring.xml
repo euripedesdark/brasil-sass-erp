@@ -62,4 +62,17 @@
         </root>
     </springProfile>
 
+    <!--
+        Sem este bloco o profile test nao tinha root logger nenhum: os tres
+        appenders acima ficavam declarados e ninguem os referenciava ("Appender
+        named [CONSOLE] not referenced"), e o @ExceptionHandler(Exception) do
+        GlobalExceptionHandler devolvia 500 sem deixar stack no console do
+        surefire. O teste falhava sem dizer por que.
+    -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
 </configuration>

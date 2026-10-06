@@ -60,6 +60,27 @@ public class EmpresaTenantIdentifierResolver implements CurrentTenantIdentifierR
     public static final Long SEM_FILTRO = -1L;
 
     /**
+     * O tenant de quem autenticou mas ainda nao tem empresa.
+     *
+     * <p>Separa do {@link #SEM_FILTRO} de proposito. Os dois significam "nao ha
+     * empresa para filtrar", mas so o {@code SEM_FILTRO} pode ser raiz: ele
+     * cobre o superuser e o bootstrap, que enxergam tudo. Quem entrou pelo AD e
+     * ainda nao cadastrou a propria empresa — o estado que dispara a tela de
+     * {@code POST /api/core/minha-empresa} — nao e' superuser e nao pode ver
+     * nada.
+     *
+     * <p>Com um so valor, esse usuario caia em {@code isRoot(-1) == true} e a
+     * consulta saia sem {@code WHERE empresa_id}: um usuario novo do dominio
+     * leria as empresas dos outros antes de cadastrar a sua. Aqui ele recebe um
+     * id que nenhuma linha tem, o filtro e' aplicado, e a resposta vem vazia —
+     * que e' o mesmo resultado que a tela de configuracao espera.
+     *
+     * <p>{@code -2} nao sai da sequencia (que comeca em 1) nem colide com
+     * {@link #SEM_FILTRO}.
+     */
+    public static final Long SEM_EMPRESA = -2L;
+
+    /**
      * O papel que atravessa empresas.
      *
      * <p>Existe em dois nomes porque as rotas ja aceitavam os dois, e nao ha
@@ -99,10 +120,15 @@ public class EmpresaTenantIdentifierResolver implements CurrentTenantIdentifierR
      * A empresa do usuario da requisicao, ou {@link #SEM_FILTRO} quando ele ve
      * todas — ou quando nao ha usuario nenhum.
      *
-     * <p>O sentinela cobre tres estados que de outro modo seriam indistinguiveis
-     * aqui, e que precisam ser distinguidos la em {@link #empresaDaRequisicao()}:
-     * o superuser, o bootstrap e o anonimo. Para o Hibernate os tres sao a mesma
-     * coisa — sem filtro — e por isso um so valor resolve.
+     * <p>{@link #SEM_FILTRO} cobre tres estados que de outro modo seriam
+     * indistinguiveis aqui, e que precisam ser distinguidos la em
+     * {@link #empresaDaRequisicao()}: o superuser, o bootstrap e o anonimo.
+     * Para o Hibernate os tres sao a mesma coisa — sem filtro — e por isso um
+     * so valor resolve.
+     *
+     * <p>O quarto estado, {@link #SEM_EMPRESA}, e' o usuario autenticado que
+     * ainda nao cadastrou empresa. Ele nao entra aqui de proposito: nao e' o
+     * mesmo que "sem filtro", e' "sem nenhuma linha que ver".
      */
     private Long empresaDoUsuarioAutenticado() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -123,7 +149,7 @@ public class EmpresaTenantIdentifierResolver implements CurrentTenantIdentifierR
             return SEM_FILTRO;
         }
 
-        return usuario.getEmpresaId() == null ? SEM_FILTRO : usuario.getEmpresaId();
+        return usuario.getEmpresaId() == null ? SEM_EMPRESA : usuario.getEmpresaId();
     }
 
     /**
@@ -164,7 +190,9 @@ public class EmpresaTenantIdentifierResolver implements CurrentTenantIdentifierR
      */
     public static Optional<Long> empresaDaRequisicao() {
         Long tenant = new EmpresaTenantIdentifierResolver().resolveCurrentTenantIdentifier();
-        if (tenant == null || SEM_FILTRO.equals(tenant)) {
+        // SEM_EMPRESA entra aqui junto: -2 tambem nao e' uma empresa, e o
+        // chamador que gravasse com ele criaria linha na empresa "-2".
+        if (tenant == null || SEM_FILTRO.equals(tenant) || SEM_EMPRESA.equals(tenant)) {
             return Optional.empty();
         }
         return Optional.of(tenant);

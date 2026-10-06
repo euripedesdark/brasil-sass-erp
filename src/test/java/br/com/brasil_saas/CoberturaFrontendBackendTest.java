@@ -31,7 +31,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Criterio: 400 = o mapeamento existe e a validacao barrou o request.
  * 404/405 apareceriam se o endpoint nao estivesse registrado.
  */
-@SpringBootTest
+/**
+ * Profile {@code test}, e nao o padrao {@code dev}.
+ *
+ * <p>Sem isto o {@code application-test.yml} nunca e' carregado: o contexto sobe
+ * com o {@code application.yml} ({@code profiles.active: dev}), que aponta o
+ * datasource para o Postgres real com {@code sslmode=verify-ca} e os certs de
+ * {@code /etc/brasil-saas/pki} — caminho que o processo de build nao tem como
+ * ler, e que nem deveria entrar aqui. O teste morria no Flyway com
+ * {@code Could not open SSL root certificate file}, e os oito metodos da classe
+ * caiam junto.
+ *
+ * <p>Com o profile, vale o H2 em memoria do {@code application-test.yml}:
+ * {@code ddl-auto: create-drop}, Flyway desligado, Postgres fora. E' o mesmo
+ * caminho que {@link TesteGeralSistema} ja usava, no proprio pacote.
+ *
+ * <p>O certificado e' opcional para a conexao e nao tem relacao com o que esta
+ * classe cobre — ela so verifica se o mapeamento dos endpoints existe.
+ */
+@SpringBootTest(properties = {
+        "spring.profiles.active=test",
+        // O MigracaoImagensSistemaV1 e' um CommandLineRunner que chama
+        // MongoTemplate.exists() na subida. Sem o profile dev nao ha URI do
+        // Mongo, o cliente sobe sem autenticacao e o servidor responde
+        // "Command aggregate requires authentication" (erro 13) — derrubando o
+        // contexto. Mesma propriedade que TesteGeralSistema ja desligava.
+        "brasil-saas.migracao.imagens.enabled=false"
+})
 @AutoConfigureMockMvc
 class CoberturaFrontendBackendTest {
 

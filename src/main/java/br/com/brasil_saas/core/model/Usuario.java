@@ -1,6 +1,6 @@
 package br.com.brasil_saas.core.model;
 
-import br.com.brasil_saas.shared.model.TenantEntity;
+import br.com.brasil_saas.shared.model.BaseEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,7 +13,40 @@ import java.util.Set;
 @Table(name = "bc_core_usuario", schema = "brasil_saas")
 @Getter
 @Setter
-public class Usuario extends TenantEntity {
+public class Usuario extends BaseEntity {
+
+    /**
+     * A empresa do usuario, ou ausente enquanto ele ainda nao cadastrou.
+     *
+     * <p><b>Por que este campo esta aqui e nao no {@code TenantEntity}.</b> O
+     * {@code @TenantId} faz o Hibernate gravar no {@code INSERT} o tenant
+     * corrente da sessao. No login nao ha principal autenticado, o resolver
+     * devolve {@code SEM_FILTRO = -1}, e o usuario novo nascia com
+     * {@code empresa_id = -1} — que viola a FK
+     * {@code bc_core_usuario_empresa_id_fkey} e devolve 409. Nenhum usuario do
+     * AD conseguia ser criado, entao o fluxo documentado em
+     * {@code MinhaEmpresaController} ("o primeiro acesso cadastra a empresa")
+     * nunca chegava a rodar.
+     *
+     * <p><b>Por que nao uma linha sentinela -1 em {@code bc_core_empresa}.</b>
+     * {@code EmpresaTenantIdentifierResolver.isRoot(-1)} e' verdadeiro, entao
+     * o usuario ficaria sem filtro de tenant — vendo as empresas dos outros.
+     * Aqui o estado e' {@code null} de verdade: a coluna aceita null no banco,
+     * e {@code usuario.getEmpresaId() == null} cai no mesmo caminho de
+     * "sem empresa" que o resto do codigo ja trata.
+     *
+     * <p><b>Por que a listagem nao quebra.</b> Quem precisa de isolamento ja
+     * filtra na query: {@code findAllByEmpresaIdAndDeletedAtIsNull(empresaId)}.
+     * Os {@code COUNT} de perfil ({@code contarSuperusersAtivos},
+     * {@code contarAtivosComPerfilExceto}) sao documentados como "em qualquer
+     * empresa", e as buscas de login sao por username ou id. Nenhum deles
+     * dependia do filtro que o {@code @TenantId} acrescentava.
+     *
+     * <p>O cadastro e' por {@code UsuarioRepository.vincularEmpresa(id, empresaId)},
+     * chamado do {@code POST /api/core/minha-empresa}.
+     */
+    @Column(name = "empresa_id")
+    private Long empresaId;
 
     @Column(length = 150)
     private String nome;
