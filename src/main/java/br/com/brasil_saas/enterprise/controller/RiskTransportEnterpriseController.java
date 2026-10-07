@@ -128,11 +128,11 @@ public class RiskTransportEnterpriseController {
     @PostMapping("/tms/ordens")
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> ordem(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody Map<String,Object> b) {
-        jdbc.update("insert into brasil_saas.bc_tms_ordem(empresa_id,numero,origem,destino,transportadora_id,modalidade,status,data_prevista_saida,data_prevista_entrega,peso,volume,frete_previsto,frete_real) values(?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                u.getEmpresaId(), required(b,"numero"), b.get("origem"), b.get("destino"), longValue(b.get("transportadoraId")),
+        jdbc.update("insert into brasil_saas.bc_tms_ordem(empresa_id,numero,origem,destino,transportadora_id,rota_id,modalidade,status,data_prevista_saida,data_prevista_entrega,peso,volume,frete_previsto,frete_real,veiculo,motorista) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                u.getEmpresaId(), required(b,"numero"), b.get("origem"), b.get("destino"), longValue(b.get("transportadoraId")), longValue(b.get("rotaId")),
                 b.getOrDefault("modalidade","RODOVIARIO"), b.getOrDefault("status","PLANEJADA"),
                 b.get("dataPrevistaSaida"), b.get("dataPrevistaEntrega"), number(b.get("peso")), number(b.get("volume")),
-                number(b.get("fretePrevisto")), number(b.get("freteReal")));
+                number(b.get("fretePrevisto")), number(b.get("freteReal")), b.get("veiculo"), b.get("motorista"));
         return Map.of("ok", true);
     }
 
@@ -146,7 +146,7 @@ public class RiskTransportEnterpriseController {
 
     @PostMapping("/tms/ordens/{id}/status")
     @PreAuthorize("hasAuthority('enterprise:escrita')")
-    public Map<String,Object> statusOrdem(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){ ensure("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?",id,u.getEmpresaId(),"Ordem inválida"); String s=required(b,"status"); jdbc.update("update brasil_saas.bc_tms_ordem set status=? where id=? and empresa_id=?",s,id,u.getEmpresaId()); jdbc.update("insert into brasil_saas.bc_tms_evento(empresa_id,ordem_id,tipo,descricao) values(?,?,?,?)",u.getEmpresaId(),id,"STATUS",s); return Map.of("ok",true); }
+    public Map<String,Object> statusOrdem(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){ ensure("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?",id,u.getEmpresaId(),"Ordem inválida"); String s=required(b,"status"); jdbc.update("update brasil_saas.bc_tms_ordem set status=?,data_saida=case when ?='EM_TRANSITO' then coalesce(data_saida,now()) else data_saida end,data_entrega=case when ?='ENTREGUE' then coalesce(data_entrega,now()) else data_entrega end where id=? and empresa_id=?",s,s,s,id,u.getEmpresaId()); jdbc.update("insert into brasil_saas.bc_tms_evento(empresa_id,ordem_id,tipo,descricao) values(?,?,?,?)",u.getEmpresaId(),id,"STATUS",s); return Map.of("ok",true); }
 
     @GetMapping("/tms/paradas")
     @PreAuthorize("hasAuthority('enterprise:leitura')")
