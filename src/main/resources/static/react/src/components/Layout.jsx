@@ -358,6 +358,11 @@ export const Layout = () => {
             command: () => handleNavigation('/doacoes')
         });
         items.push({
+            label: 'GRC / TMS Enterprise',
+            icon: 'pi pi-shield',
+            command: () => handleNavigation('/riscos-tms-enterprise')
+        });
+        items.push({
             label: 'Governança Corporativa',
             icon: 'pi pi-shield',
             command: () => handleNavigation('/governanca-corporativa')
