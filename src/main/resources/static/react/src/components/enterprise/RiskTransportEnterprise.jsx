@@ -15,7 +15,7 @@ function CrudTab({resource,fields,createLabel,extraLoad}) {
  useEffect(()=>{load()},[]);
  const save=async()=>{try{await api.post('/enterprise/'+resource,form);setForm({});setMsg(t('enterpriseOps.saved'));load()}catch(e){setMsg(e?.response?.data?.message||e.message)}};
  return <div className="bc-module">
-  <div className="bc-action-bar"><strong>{createLabel}</strong><Button label={t('common.add')} icon="pi pi-plus" onClick={save}/></div>
+  <div className="bc-action-bar"><strong>{createLabel}</strong><Button label={t('common.add','Adicionar')} icon="pi pi-plus" onClick={save}/></div>
   <div className="bc-form-grid">{fields.map(f=><span key={f.key} className="p-float-label">
    {f.type==='number'?<InputNumber id={f.key} value={form[f.key]??null} onValueChange={e=>setForm({...form,[f.key]:e.value})}/>:f.type==='select'?<Dropdown id={f.key} value={form[f.key]??null} options={f.options} optionLabel="label" optionValue="value" onChange={e=>setForm({...form,[f.key]:e.value})}/>:<InputText id={f.key} value={form[f.key]??''} onChange={e=>setForm({...form,[f.key]:e.target.value})}/>}
    <label htmlFor={f.key}>{f.label}</label></span>)}</div>
