@@ -1288,7 +1288,10 @@
       "value": "Valeur",
       "document": "Document",
       "saved": "Enregistrement sauvegardé",
-      "empty": "Aucun enregistrement",,
+      "empty": "Aucun enregistrement",,,
+      "routeId": "ID de l'itinéraire",
+      "vehicle": "Véhicule",
+      "driver": "Conducteur"
       "riskControlLinks": "Risque × Contrôle",
       "evidence": "Preuves",
       "newLink": "Nouveau lien",
