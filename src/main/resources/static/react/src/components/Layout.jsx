@@ -368,8 +368,7 @@ export const Layout = () => {
                 item('Supply Chain / Engenharia', 'pi pi-sitemap', '/supply-chain-enterprise'),
                 item('Supply Chain Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower')
             ],
-            icon: 'pi pi-sitemap',
-            command: () => handleNavigation('/supply-chain-enterprise')
+            icon: 'pi pi-sitemap'
         });
         items.push({
             label: 'Gestão Empresarial',
