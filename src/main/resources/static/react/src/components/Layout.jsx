@@ -176,6 +176,7 @@ export const Layout = () => {
                     item('menu.bankAccounts', 'pi pi-building', '/financeiro/contas-bancarias'),
                     item('menu.chartOfAccounts', 'pi pi-sitemap', '/financeiro/plano-contas'),
                     item('menu.accountingEntries', 'pi pi-book', '/financeiro/contabil'),
+                    item('Contabilidade Enterprise / Close', 'pi pi-lock', '/contabilidade/enterprise'),
                     item('menu.costCenters', 'pi pi-th-large', '/financeiro/centro-custos'),
                     item('menu.paymentTerms', 'pi pi-calendar', '/financeiro/condicoes-pagamento'),
                     item('menu.paymentTypes', 'pi pi-credit-card', '/financeiro/tipos-pagamento'),
@@ -278,7 +279,6 @@ export const Layout = () => {
                     item('menu.rescisao', 'pi pi-sign-out', '/rh/rescisao'),
                     item('Ferias', 'pi pi-calendar', '/rh/ferias'),
                     item('menu.esocial', 'pi pi-building', '/rh/esocial'),
-                    item('RH Enterprise', 'pi pi-users', '/rh/enterprise')
                 ]
             },
             {
