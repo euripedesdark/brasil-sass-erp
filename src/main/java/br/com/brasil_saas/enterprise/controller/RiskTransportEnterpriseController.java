@@ -1,6 +1,6 @@
 package br.com.brasil_saas.enterprise.controller;
 
-import br.com.brasil_saas.auth.domain.AuthenticatedUser;
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
