@@ -59,6 +59,7 @@ import ConfigurarEmpresa from './components/core/ConfigurarEmpresa';
 import Sobre from './components/core/Sobre';
 import EnterpriseOperations from './components/enterprise/EnterpriseOperations';
 import SupplyChainEnterprise from './components/enterprise/SupplyChainEnterprise';
+import CorporateGovernance from './components/enterprise/CorporateGovernance';
 
 import { Nfse } from './components/fiscal/Nfse';
 import { NFe } from './components/fiscal/NFe';
@@ -168,6 +169,7 @@ function App() {
                     <Route path="sobre" element={<Sobre />} />
                     <Route path="gestao-empresarial" element={<EnterpriseOperations />} />
                     <Route path="supply-chain-enterprise" element={<SupplyChainEnterprise />} />
+                    <Route path="governanca-corporativa" element={<CorporateGovernance />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
                     <Route path="contabilidade" element={<Contabilidade />} />
