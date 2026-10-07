@@ -184,6 +184,7 @@ export const Layout = () => {
                     item('menu.loans', 'pi pi-building-columns', '/financeiro/emprestimos'),
                     item('menu.credito', 'pi pi-shield', '/financeiro/credito'),
                     item('menu.fluxoCaixa', 'pi pi-chart-line', '/financeiro/fluxo-caixa'),
+                    item('RH Enterprise', 'pi pi-users', '/rh/enterprise'),
                     item('menu.cobranca', 'pi pi-phone', '/financeiro/cobranca')
                 ]
             },
@@ -207,6 +208,16 @@ export const Layout = () => {
                     item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
                     item('menu.obrigacoes', 'pi pi-calendar-check', '/fiscal/obrigacoes'),
                     item('menu.buscaFiscal', 'pi pi-search', '/fiscal/busca')
+                ]
+            },
+            {
+                label: t('nav.analytics'),
+                modulo: 'bi',
+                icon: 'pi pi-chart-bar',
+                items: [
+                    item('BI Control Tower', 'pi pi-chart-line', '/bi/control-tower'),
+                    item('menu.kpis', 'pi pi-chart-bar', '/bi/kpis'),
+                    item('menu.reports', 'pi pi-file', '/bi/relatorios')
                 ]
             },
             {
