@@ -46,6 +46,30 @@ public class RiskTransportEnterpriseController {
         return Map.of("ok", true);
     }
 
+    @PostMapping("/grc/vinculos")
+    @PreAuthorize("hasAuthority('enterprise:escrita')")
+    public Map<String,Object> vinculo(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object> b){
+        Long risco=longValue(b.get("riscoId")), controle=longValue(b.get("controleId"));
+        if(risco==null||controle==null||jdbc.queryForObject("select count(*) from brasil_saas.bc_grc_risco r join brasil_saas.bc_grc_controle c on c.empresa_id=r.empresa_id where r.id=? and c.id=? and r.empresa_id=?",Integer.class,risco,controle,u.getEmpresaId())==0)
+            throw new IllegalArgumentException("Risco/controle inválido para a empresa");
+        jdbc.update("insert into brasil_saas.bc_grc_risco_controle(empresa_id,risco_id,controle_id) values(?,?,?) on conflict do nothing",u.getEmpresaId(),risco,controle);
+        return Map.of("ok",true);
+    }
+
+    @GetMapping("/grc/evidencias")
+    @PreAuthorize("hasAuthority('enterprise:leitura')")
+    public List<Map<String,Object>> evidencias(@AuthenticationPrincipal AuthenticatedUser u){
+        return jdbc.queryForList("select * from brasil_saas.bc_grc_evidencia where empresa_id=? order by id desc",u.getEmpresaId());
+    }
+
+    @PostMapping("/grc/evidencias")
+    @PreAuthorize("hasAuthority('enterprise:escrita')")
+    public Map<String,Object> evidencia(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object> b){
+        jdbc.update("insert into brasil_saas.bc_grc_evidencia(empresa_id,entidade_tipo,entidade_id,nome,localizacao,validade,hash_documento) values(?,?,?,?,?,?,?)",
+            u.getEmpresaId(),required(b,"entidadeTipo"),longValue(b.get("entidadeId")),required(b,"nome"),b.get("localizacao"),b.get("validade"),b.get("hashDocumento"));
+        return Map.of("ok",true);
+    }
+
     @GetMapping("/grc/testes")
     @PreAuthorize("hasAuthority('enterprise:leitura')")
     public List<Map<String,Object>> testes(@AuthenticationPrincipal AuthenticatedUser u) {
