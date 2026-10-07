@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import {Card} from 'primereact/card';import {TabView,TabPanel} from 'primereact/tabview';import {DataTable} from 'primereact/datatable';import {Column} from 'primereact/column';import {Button} from 'primereact/button';import {Dialog} from 'primereact/dialog';import {InputText} from 'primereact/inputtext';import {InputNumber} from 'primereact/inputnumber';import {Message} from 'primereact/message';import {api} from '../../services/ApiConfig';
-const tabs=[
+const tabs=[['plm-documentos','PLM Documentos'],['plm-efeitos','PLM Efeitos'],['plm-aprovacoes','PLM Aprovações'],['ehs-riscos','EHS Riscos'],['ehs-inspecoes','EHS Inspeções'],['ehs-acoes','EHS Ações'],['ehs-permissoes','EHS Permissões'],
  ['reposicao','Reposição / MRP'],['transportes','Transportes'],['revisoes-produto','Engenharia de Produto'],['mudancas-engenharia','Mudanças de Engenharia'],['ehs','EHS'],['contratos-servico','Contratos de Serviço']
 ];
 const labelMap={reposicao:'Política de reposição',transportes:'Ordem de transporte', 'revisoes-produto':'Revisão de produto','mudancas-engenharia':'Mudança de engenharia',ehs:'Ocorrência EHS','contratos-servico':'Contrato de serviço'};
