@@ -48,6 +48,7 @@ import AprovacoesTitulos from './components/financeiro/AprovacoesTitulos';
 import Caixa from './components/Caixa';
 import { Workflow } from "./components/workflow/Workflow";
 import { Contabilidade } from "./components/contabil/Contabilidade";
+import ContabilidadeEnterprise from './components/contabil/ContabilidadeEnterprise';
 import { CRM } from "./components/crm/CRM";
 import { WMS } from "./components/wms/WMS";
 import { Projetos } from "./components/projetos/Projetos";
@@ -172,7 +173,8 @@ function App() {
                     <Route path="governanca-corporativa" element={<CorporateGovernance />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
-                    <Route path="contabilidade" element={<Contabilidade />} />
+                    <Route path="contabilidade" element={<Contabilidade />
+                    <Route path="contabilidade/enterprise" element={<ContabilidadeEnterprise />} />} />
                     <Route path="crm" element={<CRM />} />
                     <Route path="wms" element={<WMS />} />
                     <Route path="projetos" element={<Projetos />} />
