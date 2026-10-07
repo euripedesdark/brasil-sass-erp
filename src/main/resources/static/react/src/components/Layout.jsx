@@ -184,7 +184,6 @@ export const Layout = () => {
                     item('menu.loans', 'pi pi-building-columns', '/financeiro/emprestimos'),
                     item('menu.credito', 'pi pi-shield', '/financeiro/credito'),
                     item('menu.fluxoCaixa', 'pi pi-chart-line', '/financeiro/fluxo-caixa'),
-                    item('RH Enterprise', 'pi pi-users', '/rh/enterprise'),
                     item('menu.cobranca', 'pi pi-phone', '/financeiro/cobranca')
                 ]
             },
@@ -278,7 +277,8 @@ export const Layout = () => {
                     item('menu.ponto', 'pi pi-clock', '/rh/ponto'),
                     item('menu.rescisao', 'pi pi-sign-out', '/rh/rescisao'),
                     item('Ferias', 'pi pi-calendar', '/rh/ferias'),
-                    item('menu.esocial', 'pi pi-building', '/rh/esocial')
+                    item('menu.esocial', 'pi pi-building', '/rh/esocial'),
+                    item('RH Enterprise', 'pi pi-users', '/rh/enterprise')
                 ]
             },
             {
