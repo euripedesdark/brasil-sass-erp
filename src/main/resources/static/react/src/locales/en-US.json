@@ -1288,7 +1288,10 @@
       "value": "Value",
       "document": "Document",
       "saved": "Record saved",
-      "empty": "No records found",,
+      "empty": "No records found",,,
+      "routeId": "Route ID",
+      "vehicle": "Vehicle",
+      "driver": "Driver"
       "riskControlLinks": "Risk × Control",
       "evidence": "Evidence",
       "newLink": "New link",
