@@ -57,6 +57,7 @@ import { PortalPublico } from "./components/portais/PortalPublico";
 import { Boletos } from './components/financeiro/Boletos';
 import ConfigurarEmpresa from './components/core/ConfigurarEmpresa';
 import Sobre from './components/core/Sobre';
+import EnterpriseOperations from './components/enterprise/EnterpriseOperations';
 
 import { Nfse } from './components/fiscal/Nfse';
 import { NFe } from './components/fiscal/NFe';
@@ -164,6 +165,7 @@ function App() {
 
                     <Route path="configurar-empresa" element={<ConfigurarEmpresa />} />
                     <Route path="sobre" element={<Sobre />} />
+                    <Route path="gestao-empresarial" element={<EnterpriseOperations />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
                     <Route path="contabilidade" element={<Contabilidade />} />
