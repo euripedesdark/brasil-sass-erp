@@ -62,6 +62,7 @@ import EnterpriseOperations from './components/enterprise/EnterpriseOperations';
 import SupplyChainEnterprise from './components/enterprise/SupplyChainEnterprise';
 import SupplyChainControlTower from './components/enterprise/SupplyChainControlTower';
 import CorporateGovernance from './components/enterprise/CorporateGovernance';
+import RiskTransportEnterprise from './components/enterprise/RiskTransportEnterprise';
 
 import { Nfse } from './components/fiscal/Nfse';
 import { NFe } from './components/fiscal/NFe';
@@ -173,6 +174,7 @@ function App() {
                     <Route path="supply-chain-enterprise" element={<SupplyChainEnterprise />} />
                     <Route path="supply-chain/control-tower" element={<SupplyChainControlTower />} />
                     <Route path="governanca-corporativa" element={<CorporateGovernance />} />
+                    <Route path="riscos-tms-enterprise" element={<RiskTransportEnterprise />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
                     <Route path="contabilidade" element={<Contabilidade />
