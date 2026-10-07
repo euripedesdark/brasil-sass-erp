@@ -1288,7 +1288,10 @@
       "value": "Valor",
       "document": "Documento",
       "saved": "Registro salvo",
-      "empty": "Nenhum registro encontrado",,
+      "empty": "Nenhum registro encontrado",,,
+      "routeId": "ID da rota",
+      "vehicle": "Veículo",
+      "driver": "Motorista"
       "riskControlLinks": "Risco × Controle",
       "evidence": "Evidências",
       "newLink": "Novo vínculo",
