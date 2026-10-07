@@ -68,8 +68,8 @@ export default function RiskTransportEnterprise(){
     {key:'adicionais',label:t('enterpriseOps.additionalFreight'),type:'number'},{key:'descontos',label:t('enterpriseOps.discounts'),type:'number'},{key:'documento',label:t('enterpriseOps.document')}]}/></TabPanel>
    <TabPanel header={t('enterpriseOps.transportOrders')}><CrudTab resource="tms/ordens" createLabel={t('enterpriseOps.newTransport')} fields={[
     {key:'numero',label:t('enterpriseOps.number')},{key:'origem',label:t('enterpriseOps.origin')},{key:'destino',label:t('enterpriseOps.destination')},
-    {key:'modalidade',label:t('enterpriseOps.mode')},{key:'peso',label:t('enterpriseOps.weight'),type:'number'},{key:'volume',label:t('enterpriseOps.volume'),type:'number'},
-    {key:'fretePrevisto',label:t('enterpriseOps.plannedFreight'),type:'number'}]}/></TabPanel>
+    {key:'rotaId',label:t('enterpriseOps.routeId'),type:'number'},{key:'modalidade',label:t('enterpriseOps.mode')},{key:'veiculo',label:t('enterpriseOps.vehicle')},{key:'motorista',label:t('enterpriseOps.driver')},
+    {key:'peso',label:t('enterpriseOps.weight'),type:'number'},{key:'volume',label:t('enterpriseOps.volume'),type:'number'},{key:'fretePrevisto',label:t('enterpriseOps.plannedFreight'),type:'number'}]}/></TabPanel>
    <TabPanel header={t('enterpriseOps.tracking')}><CrudTab resource="tms/tracking" createLabel={t('enterpriseOps.newTracking')} fields={[
     {key:'ordemId',label:t('enterpriseOps.orderId'),type:'number'},{key:'codigo',label:t('enterpriseOps.trackingCode')},{key:'transportadora',label:t('enterpriseOps.carrier')},{key:'ultimoStatus',label:t('enterpriseOps.status')}]}/></TabPanel>
    <TabPanel header={t('enterpriseOps.freight')}><CrudTab resource="tms/fretes" createLabel={t('enterpriseOps.newFreight')} fields={[
