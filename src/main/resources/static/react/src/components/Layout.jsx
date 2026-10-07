@@ -357,6 +357,7 @@ export const Layout = () => {
             icon: 'pi pi-heart-fill',
             command: () => handleNavigation('/doacoes')
         });
+        items.push({ label: 'Integrações Enterprise', icon: 'pi pi-share-alt', command: () => handleNavigation('/integracoes-enterprise') });
         items.push({
             label: 'GRC / TMS Enterprise',
             icon: 'pi pi-shield',
