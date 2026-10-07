@@ -347,6 +347,11 @@ export const Layout = () => {
             command: () => handleNavigation('/doacoes')
         });
         items.push({
+            label: 'Supply Chain / Engenharia',
+            icon: 'pi pi-sitemap',
+            command: () => handleNavigation('/supply-chain-enterprise')
+        });
+        items.push({
             label: 'Gestão Empresarial',
             icon: 'pi pi-building',
             command: () => handleNavigation('/gestao-empresarial')
