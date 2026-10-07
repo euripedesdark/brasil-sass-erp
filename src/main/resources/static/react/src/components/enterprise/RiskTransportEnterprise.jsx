@@ -37,6 +37,11 @@ export default function RiskTransportEnterprise(){
    <TabPanel header={t('enterpriseOps.controls')}><CrudTab resource="grc/controles" createLabel={t('enterpriseOps.newControl')} fields={[
     {key:'codigo',label:t('enterpriseOps.code')},{key:'descricao',label:t('enterpriseOps.description')},{key:'tipo',label:t('enterpriseOps.controlType')},
     {key:'frequencia',label:t('enterpriseOps.frequency')},{key:'responsavel',label:t('enterpriseOps.owner')}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.riskControlLinks')}><CrudTab resource="vinculos" createLabel={t('enterpriseOps.newLink')} fields={[
+    {key:'riscoId',label:t('enterpriseOps.riskId'),type:'number'},{key:'controleId',label:t('enterpriseOps.controlId'),type:'number'}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.evidence')}><CrudTab resource="evidencias" createLabel={t('enterpriseOps.newEvidence')} fields={[
+    {key:'entidadeTipo',label:t('enterpriseOps.entityType')},{key:'entidadeId',label:t('enterpriseOps.entityId'),type:'number'},{key:'nome',label:t('enterpriseOps.name')},
+    {key:'localizacao',label:t('enterpriseOps.location')},{key:'validade',label:t('enterpriseOps.validUntil')},{key:'hashDocumento',label:t('enterpriseOps.documentHash')}]}/></TabPanel>
    <TabPanel header={t('enterpriseOps.controlTests')}><CrudTab resource="grc/testes" createLabel={t('enterpriseOps.newTest')} fields={[
     {key:'controleId',label:t('enterpriseOps.controlId'),type:'number'},{key:'periodo',label:t('enterpriseOps.period')},
     {key:'resultado',label:t('enterpriseOps.result'),type:'select',options:result},{key:'observacao',label:t('enterpriseOps.notes')},{key:'testadoPor',label:t('enterpriseOps.tester')}]}/></TabPanel>
