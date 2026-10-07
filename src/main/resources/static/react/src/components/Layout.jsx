@@ -347,6 +347,11 @@ export const Layout = () => {
             command: () => handleNavigation('/doacoes')
         });
         items.push({
+            label: 'Gestão Empresarial',
+            icon: 'pi pi-building',
+            command: () => handleNavigation('/gestao-empresarial')
+        });
+        items.push({
             label: t('nav.workflow', { defaultValue: 'Workflow' }),
             icon: 'pi pi-sitemap',
             command: () => handleNavigation('/workflow')
