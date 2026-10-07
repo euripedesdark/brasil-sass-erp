@@ -40,6 +40,27 @@ export default function RiskTransportEnterprise(){
    <TabPanel header={t('enterpriseOps.controlTests')}><CrudTab resource="grc/testes" createLabel={t('enterpriseOps.newTest')} fields={[
     {key:'controleId',label:t('enterpriseOps.controlId'),type:'number'},{key:'periodo',label:t('enterpriseOps.period')},
     {key:'resultado',label:t('enterpriseOps.result'),type:'select',options:result},{key:'observacao',label:t('enterpriseOps.notes')},{key:'testadoPor',label:t('enterpriseOps.tester')}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.actionPlans')}><CrudTab resource="grc/planos" createLabel={t('enterpriseOps.newActionPlan')} fields={[
+    {key:'riscoId',label:t('enterpriseOps.riskId'),type:'number'},{key:'descricao',label:t('enterpriseOps.description')},{key:'responsavel',label:t('enterpriseOps.owner')},
+    {key:'prazo',label:t('enterpriseOps.deadline')},{key:'status',label:t('enterpriseOps.status')},{key:'percentualConclusao',label:t('enterpriseOps.completion'),type:'number'}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.riskAssessments')}><CrudTab resource="grc/avaliacoes" createLabel={t('enterpriseOps.newAssessment')} fields={[
+    {key:'riscoId',label:t('enterpriseOps.riskId'),type:'number'},{key:'periodo',label:t('enterpriseOps.period')},{key:'probabilidade',label:t('enterpriseOps.probability'),type:'number'},
+    {key:'impacto',label:t('enterpriseOps.impact'),type:'number'},{key:'tendencia',label:t('enterpriseOps.trend')},{key:'avaliador',label:t('enterpriseOps.evaluator')},{key:'observacao',label:t('enterpriseOps.notes')}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.routes')}><CrudTab resource="tms/rotas" createLabel={t('enterpriseOps.newRoute')} fields={[
+    {key:'codigo',label:t('enterpriseOps.code')},{key:'origem',label:t('enterpriseOps.origin')},{key:'destino',label:t('enterpriseOps.destination')},{key:'distanciaKm',label:t('enterpriseOps.distance'),type:'number'},
+    {key:'tempoEstimadoMin',label:t('enterpriseOps.estimatedTime'),type:'number'},{key:'pedagioEstimado',label:t('enterpriseOps.toll'),type:'number'}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.stops')}><CrudTab resource="tms/paradas" createLabel={t('enterpriseOps.newStop')} fields={[
+    {key:'ordemId',label:t('enterpriseOps.orderId'),type:'number'},{key:'sequencia',label:t('enterpriseOps.sequence'),type:'number'},{key:'tipo',label:t('enterpriseOps.stopType')},
+    {key:'localizacao',label:t('enterpriseOps.location')},{key:'previstaEm',label:t('enterpriseOps.expectedAt')}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.events')}><CrudTab resource="tms/eventos" createLabel={t('enterpriseOps.newEvent')} fields={[
+    {key:'ordemId',label:t('enterpriseOps.orderId'),type:'number'},{key:'tipo',label:t('enterpriseOps.eventType')},{key:'dataEvento',label:t('enterpriseOps.eventAt')},
+    {key:'localizacao',label:t('enterpriseOps.location')},{key:'descricao',label:t('enterpriseOps.description')},{key:'status',label:t('enterpriseOps.status')}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.deliveries')}><CrudTab resource="tms/entregas" createLabel={t('enterpriseOps.newDelivery')} fields={[
+    {key:'ordemId',label:t('enterpriseOps.orderId'),type:'number'},{key:'numero',label:t('enterpriseOps.document')},{key:'recebedor',label:t('enterpriseOps.receiver')},
+    {key:'recebidoEm',label:t('enterpriseOps.receivedAt')},{key:'observacao',label:t('enterpriseOps.notes')},{key:'status',label:t('enterpriseOps.status')}]}/></TabPanel>
+   <TabPanel header={t('enterpriseOps.freightClosing')}><CrudTab resource="tms/fechamentos" createLabel={t('enterpriseOps.newFreightClosing')} fields={[
+    {key:'ordemId',label:t('enterpriseOps.orderId'),type:'number'},{key:'freteContratado',label:t('enterpriseOps.contractedFreight'),type:'number'},
+    {key:'adicionais',label:t('enterpriseOps.additionalFreight'),type:'number'},{key:'descontos',label:t('enterpriseOps.discounts'),type:'number'},{key:'documento',label:t('enterpriseOps.document')}]}/></TabPanel>
    <TabPanel header={t('enterpriseOps.transportOrders')}><CrudTab resource="tms/ordens" createLabel={t('enterpriseOps.newTransport')} fields={[
     {key:'numero',label:t('enterpriseOps.number')},{key:'origem',label:t('enterpriseOps.origin')},{key:'destino',label:t('enterpriseOps.destination')},
     {key:'modalidade',label:t('enterpriseOps.mode')},{key:'peso',label:t('enterpriseOps.weight'),type:'number'},{key:'volume',label:t('enterpriseOps.volume'),type:'number'},
