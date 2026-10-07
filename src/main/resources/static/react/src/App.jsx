@@ -86,7 +86,6 @@ import { Rescisao } from './components/rh/Rescisao';
 import { Ferias } from './components/rh/Ferias';
 import { Esocial } from './components/rh/Esocial';
 import { FuncionarioFoto } from './components/rh/FuncionarioFoto';
-import RHEnterprise from './components/rh/RHEnterprise';
 
 import { Vendas } from './components/vendas/Vendas';
 import { TabelasPreco } from './components/vendas/TabelasPreco'
@@ -126,7 +125,6 @@ import { BI } from './components/bi/BI';
 import { Kpis } from './components/bi/Kpis';
 import { RelatoriosAgendados } from './components/bi/RelatoriosAgendados';
 import { RelatoriosBI } from './components/bi/RelatoriosBI';
-import BIControlTower from './components/bi/BIControlTower';
 import { IA } from './components/ia/IA';
 import { Assistente } from './components/ia/Assistente';
 import { Perfil } from './components/Perfil';
@@ -172,8 +170,6 @@ function App() {
                     <Route path="gestao-empresarial" element={<EnterpriseOperations />} />
                     <Route path="supply-chain-enterprise" element={<SupplyChainEnterprise />} />
                     <Route path="governanca-corporativa" element={<CorporateGovernance />} />
-                    <Route path="rh/enterprise" element={<RHEnterprise />} />
-                    <Route path="bi/control-tower" element={<BIControlTower />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
                     <Route path="contabilidade" element={<Contabilidade />} />
