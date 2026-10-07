@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/superadmin/assets/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/financeiro/stripe/webhook/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/integracoes/webhook/**").permitAll()
 
                 // O React e uma SPA: qualquer rota de interface deve conseguir
                 // carregar o shell. A autorizacao real ocorre nas APIs.
