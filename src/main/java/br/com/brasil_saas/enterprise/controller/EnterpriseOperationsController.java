@@ -105,7 +105,7 @@ public class EnterpriseOperationsController {
         };
         int n = jdbc.update("update brasil_saas.bc_ent_periodo_contabil set "+campo
             +"=true,updated_at=?,fechado_em=?,fechado_por=?,status=case when "
-            +"fechamento_financeiro and fechamento_fiscal and "+campo+" then 'FECHADO' else 'EM_FECHAMENTO' end "
+            +"fechamento_financeiro and fechamento_fiscal and "+("fechamento_contabil".equals(campo) ? "true" : "fechamento_contabil")+" then 'FECHADO' else 'EM_FECHAMENTO' end "
             +"where empresa_id=? and id=?",
             new Date(System.currentTimeMillis()),new Date(System.currentTimeMillis()),u.getId(),u.getEmpresaId(),id);
         if(n==0) throw new NoSuchElementException("Período não encontrado");
