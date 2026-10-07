@@ -31,6 +31,39 @@ public class RiskTransportEnterpriseController {
         return Map.of("ok", true, "nivel", p*i);
     }
 
+    @PutMapping("/grc/riscos/{id}")
+    @PreAuthorize("hasAuthority('enterprise:escrita')")
+    public Map<String,Object> atualizarRisco(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
+        ensure("select count(*) from brasil_saas.bc_grc_risco where id=? and empresa_id=?",id,u.getEmpresaId(),"Risco inválido");
+        Object p=b.get("probabilidade"),i=b.get("impacto");
+        jdbc.update("update brasil_saas.bc_grc_risco set descricao=coalesce(?,descricao),categoria=coalesce(?,categoria),probabilidade=coalesce(?,probabilidade),impacto=coalesce(?,impacto),nivel=case when ? is null and ? is null then nivel else coalesce(?,probabilidade)*coalesce(?,impacto) end,status=coalesce(?,status),responsavel=coalesce(?,responsavel),prazo=coalesce(?,prazo),updated_at=now() where id=? and empresa_id=?",
+            b.get("descricao"),b.get("categoria"),p,i,p,i,p,i,b.get("status"),b.get("responsavel"),b.get("prazo"),id,u.getEmpresaId());
+        return Map.of("ok",true);
+    }
+
+    @PutMapping("/grc/controles/{id}")
+    @PreAuthorize("hasAuthority('enterprise:escrita')")
+    public Map<String,Object> atualizarControle(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
+        ensure("select count(*) from brasil_saas.bc_grc_controle where id=? and empresa_id=?",id,u.getEmpresaId(),"Controle inválido");
+        jdbc.update("update brasil_saas.bc_grc_controle set descricao=coalesce(?,descricao),tipo=coalesce(?,tipo),frequencia=coalesce(?,frequencia),responsavel=coalesce(?,responsavel),status=coalesce(?,status) where id=? and empresa_id=?",b.get("descricao"),b.get("tipo"),b.get("frequencia"),b.get("responsavel"),b.get("status"),id,u.getEmpresaId());
+        return Map.of("ok",true);
+    }
+
+    @GetMapping("/grc/vinculos")
+    @PreAuthorize("hasAuthority('enterprise:leitura')")
+    public List<Map<String,Object>> vinculos(@AuthenticationPrincipal AuthenticatedUser u){
+        return jdbc.queryForList("select rc.*,r.codigo risco_codigo,c.codigo controle_codigo from brasil_saas.bc_grc_risco_controle rc join brasil_saas.bc_grc_risco r on r.id=rc.risco_id and r.empresa_id=rc.empresa_id join brasil_saas.bc_grc_controle c on c.id=rc.controle_id and c.empresa_id=rc.empresa_id where rc.empresa_id=? order by r.codigo,c.codigo",u.getEmpresaId());
+    }
+
+    @PutMapping("/tms/ordens/{id}")
+    @PreAuthorize("hasAuthority('enterprise:escrita')")
+    public Map<String,Object> atualizarOrdem(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
+        ensure("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?",id,u.getEmpresaId(),"Ordem inválida");
+        jdbc.update("update brasil_saas.bc_tms_ordem set origem=coalesce(?,origem),destino=coalesce(?,destino),transportadora_id=coalesce(?,transportadora_id),rota_id=coalesce(?,rota_id),modalidade=coalesce(?,modalidade),veiculo=coalesce(?,veiculo),motorista=coalesce(?,motorista),data_prevista_saida=coalesce(?,data_prevista_saida),data_prevista_entrega=coalesce(?,data_prevista_entrega),peso=coalesce(?,peso),volume=coalesce(?,volume),frete_previsto=coalesce(?,frete_previsto) where id=? and empresa_id=?",
+            b.get("origem"),b.get("destino"),longValue(b.get("transportadoraId")),longValue(b.get("rotaId")),b.get("modalidade"),b.get("veiculo"),b.get("motorista"),b.get("dataPrevistaSaida"),b.get("dataPrevistaEntrega"),b.get("peso"),b.get("volume"),b.get("fretePrevisto"),id,u.getEmpresaId());
+        return Map.of("ok",true);
+    }
+
     @GetMapping("/grc/controles")
     @PreAuthorize("hasAuthority('enterprise:leitura')")
     public List<Map<String,Object>> controles(@AuthenticationPrincipal AuthenticatedUser u) {
