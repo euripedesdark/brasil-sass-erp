@@ -9,7 +9,9 @@ import br.com.brasil_saas.core.repository.UsuarioModuloRepository;
 import br.com.brasil_saas.core.repository.UsuarioRepository;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -53,6 +55,17 @@ public class ModuloAcessoService {
     public List<Modulo> modulosDoUsuario(Long usuarioId) {
         Usuario u = usuarioRepository.findById(usuarioId).orElse(null);
         if (u == null) return List.of();
+
+        // A função que veio do AD (no principal da requisição) vale mesmo sem
+        // perfil no banco: é o caso do usuário que acaba de completar o
+        // cadastro da empresa, ou de um administrador de domínio.
+        Authentication principalAuth = SecurityContextHolder.getContext().getAuthentication();
+        if (principalAuth != null && principalAuth.getPrincipal() instanceof AuthenticatedUser principal
+                && usuarioId.equals(principal.getId())
+                && (atravessaEmpresas(principal) || veTudoNaEmpresa(principal))) {
+            return moduloRepository.findByAtivoTrueOrderByOrdemAscNomeAsc();
+        }
+
         if (isAdmin(u)) {
             return moduloRepository.findByAtivoTrueOrderByOrdemAscNomeAsc();
         }
@@ -73,7 +86,8 @@ public class ModuloAcessoService {
      */
     private static final Set<String> VEM_TUDO_DENTRO_DA_EMPRESA = Set.of(
             "DIRETORIA",
-            "GERENTE"
+            "GERENTE",
+            "GESTOR"
     );
 
     /**
@@ -133,10 +147,11 @@ public class ModuloAcessoService {
     }
 
     /**
-     * Se o usuario e' DIRETORIA ou GERENTE.
+     * Se o usuario e' DIRETORIA, GERENTE ou GESTOR.
      *
      * <p>Sai das authorities, nao de uma consulta ao perfil: o nome do perfil ja
-     * esta no token como {@code ROLE_<perfil>}, entao a resposta vem de memoria.
+     * esta no token como {@code ROLE_<funcao>}, entao a resposta vem de memoria.
+     * Vale para quem pegou a funcao de um grupo do AD sem ter perfil no banco.
      */
     public boolean veTudoNaEmpresa(AuthenticatedUser usuario) {
         return temPerfil(usuario, VEM_TUDO_DENTRO_DA_EMPRESA);
@@ -283,8 +298,8 @@ public class ModuloAcessoService {
      * codigo morto que continua enganando quem le, e da para um
      * usuario novo receber os modulos todos sem ninguem ter decidido isso.
      *
-     * <p>Hoje: o SUPERUSER atravessa, e DIRETORIA e GERENTE veem tudo dentro da
-     * empresa — a mesma regra do filtro, pelos mesmos motivos.
+     * <p>Hoje: o SUPERUSER atravessa, e DIRETORIA, GERENTE e GESTOR veem tudo
+     * dentro da empresa — a mesma regra do filtro, pelos mesmos motivos.
      */
     private boolean isAdmin(Usuario u) {
         if (u == null || u.getPerfis() == null) {
@@ -296,7 +311,8 @@ public class ModuloAcessoService {
         return nomes.contains("SUPERUSER")
                 || nomes.contains("SUPERADMIN")
                 || nomes.contains("DIRETORIA")
-                || nomes.contains("GERENTE");
+                || nomes.contains("GERENTE")
+                || nomes.contains("GESTOR");
     }
 
     private boolean isSuperuser(Usuario u) {

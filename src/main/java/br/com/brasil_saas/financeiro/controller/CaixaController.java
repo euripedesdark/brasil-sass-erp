@@ -27,11 +27,15 @@ import java.util.List;
  * controller, todas as chamadas davam 404 e a tela ficava vazia sem mensagem.
  *
  * O tenant vem do token (nunca da query), no padrao do PedidoVendaController.
+ *
+ * Diretiva do dono (06/10): DIRETORIA, GERENTE e GESTOR gravam em todos os
+ * modulos da propria empresa; o caixa e parte do financeiro. Por isso as tres
+ * funcoes entram junto com os administradores neste guard.
  */
 @RestController
 @RequestMapping("/api/financeiro/caixas")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN','SUPERUSER')")
+@PreAuthorize("hasAnyRole('GESTOR','GERENTE','DIRETORIA','ADMIN','SUPERADMIN','SUPERUSER')")
 public class CaixaController {
 
     private final CaixaService service;

@@ -22,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * chega para toda conta, e se virar {@code ROLE_SRVCLOUD} seria um acesso que
  * ninguem concedeu.
  *
+ * <p>Diretiva do dono (06/10): os administradores do dominio —
+ * {@code Administrators} e {@code Domain Admins} — sao SUPERUSER do ERP. Eles
+ * entram no contrato ao lado dos {@code GRP_*}; o restante do AD continua fora.
+ *
  * <p>A traducao e um metodo estatico e privado, entao o teste o invoca direto por
  * reflexao. Nao ha mock de {@code JdbcTemplate} aqui de proposito: o caminho do
  * grupo nao passa pelo banco, e o Mockito nao instrumenta o {@code JdbcTemplate}
@@ -57,9 +61,11 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
-    @DisplayName("os nove grupos do contrato viram os nove ROLE_")
+    @DisplayName("os onze grupos do contrato viram os onze ROLE_")
     void contratoInteiro() throws Exception {
         Set<String> roles = rolesDe(List.of(
+                "Administrators",
+                "Domain Admins",
                 "GRP_DIRETORIA",
                 "GRP_GERENTE",
                 "GRP_GESTOR",
@@ -83,11 +89,19 @@ class CustomUserDetailsServiceTest {
     }
 
     @Test
+    @DisplayName("administradores do dominio viram ROLE_SUPERUSER")
+    void administradoresDoDominioViramSuperuser() throws Exception {
+        Set<String> roles = rolesDe(List.of("Administrators", "Domain Admins"));
+
+        assertEquals(Set.of("ROLE_SUPERUSER"), roles);
+    }
+
+    @Test
     @DisplayName("grupo fora do contrato nao vira authority nenhuma")
     void grupoForaDoContratoNaoViraRole() throws Exception {
         Set<String> roles = rolesDe(List.of(
                 "srvcloud",
-                "Domain Admins",
+                "GROUP POLICY CREATOR OWNERS",
                 "ERP_EMPRESA_00000000000191",
                 "ERP_MODULO_FISCAL",
                 "GRP_ERP_ACESSO",

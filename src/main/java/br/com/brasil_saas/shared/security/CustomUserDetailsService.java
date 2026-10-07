@@ -125,10 +125,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     /**
      * Mapeamento explícito entre grupos do AD e roles reconhecidas pelo ERP.
-     * Não há conversão genérica de nomes: somente estes nove grupos concedem
-     * roles.
+     * Não há conversão genérica de nomes: somente estes grupos concedem roles.
+     *
+     * <p>Diretiva do dono (06/10): <b>todo administrador do AD — Administrators
+     * ou Domain Admins — é SUPERUSER do ERP</b>, acima das roles do sistema.
+     * Os grupos de domínio entram pelo sAMAccountName em minúsculas, que é o
+     * que o Auth Service devolve.
      */
     private static final Map<String, String> GRUPOS_PARA_ROLES = Map.ofEntries(
+            Map.entry("administrators",  "ROLE_SUPERUSER"),
+            Map.entry("domain admins",   "ROLE_SUPERUSER"),
             Map.entry("grp_diretoria",   "ROLE_DIRETORIA"),
             Map.entry("grp_gerente",     "ROLE_GERENTE"),
             Map.entry("grp_gestor",      "ROLE_GESTOR"),
