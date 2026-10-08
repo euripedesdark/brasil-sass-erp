@@ -42,6 +42,15 @@ public class ApontamentoProducaoServiceImpl implements ApontamentoProducaoServic
             throw new BusinessException("Nao e possivel adicionar apontamentos a uma producao finalizada ou cancelada");
         }
 
+        // Primeiro apontamento em OP ABERTO inicia a ordem (ABERTO → EM_PROCESSO).
+        if ("ABERTO".equals(producao.getStatus())) {
+            producao.setStatus("EM_PROCESSO");
+            if (producao.getDataInicio() == null) {
+                producao.setDataInicio(LocalDateTime.now());
+            }
+            producaoRepository.save(producao);
+        }
+
         ItemProducao itemProducao = null;
         if (request.itemProducaoId() != null) {
             itemProducao = itemRepository.findById(request.itemProducaoId())
@@ -62,9 +71,6 @@ public class ApontamentoProducaoServiceImpl implements ApontamentoProducaoServic
         apontamento.setStatus("INICIADO");
 
         ApontamentoProducao salvo = apontamentoRepository.save(apontamento);
-        // a coluna espelho e read-only no banco: recem-salvo, ela ainda vem nula
-        // e a resposta do POST saia com producaoId null, diferente do mesmo
-        // registro lido depois. Preenchida aqui, os dois caminhos concordam.
         salvo.setProducaoIdRef(request.producaoId());
         salvo.setItemProducaoIdRef(request.itemProducaoId());
         return salvo;
@@ -165,22 +171,22 @@ public class ApontamentoProducaoServiceImpl implements ApontamentoProducaoServic
     @Transactional(readOnly = true)
     public Map<String, Object> getEstatisticas(Long empresaId, Long producaoId) {
         Map<String, Object> stats = new HashMap<>();
-        
+
         BigDecimal totalHoras = apontamentoRepository.sumHorasTrabalhadasByProducao(empresaId, producaoId);
         BigDecimal totalProduzido = apontamentoRepository.sumQuantidadeProduzidaByProducao(empresaId, producaoId);
         BigDecimal totalRefugo = apontamentoRepository.sumQuantidadeRefugoByProducao(empresaId, producaoId);
-        
+
         List<ApontamentoProducao> apontamentos = listarPorProducao(empresaId, producaoId);
-        
+
         stats.put("totalApontamentos", apontamentos.size());
         stats.put("totalHorasTrabalhadas", totalHoras);
         stats.put("totalQuantidadeProduzida", totalProduzido);
         stats.put("totalQuantidadeRefugo", totalRefugo);
-        stats.put("percentualRefugo", 
-            totalProduzido.compareTo(BigDecimal.ZERO) > 0 ? 
-                totalRefugo.multiply(BigDecimal.valueOf(100)).divide(totalProduzido, 2, java.math.RoundingMode.HALF_UP) : 
+        stats.put("percentualRefugo",
+            totalProduzido.compareTo(BigDecimal.ZERO) > 0 ?
+                totalRefugo.multiply(BigDecimal.valueOf(100)).divide(totalProduzido, 2, java.math.RoundingMode.HALF_UP) :
                 BigDecimal.ZERO);
-        
+
         return stats;
     }
 }
