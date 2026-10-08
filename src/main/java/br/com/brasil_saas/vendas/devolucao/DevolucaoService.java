@@ -31,10 +31,18 @@ public class DevolucaoService {
         return itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
     }
     @Transactional public VenDevolucao solicitar(Long empresaId, Long pedidoId, String motivo, Map<Long, BigDecimal> itensQtd) {
-        PedidoVenda p = exigir(pedidos.findByIdAndEmpresaId(pedidoId, empresaId), "Pedido inexistente");
+        // A trava do pedido serializa solicitacoes concorrentes sobre o mesmo pedido.
+        PedidoVenda p = exigir(pedidos.findByIdForUpdate(pedidoId).filter(x -> empresaId.equals(x.getEmpresaId())), "Pedido inexistente");
         if (!"FATURADO".equals(p.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente pedido faturado");
         if (motivo == null || motivo.isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo obrigatorio");
         if (itensQtd == null || itensQtd.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Informe ao menos um item");
+        if (motivo.length() > 100) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo deve ter no maximo 100 caracteres");
+        // Quantidade ja comprometida por outras devolucoes (solicitadas, aprovadas ou recebidas).
+        Map<Long, BigDecimal> jaDevolvido = new HashMap<>();
+        for (VenDevolucao anterior : devolucoes.findByPedidoIdAndEmpresaIdAndStatusInAndDeletedAtIsNull(
+                pedidoId, empresaId, List.of("SOLICITADA", "APROVADA", "RECEBIDA")))
+            for (VenDevolucaoItem x : itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(anterior.getId(), empresaId))
+                jaDevolvido.merge(x.getProdutoId(), x.getQuantidade() == null ? BigDecimal.ZERO : x.getQuantidade(), BigDecimal::add);
         VenDevolucao d = new VenDevolucao();
         d.setEmpresaId(empresaId);
         d.setPedidoId(pedidoId);
@@ -45,9 +53,10 @@ public class DevolucaoService {
         if (p.getItens() != null) for (var it : p.getItens()) if (it.getProdutoId() != null) vendidas.merge(it.getProdutoId(), it.getQuantidade() == null ? BigDecimal.ZERO : it.getQuantidade(), BigDecimal::add);
         boolean tem = false;
         for (var e : itensQtd.entrySet()) {
-            BigDecimal vendida = vendidas.getOrDefault(e.getKey(), BigDecimal.ZERO);
+            BigDecimal vendida = vendidas.getOrDefault(e.getKey(), BigDecimal.ZERO)
+                    .subtract(jaDevolvido.getOrDefault(e.getKey(), BigDecimal.ZERO));
             BigDecimal qtd = e.getValue() == null ? BigDecimal.ZERO : e.getValue();
-            if (qtd.signum() <= 0 || qtd.compareTo(vendida) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida para o produto " + e.getKey());
+            if (qtd.signum() <= 0 || qtd.compareTo(vendida) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida ou acima do saldo devolvivel para o produto " + e.getKey());
             VenDevolucaoItem i = new VenDevolucaoItem();
             i.setEmpresaId(empresaId);
             i.setDevolucaoId(d.getId());
@@ -69,7 +78,7 @@ public class DevolucaoService {
         return devolucoes.save(d);
     }
     @Transactional public VenDevolucao receber(Long empresaId, Long id) {
-        VenDevolucao d = exigir(devolucoes.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Devolucao inexistente");
+        VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
         if ("APROVADA".equals(d.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprove antes de receber");
         Long depId = depositos.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO").orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Deposito PADRAO inexistente")).getId();
         for (VenDevolucaoItem i : itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) {
