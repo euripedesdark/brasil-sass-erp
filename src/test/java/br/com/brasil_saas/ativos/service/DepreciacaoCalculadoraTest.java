@@ -41,6 +41,14 @@ class DepreciacaoCalculadoraTest {
     }
 
     @Test
+    void somaDosDigitosComUltimoAnoParcialTerminaNaVidaUtil() {
+        // 13 meses: ano 1 peso 2, ano 2 (1 mes) peso 1/12 -> denominador 25
+        assertEquals(bd("288.00"), DepreciacaoCalculadora.cota("SOMA_DIGITOS", bd("3600"), BigDecimal.ZERO, 13, null, 0));
+        assertEquals(bd("144.00"), DepreciacaoCalculadora.cota("SOMA_DIGITOS", bd("3600"), bd("3456"), 13, null, 12));
+        assertEquals(bd("0.00"), DepreciacaoCalculadora.cota("SOMA_DIGITOS", bd("3600"), bd("3600"), 13, null, 13));
+    }
+
+    @Test
     void saldoDecrescenteUsaTaxaDuplaENuncaFicaAbaixoDoLinear() {
         // vida 60 meses -> taxa 40% a.a. sobre o saldo
         assertEquals(bd("400.00"), DepreciacaoCalculadora.cota("SALDO_DECRESCENTE", bd("12000"), BigDecimal.ZERO, 60, null, 0));
