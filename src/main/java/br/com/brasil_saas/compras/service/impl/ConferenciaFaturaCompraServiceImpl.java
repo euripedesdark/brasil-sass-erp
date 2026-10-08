@@ -77,7 +77,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     public List<ConferenciaFaturaCompraItem> listarItens(Long empresaId, Long conferenciaId) {
         repository.findByIdAndEmpresaIdAndDeletedAtIsNull(conferenciaId, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conferencia nao encontrada"));
-        return itemRepository.findByEmpresaIdAndConferenciaIdOrderByNumeroItemAsc(empresaId, conferenciaId);
+        return itemRepository.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByIdAsc(empresaId, conferenciaId);
     }
 
     @Override

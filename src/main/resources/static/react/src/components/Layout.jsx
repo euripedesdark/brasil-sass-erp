@@ -252,7 +252,7 @@ export const Layout = () => {
                 icon: 'pi pi-cog',
                 items: [
                     item('Ativos imobilizados', 'pi pi-building', '/ativos'),
-                    item('Ordens de manutenção', 'pi pi-wrench', '/ativos'),
+                    item('Manutenção (ordens, notas, planos)', 'pi pi-wrench', '/ativos/manutencao'),
                     item('Indicadores MTBF/MTTR', 'pi pi-chart-line', '/ativos/indicadores')
                 ]
             },

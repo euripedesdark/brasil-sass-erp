@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SupplyChainEnterpriseController {
  private final JdbcTemplate jdbc;
- private static final Map<String,String> TABLES=Map.of(
+ private static final Map<String,String> TABLES=tabelas(
   "reposicao","bc_scm_politica_reposicao","transportes","bc_scm_ordem_transporte",
   "revisoes-produto","bc_plm_produto_revisao","mudancas-engenharia","bc_plm_mudanca",
   "ehs","bc_ehs_ocorrencia","contratos-servico","bc_srv_contrato", "plm-documentos","bc_plm_documento", "plm-efeitos","bc_plm_efeito_mudanca", "plm-aprovacoes","bc_plm_aprovacao", "ehs-riscos","bc_ehs_risco", "ehs-inspecoes","bc_ehs_inspecao", "ehs-acoes","bc_ehs_acao", "ehs-permissoes","bc_ehs_permissao_trabalho"
@@ -253,5 +253,19 @@ public class SupplyChainEnterpriseController {
  private String table(String r){String t=TABLES.get(r);if(t==null)throw new IllegalArgumentException("Recurso inválido");return t;}
  private Map<String,Object> sanitize(Map<String,Object> s){
   Map<String,Object> d=new LinkedHashMap<>(); s.forEach((k,v)->{if(k!=null&&k.matches("[a-z][a-z0-9_]*")&&!Set.of("id","uuid","empresa_id","created_by","updated_by","deleted_at").contains(k))d.put(k,v);});return d;
+ }
+
+ private static Map<String,String> tabelas(String... kv){
+  Map<String,String> m=new LinkedHashMap<>();
+  for(int i=0;i<kv.length;i+=2) m.put(kv[i],kv[i+1]);
+  return Collections.unmodifiableMap(m);
+ }
+ private static Long longValue(Object v){
+  if(v==null||v.toString().isBlank()) return null;
+  return v instanceof Number n?n.longValue():Long.valueOf(v.toString().trim());
+ }
+ private static Integer integerValue(Object v,Integer padrao){
+  if(v==null||v.toString().isBlank()) return padrao;
+  return v instanceof Number n?n.intValue():Integer.valueOf(v.toString().trim());
  }
 }

@@ -11,14 +11,16 @@ import java.util.*;
 public class ContabilidadeEnterpriseController {
  private final JdbcTemplate jdbc;
  @GetMapping("/regras") @PreAuthorize("hasAuthority('enterprise:leitura')") public List<Map<String,Object>> regras(@AuthenticationPrincipal AuthenticatedUser u){return jdbc.queryForList("select * from brasil_saas.bc_cont_regra_lancamento where empresa_id=? order by codigo",u.getEmpresaId());}
- @PostMapping("/regras") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> regra(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object>b){jdbc.update("""insert into brasil_saas.bc_cont_regra_lancamento(empresa_id,codigo,nome,origem,conta_debito_id,conta_credito_id,centro_custo_id,historico,configuracao) values(?,?,?,?,?,?,?,?,?::jsonb)
+ @PostMapping("/regras") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> regra(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object>b){jdbc.update("""
+insert into brasil_saas.bc_cont_regra_lancamento(empresa_id,codigo,nome,origem,conta_debito_id,conta_credito_id,centro_custo_id,historico,configuracao) values(?,?,?,?,?,?,?,?,?::jsonb)
  on conflict(empresa_id,codigo) do update set nome=excluded.nome,origem=excluded.origem,conta_debito_id=excluded.conta_debito_id,conta_credito_id=excluded.conta_credito_id,centro_custo_id=excluded.centro_custo_id,historico=excluded.historico,configuracao=excluded.configuracao,updated_at=now()""",u.getEmpresaId(),b.get("codigo"),b.get("nome"),b.get("origem"),b.get("contaDebitoId"),b.get("contaCreditoId"),b.get("centroCustoId"),b.get("historico"),b.getOrDefault("configuracao","{}"));return Map.of("ok",true);}
  @PostMapping("/lancamentos/{id}/validar") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> validar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
    Map<String,Object> x=jdbc.queryForMap("select coalesce(sum(case when tipo='D' then valor else 0 end),0) debitos,coalesce(sum(case when tipo='C' then valor else 0 end),0) creditos from brasil_saas.bc_fin_lancamento_partida p join brasil_saas.bc_fin_lancamento_contabil l on l.id=p.lancamento_id where l.empresa_id=? and l.id=?",u.getEmpresaId(),id);
    boolean ok=Objects.equals(String.valueOf(x.get("debitos")),String.valueOf(x.get("creditos"))); return Map.of("ok",ok,"lancamentoId",id,"totais",x);
  }
  @GetMapping("/balancete") @PreAuthorize("hasAuthority('enterprise:leitura')") public List<Map<String,Object>> balancete(@AuthenticationPrincipal AuthenticatedUser u,@RequestParam Long periodoId){
-   return jdbc.queryForList("""select p.id conta_id,p.codigo,p.descricao,coalesce(sum(case when lp.tipo='D' then lp.valor else 0 end),0) debito,
+   return jdbc.queryForList("""
+select p.id conta_id,p.codigo,p.descricao,coalesce(sum(case when lp.tipo='D' then lp.valor else 0 end),0) debito,
     coalesce(sum(case when lp.tipo='C' then lp.valor else 0 end),0) credito,
     coalesce(sum(case when lp.tipo='D' then lp.valor else -lp.valor end),0) saldo
     from brasil_saas.bc_fin_plano_contas p left join brasil_saas.bc_fin_lancamento_partida lp on lp.plano_contas_id=p.id
@@ -27,7 +29,8 @@ public class ContabilidadeEnterpriseController {
     group by p.id,p.codigo,p.descricao order by p.codigo""",u.getEmpresaId(),periodoId);
  }
  @GetMapping("/dre") @PreAuthorize("hasAuthority('enterprise:leitura')") public List<Map<String,Object>> dre(@AuthenticationPrincipal AuthenticatedUser u,@RequestParam Long periodoId){
-   return jdbc.queryForList("""select p.codigo,p.descricao,coalesce(sum(case when lp.tipo='C' then lp.valor else -lp.valor end),0) saldo
+   return jdbc.queryForList("""
+select p.codigo,p.descricao,coalesce(sum(case when lp.tipo='C' then lp.valor else -lp.valor end),0) saldo
     from brasil_saas.bc_fin_plano_contas p join brasil_saas.bc_fin_lancamento_partida lp on lp.plano_contas_id=p.id
     join brasil_saas.bc_fin_lancamento_contabil l on l.id=lp.lancamento_id
     where p.empresa_id=? and l.periodo_contabil_id=? and p.deleted_at is null
