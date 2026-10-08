@@ -1,14 +1,21 @@
 package br.com.brasil_saas.compras.controller;
 
 import br.com.brasil_saas.compras.model.ConferenciaFaturaCompra;
+import br.com.brasil_saas.compras.model.ConferenciaFaturaCompraItem;
+import br.com.brasil_saas.compras.model.RecebimentoCompraItem;
+import br.com.brasil_saas.compras.model.ItemPedidoCompra;
 import br.com.brasil_saas.compras.model.PedidoCompra;
 import br.com.brasil_saas.compras.model.RecebimentoCompra;
 import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraRepository;
+import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository;
+import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
 import br.com.brasil_saas.fiscal.model.Nfe;
+import br.com.brasil_saas.fiscal.model.NfeItem;
 import br.com.brasil_saas.fiscal.repository.NfeRepository;
+import br.com.brasil_saas.fiscal.repository.NfeItemRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
@@ -22,6 +29,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/compras/conferencia-faturas")
@@ -32,11 +43,24 @@ public class ConferenciaFaturaCompraController {
     private final RecebimentoCompraRepository recebimentoRepository;
     private final TituloRepository tituloRepository;
     private final NfeRepository nfeRepository;
+    private final NfeItemRepository nfeItemRepository;
+    private final RecebimentoCompraItemRepository recebimentoItemRepository;
+    private final ConferenciaFaturaCompraItemRepository itemRepository;
 
     @GetMapping
     @PreAuthorize("hasAuthority('compras:pedido:leitura')")
     public List<ConferenciaFaturaCompra> listar(@AuthenticationPrincipal AuthenticatedUser user) {
         return repository.findByEmpresaIdOrderByCreatedAtDesc(user.getEmpresaId());
+    }
+
+    @GetMapping("/{id}/itens")
+    @PreAuthorize("hasAuthority('compras:pedido:leitura')")
+    public List<ConferenciaFaturaCompraItem> itens(@AuthenticationPrincipal AuthenticatedUser user,
+                                                   @PathVariable Long id) {
+        repository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, user.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Conferencia 3-way nao encontrada"));
+        return itemRepository.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByIdAsc(
+                user.getEmpresaId(), id);
     }
 
     @PostMapping
@@ -117,7 +141,75 @@ public class ConferenciaFaturaCompraController {
                 "Divergencia 3-way: pedido=" + valorPedido +
                 ", recebido=" + valorRecebido + ", fatura=" + valorFatura +
                 ", tolerancia=" + tolerancia);
-        return repository.save(c);
+        ConferenciaFaturaCompra salva = repository.save(c);
+        persistirItens(user.getEmpresaId(), salva, pedido, recebimento, nfe, tolerancia);
+        return salva;
+    }
+
+    private void persistirItens(Long empresaId, ConferenciaFaturaCompra conferencia,
+                                PedidoCompra pedido, RecebimentoCompra recebimento,
+                                Nfe nfe, BigDecimal tolerancia) {
+        List<RecebimentoCompraItem> recebidos = recebimento == null ? List.of()
+                : recebimentoItemRepository.findByEmpresaIdAndRecebimentoIdAndDeletedAtIsNullOrderByIdAsc(
+                        empresaId, recebimento.getId());
+        List<NfeItem> faturados = nfe == null ? List.of()
+                : nfeItemRepository.findByNfeIdOrderByNumeroItem(nfe.getId());
+
+        Map<Long, RecebimentoCompraItem> recebidoPorProduto = recebidos.stream()
+                .filter(i -> i.getProdutoId() != null)
+                .collect(Collectors.toMap(RecebimentoCompraItem::getProdutoId, Function.identity(), (a,b) -> a));
+        Map<Long, NfeItem> faturadoPorProduto = faturados.stream()
+                .filter(i -> i.getProdutoId() != null)
+                .collect(Collectors.toMap(NfeItem::getProdutoId, Function.identity(), (a,b) -> a));
+
+        for (ItemPedidoCompra pedidoItem : pedido.getItens()) {
+            Long produtoId = pedidoItem.getProdutoId();
+            RecebimentoCompraItem recebido = produtoId == null ? null : recebidoPorProduto.get(produtoId);
+            NfeItem faturado = produtoId == null ? null : faturadoPorProduto.get(produtoId);
+
+            BigDecimal qtdPedido = nz(pedidoItem.getQuantidade());
+            BigDecimal qtdRecebida = recebido == null ? nz(pedidoItem.getQuantidadeRecebida()) : nz(recebido.getQuantidadeRecebida());
+            BigDecimal qtdFaturada = faturado == null ? BigDecimal.ZERO : nz(faturado.getQuantidade());
+            BigDecimal precoPedido = nz(pedidoItem.getValorUnitario());
+            BigDecimal precoRecebido = recebido == null ? precoPedido : nz(recebido.getValorUnitario());
+            BigDecimal precoFaturado = faturado == null ? BigDecimal.ZERO : nz(faturado.getValorUnitario());
+
+            boolean quantidadeOk = qtdRecebida.compareTo(qtdPedido) <= 0 && qtdFaturada.compareTo(qtdRecebida) == 0;
+            boolean precoOk = faturado != null
+                    && precoFaturado.subtract(precoPedido).abs().compareTo(tolerancia.abs()) <= 0
+                    && precoFaturado.subtract(precoRecebido).abs().compareTo(tolerancia.abs()) <= 0;
+
+            ConferenciaFaturaCompraItem item = new ConferenciaFaturaCompraItem();
+            item.setEmpresaId(empresaId);
+            item.setConferenciaId(conferencia.getId());
+            item.setPedidoItemId(pedidoItem.getId());
+            item.setRecebimentoItemId(recebido == null ? null : recebido.getId());
+            item.setNfeItemId(faturado == null ? null : faturado.getId());
+            item.setProdutoId(produtoId);
+            item.setQuantidadePedida(qtdPedido);
+            item.setQuantidadeRecebida(qtdRecebida);
+            item.setQuantidadeFaturada(qtdFaturada);
+            item.setValorUnitarioPedido(precoPedido);
+            item.setValorUnitarioRecebido(precoRecebido);
+            item.setValorUnitarioFaturado(precoFaturado);
+            item.setTolerancia(tolerancia);
+            item.setStatus(quantidadeOk && precoOk ? "APROVADA" : "DIVERGENTE");
+            if (!(quantidadeOk && precoOk)) {
+                item.setDivergencia("Item=" + pedidoItem.getNumeroItem()
+                        + ", produto=" + produtoId
+                        + ", qtd pedido=" + qtdPedido
+                        + ", recebida=" + qtdRecebida
+                        + ", faturada=" + qtdFaturada
+                        + ", preco pedido=" + precoPedido
+                        + ", recebido=" + precoRecebido
+                        + ", faturado=" + precoFaturado);
+            }
+            itemRepository.save(item);
+        }
+    }
+
+    private static BigDecimal nz(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 
     public record Request(@NotNull Long pedidoId, @NotNull BigDecimal valorFatura,
