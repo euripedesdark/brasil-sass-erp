@@ -7,6 +7,7 @@ import { Button } from 'primereact/button';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
+import { Dialog } from 'primereact/dialog';
 import ConferenciaCompraService from '../../services/ConferenciaCompraService';
 
 export default function ConferenciaFaturasCompra() {
@@ -14,6 +15,8 @@ export default function ConferenciaFaturasCompra() {
     const [rows,setRows]=useState([]);
     const [form,setForm]=useState({pedidoId:null,valorFatura:0,tolerancia:0,nfeId:null,tituloId:null,recebimentoId:null});
     const [error,setError]=useState('');
+    const [detalhe,setDetalhe]=useState(null);
+    const [itens,setItens]=useState([]);
     const carregar=async()=>setRows((await ConferenciaCompraService.conferencias()).data||[]);
     useEffect(()=>{carregar()},[]);
     const conferir=async()=>{
@@ -21,14 +24,21 @@ export default function ConferenciaFaturasCompra() {
         try { await ConferenciaCompraService.conferir(form); setForm({...form,pedidoId:null,valorFatura:0}); await carregar(); }
         catch(e){setError(e.response?.data?.message || t('legacyUi.conferencia.error'));}
     };
+    const abrirItens=async(row)=>{
+        setDetalhe(row);
+        setItens((await ConferenciaCompraService.itensConferencia(row.id)).data||[]);
+    };
+    const fecharItens=()=>{setDetalhe(null);setItens([]);};
+    const quantidade=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:4});
+    const dinheiro=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     return <Card title={t('legacyUi.conferencia.title')}>
         <div className="grid align-items-end mb-4">
             <div className="col-12 md:col-2 field"><label>Pedido</label><InputNumber value={form.pedidoId} onValueChange={e=>setForm({...form,pedidoId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>Recebimento</label><InputNumber value={form.recebimentoId} onValueChange={e=>setForm({...form,recebimentoId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>NF-e</label><InputNumber value={form.nfeId} onValueChange={e=>setForm({...form,nfeId:e.value})}/></div>
-            <div className="col-12 md:col-2 field"><label>Título</label><InputNumber value={form.tituloId} onValueChange={e=>setForm({...form,tituloId:e.value})}/></div>
+            <div className="col-12 md:col-2 field"><label>T\u00edtulo</label><InputNumber value={form.tituloId} onValueChange={e=>setForm({...form,tituloId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>Valor da fatura</label><InputNumber value={form.valorFatura} onValueChange={e=>setForm({...form,valorFatura:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
-            <div className="col-12 md:col-2 field"><label>Tolerância</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
+            <div className="col-12 md:col-2 field"><label>Toler\u00e2ncia</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
             <div className="col-12"><Button label={t('legacyUi.conferencia.run')} icon="pi pi-check-circle" onClick={conferir}/></div>
         </div>
         {error && <div className="p-error mb-3">{error}</div>}
@@ -41,6 +51,20 @@ export default function ConferenciaFaturasCompra() {
             <Column field="valorFatura" header={t('legacyUi.conferencia.billed')}/>
             <Column field="status" header="Status" body={r=><Tag value={r.status} severity={r.status==='APROVADA'?'success':'danger'}/>}/>
             <Column field="divergencia" header={t('legacyUi.conferencia.divergence')}/>
+            <Column header="Itens" body={r=><Button label="Itens" icon="pi pi-list" className="p-button-text p-button-sm" onClick={()=>abrirItens(r)}/>}/>
         </DataTable>
+        <Dialog header="Itens conferidos" visible={detalhe!==null} style={{width:'75vw'}} onHide={fecharItens}>
+            <DataTable value={itens} paginator rows={10} stripedRows emptyMessage="Nenhum item conferido">
+                <Column field="numeroItem" header="Item"/>
+                <Column field="descricao" header="Descri\u00e7\u00e3o"/>
+                <Column header="Qtd. pedida" body={r=>quantidade(r.quantidadePedida)}/>
+                <Column header="Qtd. recebida" body={r=>quantidade(r.quantidadeRecebida)}/>
+                <Column header="Qtd. faturada" body={r=>quantidade(r.quantidadeFaturada)}/>
+                <Column header="Pre\u00e7o pedido" body={r=>dinheiro(r.valorUnitarioPedido)}/>
+                <Column header="Pre\u00e7o faturado" body={r=>dinheiro(r.valorUnitarioFaturado)}/>
+                <Column header="Situa\u00e7\u00e3o" body={r=><Tag value={r.conforme?'Conforme':r.tipoDivergencia} severity={r.conforme?'success':'danger'}/>}/>
+                <Column field="divergencia" header="Diverg\u00eancia"/>
+            </DataTable>
+        </Dialog>
     </Card>;
 }
