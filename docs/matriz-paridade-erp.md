@@ -42,6 +42,14 @@ A tela ConferenciaFaturasCompra usava estados não declarados (`detalhe`/`itens`
 
 Validação nesta integração: 30 testes Java selecionados (conferência, baixa, vínculo financeiro, JPQL/H2 e HTTP MockMvc); build Vite; cinco checks smoke; regressão de renderização React; SQL V171/V172/V173 e repetição de V173 em PostgreSQL 18 com tabelas de referência mínimas. As contagens finais constam do log `/workspace/.tools/erp-focused-tests.log`. Os testes HTTP exercitam roteamento, validação e delegação com principal controlado; não cobrem toda a cadeia de autenticação/autorização. Build completo Maven e boot continuam sem validação devido à resolução do Spring AI.
 
+## Entrega: conferência de recebimento parcial
+
+Base: main `2510a647`, após incorporação do PR #40. O valor informado da fatura é confrontado com o total registrado na NF-e e com o recebimento escolhido; o pedido completo fica como referência e limite superior do recebido. Assim, uma entrega de R$ 40 de um pedido de R$ 150 pode ser aprovada, sem exigir faturar R$ 150.
+
+Itens do pedido ainda não entregues e não faturados são excluídos desta conferência. Itens efetivamente recebidos sem fatura continuam divergentes; itens faturados sem recebimento e produtos recebidos sem correspondência no pedido também são divergentes. Conferência sem itens ou NF sem total não é aprovada. A tolerância monetária do total fiscal foi validada no limite e acima dele; regras de tolerância de preço por item continuam fora desta etapa.
+
+Validação: 46 arquivos próprios compilados; 40 testes selecionados executados e aprovados, zero ignorados, incluindo dez novas regressões. Novo `RecebimentoParcialConferenciaTest`; testes anteriores de baixa/JPQL/HTTP permanecem aprovados. Não houve mudança de migration ou frontend nesta etapa. Não foi validado o build completo/boot. O confronto ainda exige que a NF represente o recebimento selecionado; rateio de um recebimento entre várias NFs, consumo acumulado e obrigatoriedade de conferência de todos os documentos antes de pagamento continuam pendentes.
+
 ## Como interpretar
 
 - **Parcial**: há implementação concreta, mas integração/regra/teste do ciclo ainda não foi comprovado.

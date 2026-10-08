@@ -95,6 +95,7 @@ class ConferenciaPagamentoCompraTest {
                 .thenReturn(java.util.List.of(recebido));
         var nf = new br.com.brasil_saas.fiscal.model.Nfe();
         nf.setId(5L); nf.setTipoOperacao("E"); nf.setPedidoCompraId(1L); nf.setStatus("AUTORIZADA");
+        nf.setValorTotal(BigDecimal.TEN);
         when(notas.findByIdAndEmpresaIdAndDeletedAtIsNull(5L, 2L)).thenReturn(Optional.of(nf));
         var ni = new br.com.brasil_saas.fiscal.model.NfeItem();
         ni.setProdutoId(6L); ni.setQuantidade(BigDecimal.ONE); ni.setValorUnitario(BigDecimal.TEN);
