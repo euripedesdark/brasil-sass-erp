@@ -73,10 +73,32 @@ public class ProducaoServiceImpl implements ProducaoService {
 
     @Override
     @Transactional
+    public Producao iniciarProducao(Long empresaId, Long producaoId) {
+        Producao p = producaoRepository.findById(producaoId)
+                .filter(x -> x.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new BusinessException("Ordem de produção não encontrada"));
+        if (!"ABERTO".equals(p.getStatus()))
+            throw new BusinessException("Somente ordem ABERTO pode ser iniciada (status=" + p.getStatus() + ")");
+        p.setStatus("EM_PROCESSO");
+        if (p.getDataInicio() == null) p.setDataInicio(LocalDateTime.now());
+        return producaoRepository.save(p);
+    }
+
+    @Override
+    @Transactional
+    public Producao cancelarProducao(Long empresaId, Long producaoId) {
+        Producao p = producaoRepository.findById(producaoId)
+                .filter(x -> x.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new BusinessException("Ordem de produção não encontrada"));
+        if (!"ABERTO".equals(p.getStatus()))
+            throw new BusinessException("Somente ordem ABERTO pode ser cancelada (status=" + p.getStatus() + ")");
+        p.setStatus("CANCELADO");
+        return producaoRepository.save(p);
+    }
+
+    @Override
+    @Transactional
     public Producao finalizarProducao(Long empresaId, Long producaoId) {
-        // o tenant e conferido junto com o id: buscar so por id permitia a uma
-        // empresa finalizar a ordem de outra, baixando o insumo do estoque dela
-        // e marcando a ordem de terceiro como FINALIZADO
         Producao p = producaoRepository.findById(producaoId)
                 .filter(x -> x.getEmpresaId().equals(empresaId))
                 .orElseThrow(() -> new BusinessException("Ordem de produção não encontrada"));
@@ -85,22 +107,18 @@ public class ProducaoServiceImpl implements ProducaoService {
             throw new BusinessException("Ordem não pode ser finalizada no estado atual");
         }
 
-        // custeio antes de mexer no estoque: usa os apontamentos e o custo vigente dos insumos
         var custo = custoService.calcular(empresaId, producaoId);
 
-        // 1. Consumir estoque de insumos
         for (ItemProducao item : p.getItens()) {
             baixarEstoque(empresaId, item.getProdutoId(), item.getQuantidade(), p.getId());
         }
 
-        // 2. Adicionar produto final ao estoque: somente unidades boas
         BigDecimal entrada = custo.quantidadeBoa();
         if (entrada != null && entrada.signum() > 0) {
             atualizarCustoMedio(empresaId, p.getProdutoFinalId(), entrada, custo.custoUnitario());
             adicionarEstoque(empresaId, p.getProdutoFinalId(), entrada, p.getId());
         }
 
-        // 3. Gravar o custo na OP e nos itens
         p.setCustoTotal(custo.custoTotal().setScale(2, RoundingMode.HALF_UP));
         for (ItemProducao item : p.getItens()) {
             var linha = custo.materiais().stream()
@@ -116,7 +134,6 @@ public class ProducaoServiceImpl implements ProducaoService {
         return producaoRepository.save(p);
     }
 
-    /** Atualiza o preço de custo do produto final pelo custo médio ponderado da entrada. */
     private void atualizarCustoMedio(Long empresaId, Long produtoId, BigDecimal entrada, BigDecimal custoUnitarioOp) {
         if (custoUnitarioOp == null || custoUnitarioOp.signum() <= 0) return;
         var produto = produtoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(produtoId, empresaId).orElse(null);
@@ -168,8 +185,6 @@ public class ProducaoServiceImpl implements ProducaoService {
                 .orElseGet(() -> {
                     SaldoEstoque novo = new SaldoEstoque();
                     novo.setEmpresaId(empresaId);
-                    // deposito_id e NOT NULL: sem isso, finalizar uma OP de produto
-                    // que nunca teve saldo quebrava no INSERT
                     novo.setDepositoId(depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO")
                             .orElseThrow(() -> new BusinessException("Deposito PADRAO nao encontrado para a empresa " + empresaId))
                             .getId());
