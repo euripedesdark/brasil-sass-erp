@@ -136,6 +136,8 @@ public class TransferenciaEstoqueController {
                     .orElseThrow(() -> new BusinessException("Lote não encontrado"));
             if (!request.produtoId().equals(lote.getProdutoId()) || !request.depositoId().equals(lote.getDepositoId()))
                 throw new BusinessException("Lote não pertence ao produto/deposito informado");
+            if (!"ATIVO".equals(lote.getStatus()))
+                throw new BusinessException("Lote " + lote.getCodigo() + " nao esta ATIVO (status=" + lote.getStatus() + ")");
         }
 
         BigDecimal saldoEndereco = movimentacaoRepository.saldosPorEndereco(
