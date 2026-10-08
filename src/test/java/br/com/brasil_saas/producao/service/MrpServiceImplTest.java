@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import br.com.brasil_saas.compras.repository.SolicitacaoCompraRepository;
 import br.com.brasil_saas.estoque.model.SaldoEstoque;
+import br.com.brasil_saas.estoque.repository.ReservaEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.producao.model.EstruturaProduto;
 import br.com.brasil_saas.producao.repository.EstruturaProdutoRepository;
@@ -25,13 +26,15 @@ class MrpServiceImplTest {
     private static final Long EMP = 1L;
     private EstruturaProdutoRepository bom;
     private SaldoEstoqueRepository saldo;
+    private ReservaEstoqueRepository reservas;
     private MrpServiceImpl mrp;
 
     @BeforeEach
     void setUp() {
         bom = mock(EstruturaProdutoRepository.class);
         saldo = mock(SaldoEstoqueRepository.class);
-        mrp = new MrpServiceImpl(bom, saldo, mock(ProducaoService.class), mock(SolicitacaoCompraRepository.class));
+        reservas = mock(ReservaEstoqueRepository.class);
+        mrp = new MrpServiceImpl(bom, saldo, mock(ProducaoService.class), mock(SolicitacaoCompraRepository.class), reservas);
         when(bom.findByEmpresaIdAndProdutoPaiIdAndDeletedAtIsNullOrderByNivelAscIdAsc(anyLong(), anyLong()))
                 .thenReturn(List.of());
         when(saldo.findByEmpresaIdAndProdutoId(anyLong(), anyLong())).thenReturn(Optional.empty());
@@ -124,5 +127,31 @@ class MrpServiceImplTest {
     void quantidadeInvalida() {
         assertThrows(BusinessException.class, () -> mrp.simular(EMP, new MrpRequest(1L, BigDecimal.ZERO)));
         assertThrows(BusinessException.class, () -> mrp.simular(EMP, new MrpRequest(null, BigDecimal.ONE)));
+    }
+
+    @Test
+    @DisplayName("Estoque reservado para venda nao conta como disponivel para o MRP")
+    void reservaReduzEstoqueLivre() {
+        SaldoEstoque s = new SaldoEstoque();
+        s.setDepositoId(9L);
+        s.setQuantidade(new BigDecimal("10"));
+        when(saldo.findByEmpresaIdAndProdutoId(EMP, 5L)).thenReturn(Optional.of(s));
+        when(reservas.sumAtivas(EMP, 9L, 5L)).thenReturn(new BigDecimal("7"));
+        var rows = mrp.simular(EMP, new MrpRequest(5L, BigDecimal.TEN));
+        assertEquals(0, new BigDecimal("3").compareTo(bd(linha(rows, 5).get("estoqueUtilizado"))));
+        assertEquals(0, new BigDecimal("7").compareTo(bd(linha(rows, 5).get("necessidadeLiquida"))));
+    }
+
+    @Test
+    @DisplayName("Reserva maior que o saldo nao gera estoque negativo")
+    void reservaMaiorQueSaldoNaoFicaNegativa() {
+        SaldoEstoque s = new SaldoEstoque();
+        s.setDepositoId(9L);
+        s.setQuantidade(new BigDecimal("4"));
+        when(saldo.findByEmpresaIdAndProdutoId(EMP, 5L)).thenReturn(Optional.of(s));
+        when(reservas.sumAtivas(EMP, 9L, 5L)).thenReturn(new BigDecimal("9"));
+        var rows = mrp.simular(EMP, new MrpRequest(5L, BigDecimal.TEN));
+        assertEquals(0, BigDecimal.ZERO.compareTo(bd(linha(rows, 5).get("estoqueUtilizado"))));
+        assertEquals(0, BigDecimal.TEN.compareTo(bd(linha(rows, 5).get("necessidadeLiquida"))));
     }
 }

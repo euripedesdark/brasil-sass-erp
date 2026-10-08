@@ -3,6 +3,7 @@ package br.com.brasil_saas.producao.service.impl;
 import br.com.brasil_saas.compras.model.SolicitacaoCompra;
 import br.com.brasil_saas.compras.model.SolicitacaoCompraItem;
 import br.com.brasil_saas.compras.repository.SolicitacaoCompraRepository;
+import br.com.brasil_saas.estoque.repository.ReservaEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.producao.model.EstruturaProduto;
 import br.com.brasil_saas.producao.model.Producao;
@@ -45,6 +46,7 @@ public class MrpServiceImpl implements MrpService {
     private final SaldoEstoqueRepository saldo;
     private final ProducaoService producaoService;
     private final SolicitacaoCompraRepository solicitacaoRepository;
+    private final ReservaEstoqueRepository reservaRepository;
 
     /** Estado de uma rodada de calculo. */
     private static final class Rodada {
@@ -160,9 +162,15 @@ public class MrpServiceImpl implements MrpService {
             l.bruta = l.bruta.add(qtd);
 
             BigDecimal restante = r.estoqueRestante.computeIfAbsent(produtoId, id -> {
-                BigDecimal q = saldo.findByEmpresaIdAndProdutoId(empresaId, id)
-                        .map(s -> s.getQuantidade()).orElse(BigDecimal.ZERO);
-                return q == null ? BigDecimal.ZERO : q.max(BigDecimal.ZERO);
+                // Estoque livre = saldo fisico menos o que ja esta reservado para vendas/separacao.
+                // Sem isso o MRP promete a mesma unidade para a producao e para o cliente.
+                BigDecimal q = saldo.findByEmpresaIdAndProdutoId(empresaId, id).map(s -> {
+                    BigDecimal fisico = s.getQuantidade() == null ? BigDecimal.ZERO : s.getQuantidade();
+                    BigDecimal reservado = s.getDepositoId() == null ? null
+                            : reservaRepository.sumAtivas(empresaId, s.getDepositoId(), id);
+                    return fisico.subtract(reservado == null ? BigDecimal.ZERO : reservado);
+                }).orElse(BigDecimal.ZERO);
+                return q.max(BigDecimal.ZERO);
             });
             if (l.estoqueInicial.signum() == 0 && l.utilizado.signum() == 0) {
                 l.estoqueInicial = restante;
