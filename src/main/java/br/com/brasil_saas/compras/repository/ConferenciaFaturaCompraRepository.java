@@ -31,4 +31,24 @@ public interface ConferenciaFaturaCompraRepository extends JpaRepository<Confere
         """)
     List<ConferenciaFaturaCompra> findVigentesParaTitulo(
             @Param("empresaId") Long empresaId, @Param("tituloId") Long tituloId);
+
+    // Conferencias aprovadas e vigentes que ja consumiram este recebimento com
+    // outra NF, ou esta NF com outro recebimento. Uma reavaliacao do mesmo par
+    // substitui a anterior e por isso nao entra aqui.
+    @Query("""
+        SELECT c FROM ConferenciaFaturaCompra c
+        WHERE c.empresaId = :empresaId AND c.deletedAt IS NULL
+          AND c.status = 'APROVADA'
+          AND ((c.recebimentoId = :recebimentoId AND (c.nfeId IS NULL OR c.nfeId <> :nfeId))
+            OR (c.nfeId = :nfeId AND (c.recebimentoId IS NULL OR c.recebimentoId <> :recebimentoId)))
+          AND NOT EXISTS (
+              SELECT posterior.id FROM ConferenciaFaturaCompra posterior
+              WHERE posterior.empresaId = c.empresaId AND posterior.deletedAt IS NULL
+                AND posterior.pedidoId = c.pedidoId AND posterior.id > c.id
+                AND posterior.nfeId = c.nfeId AND posterior.recebimentoId = c.recebimentoId)
+        """)
+    List<ConferenciaFaturaCompra> findConsumosConflitantes(
+            @Param("empresaId") Long empresaId,
+            @Param("recebimentoId") Long recebimentoId,
+            @Param("nfeId") Long nfeId);
 }
