@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Tag } from 'primereact/tag';
 import { Card } from 'primereact/card';
 import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
@@ -17,6 +18,30 @@ export default function Mrp() {
     const [erro, setErro] = useState('');
     const [gerando, setGerando] = useState(false);
     const [resultado, setResultado] = useState(null);
+    const [nomes, setNomes] = useState({});
+    const [gerado, setGerado] = useState(false);
+
+    const mensagem = async (response, padrao) => {
+        const texto = await response.text().catch(() => '');
+        try { const j = JSON.parse(texto); return j?.message || j?.errors?.[0]?.message || padrao; }
+        catch { return texto || padrao; }
+    };
+
+    // Resolve os nomes dos produtos da explosao (um GET por produto distinto).
+    const carregarNomes = async (linhas) => {
+        const ids = [...new Set(linhas.map((r) => r.produtoId))].filter((id) => !nomes[id]);
+        const achados = {};
+        await Promise.all(ids.map(async (id) => {
+            try {
+                const r = await apiFetch('/api/cadastro/produtos/' + id);
+                if (!r.ok) return;
+                const j = await r.json();
+                const p = j?.data ?? j;
+                if (p?.nome) achados[id] = p.nome;
+            } catch { /* mantem so o ID */ }
+        }));
+        setNomes((atual) => ({ ...atual, ...achados }));
+    };
 
     const buscarProdutos = async (event) => {
         try {
@@ -58,11 +83,14 @@ export default function Mrp() {
                 })
             });
             if (!response.ok) {
-                throw new Error((await response.text()) || 'Falha no MRP');
+                throw new Error(await mensagem(response, 'Falha no MRP'));
             }
             const data = await response.json();
-            setRows(data?.data ?? data ?? []);
+            const linhas = data?.data ?? data ?? [];
+            setRows(linhas);
             setResultado(null);
+            setGerado(false);
+            carregarNomes(linhas);
         } catch (e) {
             setRows([]);
             setErro(e.message || 'Falha no MRP');
@@ -72,7 +100,10 @@ export default function Mrp() {
     };
 
     const gerarSugestoes = async () => {
-        if (!produto?.id || !rows.some(r => r.acao !== 'SEM_ACAO')) return;
+        if (!produto?.id || gerado || !rows.some(r => r.acao !== 'SEM_ACAO')) return;
+        const produzir = rows.filter((r) => r.acao === 'PRODUZIR').length;
+        const comprar = rows.filter((r) => r.acao === 'COMPRAR').length;
+        if (!window.confirm('Gerar ' + produzir + ' ordem(ns) de produção e uma solicitação com ' + comprar + ' item(ns) de compra? Isso grava no sistema e não deve ser repetido para a mesma simulação.')) return;
         setGerando(true);
         setErro('');
         try {
@@ -82,10 +113,11 @@ export default function Mrp() {
                 body: JSON.stringify({ produtoId: produto.id, quantidade: Number(quantidade) })
             });
             if (!response.ok) {
-                throw new Error((await response.text()) || 'Falha ao gerar sugestões');
+                throw new Error(await mensagem(response, 'Falha ao gerar sugestões'));
             }
             const data = await response.json();
             setResultado(data?.data ?? data);
+            setGerado(true);
         } catch (e) {
             setErro(e.message || 'Falha ao gerar sugestões');
         } finally {
@@ -140,7 +172,8 @@ export default function Mrp() {
                             className="p-button-success ml-2"
                             loading={gerando}
                             onClick={gerarSugestoes}
-                            disabled={!rows.some(r => r.acao !== 'SEM_ACAO')}
+                            disabled={gerado || !rows.some(r => r.acao !== 'SEM_ACAO')}
+                            tooltip={gerado ? 'Já gerado para esta simulação. Execute o MRP de novo para gerar outra rodada.' : undefined}
                         />
                     </div>
                 </div>
@@ -152,7 +185,10 @@ export default function Mrp() {
                         text={`Geradas ${resultado.ordensProducao?.length || 0} ordem(ns) de produção` +
                             (resultado.solicitacaoCompra
                                 ? ` e a solicitação de compra ${resultado.solicitacaoCompra.numero}.`
-                                : '; nada a comprar.')}
+                                : '; nada a comprar.') +
+                            ((resultado.ordensProducao || []).length
+                                ? ' OPs: ' + resultado.ordensProducao.map((o) => o.numero).join(', ') + '.'
+                                : '')}
                     />
                 )}
                 {erro && <Message severity="error" text={erro} className="w-full mt-3" />}
@@ -165,13 +201,20 @@ export default function Mrp() {
                     emptyMessage="Execute o MRP para ver as necessidades."
                     responsiveLayout="scroll"
                 >
-                    <Column field="produtoId" header="Produto" />
+                    <Column header="Produto" body={(r) => (
+                        <span style={{ paddingLeft: (r.nivel || 0) * 16 }}>
+                            {r.produtoId}{nomes[r.produtoId] ? ' — ' + nomes[r.produtoId] : ''}
+                        </span>
+                    )} />
                     <Column field="nivel" header="Nível" />
                     <Column field="necessidadeBruta" header="Necessidade bruta" />
-                    <Column field="estoqueDisponivel" header="Estoque disponível" />
+                    <Column field="estoqueDisponivel" header="Estoque livre (sem reservas)" />
                     <Column field="estoqueUtilizado" header="Estoque utilizado" />
                     <Column field="necessidadeLiquida" header="Necessidade líquida" />
-                    <Column field="acao" header="Ação" />
+                    <Column header="Ação" body={(r) => (
+                        <Tag value={r.acao === 'SEM_ACAO' ? 'Sem ação' : r.acao === 'PRODUZIR' ? 'Produzir' : 'Comprar'}
+                            severity={r.acao === 'SEM_ACAO' ? 'success' : r.acao === 'PRODUZIR' ? 'info' : 'warning'} />
+                    )} />
                 </DataTable>
             </Card>
         </div>
