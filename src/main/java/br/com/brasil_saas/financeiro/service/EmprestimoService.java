@@ -18,11 +18,15 @@ public class EmprestimoService {
     public List<Emprestimo> listar(Long empresaId) { return repo.findByEmpresaIdAndDeletedAtIsNullOrderByDataContratacaoDesc(empresaId); }
     @Transactional public Emprestimo salvar(Long empresaId, Emprestimo e) {
         e.setId(null);
+        e.setEmpresaId(empresaId);
         if (e.getStatus() == null) e.setStatus("ATIVO");
         return repo.save(e);
     }
     @Transactional public Emprestimo quitar(Long empresaId, Long id) {
         Emprestimo e = exigir(repo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Emprestimo inexistente");
+        if (!"ATIVO".equals(e.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Somente empréstimo ATIVO pode ser quitado");
+        }
         e.setStatus("QUITADO");
         e.setDataQuitacao(LocalDate.now());
         return repo.save(e);
