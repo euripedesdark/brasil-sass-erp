@@ -20,19 +20,31 @@ public class ProducaoController {
     private final ProducaoService producaoService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
     public ResponseEntity<Producao> criar(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody ProducaoRequest request) {
         return ResponseEntity.ok(producaoService.criarOrdem(u.getEmpresaId(), request));
     }
 
+    @PostMapping("/{id}/iniciar")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
+    public ResponseEntity<Producao> iniciar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        return ResponseEntity.ok(producaoService.iniciarProducao(u.getEmpresaId(), id));
+    }
+
     @PostMapping("/{id}/finalizar")
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
     public ResponseEntity<Producao> finalizar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
         return ResponseEntity.ok(producaoService.finalizarProducao(u.getEmpresaId(), id));
     }
 
+    @PostMapping("/{id}/cancelar")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
+    public ResponseEntity<Producao> cancelar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        return ResponseEntity.ok(producaoService.cancelarProducao(u.getEmpresaId(), id));
+    }
+
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:leitura')")
     public ResponseEntity<List<Producao>> listar(@AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(producaoService.listar(u.getEmpresaId()));
     }
