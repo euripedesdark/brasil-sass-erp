@@ -115,6 +115,7 @@ import { Producao } from './components/producao/Producao';
 import Qualidade from './components/qualidade/Qualidade';
 import Ativos from './components/ativos/Ativos';
 import IndicadoresAtivos from './components/ativos/IndicadoresAtivos';
+import ManutencaoAtivos from './components/ativos/ManutencaoAtivos';
 import { RomaneioProducao } from './components/producao/RomaneioProducao';
 import { ApontamentosProducao } from './components/producao/ApontamentosProducao';
 import { EstruturaProduto } from './components/producao/EstruturaProduto';
@@ -298,6 +299,7 @@ function App() {
                     <Route path="qualidade" element={<Qualidade />} />
                     <Route path="ativos" element={<Ativos />} />
                     <Route path="ativos/indicadores" element={<IndicadoresAtivos />} />
+                    <Route path="ativos/manutencao" element={<ManutencaoAtivos />} />
 
                     <Route path="bi" element={<BI />} />
                     <Route path="bi/kpis" element={<Kpis />} />

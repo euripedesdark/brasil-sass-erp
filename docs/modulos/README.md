@@ -16,6 +16,7 @@ que tem tela. Serve para comparar a abrangência: o número de **endpoints sem t
 | [Fiscal](./fiscal.md) | 7 | 9 | 24 | 7 | 71% |
 | [Produção](./producao.md) | 4 | 4 | 16 | 0 | 100% |
 | [Serviços](./servicos.md) | 3 | 1 | 10 | 0 | 100% |
+| [Ativos (FI-AA + PM)](./ativos.md) | 3 | 2 | 46 | 0 | 100% |
 | [Recursos Humanos](./rh.md) | 4 | 4 | 20 | 0 | 100% |
 | [Business Intelligence](./bi.md) | 3 | 5 | 47 | 18 | 62% |
 | [Relatórios](./relatorios.md) | 1 | 1 | 2 | 0 | 100% |
