@@ -27,7 +27,7 @@ public class EnterpriseOperationsController {
         "tributacao","bc_ent_cenario_tributario"
     );
 
-    @GetMapping("/{resource}")
+    @GetMapping("/{resource:contratos|qualificacoes|metas|periodos|orcamentos|tesouraria|tributacao}")
     @PreAuthorize("hasAuthority('enterprise:leitura')")
     public List<Map<String,Object>> listar(@AuthenticationPrincipal AuthenticatedUser u,
                                             @PathVariable String resource) {
@@ -36,7 +36,7 @@ public class EnterpriseOperationsController {
             + " and coalesce(deleted_at, null) is null order by id desc", u.getEmpresaId());
     }
 
-    @PostMapping("/{resource}")
+    @PostMapping("/{resource:contratos|qualificacoes|metas|periodos|orcamentos|tesouraria|tributacao}")
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> criar(@AuthenticationPrincipal AuthenticatedUser u,
                                     @PathVariable String resource,
@@ -56,7 +56,7 @@ public class EnterpriseOperationsController {
         return jdbc.queryForMap(sql, values.toArray());
     }
 
-    @PutMapping("/{resource}/{id}")
+    @PutMapping("/{resource:contratos|qualificacoes|metas|periodos|orcamentos|tesouraria|tributacao}/{id}")
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> atualizar(@AuthenticationPrincipal AuthenticatedUser u,
                                          @PathVariable String resource,
@@ -80,7 +80,7 @@ public class EnterpriseOperationsController {
         return rows.get(0);
     }
 
-    @DeleteMapping("/{resource}/{id}")
+    @DeleteMapping("/{resource:contratos|qualificacoes|metas|periodos|orcamentos|tesouraria|tributacao}/{id}")
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public void excluir(@AuthenticationPrincipal AuthenticatedUser u,
                         @PathVariable String resource, @PathVariable Long id) {
