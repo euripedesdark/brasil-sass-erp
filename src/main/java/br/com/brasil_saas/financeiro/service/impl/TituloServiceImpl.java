@@ -4,6 +4,7 @@ import br.com.brasil_saas.financeiro.dto.FinanceiroDtos.*;
 import br.com.brasil_saas.financeiro.model.*;
 import br.com.brasil_saas.financeiro.repository.*;
 import br.com.brasil_saas.financeiro.service.TituloService;
+import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class TituloServiceImpl implements TituloService {
     private final CondicaoPagamentoRepository condicaoRepository;
     private final ContaBancariaRepository contaBancariaRepository;
     private final ExtratoRepository extratoRepository;
+    private final ConferenciaFaturaCompraRepository conferenciaCompraRepository;
 
     @Override @Transactional(readOnly = true)
     public List<TituloResponse> listar(Long empresaId, String status) {
@@ -86,6 +88,11 @@ public class TituloServiceImpl implements TituloService {
     public BaixaResponse baixar(Long empresaId, Long tituloId, BaixaRequest r) {
         Titulo titulo = tituloRepository.findForUpdate(tituloId, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Título não encontrado"));
+
+        if (conferenciaCompraRepository.findVigentesParaTitulo(empresaId, tituloId).stream()
+                .anyMatch(c -> !"APROVADA".equals(c.getStatus()))) {
+            throw new BusinessException("Título bloqueado por conferência de compra pendente ou divergente");
+        }
 
         if (r.valorBaixa() == null || r.valorBaixa().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("Valor da baixa deve ser maior que zero");

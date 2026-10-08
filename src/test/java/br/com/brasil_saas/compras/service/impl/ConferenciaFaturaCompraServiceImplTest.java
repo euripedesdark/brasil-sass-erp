@@ -112,4 +112,55 @@ class ConferenciaFaturaCompraServiceImplTest {
         assertTrue(linhas.get(0).getConforme());
         assertEquals("ITEM_NAO_PEDIDO", linhas.get(1).getTipoDivergencia());
     }
+
+    @Test
+    void somaLinhasRepetidasSemReutilizarQuantidade() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "4", "5"), pedido(10L, "6", "5.00")),
+                List.of(recebimento(10L, "3", "5"), recebimento(10L, "7", "5")),
+                List.of(nfe(10L, "2", "5"), nfe(10L, "8", "5")));
+        assertEquals(1, linhas.size());
+        assertTrue(linhas.get(0).getConforme());
+        assertEquals(new BigDecimal("10"), linhas.get(0).getQuantidadeFaturada());
+        assertEquals(new BigDecimal("50.00"), linhas.get(0).getValorTotalFaturado());
+    }
+
+    @Test
+    void naoEscondeExcessoEmLinhaRepetidaDaNfe() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "10", "5")), List.of(recebimento(10L, "10", "5")),
+                List.of(nfe(10L, "10", "5"), nfe(10L, "10", "5")));
+        assertFalse(linhas.get(0).getConforme());
+        assertEquals("QUANTIDADE_FATURADA_MAIOR_QUE_RECEBIDA", linhas.get(0).getTipoDivergencia());
+    }
+
+    @Test
+    void preservaPrecosDiferentesDoMesmoProduto() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "2", "5"), pedido(10L, "3", "6")),
+                List.of(recebimento(10L, "2", "5"), recebimento(10L, "3", "6")),
+                List.of(nfe(10L, "3", "6"), nfe(10L, "2", "5")));
+        assertEquals(2, linhas.size());
+        assertTrue(linhas.stream().allMatch(ConferenciaFaturaCompraItem::getConforme));
+    }
+
+    @Test
+    void precoDivergenteNaoConsomeLinhaDeOutroPrecoCorreto() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "2", "5"), pedido(10L, "3", "6")),
+                List.of(recebimento(10L, "2", "5"), recebimento(10L, "3", "6")),
+                List.of(nfe(10L, "3", "6"), nfe(10L, "2", "7")));
+        assertEquals(2, linhas.size());
+        assertEquals(1, linhas.stream().filter(ConferenciaFaturaCompraItem::getConforme).count());
+        assertTrue(linhas.stream().anyMatch(x -> "PRECO_DIVERGENTE".equals(x.getTipoDivergencia())));
+    }
+
+    @Test
+    void apontaLinhaFiscalSemProdutoENaoPedida() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "1", "5")), List.of(recebimento(10L, "1", "5")),
+                List.of(nfe(10L, "1", "5"), nfe(null, "1", "7")));
+        assertEquals(2, linhas.size());
+        assertEquals("ITEM_NAO_PEDIDO", linhas.get(1).getTipoDivergencia());
+    }
 }

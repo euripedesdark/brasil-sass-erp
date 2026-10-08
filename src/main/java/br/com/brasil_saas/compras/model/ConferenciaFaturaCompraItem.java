@@ -25,6 +25,27 @@ public class ConferenciaFaturaCompraItem extends TenantEntity {
     @Column(name = "produto_id")
     private Long produtoId;
 
+    @Column(name = "numero_item")
+    private Integer numeroItem;
+
+    @Column(name = "descricao", length = 300)
+    private String descricao;
+
+    @Column(name = "valor_total_pedido", precision = 15, scale = 2)
+    private BigDecimal valorTotalPedido = BigDecimal.ZERO;
+
+    @Column(name = "valor_total_recebido", precision = 15, scale = 2)
+    private BigDecimal valorTotalRecebido = BigDecimal.ZERO;
+
+    @Column(name = "valor_total_faturado", precision = 15, scale = 2)
+    private BigDecimal valorTotalFaturado = BigDecimal.ZERO;
+
+    @Column(name = "conforme", nullable = false)
+    private Boolean conforme = true;
+
+    @Column(name = "tipo_divergencia", length = 40)
+    private String tipoDivergencia;
+
     @Column(name = "quantidade_pedida", precision = 18, scale = 4, nullable = false)
     private BigDecimal quantidadePedida = BigDecimal.ZERO;
 

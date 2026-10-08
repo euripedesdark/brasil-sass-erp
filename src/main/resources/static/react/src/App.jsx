@@ -179,8 +179,8 @@ function App() {
                     <Route path="integracoes-enterprise" element={<IntegrationEnterprise />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
-                    <Route path="contabilidade" element={<Contabilidade />
-                    <Route path="contabilidade/enterprise" element={<ContabilidadeEnterprise />} />} />
+                    <Route path="contabilidade" element={<Contabilidade />} />
+                    <Route path="contabilidade/enterprise" element={<ContabilidadeEnterprise />} />
                     <Route path="crm" element={<CRM />} />
                     <Route path="wms" element={<WMS />} />
                     <Route path="projetos" element={<Projetos />} />

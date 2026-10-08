@@ -25,3 +25,12 @@ CREATE INDEX IF NOT EXISTS ix_com_conf_item_tenant
     ON brasil_saas.bc_com_conferencia_fatura_item(empresa_id, conferencia_id);
 CREATE INDEX IF NOT EXISTS ix_com_conf_item_produto
     ON brasil_saas.bc_com_conferencia_fatura_item(empresa_id, produto_id);
+
+-- V171 cria a tabela com as colunas da conferencia detalhada.
+-- CREATE TABLE IF NOT EXISTS nao acrescenta colunas a uma tabela existente.
+ALTER TABLE brasil_saas.bc_com_conferencia_fatura_item
+    ADD COLUMN IF NOT EXISTS pedido_item_id bigint REFERENCES brasil_saas.bc_com_pedido_item(id),
+    ADD COLUMN IF NOT EXISTS recebimento_item_id bigint REFERENCES brasil_saas.bc_com_recebimento_item(id),
+    ADD COLUMN IF NOT EXISTS nfe_item_id bigint REFERENCES brasil_saas.bc_fis_nfe_item(id),
+    ADD COLUMN IF NOT EXISTS tolerancia numeric(18,4) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS status varchar(20) NOT NULL DEFAULT 'DIVERGENTE';
