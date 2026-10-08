@@ -88,12 +88,14 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return lancamentos.save(l);
     }
     @Override @Transactional public CtbLancamento estornar(Long empresaId, Long id, String motivo) {
-        CtbLancamento l = exigir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Lancamento inexistente");
+        CtbLancamento l = exigir(lancamentos.findByIdForUpdate(id, empresaId), "Lancamento inexistente");
         if (!"LANCADO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente lancado pode ser estornado");
         exigirAberto(empresaId, l.getPeriodo());
         CtbLancamento e = new CtbLancamento();
         e.setData(LocalDate.now());
         e.setPeriodo(periodoDe(e.getData()));
+        // O estorno e' gravado na data de hoje: esse periodo tambem precisa estar aberto.
+        exigirAberto(empresaId, e.getPeriodo());
         e.setHistorico("Estorno de #" + l.getId() + (motivo == null ? "" : " - " + motivo));
         e.setOrigemTipo(l.getOrigemTipo());
         e.setOrigemId(l.getOrigemId());
@@ -179,7 +181,12 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         Titulo t = exigir(titulos.findByIdAndEmpresaIdAndDeletedAtIsNull(tituloId, empresaId), "Titulo inexistente");
         exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaDebitoId, empresaId), "Conta debito inexistente");
         exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaCreditoId, empresaId), "Conta credito inexistente");
-        BigDecimal valor = t.getValorSaldo() == null || t.getValorSaldo().signum() <= 0 ? t.getValorOriginal() : t.getValorSaldo();
+        // O lancamento de emissao usa o valor original; o saldo muda a cada baixa.
+        BigDecimal valor = t.getValorOriginal() != null && t.getValorOriginal().signum() > 0 ? t.getValorOriginal() : t.getValorSaldo();
+        if (valor == null || valor.signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Titulo sem valor para contabilizar");
+        if (!lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
+                empresaId, "TITULO", t.getId(), List.of("RASCUNHO", "LANCADO")).isEmpty())
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Titulo ja contabilizado");
         CtbLancamento l = new CtbLancamento();
         l.setData(t.getDataEmissao() == null ? LocalDate.now() : t.getDataEmissao());
         l.setPeriodo(periodoDe(l.getData()));
@@ -207,10 +214,17 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
     }
     @Override @Transactional public CtbFechamento fechar(Long empresaId, Long userId, String periodo) {
+        if (periodo == null || !periodo.matches("\\d{4}-(0[1-9]|1[0-2])"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Periodo deve estar no formato AAAA-MM");
+        if (!lancamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNullOrderByDataDescIdDesc(empresaId, periodo).stream()
+                .filter(x -> "RASCUNHO".equals(x.getStatus())).toList().isEmpty())
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo com lancamentos em rascunho: lance ou exclua antes de fechar");
         Optional<CtbFechamento> atual = fechamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo);
         if (atual.isPresent()) {
             CtbFechamento f = atual.get();
             f.setStatus("FECHADO");
+            f.setFechadoPor(userId);
+            f.setFechadoEm(java.time.LocalDateTime.now());
             return fechamentos.save(f);
         }
         CtbFechamento f = new CtbFechamento();
