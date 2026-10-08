@@ -5,7 +5,6 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Button } from 'primereact/button';
 import { InputNumber } from 'primereact/inputnumber';
-import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import { Dialog } from 'primereact/dialog';
 import ConferenciaCompraService from '../../services/ConferenciaCompraService';
@@ -15,10 +14,13 @@ export default function ConferenciaFaturasCompra() {
     const [rows,setRows]=useState([]);
     const [form,setForm]=useState({pedidoId:null,valorFatura:0,tolerancia:0,nfeId:null,tituloId:null,recebimentoId:null});
     const [error,setError]=useState('');
+    const [detalhe,setDetalhe]=useState(null);
+    const [itens,setItens]=useState([]);
+    const [processando,setProcessando]=useState(false);
     const [expandedRows,setExpandedRows]=useState(null);
     const [itemRows,setItemRows]=useState({});
     const carregar=async()=>setRows((await ConferenciaCompraService.conferencias()).data||[]);
-    useEffect(()=>{carregar()},[]);
+    useEffect(()=>{carregar().catch(e=>setError(e.response?.data?.message || t('legacyUi.conferencia.error')))},[]);
     const carregarItens=async(row)=>{
         if (itemRows[row.id]) return;
         try {
@@ -47,12 +49,18 @@ export default function ConferenciaFaturasCompra() {
     </DataTable>;
     const conferir=async()=>{
         setError('');
-        try { await ConferenciaCompraService.conferir(form); setForm({...form,pedidoId:null,valorFatura:0}); await carregar(); }
+        setProcessando(true);
+        try { await ConferenciaCompraService.conferir(form); setForm({pedidoId:null,valorFatura:0,tolerancia:0,nfeId:null,tituloId:null,recebimentoId:null}); setItemRows({}); await carregar(); }
         catch(e){setError(e.response?.data?.message || t('legacyUi.conferencia.error'));}
+        finally {setProcessando(false);}
     };
     const abrirItens=async(row)=>{
-        setDetalhe(row);
-        setItens((await ConferenciaCompraService.itensConferencia(row.id)).data||[]);
+        setError('');
+        try {
+            const data=(await ConferenciaCompraService.itensConferencia(row.id)).data||[];
+            setItens(data);
+            setDetalhe(row);
+        } catch(e){setError(e.response?.data?.message || t('legacyUi.conferencia.error'));}
     };
     const fecharItens=()=>{setDetalhe(null);setItens([]);};
     const quantidade=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:4});
@@ -65,10 +73,11 @@ export default function ConferenciaFaturasCompra() {
             <div className="col-12 md:col-2 field"><label>T\u00edtulo</label><InputNumber value={form.tituloId} onValueChange={e=>setForm({...form,tituloId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>Valor da fatura</label><InputNumber value={form.valorFatura} onValueChange={e=>setForm({...form,valorFatura:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
             <div className="col-12 md:col-2 field"><label>Toler\u00e2ncia</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
-            <div className="col-12"><Button label={t('legacyUi.conferencia.run')} icon="pi pi-check-circle" onClick={conferir}/></div>
+            <div className="col-12"><Button label={t('legacyUi.conferencia.run')} icon="pi pi-check-circle" onClick={conferir} loading={processando} disabled={!form.pedidoId || !form.recebimentoId || !form.nfeId || !(form.valorFatura>0) || form.tolerancia<0}/></div>
         </div>
         {error && <div className="p-error mb-3">{error}</div>}
-        <DataTable value={rows} paginator rows={15} stripedRows dataKey="id" expandedRows={expandedRows} onRowToggle={onRowToggle} rowExpansionTemplate={itemExpansion}>\n            <Column expander style={{width:"3rem"}} />
+        <DataTable value={rows} paginator rows={15} stripedRows dataKey="id" expandedRows={expandedRows} onRowToggle={onRowToggle} rowExpansionTemplate={itemExpansion}>
+            <Column expander style={{width:"3rem"}} />
             <Column field="pedidoId" header={t('legacyUi.conferencia.order')}/>
             <Column field="recebimentoId" header={t('legacyUi.conferencia.receipt')}/>
             <Column field="nfeId" header={t('legacyUi.conferencia.invoice')}/>

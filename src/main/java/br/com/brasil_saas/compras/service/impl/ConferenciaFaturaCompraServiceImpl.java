@@ -27,10 +27,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Conferencia 3-way da compra: pedido x recebimento x NF-e de entrada.
@@ -77,7 +75,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     public List<ConferenciaFaturaCompraItem> listarItens(Long empresaId, Long conferenciaId) {
         repository.findByIdAndEmpresaIdAndDeletedAtIsNull(conferenciaId, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Conferencia nao encontrada"));
-        return itemRepository.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByIdAsc(empresaId, conferenciaId);
+        return itemRepository.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByNumeroItemAsc(empresaId, conferenciaId);
     }
 
     @Override
@@ -97,6 +95,27 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
             throw new BusinessException("O 3-way match exige o documento fiscal de entrada");
         }
 
+        if (pedido.getTituloId() != null && request.tituloId() != null
+                && !pedido.getTituloId().equals(request.tituloId())) {
+            throw new BusinessException("Titulo informado nao pertence ao pedido de compra");
+        }
+        Long tituloId = pedido.getTituloId() != null ? pedido.getTituloId() : request.tituloId();
+        if (tituloId != null) {
+            // A baixa usa a mesma trava. Uma conferencia nao pode ser gravada
+            // enquanto o pagamento decide se este titulo esta liberado.
+            var titulo = tituloRepository.findForUpdate(tituloId, empresaId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Titulo informado nao encontrado"));
+            if (!"P".equalsIgnoreCase(titulo.getTipo())) {
+                throw new BusinessException("Conferencia de compra exige titulo a pagar");
+            }
+            if ("CANCELADO".equalsIgnoreCase(titulo.getStatus())
+                    || "BAIXADO".equalsIgnoreCase(titulo.getStatus())
+                    || (titulo.getValorOriginal() != null && titulo.getValorSaldo() != null
+                        && titulo.getValorSaldo().compareTo(titulo.getValorOriginal()) < 0)) {
+                throw new BusinessException("Titulo cancelado ou com pagamento nao pode ser reconferido");
+            }
+        }
+
         RecebimentoCompra recebimento = recebimentoRepository
                 .findByIdAndEmpresaIdAndDeletedAtIsNull(request.recebimentoId(), empresaId)
                 .filter(r -> pedido.getId().equals(r.getPedidoId()))
@@ -114,12 +133,6 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         if (nfe.getStatus() != null
                 && !("AUTORIZADA".equalsIgnoreCase(nfe.getStatus()) || "AUTORIZADO".equalsIgnoreCase(nfe.getStatus()))) {
             throw new BusinessException("Documento fiscal ainda nao esta autorizado");
-        }
-
-        if (request.tituloId() != null) {
-            tituloRepository.findById(request.tituloId())
-                    .filter(t -> t.getEmpresaId().equals(empresaId))
-                    .orElseThrow(() -> new ResourceNotFoundException("Titulo informado nao encontrado"));
         }
 
         BigDecimal valorPedido = nz(pedido.getValorTotal());
@@ -145,7 +158,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         conferencia.setEmpresaId(empresaId);
         conferencia.setPedidoId(pedido.getId());
         conferencia.setRecebimentoId(recebimento.getId());
-        conferencia.setTituloId(request.tituloId());
+        conferencia.setTituloId(tituloId);
         conferencia.setNfeId(nfe.getId());
         conferencia.setValorPedido(valorPedido);
         conferencia.setValorRecebido(valorRecebido);
@@ -175,46 +188,92 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                                                           List<ItemPedidoCompra> itensPedido,
                                                           List<RecebimentoCompraItem> itensRecebimento,
                                                           List<NfeItem> itensNfe) {
-        Map<Long, RecebimentoCompraItem> recebimentoPorProduto = new LinkedHashMap<>();
+        // Somar linhas equivalentes antes do confronto: um produto pode aparecer
+        // mais de uma vez, inclusive com precos diferentes. Nao sobrescrever linhas
+        // nem reutilizar a mesma quantidade para dois itens do pedido.
+        Map<String, ItemPedidoCompra> pedidos = new LinkedHashMap<>();
+        for (ItemPedidoCompra item : itensPedido) {
+            String chave = chave(item.getProdutoId(), item.getNumeroItem(), item.getValorUnitario());
+            ItemPedidoCompra grupo = pedidos.get(chave);
+            if (grupo == null) {
+                grupo = new ItemPedidoCompra();
+                grupo.setId(item.getId());
+                grupo.setProdutoId(item.getProdutoId());
+                grupo.setNumeroItem(item.getNumeroItem());
+                grupo.setDescricao(item.getDescricao());
+                grupo.setValorUnitario(nz(item.getValorUnitario()));
+                grupo.setQuantidade(BigDecimal.ZERO);
+                pedidos.put(chave, grupo);
+            } else {
+                grupo.setId(null); // agregado nao representa um unico item original
+            }
+            grupo.setQuantidade(grupo.getQuantidade().add(nz(item.getQuantidade())));
+        }
+        Map<String, RecebimentoCompraItem> recebidos = new LinkedHashMap<>();
         for (RecebimentoCompraItem item : itensRecebimento) {
-            if (item.getProdutoId() != null) {
-                recebimentoPorProduto.put(item.getProdutoId(), item);
+            String chave = chave(item.getProdutoId(), null, item.getValorUnitario());
+            RecebimentoCompraItem grupo = recebidos.get(chave);
+            if (grupo == null) {
+                grupo = new RecebimentoCompraItem();
+                grupo.setId(item.getId());
+                grupo.setProdutoId(item.getProdutoId());
+                grupo.setValorUnitario(nz(item.getValorUnitario()));
+                grupo.setQuantidadeRecebida(BigDecimal.ZERO);
+                recebidos.put(chave, grupo);
+            } else {
+                grupo.setId(null);
             }
+            grupo.setQuantidadeRecebida(grupo.getQuantidadeRecebida().add(nz(item.getQuantidadeRecebida())));
         }
-
-        Map<Long, NfeItem> nfePorProduto = new LinkedHashMap<>();
-        Map<Integer, NfeItem> nfePorNumero = new LinkedHashMap<>();
+        Map<String, NfeItem> faturados = new LinkedHashMap<>();
         for (NfeItem item : itensNfe) {
-            if (item.getProdutoId() != null) {
-                nfePorProduto.put(item.getProdutoId(), item);
+            String chave = chave(item.getProdutoId(), item.getNumeroItem(), item.getValorUnitario());
+            NfeItem grupo = faturados.get(chave);
+            if (grupo == null) {
+                grupo = new NfeItem();
+                grupo.setId(item.getId());
+                grupo.setProdutoId(item.getProdutoId());
+                grupo.setNumeroItem(item.getNumeroItem());
+                grupo.setValorUnitario(nz(item.getValorUnitario()));
+                grupo.setQuantidade(BigDecimal.ZERO);
+                grupo.setValorTotal(BigDecimal.ZERO);
+                faturados.put(chave, grupo);
+            } else {
+                grupo.setId(null);
             }
-            if (item.getNumeroItem() != null) {
-                nfePorNumero.put(item.getNumeroItem(), item);
-            }
+            grupo.setQuantidade(grupo.getQuantidade().add(nz(item.getQuantidade())));
+            grupo.setValorTotal(grupo.getValorTotal().add(item.getValorTotal() == null
+                    ? total(item.getQuantidade(), item.getValorUnitario()) : item.getValorTotal()));
         }
-
         List<ConferenciaFaturaCompraItem> linhas = new ArrayList<>();
-        Set<Long> produtosDoPedido = new LinkedHashSet<>();
-        for (ItemPedidoCompra itemPedido : itensPedido) {
-            RecebimentoCompraItem itemRecebimento = itemPedido.getProdutoId() == null
-                    ? null
-                    : recebimentoPorProduto.get(itemPedido.getProdutoId());
-            NfeItem itemNfe = itemPedido.getProdutoId() == null
-                    ? nfePorNumero.get(itemPedido.getNumeroItem())
-                    : nfePorProduto.get(itemPedido.getProdutoId());
-            linhas.add(linha(empresaId, itemPedido, itemRecebimento, itemNfe));
-            if (itemPedido.getProdutoId() != null) {
-                produtosDoPedido.add(itemPedido.getProdutoId());
+        // Primeiro consumir precos exatos, para uma linha divergente nao roubar
+        // o documento de outra linha cujo preco confere.
+        for (boolean exato : new boolean[]{true, false}) {
+            var pendentes = pedidos.entrySet().iterator();
+            while (pendentes.hasNext()) {
+                var entry = pendentes.next();
+                ItemPedidoCompra pedido = entry.getValue();
+                if (exato && !faturados.containsKey(entry.getKey())) continue;
+                String prefixo = identidade(pedido.getProdutoId(), pedido.getNumeroItem()) + "@";
+                String chaveNfe = faturados.containsKey(entry.getKey()) ? entry.getKey()
+                        : faturados.keySet().stream().filter(k -> k.startsWith(prefixo)).findFirst().orElse(null);
+                String chaveRec = recebidos.containsKey(entry.getKey()) ? entry.getKey()
+                        : recebidos.keySet().stream().filter(k -> k.startsWith(prefixo)).findFirst().orElse(null);
+                linhas.add(linha(empresaId, pedido, recebidos.remove(chaveRec), faturados.remove(chaveNfe)));
+                pendentes.remove();
             }
         }
-
-        for (NfeItem itemNfe : itensNfe) {
-            if (itemNfe.getProdutoId() == null || produtosDoPedido.contains(itemNfe.getProdutoId())) {
-                continue;
-            }
-            linhas.add(linhaNaoPedida(empresaId, itemNfe));
-        }
+        // Toda linha fiscal nao consumida e' divergente, inclusive texto livre.
+        faturados.values().forEach(item -> linhas.add(linhaNaoPedida(empresaId, item)));
         return linhas;
+    }
+
+    private static String identidade(Long produtoId, Integer numeroItem) {
+        return produtoId == null ? "ITEM:" + numeroItem : "PRODUTO:" + produtoId;
+    }
+
+    private static String chave(Long produtoId, Integer numeroItem, BigDecimal preco) {
+        return identidade(produtoId, numeroItem) + "@" + nz(preco).stripTrailingZeros().toPlainString();
     }
 
     private static ConferenciaFaturaCompraItem linha(Long empresaId, ItemPedidoCompra itemPedido,
@@ -261,6 +320,9 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         ConferenciaFaturaCompraItem linha = new ConferenciaFaturaCompraItem();
         linha.setEmpresaId(empresaId);
         linha.setProdutoId(itemPedido.getProdutoId());
+        linha.setPedidoItemId(itemPedido.getId());
+        linha.setRecebimentoItemId(itemRecebimento == null ? null : itemRecebimento.getId());
+        linha.setNfeItemId(itemNfe == null ? null : itemNfe.getId());
         linha.setNumeroItem(itemPedido.getNumeroItem());
         linha.setDescricao(itemPedido.getDescricao());
         linha.setQuantidadePedida(quantidadePedida);
@@ -276,6 +338,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                 : total(quantidadeFaturada, valorUnitarioFaturado));
         linha.setConforme(problemas.isEmpty());
         linha.setTipoDivergencia(problemas.isEmpty() ? OK : tipo);
+        linha.setStatus(problemas.isEmpty() ? "APROVADA" : "DIVERGENTE");
         linha.setDivergencia(problemas.isEmpty() ? null : String.join("; ", problemas));
         return linha;
     }
