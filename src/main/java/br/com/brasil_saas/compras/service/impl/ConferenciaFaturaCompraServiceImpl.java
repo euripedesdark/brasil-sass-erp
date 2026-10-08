@@ -156,7 +156,10 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                 nfeItemRepository.findByNfeIdOrderByNumeroItem(nfe.getId()));
 
         long divergentes = itens.stream().filter(i -> !Boolean.TRUE.equals(i.getConforme())).count();
-        boolean aprovada = totaisOk && !itens.isEmpty() && divergentes == 0;
+        // Cada NF e cada recebimento so podem ser consumidos por um par aprovado.
+        var consumos = repository.findConsumosConflitantes(empresaId, recebimento.getId(), nfe.getId());
+        boolean reaproveitado = consumos != null && !consumos.isEmpty();
+        boolean aprovada = totaisOk && !itens.isEmpty() && divergentes == 0 && !reaproveitado;
 
         ConferenciaFaturaCompra conferencia = new ConferenciaFaturaCompra();
         conferencia.setEmpresaId(empresaId);
@@ -171,7 +174,9 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         conferencia.setStatus(aprovada ? "APROVADA" : "DIVERGENTE");
         conferencia.setDivergencia(aprovada ? null
                 : descrever(valorPedido, valorRecebido, valorFatura, tolerancia, totaisOk, divergentes, itens.size())
-                    + ", total NF-e=" + nfe.getValorTotal());
+                    + ", total NF-e=" + nfe.getValorTotal()
+                    + (reaproveitado ? " | NF-e ou recebimento ja consumido pela conferencia "
+                        + consumos.get(0).getId() : ""));
 
         ConferenciaFaturaCompra salva = repository.save(conferencia);
 

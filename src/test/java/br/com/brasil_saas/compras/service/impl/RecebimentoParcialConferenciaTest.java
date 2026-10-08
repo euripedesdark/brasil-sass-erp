@@ -133,4 +133,19 @@ class RecebimentoParcialConferenciaTest {
         assertEquals("DIVERGENTE", c.getStatus());
         assertTrue(c.getDivergencia().contains("sem itens"));
     }
+
+    @Test
+    void recebimentoJaConsumidoPorOutraNfNaoPodeSerAprovadoDeNovo() {
+        var anterior = new ConferenciaFaturaCompra(); anterior.setId(3L);
+        when(conferencias.findConsumosConflitantes(2L, 4L, 5L)).thenReturn(List.of(anterior));
+        var c = conferir("40", "0");
+        assertEquals("DIVERGENTE", c.getStatus());
+        assertTrue(c.getDivergencia().contains("ja consumido pela conferencia 3"));
+    }
+
+    @Test
+    void reconferenciaDoMesmoParSemConflitoContinuaAprovada() {
+        when(conferencias.findConsumosConflitantes(2L, 4L, 5L)).thenReturn(List.of());
+        assertEquals("APROVADA", conferir("40", "0").getStatus());
+    }
 }
