@@ -7,4 +7,5 @@ public interface WmsVolumeItemRepository extends JpaRepository<WmsVolumeItem, Lo
     Optional<WmsVolumeItem> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     List<WmsVolumeItem> findByEmpresaIdAndDeletedAtIsNull(Long empresaId);
     List<WmsVolumeItem> findByVolumeIdAndEmpresaIdAndDeletedAtIsNull(Long volumeId, Long empresaId);
+    List<WmsVolumeItem> findByOndaItemIdAndEmpresaIdAndDeletedAtIsNull(Long ondaItemId, Long empresaId);
 }
