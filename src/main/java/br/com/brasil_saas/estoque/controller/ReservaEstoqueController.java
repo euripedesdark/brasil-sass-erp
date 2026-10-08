@@ -165,6 +165,23 @@ public class ReservaEstoqueController {
         return repository.save(reserva);
     }
 
+    @PostMapping("/{id}/cancelar")
+    @Transactional
+    @PreAuthorize("hasAuthority('estoque:reserva:escrita')")
+    public ReservaEstoque cancelar(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
+        ReservaEstoque reserva = repository.findWithLockByIdAndEmpresaIdAndDeletedAtIsNull(id, user.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva nao encontrada"));
+        if ("LIBERADA".equals(reserva.getStatus()) || "CANCELADA".equals(reserva.getStatus())
+                || "CONSUMIDA".equals(reserva.getStatus())) {
+            throw new BusinessException("Reserva ja esta encerrada e nao pode ser cancelada");
+        }
+        if ("SEPARACAO".equals(reserva.getStatus())) {
+            throw new BusinessException("Reserva em SEPARACAO: libere ou conclua a expedicao antes de cancelar");
+        }
+        reserva.setStatus("CANCELADA");
+        return repository.save(reserva);
+    }
+
     public record Request(@NotNull Long depositoId, @NotNull Long produtoId, Long pedidoVendaId, Long loteId,
                           Long enderecoId, @NotNull @DecimalMin("0.001") BigDecimal quantidade, LocalDateTime dataExpiracao) {}
 }
