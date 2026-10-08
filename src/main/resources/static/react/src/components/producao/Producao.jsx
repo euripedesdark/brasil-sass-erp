@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -11,6 +11,7 @@ import { AutoComplete } from 'primereact/autocomplete';
 import ProdutoService from '../../services/ProdutoService';
 import EstruturaProdutoService from '../../services/EstruturaProdutoService';
 import { Message } from 'primereact/message';
+import { Toast } from 'primereact/toast';
 import { Tag } from 'primereact/tag';
 import { Divider } from 'primereact/divider';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
@@ -19,6 +20,7 @@ import { RomaneioProducao } from './RomaneioProducao';
 
 export const Producao = () => {
     const { user } = useAuth();
+    const toast = useRef(null);
     const [ordens, setOrdens] = useState([]);
     const [loading, setLoading] = useState(false);
     const [dialogVisible, setDialogVisible] = useState(false);
@@ -111,10 +113,11 @@ export const Producao = () => {
 
             if (response.ok) {
                 setSuccess(true);
+                toast.current?.show({ severity: 'success', summary: 'OP criada', life: 2500 });
                 setTimeout(() => {
                     setDialogVisible(false);
                     fetchOrdens();
-                }, 1500);
+                }, 800);
             } else {
                 const err = await response.text();
                 setError(err);
@@ -126,21 +129,28 @@ export const Producao = () => {
         }
     };
 
-    const finalizarOrdem = async (id) => {
-        try {
-            const response = await apiFetch(`${ApiConfig.BASE_URL}/api/producao/${id}/finalizar?empresaId=${user?.empresaId}`, {
-                method: 'POST'
-            });
+    const msg = (text) => {
+        try { return typeof text === 'string' ? (JSON.parse(text).message || text) : text; } catch { return text; }
+    };
 
+    const acaoOrdem = async (id, path, okLabel) => {
+        try {
+            const response = await apiFetch(`${ApiConfig.BASE_URL}/api/producao/${id}/${path}`, { method: 'POST' });
             if (response.ok) {
+                toast.current?.show({ severity: 'success', summary: okLabel, life: 2500 });
                 fetchOrdens();
             } else {
-                alert('Erro ao finalizar produção: ' + await response.text());
+                const body = await response.text();
+                toast.current?.show({ severity: 'error', summary: 'Erro', detail: msg(body), life: 5000 });
             }
         } catch (err) {
-            alert('Erro de conexão ao finalizar produção');
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: err.message || 'Falha de conexão', life: 4000 });
         }
     };
+
+    const iniciarOrdem = (id) => acaoOrdem(id, 'iniciar', 'OP iniciada');
+    const finalizarOrdem = (id) => acaoOrdem(id, 'finalizar', 'OP finalizada — estoque atualizado');
+    const cancelarOrdem = (id) => acaoOrdem(id, 'cancelar', 'OP cancelada');
 
     const verCusto = async (ordem) => {
         setCustoOrdem(ordem);
@@ -150,9 +160,9 @@ export const Producao = () => {
         try {
             const response = await apiFetch(`${ApiConfig.BASE_URL}/api/producao/${ordem.id}/custo`);
             if (!response.ok) {
-                let msg = 'Falha ao calcular o custo';
-                try { const j = await response.json(); msg = j?.message || j?.error || msg; } catch { /* corpo nao JSON */ }
-                throw new Error(msg);
+                let m = 'Falha ao calcular o custo';
+                try { const j = await response.json(); m = j?.message || j?.error || m; } catch { /* */ }
+                throw new Error(m);
             }
             const data = await response.json();
             setCusto(data?.data ?? data);
@@ -172,59 +182,53 @@ export const Producao = () => {
             'FINALIZADO': 'success',
             'CANCELADO': 'danger'
         }[rowData.status] || 'info';
-
         return <Tag value={rowData.status} severity={severity} />;
     };
 
     const finalizarTemplate = (rowData) => {
         return (
-            <Button
-                icon="pi pi-check"
-                className="p-button-success p-button-text"
-                onClick={() => finalizarOrdem(rowData.id)}
-                disabled={rowData.status === 'FINALIZADO' || rowData.status === 'CANCELADO'}
-            />
+            <div className="flex gap-1">
+                <Button icon="pi pi-play" className="p-button-rounded p-button-text p-button-info" tooltip="Iniciar"
+                    onClick={() => iniciarOrdem(rowData.id)}
+                    disabled={rowData.status !== 'ABERTO'} />
+                <Button icon="pi pi-check" className="p-button-rounded p-button-text p-button-success" tooltip="Finalizar"
+                    onClick={() => finalizarOrdem(rowData.id)}
+                    disabled={rowData.status === 'FINALIZADO' || rowData.status === 'CANCELADO'} />
+                <Button icon="pi pi-times" className="p-button-rounded p-button-text p-button-danger" tooltip="Cancelar"
+                    onClick={() => cancelarOrdem(rowData.id)}
+                    disabled={rowData.status !== 'ABERTO'} />
+            </div>
         );
     };
 
     return (
+        <div>
+            <Toast ref={toast} />
         <div className="producao-enterprise-container">
             <Card title="Controle de Produção Industrial & Agrícola" className="prod-main-card">
                 <div className="prod-header-actions mb-4 flex justify-content-between align-items-center">
                     <div className="prod-info">
-                        <p className="text-muted m-0">Gestão de insumos, processamento e entrada de produtos acabados.</p>
+                        <p className="text-muted m-0">Ciclo: ABERTO → iniciar → EM_PROCESSO → finalizar (baixa insumos / entra acabado).</p>
                     </div>
                     <Button label="Nova Ordem de Produção" icon="pi pi-plus" onClick={() => setDialogVisible(true)} className="p-button-success" />
                 </div>
 
-                <DataTable
-                    value={ordens}
-                    loading={loading}
-                    paginator
-                    rows={10}
-                    responsiveLayout="scroll"
-                    className="p-datatable-sm"
-                >
+                <DataTable value={ordens} loading={loading} paginator rows={10} responsiveLayout="scroll" className="p-datatable-sm">
                     <Column field="numero" header="Nº Ordem" sortable style={{ width: '15%' }}></Column>
-                    <Column field="tipoProducao" header="Tipo" sortable style={{ width: '15%' }}></Column>
-                    <Column field="produtoFinalId" header="Produto Final" sortable style={{ width: '20%' }}></Column>
-                    <Column field="quantidadePlanejada" header="Qtd Planejada" sortable style={{ width: '15%' }}></Column>
-                    <Column field="unidadeMedida" header="Unidade" sortable style={{ width: '10%' }}></Column>
-                    <Column field="status" header="Status" body={statusTemplate} sortable style={{ width: '15%' }}></Column>
+                    <Column field="tipoProducao" header="Tipo" sortable style={{ width: '12%' }}></Column>
+                    <Column field="produtoFinalId" header="Produto Final" sortable style={{ width: '18%' }}></Column>
+                    <Column field="quantidadePlanejada" header="Qtd Planejada" sortable style={{ width: '12%' }}></Column>
+                    <Column field="unidadeMedida" header="Unidade" sortable style={{ width: '8%' }}></Column>
+                    <Column field="status" header="Status" body={statusTemplate} sortable style={{ width: '12%' }}></Column>
                     <Column header="Custo" style={{ width: '8%' }} body={(rowData) => (
                         <Button icon="pi pi-dollar" className="p-button-text" tooltip="Ver custo da ordem"
                                 onClick={() => verCusto(rowData)} />
                     )}></Column>
-                    <Column header="Finalizar" body={finalizarTemplate} style={{ width: '10%' }}></Column>
+                    <Column header="Ações" body={finalizarTemplate} style={{ width: '14%' }}></Column>
                 </DataTable>
             </Card>
 
-            <Dialog
-                header={`Custo da ordem ${custoOrdem?.numero || ''}`}
-                visible={custoDialog}
-                style={{ width: '60vw' }}
-                onHide={() => setCustoDialog(false)}
-            >
+            <Dialog header={`Custo da ordem ${custoOrdem?.numero || ''}`} visible={custoDialog} style={{ width: '60vw' }} onHide={() => setCustoDialog(false)}>
                 {custoErro && <Message severity="error" text={custoErro} className="w-full mb-3" />}
                 {!custo && !custoErro && <p>Calculando...</p>}
                 {custo && (
@@ -264,12 +268,7 @@ export const Producao = () => {
 
             <RomaneioProducao empresaId={user?.empresaId} ordens={ordens} />
 
-            <Dialog
-                header="Lançamento de Ordem de Produção"
-                visible={dialogVisible}
-                style={{ width: '700px' }}
-                onHide={() => setDialogVisible(false)}
-            >
+            <Dialog header="Lançamento de Ordem de Produção" visible={dialogVisible} style={{ width: '700px' }} onHide={() => setDialogVisible(false)}>
                 <div className="p-fluid">
                     <div className="grid">
                         <div className="col-12 md:col-6 field">
@@ -278,11 +277,7 @@ export const Producao = () => {
                         </div>
                         <div className="col-12 md:col-6 field">
                             <label className="font-bold mb-2 block">Tipo de Produção</label>
-                            <Dropdown
-                                value={novoPedido.tipoProducao}
-                                options={['INDUSTRIA', 'PECUARIA', 'AGRICULTURA']}
-                                onChange={(e) => setNovoPedido({...novoPedido, tipoProducao: e.value})}
-                            />
+                            <Dropdown value={novoPedido.tipoProducao} options={['INDUSTRIA', 'PECUARIA', 'AGRICULTURA']} onChange={(e) => setNovoPedido({...novoPedido, tipoProducao: e.value})} />
                         </div>
                         <div className="col-12 md:col-6 field">
                             <label className="font-bold mb-2 block">Produto Final *</label>
@@ -300,16 +295,12 @@ export const Producao = () => {
                             <label className="font-bold mb-2 block">Unidade</label>
                             <InputText value={novoPedido.unidadeMedida} onChange={(e) => setNovoPedido({...novoPedido, unidadeMedida: e.target.value})} placeholder="KG, L, UN" />
                         </div>
-                        <div className="col-12 field">
-                            <label className="font-bold mb-2 block">Densidade / Volume (Opcional)</label>
-                            <InputNumber value={novoPedido.densidade} onValueChange={(e) => setNovoPedido({...novoPedido, densidade: e.value})} />
-                        </div>
                     </div>
 
                     <Divider />
-                    <h3 className="mb-3">Composição de Insumos (Matéria Prima)</h3>
+                    <h3 className="mb-3">Composição de Insumos</h3>
                     {estrutura.length > 0 && <div className="mb-3">
-                        <Message severity="info" text={`${estrutura.length} componente(s) encontrados na BOM.`} />
+                        <Message severity="info" text={`${estrutura.length} componente(s) na BOM.`} />
                         <Button label="Aplicar BOM" icon="pi pi-sitemap" className="p-button-outlined mt-2" onClick={() => setNovoPedido(prev => ({...prev, itens: estrutura.map(x => ({produtoId: x.produtoFilhoId, quantidade: Number(prev.quantidadePlanejada || 0) * Number(x.quantidade || 0) * (1 + Number(x.perdaPercentual || 0) / 100)}))}))} />
                     </div>}
 
@@ -323,7 +314,7 @@ export const Producao = () => {
                                 placeholder="Pesquisar insumo" />
                         </div>
                         <div className="col-12 md:col-4 field">
-                            <label className="font-bold mb-2 block">Quantidade Necessária</label>
+                            <label className="font-bold mb-2 block">Quantidade</label>
                             <InputNumber value={itemAtual.quantidade} onChange={(e) => setItemAtual({...itemAtual, quantidade: e.value})} />
                         </div>
                         <div className="col-12 md:col-3 field">
@@ -340,14 +331,15 @@ export const Producao = () => {
                     </DataTable>
 
                     {error && <Message severity="error" text={error} className="w-full mb-3" />}
-                    {success && <Message severity="success" text="Ordem de produção criada com sucesso!" className="w-full mb-3" />}
+                    {success && <Message severity="success" text="Ordem criada!" className="w-full mb-3" />}
 
                     <div className="flex justify-content-end gap-2 mt-4">
-                        <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={() => setDialogVisible(false)} />
+                        <Button label="Fechar" icon="pi pi-times" className="p-button-text" onClick={() => setDialogVisible(false)} />
                         <Button label="Salvar Ordem" icon="pi pi-save" onClick={salvarOrdem} loading={loading} />
                     </div>
                 </div>
             </Dialog>
+        </div>
         </div>
     );
 };
