@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.sql.Date;
 import java.util.*;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/enterprise")
@@ -51,22 +52,78 @@ public class SupplyChainEnterpriseController {
   int n=jdbc.update("update brasil_saas."+t+" set deleted_at=?,updated_at=?,updated_by=? where empresa_id=? and id=?",new Date(System.currentTimeMillis()),new Date(System.currentTimeMillis()),u.getId(),u.getEmpresaId(),id);
   if(n==0) throw new NoSuchElementException("Registro não encontrado");
  }
+ @PostMapping("/plm/mudancas/{id}/enviar-aprovacao")
+ @PreAuthorize("hasAuthority('plm:escrita')")
+ public Map<String,Object> enviarParaAprovacao(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
+  ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=? and status in ('ABERTA','EM_DESENVOLVIMENTO')",id,u.getEmpresaId(),"Mudança não está disponível para aprovação");
+  int efeitos=jdbc.queryForObject("select count(*) from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=?",Integer.class,id,u.getEmpresaId());
+  if(efeitos==0) throw new IllegalStateException("A mudança precisa ter pelo menos um efeito de engenharia antes da aprovação");
+  jdbc.update("update brasil_saas.bc_plm_mudanca set status='EM_APROVACAO',updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
+  jdbc.update("insert into brasil_saas.bc_plm_aprovacao(empresa_id,mudanca_id,etapa,aprovador_id,decisao,obrigatoria) values(?,?,1,null,'PENDENTE',true) on conflict(empresa_id,mudanca_id,etapa) do nothing",u.getEmpresaId(),id);
+  return workflow(u,id);
+ }
+
+ @GetMapping("/plm/mudancas/{id}/workflow")
+ @PreAuthorize("hasAuthority('plm:leitura')")
+ public Map<String,Object> workflow(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
+  ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=?",id,u.getEmpresaId(),"Mudança não encontrada");
+  Map<String,Object> r=new LinkedHashMap<>();
+  r.put("mudanca",jdbc.queryForMap("select * from brasil_saas.bc_plm_mudanca where id=? and empresa_id=?",id,u.getEmpresaId()));
+  r.put("aprovacoes",jdbc.queryForList("select * from brasil_saas.bc_plm_aprovacao where mudanca_id=? and empresa_id=? order by etapa",id,u.getEmpresaId()));
+  r.put("efeitos",jdbc.queryForList("select * from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=? order by ordem_execucao,id",id,u.getEmpresaId()));
+  r.put("documentos",jdbc.queryForList("select * from brasil_saas.bc_plm_documento where mudanca_id=? and empresa_id=? and deleted_at is null order by id desc",id,u.getEmpresaId()));
+  return r;
+ }
+
+ @PostMapping("/plm/mudancas/{id}/efeitos")
+ @PreAuthorize("hasAuthority('plm:escrita')")
+ public Map<String,Object> adicionarEfeito(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
+  ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=? and status not in ('IMPLEMENTADA','CANCELADA')",id,u.getEmpresaId(),"Mudança não encontrada ou já encerrada");
+  String tipo=String.valueOf(b.getOrDefault("entidadeTipo",""));
+  String acao=String.valueOf(b.getOrDefault("acao",""));
+  Long entidade=longValue(b.get("entidadeId"));
+  validarEfeito(u,tipo,acao,entidade);
+  Integer ordem=integerValue(b.get("ordemExecucao"),jdbc.queryForObject("select coalesce(max(ordem_execucao),0)+1 from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=?",Integer.class,id,u.getEmpresaId()));
+  jdbc.update("insert into brasil_saas.bc_plm_efeito_mudanca(empresa_id,mudanca_id,entidade_tipo,entidade_id,acao,revisao_anterior,revisao_nova,efetiva_em,status,observacao,ordem_execucao,obrigatorio) values(?,?,?,?,?,?,?,?, 'PENDENTE',?,?,?)",
+   u.getEmpresaId(),id,tipo,entidade,acao,b.get("revisaoAnterior"),b.get("revisaoNova"),b.get("efetivaEm"),ordem,b.get("observacao"),b.getOrDefault("obrigatorio",true));
+  return Map.of("ok",true,"ordemExecucao",ordem);
+ }
+
  @PostMapping("/plm/mudancas/{id}/aprovar")
  @PreAuthorize("hasAuthority('plm:escrita')")
  public Map<String,Object> aprovarMudanca(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
-  ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=?",id,u.getEmpresaId(),"Mudança não encontrada");
-  String decisao=String.valueOf(b.getOrDefault("decisao","APROVADO")); int etapa=Integer.parseInt(String.valueOf(b.getOrDefault("etapa",1)));
-  jdbc.update("insert into brasil_saas.bc_plm_aprovacao(empresa_id,mudanca_id,etapa,aprovador_id,decisao,observacao,decidido_em) values(?,?,?,?,?,?,now()) on conflict(empresa_id,mudanca_id,etapa) do update set decisao=excluded.decisao,aprovador_id=excluded.aprovador_id,observacao=excluded.observacao,decidido_em=now()",u.getEmpresaId(),id,etapa,u.getId(),decisao,b.get("observacao"));
-  if("APROVADO".equals(decisao)) jdbc.update("update brasil_saas.bc_plm_mudanca set status='APROVADA',aprovador_id=?,aprovado_em=now(),updated_at=now() where id=? and empresa_id=?",u.getId(),id,u.getEmpresaId());
-  return Map.of("ok",true,"status",decisao);
+  ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=? and status='EM_APROVACAO'",id,u.getEmpresaId(),"Mudança não está aguardando aprovação");
+  int etapa=integerValue(b.get("etapa"),1);
+  String decisao=String.valueOf(b.getOrDefault("decisao","APROVADO")).toUpperCase(Locale.ROOT);
+  if(!Set.of("APROVADO","REJEITADO").contains(decisao)) throw new IllegalArgumentException("Decisão inválida");
+  jdbc.update("update brasil_saas.bc_plm_aprovacao set decisao=?,aprovador_id=?,observacao=?,decidido_em=now() where empresa_id=? and mudanca_id=? and etapa=?",
+   decisao,u.getId(),b.get("observacao"),u.getEmpresaId(),id,etapa);
+  if("REJEITADO".equals(decisao)) jdbc.update("update brasil_saas.bc_plm_mudanca set status='REJEITADA',updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
+  else {
+   int pendentes=jdbc.queryForObject("select count(*) from brasil_saas.bc_plm_aprovacao where empresa_id=? and mudanca_id=? and obrigatoria=true and decisao='PENDENTE'",Integer.class,u.getEmpresaId(),id);
+   if(pendentes==0) jdbc.update("update brasil_saas.bc_plm_mudanca set status='APROVADA',aprovador_id=?,aprovado_em=now(),updated_at=now() where id=? and empresa_id=?",u.getId(),id,u.getEmpresaId());
+  }
+  return workflow(u,id);
  }
  @PostMapping("/plm/mudancas/{id}/implementar")
  @PreAuthorize("hasAuthority('plm:escrita')")
+ @Transactional
  public Map<String,Object> implementarMudanca(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
   ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=? and status='APROVADA'",id,u.getEmpresaId(),"Mudança não aprovada");
+  List<Map<String,Object>> efeitos=jdbc.queryForList("select * from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=? order by ordem_execucao,id",id,u.getEmpresaId());
+  if(efeitos.isEmpty()) throw new IllegalStateException("Mudança sem efeitos de engenharia");
+  for(Map<String,Object> e:efeitos){
+   Long eid=((Number)e.get("id")).longValue();
+   try {
+    aplicarEfeito(u,e);
+    jdbc.update("update brasil_saas.bc_plm_efeito_mudanca set status='APLICADA',efetiva_em=coalesce(efetiva_em,current_date),aplicado_em=now(),aplicado_por=?,erro_implementacao=null where id=? and empresa_id=?",u.getId(),eid,u.getEmpresaId());
+   } catch(RuntimeException ex) {
+    jdbc.update("update brasil_saas.bc_plm_efeito_mudanca set status='ERRO',erro_implementacao=? where id=? and empresa_id=?",ex.getMessage(),eid,u.getEmpresaId());
+    throw ex;
+   }
+  }
   jdbc.update("update brasil_saas.bc_plm_mudanca set status='IMPLEMENTADA',implementado_em=now(),updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
-  jdbc.update("update brasil_saas.bc_plm_efeito_mudanca set status='APLICADA',efetiva_em=current_date where mudanca_id=? and empresa_id=?",id,u.getEmpresaId());
-  return Map.of("ok",true);
+  return workflow(u,id);
  }
  @PostMapping("/ehs/riscos/{id}/reavaliar")
  @PreAuthorize("hasAuthority('ehs:escrita')")
@@ -89,6 +146,47 @@ public class SupplyChainEnterpriseController {
   ensure("select count(*) from brasil_saas.bc_ehs_permissao_trabalho where id=? and empresa_id=?",id,u.getEmpresaId(),"Permissão não encontrada");
   jdbc.update("update brasil_saas.bc_ehs_permissao_trabalho set status='APROVADA',aprovada_por=?,aprovada_em=now() where id=? and empresa_id=?",u.getId(),id,u.getEmpresaId());
   return Map.of("ok",true);
+ }
+ 
+ private void validarEfeito(AuthenticatedUser u,String tipo,String acao,Long id){
+  if(id==null) throw new IllegalArgumentException("entidadeId é obrigatório");
+  String sql=switch(tipo){
+   case "REVISAO_PRODUTO" -> "select count(*) from brasil_saas.bc_plm_produto_revisao where id=? and empresa_id=? and deleted_at is null";
+   case "ESTRUTURA" -> "select count(*) from brasil_saas.bc_prod_estrutura where id=? and empresa_id=? and deleted_at is null";
+   case "ROTEIRO" -> "select count(*) from brasil_saas.bc_prod_roteiro where id=? and empresa_id=? and deleted_at is null";
+   case "DOCUMENTO" -> "select count(*) from brasil_saas.bc_plm_documento where id=? and empresa_id=? and deleted_at is null";
+   default -> throw new IllegalArgumentException("Tipo de entidade PLM inválido");
+  };
+  ensure(sql,id,u.getEmpresaId(),"Entidade do efeito não encontrada");
+  Set<String> permitidas=switch(tipo){
+   case "REVISAO_PRODUTO" -> Set.of("VIGENCIAR");
+   case "ESTRUTURA" -> Set.of("ATIVAR","INATIVAR");
+   case "ROTEIRO" -> Set.of("VIGENCIAR","INATIVAR");
+   case "DOCUMENTO" -> Set.of("APROVAR","INATIVAR");
+   default -> Set.of();
+  };
+  if(!permitidas.contains(acao)) throw new IllegalArgumentException("Ação incompatível com o tipo de efeito");
+ }
+
+ private void aplicarEfeito(AuthenticatedUser u,Map<String,Object> e){
+  String tipo=String.valueOf(e.get("entidade_tipo")), acao=String.valueOf(e.get("acao"));
+  Long id=((Number)e.get("entidade_id")).longValue();
+  if("REVISAO_PRODUTO".equals(tipo)&&"VIGENCIAR".equals(acao)){
+   Long produto=jdbc.queryForObject("select produto_id from brasil_saas.bc_plm_produto_revisao where id=? and empresa_id=?",Long.class,id,u.getEmpresaId());
+   jdbc.update("update brasil_saas.bc_plm_produto_revisao set status='SUPERADA',vigente_ate=current_date,updated_at=now() where empresa_id=? and produto_id=? and id<>? and status='VIGENTE'",u.getEmpresaId(),produto,id);
+   jdbc.update("update brasil_saas.bc_plm_produto_revisao set status='VIGENTE',vigente_desde=coalesce(vigente_desde,current_date),vigente_ate=null where id=? and empresa_id=?",id,u.getEmpresaId());
+  } else if("ESTRUTURA".equals(tipo)){
+   jdbc.update("update brasil_saas.bc_prod_estrutura set ativo=? where id=? and empresa_id=?", "ATIVAR".equals(acao),id,u.getEmpresaId());
+  } else if("ROTEIRO".equals(tipo)){
+   if("VIGENCIAR".equals(acao)){
+    Long produto=jdbc.queryForObject("select produto_id from brasil_saas.bc_prod_roteiro where id=? and empresa_id=?",Long.class,id,u.getEmpresaId());
+    jdbc.update("update brasil_saas.bc_prod_roteiro set ativo=false,updated_at=now() where empresa_id=? and produto_id=? and id<>?",u.getEmpresaId(),produto,id);
+    jdbc.update("update brasil_saas.bc_prod_roteiro set ativo=true,updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
+   } else jdbc.update("update brasil_saas.bc_prod_roteiro set ativo=false,updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
+  } else if("DOCUMENTO".equals(tipo)){
+   jdbc.update("update brasil_saas.bc_plm_documento set status=?,aprovado_por=?,aprovado_em=case when ?='APROVAR' then now() else aprovado_em end,updated_at=now() where id=? and empresa_id=?",
+    "APROVAR".equals(acao)?"APROVADO":"OBSOLETO",u.getId(),acao,id,u.getEmpresaId());
+  }
  }
  private String table(String r){String t=TABLES.get(r);if(t==null)throw new IllegalArgumentException("Recurso inválido");return t;}
  private Map<String,Object> sanitize(Map<String,Object> s){
