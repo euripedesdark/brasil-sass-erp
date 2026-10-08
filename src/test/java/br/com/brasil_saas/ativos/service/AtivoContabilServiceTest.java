@@ -38,7 +38,8 @@ class AtivoContabilServiceTest {
         movimentos = mock(AtivoMovimentoRepository.class);
         execucoes = mock(DepreciacaoExecucaoRepository.class);
         contabilidade = mock(ContabilidadeService.class);
-        svc = new AtivoContabilService(ativos, classes, movimentos, execucoes, contabilidade);
+        svc = new AtivoContabilService(ativos, classes, movimentos, execucoes, contabilidade,
+                org.mockito.Mockito.mock(br.com.brasil_saas.financeiro.repository.PlanoContasRepository.class));
         when(ativos.findById(anyLong())).thenAnswer(i -> Optional.ofNullable(banco.get((Long) i.getArgument(0))));
         when(ativos.findAllByEmpresaIdAndDeletedAtIsNullOrderByCodigo(EMPRESA)).thenAnswer(i -> new ArrayList<>(banco.values()));
         when(ativos.save(any())).thenAnswer(i -> i.getArgument(0));

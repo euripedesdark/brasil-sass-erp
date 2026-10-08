@@ -37,7 +37,9 @@ class ManutencaoServiceTest {
         planos = mock(PlanoManutencaoRepository.class);
         notas = mock(NotaManutencaoRepository.class);
         medicoes = mock(MedicaoAtivoRepository.class);
-        svc = new ManutencaoService(ativos, ordens, materiais, apontamentos, planos, notas, medicoes);
+        svc = new ManutencaoService(ativos, ordens, materiais, apontamentos, planos, notas, medicoes,
+                org.mockito.Mockito.mock(br.com.brasil_saas.cadastro.repository.ProdutoRepository.class),
+                org.mockito.Mockito.mock(br.com.brasil_saas.rh.repository.FuncionarioRepository.class));
         ativo = new AtivoImobilizado();
         ativo.setId(5L);
         ativo.setEmpresaId(EMPRESA);

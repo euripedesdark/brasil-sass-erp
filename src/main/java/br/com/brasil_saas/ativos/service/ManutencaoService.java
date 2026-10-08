@@ -2,6 +2,8 @@ package br.com.brasil_saas.ativos.service;
 
 import br.com.brasil_saas.ativos.model.*;
 import br.com.brasil_saas.ativos.repository.*;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,8 @@ public class ManutencaoService {
     private final PlanoManutencaoRepository planos;
     private final NotaManutencaoRepository notas;
     private final MedicaoAtivoRepository medicoes;
+    private final ProdutoRepository produtos;
+    private final FuncionarioRepository funcionarios;
 
     public record ConclusaoReq(LocalDate data, String causa, String solucao, BigDecimal horasParada, BigDecimal custoServico) {}
 
@@ -160,6 +164,8 @@ public class ManutencaoService {
         if (mat.getQuantidade() == null || mat.getQuantidade().signum() <= 0) throw new BusinessException("Quantidade deve ser maior que zero");
         if (mat.getCustoUnitario() == null) mat.setCustoUnitario(BigDecimal.ZERO);
         if (mat.getCustoUnitario().signum() < 0) throw new BusinessException("Custo unitário não pode ser negativo");
+        if (mat.getProdutoId() != null && produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(mat.getProdutoId(), empresaId).isEmpty())
+            throw new BusinessException("Produto não encontrado nesta empresa");
         mat.setId(null);
         mat.setEmpresaId(empresaId);
         mat.setManutencaoId(ordemId);
@@ -192,6 +198,9 @@ public class ManutencaoService {
         if (ap.getHoras() == null || ap.getHoras().signum() <= 0) throw new BusinessException("Horas devem ser maiores que zero");
         if (ap.getCustoHora() == null) ap.setCustoHora(BigDecimal.ZERO);
         if (ap.getCustoHora().signum() < 0) throw new BusinessException("Custo por hora não pode ser negativo");
+        if (ap.getFuncionarioId() != null && funcionarios.findById(ap.getFuncionarioId())
+                .filter(f -> empresaId.equals(f.getEmpresaId()) && f.getDeletedAt() == null).isEmpty())
+            throw new BusinessException("Funcionário não encontrado nesta empresa");
         ap.setId(null);
         ap.setEmpresaId(empresaId);
         ap.setManutencaoId(ordemId);
@@ -344,8 +353,10 @@ public class ManutencaoService {
         if (p.getAntecedenciaDias() == null || p.getAntecedenciaDias() < 0) p.setAntecedenciaDias(0);
         if (p.getPrioridade() == null) p.setPrioridade("MEDIA");
         if (!PRIORIDADES.contains(p.getPrioridade())) throw new BusinessException("Prioridade inválida: " + p.getPrioridade());
-        if (id != null) {
-            PlanoManutencao atual = plano(empresaId, id);
+        PlanoManutencao atual = id == null ? null : plano(empresaId, id);
+        boolean reprogramar = atual != null && Objects.equals(atual.getProximaData(), p.getProximaData())
+                && (!Objects.equals(atual.getIntervaloDias(), p.getIntervaloDias()) || !Objects.equals(atual.getTipoCiclo(), p.getTipoCiclo()));
+        if (atual != null) {
             p.setId(atual.getId());
             p.setUuid(atual.getUuid());
             p.setCreatedAt(atual.getCreatedAt());
@@ -357,7 +368,7 @@ public class ManutencaoService {
         p.setEmpresaId(empresaId);
         p.setDeletedAt(null);
         if (p.getAtivo() == null) p.setAtivo(Boolean.TRUE);
-        if ("TEMPO".equals(p.getTipoCiclo()) && p.getProximaData() == null)
+        if ("TEMPO".equals(p.getTipoCiclo()) && (p.getProximaData() == null || reprogramar))
             p.setProximaData((p.getUltimaExecucao() == null ? LocalDate.now() : p.getUltimaExecucao()).plusDays(p.getIntervaloDias()));
         if ("CONTADOR".equals(p.getTipoCiclo()) && p.getContadorUltimaExecucao() == null)
             ativos.findById(p.getAtivoId()).ifPresent(a -> p.setContadorUltimaExecucao(a.getContadorAtual() == null ? BigDecimal.ZERO : a.getContadorAtual()));

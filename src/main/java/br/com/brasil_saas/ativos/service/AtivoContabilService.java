@@ -5,6 +5,7 @@ import br.com.brasil_saas.ativos.repository.*;
 import br.com.brasil_saas.contabilidade.model.CtbLancamento;
 import br.com.brasil_saas.contabilidade.model.CtbPartida;
 import br.com.brasil_saas.contabilidade.service.ContabilidadeService;
+import br.com.brasil_saas.financeiro.repository.PlanoContasRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,7 @@ public class AtivoContabilService {
     private final AtivoMovimentoRepository movimentos;
     private final DepreciacaoExecucaoRepository execucoes;
     private final ContabilidadeService contabilidade;
+    private final PlanoContasRepository contas;
 
     public record AdicaoReq(LocalDate data, BigDecimal valor, String documento, Long contaContrapartidaId, String observacao) {}
     public record TransferenciaReq(LocalDate data, Long centroCustoDestinoId, String localizacaoDestino, Long responsavelDestinoId, String observacao) {}
@@ -62,6 +64,11 @@ public class AtivoContabilService {
             c.setCreatedAt(atual.getCreatedAt());
         } else {
             c.setId(null);
+        }
+        for (Long conta : Arrays.asList(c.getContaAtivoId(), c.getContaDepreciacaoAcumuladaId(), c.getContaDespesaDepreciacaoId(),
+                c.getContaGanhoBaixaId(), c.getContaPerdaBaixaId(), c.getContaReavaliacaoId(), c.getContaImpairmentId())) {
+            if (conta != null && contas.findByIdAndEmpresaIdAndDeletedAtIsNull(conta, empresaId).isEmpty())
+                throw new BusinessException("Conta contábil " + conta + " não encontrada nesta empresa");
         }
         c.setEmpresaId(empresaId);
         c.setDeletedAt(null);
@@ -355,6 +362,12 @@ public class AtivoContabilService {
             m.setPeriodo(atual.toString());
             m.setValor(total);
             m.setObservacao("Depreciação acumulada até " + atual);
+            ClasseAtivo c = classeDoAtivo(empresaId, a);
+            if (c != null && c.getContaDespesaDepreciacaoId() != null && c.getContaDepreciacaoAcumuladaId() != null)
+                m.setLancamentoId(contabilizar(empresaId, LocalDate.now(), "Depreciação do ativo " + a.getCodigo() + " até " + atual,
+                        "ATIVO_DEPRECIACAO", a.getId(), List.of(
+                                new Linha(c.getContaDespesaDepreciacaoId(), a.getCentroCustoId(), total, BigDecimal.ZERO),
+                                new Linha(c.getContaDepreciacaoAcumuladaId(), null, BigDecimal.ZERO, total))));
             movimentos.save(m);
         }
         return ativos.save(a);
@@ -391,6 +404,12 @@ public class AtivoContabilService {
         boolean jaExiste = execucoes.findAllByEmpresaIdAndDeletedAtIsNullOrderByPeriodoDescIdDesc(empresaId).stream()
                 .anyMatch(e -> periodo.toString().equals(e.getPeriodo()) && "EFETIVADA".equals(e.getStatus()));
         if (jaExiste) throw new BusinessException("Depreciação de " + periodo + " já foi executada");
+        for (AtivoImobilizado a : ativos.findAllByEmpresaIdAndDeletedAtIsNullOrderByCodigo(empresaId)) {
+            if ("ATIVO".equals(a.getStatus()) && a.getUltimoPeriodoDepreciado() != null
+                    && YearMonth.parse(a.getUltimoPeriodoDepreciado()).isAfter(periodo))
+                throw new BusinessException("Ativo " + a.getCodigo() + " já está depreciado até " + a.getUltimoPeriodoDepreciado()
+                        + "; períodos devem ser executados em ordem cronológica");
+        }
         List<Map<String, Object>> linhas = simular(empresaId, periodo);
         if (linhas.isEmpty()) throw new BusinessException("Nenhum ativo a depreciar em " + periodo);
 
@@ -457,6 +476,12 @@ public class AtivoContabilService {
         for (AtivoMovimento m : movimentos.findAllByExecucaoIdAndDeletedAtIsNull(e.getId())) {
             if (!"ATIVO".equals(m.getStatus())) continue;
             AtivoImobilizado a = ativo(empresaId, m.getAtivoId());
+            if (a.getUltimoPeriodoDepreciado() != null && a.getUltimoPeriodoDepreciado().compareTo(e.getPeriodo()) > 0)
+                throw new BusinessException("Ativo " + a.getCodigo() + " foi depreciado após " + e.getPeriodo() + "; estorno não permitido");
+        }
+        for (AtivoMovimento m : movimentos.findAllByExecucaoIdAndDeletedAtIsNull(e.getId())) {
+            if (!"ATIVO".equals(m.getStatus())) continue;
+            AtivoImobilizado a = ativo(empresaId, m.getAtivoId());
             if ("BAIXADO".equals(a.getStatus())) throw new BusinessException("Ativo " + a.getCodigo() + " já foi baixado; estorno não permitido");
             a.setValorDepreciado(nz(a.getValorDepreciado()).subtract(m.getValor()).max(BigDecimal.ZERO));
             if (e.getPeriodo().equals(a.getUltimoPeriodoDepreciado())) a.setUltimoPeriodoDepreciado(anterior);
@@ -513,7 +538,16 @@ public class AtivoContabilService {
         List<AtivoImobilizado> base = ativos.findAllByEmpresaIdAndDeletedAtIsNullOrderByCodigo(empresaId).stream()
                 .filter(a -> "ATIVO".equals(a.getStatus())).toList();
         Map<Long, BigDecimal> acumulado = new HashMap<>();
-        base.forEach(a -> acumulado.put(a.getId(), nz(a.getValorDepreciado())));
+        for (AtivoImobilizado a : base) {
+            acumulado.put(a.getId(), nz(a.getValorDepreciado()));
+            LocalDate ini = a.getDataInicioDepreciacao() != null ? a.getDataInicioDepreciacao() : a.getDataAquisicao();
+            if (ini == null || a.getVidaUtilMeses() == null) continue;
+            YearMonth p = a.getUltimoPeriodoDepreciado() == null ? YearMonth.from(ini) : YearMonth.parse(a.getUltimoPeriodoDepreciado()).plusMonths(1);
+            for (; p.isBefore(inicio); p = p.plusMonths(1)) {
+                acumulado.merge(a.getId(), DepreciacaoCalculadora.cota(a.getMetodoDepreciacao(), baseDepreciavel(a), acumulado.get(a.getId()),
+                        a.getVidaUtilMeses(), a.getTaxaAnual(), DepreciacaoCalculadora.indiceMes(ini, p)), BigDecimal::add);
+            }
+        }
         List<Map<String, Object>> out = new ArrayList<>();
         for (int i = 0; i < meses; i++) {
             YearMonth p = inicio.plusMonths(i);

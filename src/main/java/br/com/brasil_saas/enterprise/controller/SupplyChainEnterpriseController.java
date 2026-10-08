@@ -20,13 +20,13 @@ public class SupplyChainEnterpriseController {
   "revisoes-produto","bc_plm_produto_revisao","mudancas-engenharia","bc_plm_mudanca",
   "ehs","bc_ehs_ocorrencia","contratos-servico","bc_srv_contrato", "plm-documentos","bc_plm_documento", "plm-efeitos","bc_plm_efeito_mudanca", "plm-aprovacoes","bc_plm_aprovacao", "ehs-riscos","bc_ehs_risco", "ehs-inspecoes","bc_ehs_inspecao", "ehs-acoes","bc_ehs_acao", "ehs-permissoes","bc_ehs_permissao_trabalho"
  );
- @GetMapping("/{resource}")
+ @GetMapping("/{resource:reposicao|transportes|revisoes-produto|mudancas-engenharia|ehs|contratos-servico|plm-documentos|plm-efeitos|plm-aprovacoes|ehs-riscos|ehs-inspecoes|ehs-acoes|ehs-permissoes}")
  @PreAuthorize("isAuthenticated()")
  public List<Map<String,Object>> listar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource){
   String t=table(resource);
   return jdbc.queryForList("select * from brasil_saas."+t+" where empresa_id=? and deleted_at is null order by id desc",u.getEmpresaId());
  }
- @PostMapping("/{resource}")
+ @PostMapping("/{resource:reposicao|transportes|revisoes-produto|mudancas-engenharia|ehs|contratos-servico|plm-documentos|plm-efeitos|plm-aprovacoes|ehs-riscos|ehs-inspecoes|ehs-acoes|ehs-permissoes}")
  @PreAuthorize("isAuthenticated()")
  public Map<String,Object> criar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@RequestBody Map<String,Object> body){
   if("revisoes-produto".equals(resource)){
@@ -46,7 +46,7 @@ public class SupplyChainEnterpriseController {
   String sql="insert into brasil_saas."+t+" ("+String.join(",",c)+") values ("+String.join(",",Collections.nCopies(c.size(),"?"))+") returning *";
   return jdbc.queryForMap(sql,c.stream().map(d::get).toArray());
  }
- @PutMapping("/{resource}/{id}")
+ @PutMapping("/{resource:reposicao|transportes|revisoes-produto|mudancas-engenharia|ehs|contratos-servico|plm-documentos|plm-efeitos|plm-aprovacoes|ehs-riscos|ehs-inspecoes|ehs-acoes|ehs-permissoes}/{id}")
  @PreAuthorize("isAuthenticated()")
  public Map<String,Object> atualizar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@PathVariable Long id,@RequestBody Map<String,Object> body){
   String t=table(resource); Map<String,Object> d=sanitize(body);
@@ -57,7 +57,7 @@ public class SupplyChainEnterpriseController {
   List<Map<String,Object>> r=jdbc.queryForList("update brasil_saas."+t+" set "+String.join(",",c.stream().map(x->x+"=?").toList())+" where empresa_id=? and id=? and deleted_at is null returning *",v.toArray());
   if(r.isEmpty()) throw new NoSuchElementException("Registro não encontrado"); return r.get(0);
  }
- @DeleteMapping("/{resource}/{id}")
+ @DeleteMapping("/{resource:reposicao|transportes|revisoes-produto|mudancas-engenharia|ehs|contratos-servico|plm-documentos|plm-efeitos|plm-aprovacoes|ehs-riscos|ehs-inspecoes|ehs-acoes|ehs-permissoes}/{id}")
  @PreAuthorize("isAuthenticated()")
  public void excluir(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@PathVariable Long id){
   String t=table(resource);

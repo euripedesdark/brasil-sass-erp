@@ -41,7 +41,7 @@ public final class DepreciacaoCalculadora {
         BigDecimal restante = base.subtract(acumulado);
         if (restante.signum() <= 0) return zero();
         int mesesRestantes = vidaUtilMeses - indiceMes;
-        if (mesesRestantes <= 0) return restante.setScale(2, RoundingMode.HALF_UP);
+        if (mesesRestantes <= 1) return restante.setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal linearRestante = restante.divide(BigDecimal.valueOf(mesesRestantes), 2, RoundingMode.HALF_UP);
         BigDecimal valor = switch (metodo == null ? LINEAR : metodo) {
@@ -53,12 +53,14 @@ public final class DepreciacaoCalculadora {
     }
 
     private static BigDecimal somaDigitos(BigDecimal base, int vidaUtilMeses, int indiceMes) {
+        // ultimo ano pode ser parcial: entra na soma com peso proporcional aos seus meses
         int anos = (vidaUtilMeses + 11) / 12;
         int ano = indiceMes / 12;
         if (ano >= anos) return base;
-        BigDecimal soma = BigDecimal.valueOf((long) anos * (anos + 1) / 2);
+        int mesesUltimoAno = vidaUtilMeses - 12 * (anos - 1);
+        long denominador = 12L * ((long) anos * (anos + 1) / 2 - 1) + mesesUltimoAno;
         return base.multiply(BigDecimal.valueOf(anos - ano))
-                .divide(soma.multiply(BigDecimal.valueOf(12)), 2, RoundingMode.HALF_UP);
+                .divide(BigDecimal.valueOf(denominador), 2, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal saldoDecrescente(BigDecimal restante, int vidaUtilMeses, BigDecimal taxaAnual) {
