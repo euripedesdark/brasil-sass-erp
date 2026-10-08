@@ -34,6 +34,14 @@ Novos testes: `ConferenciaPagamentoCompraTest` (cinco cenários, incluindo fluxo
 
 A matriz abaixo registra o diagnóstico do commit de referência, anterior a essas correções locais.
 
+## Integração com o main atualizado
+
+As correções foram integradas ao commit remoto `9ee2e5e7da578bfe82c3d81dc2ccdb8001a415f6`, incluindo as entregas do Devin em ativos/manutenção e mapeamentos enterprise. A correção do controller, a entidade e V172 do main foram preservadas. A V172 local concorrente foi removida; V173 completa somente status e tolerância e normaliza status a partir de conforme, sem modificar migrations já publicadas.
+
+A tela ConferenciaFaturasCompra usava estados não declarados (`detalhe`/`itens`); esses estados foram implementados, os erros de carregamento tratados e o envio bloqueado para formulário inválido/em processamento. A API valida IDs positivos, recebimento/NF obrigatórios, valor positivo e tolerância não negativa.
+
+Validação nesta integração: 30 testes Java selecionados (conferência, baixa, vínculo financeiro, JPQL/H2 e HTTP MockMvc); build Vite; cinco checks smoke; regressão de renderização React; SQL V171/V172/V173 e repetição de V173 em PostgreSQL 18 com tabelas de referência mínimas. As contagens finais constam do log `/workspace/.tools/erp-focused-tests.log`. Os testes HTTP exercitam roteamento, validação e delegação com principal controlado; não cobrem toda a cadeia de autenticação/autorização. Build completo Maven e boot continuam sem validação devido à resolução do Spring AI.
+
 ## Como interpretar
 
 - **Parcial**: há implementação concreta, mas integração/regra/teste do ciclo ainda não foi comprovado.
@@ -148,7 +156,7 @@ Links relativos ao repositório; `#L` informa o ponto inicial no GitHub. O ident
 - **TEN**: [EmpresaTenantIdentifierResolver.java](../src/main/java/br/com/brasil_saas/shared/tenant/EmpresaTenantIdentifierResolver.java#L94) — `resolveCurrentTenantIdentifier`.
 - **APP**: [App.jsx](../src/main/resources/static/react/src/App.jsx#L182) — `path="contabilidade"`.
 - **TESTMATCH**: [ConferenciaFaturaCompraServiceImplTest.java](../src/test/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImplTest.java#L20) — `class Conferencia`.
-- **MIG**: [migration de conferência](../src/main/resources/db/migration/V171__compras_conferencia_fatura_item.sql) e [migration de 3-way](../src/main/resources/db/migration/V172__compras_3way_match_item.sql).
+- **MIG**: [migration de conferência](../src/main/resources/db/migration/V171__compras_conferencia_fatura_item.sql) e [migration de 3-way](../src/main/resources/db/migration/V172__compras_3way_match_complemento.sql).
 
 ## Inventário de testes Java próprios
 

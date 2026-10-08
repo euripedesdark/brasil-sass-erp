@@ -3,6 +3,8 @@ package br.com.brasil_saas.compras.service;
 import br.com.brasil_saas.compras.model.ConferenciaFaturaCompra;
 import br.com.brasil_saas.compras.model.ConferenciaFaturaCompraItem;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,7 +26,8 @@ public interface ConferenciaFaturaCompraService {
     List<ConferenciaFaturaCompraItem> listarItens(Long empresaId, Long conferenciaId);
 
     /** Corpo do POST /api/compras/conferencia-faturas (contrato inalterado). */
-    record Request(@NotNull Long pedidoId, @NotNull BigDecimal valorFatura,
-                   Long recebimentoId, Long tituloId, Long nfeId, BigDecimal tolerancia) {
+    record Request(@NotNull @Positive Long pedidoId, @NotNull @Positive BigDecimal valorFatura,
+                   @NotNull @Positive Long recebimentoId, @Positive Long tituloId,
+                   @NotNull @Positive Long nfeId, @PositiveOrZero BigDecimal tolerancia) {
     }
 }
