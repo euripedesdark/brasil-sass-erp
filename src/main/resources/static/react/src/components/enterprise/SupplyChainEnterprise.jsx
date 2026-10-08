@@ -13,7 +13,7 @@ import {api} from '../../services/ApiConfig';
 
 const tabs=[
  ['revisoes-produto','Engenharia de Produto'],['mudancas-engenharia','Mudanças de Engenharia'],['plm-documentos','Documentos PLM'],
- ['reposicao','Reposição / MRP'],['transportes','Transportes'],['ehs','EHS'],['contratos-servico','Contratos de Serviço']
+ ['reposicao','Reposição / MRP'],['transportes','Transportes'],['ehs','Ocorrências EHS'],['ehs-riscos','Riscos EHS'],['ehs-inspecoes','Inspeções EHS'],['ehs-acoes','Ações EHS'],['ehs-permissoes','Permissões de Trabalho'],['contratos-servico','Contratos de Serviço']
 ];
 const fields={
  'revisoes-produto':['produto_id','revisao','descricao','status','vigente_desde','vigente_ate','motivo','documento_id'],
