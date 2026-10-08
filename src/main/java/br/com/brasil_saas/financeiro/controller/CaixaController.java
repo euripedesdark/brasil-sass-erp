@@ -2,7 +2,10 @@ package br.com.brasil_saas.financeiro.controller;
 
 import br.com.brasil_saas.financeiro.dto.CaixaDtos.CaixaRequest;
 import br.com.brasil_saas.financeiro.dto.CaixaDtos.CaixaResponse;
+import br.com.brasil_saas.financeiro.dto.CaixaDtos.MovimentoRequest;
+import br.com.brasil_saas.financeiro.dto.CaixaDtos.MovimentoResponse;
 import br.com.brasil_saas.financeiro.model.Caixa;
+import br.com.brasil_saas.financeiro.model.MovimentoCaixa;
 import br.com.brasil_saas.financeiro.service.CaixaService;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import jakarta.validation.Valid;
@@ -11,7 +14,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,18 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Caixa.
- *
- * A tela Caixa.jsx esta no menu desde o inicio e chamava estes caminhos; sem
- * controller, todas as chamadas davam 404 e a tela ficava vazia sem mensagem.
- *
- * O tenant vem do token (nunca da query), no padrao do PedidoVendaController.
- *
- * Diretiva do dono (06/10): DIRETORIA, GERENTE e GESTOR gravam em todos os
- * modulos da propria empresa; o caixa e parte do financeiro. Por isso as tres
- * funcoes entram junto com os administradores neste guard.
- */
 @RestController
 @RequestMapping("/api/financeiro/caixas")
 @RequiredArgsConstructor
@@ -73,17 +63,29 @@ public class CaixaController {
         return ResponseEntity.ok(para(service.atualizar(id, request, empresa(user))));
     }
 
-    /**
-     * Remove. A tela chama isto como "excluir", mas o que acontece e
-     * desativacao: apagar um caixa que ja teve movimento quebraria o
-     * historico. A resposta 204 mantem o contrato que a tela ja esperava.
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> desativar(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser user) {
         service.desativar(id, empresa(user));
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/movimentos")
+    public ResponseEntity<MovimentoResponse> movimentar(
+            @PathVariable Long id,
+            @Valid @RequestBody MovimentoRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(paraMov(service.movimentar(empresa(user), id, request)));
+    }
+
+    @GetMapping("/{id}/movimentos")
+    public ResponseEntity<List<MovimentoResponse>> listarMovimentos(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(service.listarMovimentos(empresa(user), id).stream()
+                .map(CaixaController::paraMov).toList());
     }
 
     private static Long empresa(AuthenticatedUser user) {
@@ -96,5 +98,11 @@ public class CaixaController {
 
     private static CaixaResponse para(Caixa c) {
         return new CaixaResponse(c.getId(), c.getNome(), c.getSaldo(), c.getStatus(), c.isAtivo());
+    }
+
+    private static MovimentoResponse paraMov(MovimentoCaixa m) {
+        return new MovimentoResponse(
+                m.getId(), m.getCaixaId(), m.getTipo(), m.getValor(),
+                m.getSaldoAnterior(), m.getSaldoPosterior(), m.getObservacao(), m.getCreatedAt());
     }
 }

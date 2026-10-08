@@ -1,17 +1,14 @@
 package br.com.brasil_saas.financeiro.service;
 
 import br.com.brasil_saas.financeiro.dto.CaixaDtos.CaixaRequest;
+import br.com.brasil_saas.financeiro.dto.CaixaDtos.MovimentoRequest;
 import br.com.brasil_saas.financeiro.model.Caixa;
+import br.com.brasil_saas.financeiro.model.MovimentoCaixa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-/**
- * Caixa: cofre / conta de caixa.
- *
- * Toda operacao recebe o {@code empresaId} porque o tenant vem do token.
- * Sem isso, trocar o id na URL daria acesso ao caixa de outra empresa — o
- * mesmo problema que foi fechado no PedidoVendaController.
- */
+import java.util.List;
+
 public interface CaixaService {
 
     Page<Caixa> listar(Long empresaId, Pageable pageable, String termo);
@@ -22,11 +19,10 @@ public interface CaixaService {
 
     Caixa atualizar(Long id, CaixaRequest request, Long empresaId);
 
-    /**
-     * Desativa em vez de apagar.
-     *
-     * Apagar caixa que ja teve movimento quebra o historico. Desativar
-     * tira da lista ativa e mantem a referencia.
-     */
     void desativar(Long id, Long empresaId);
+
+    /** SANGRIA ou SUPRIMENTO — atualiza saldo e grava histórico. */
+    MovimentoCaixa movimentar(Long empresaId, Long caixaId, MovimentoRequest request);
+
+    List<MovimentoCaixa> listarMovimentos(Long empresaId, Long caixaId);
 }
