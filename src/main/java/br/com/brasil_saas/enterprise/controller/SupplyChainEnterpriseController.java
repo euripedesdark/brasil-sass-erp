@@ -29,6 +29,18 @@ public class SupplyChainEnterpriseController {
  @PostMapping("/{resource}")
  @PreAuthorize("isAuthenticated()")
  public Map<String,Object> criar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@RequestBody Map<String,Object> body){
+  if("revisoes-produto".equals(resource)){
+   Map<String,Object> b=new LinkedHashMap<>(body);
+   jdbc.update("insert into brasil_saas.bc_plm_produto_revisao(empresa_id,produto_id,revisao,descricao,status,vigente_desde,vigente_ate,motivo,documento_id,criado_por) values(?,?,?,?,?,?,?,?,?,?)",
+    u.getEmpresaId(),b.get("produto_id"),b.get("revisao"),b.get("descricao"),b.getOrDefault("status","EM_DESENVOLVIMENTO"),b.get("vigente_desde"),b.get("vigente_ate"),b.get("motivo"),b.get("documento_id"),u.getId());
+   return jdbc.queryForMap("select * from brasil_saas.bc_plm_produto_revisao where empresa_id=? order by id desc limit 1",u.getEmpresaId());
+  }
+  if("plm-documentos".equals(resource)){
+   Map<String,Object> b=new LinkedHashMap<>(body);
+   jdbc.update("insert into brasil_saas.bc_plm_documento(empresa_id,revisao_id,mudanca_id,tipo,codigo,versao,nome,localizacao,hash_documento,status,obrigatorio,vigencia_inicio,vigencia_fim) values(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    u.getEmpresaId(),b.get("revisao_id"),b.get("mudanca_id"),b.get("tipo"),b.get("codigo"),b.getOrDefault("versao","1"),b.get("nome"),b.get("localizacao"),b.get("hash_documento"),b.getOrDefault("status","RASCUNHO"),b.getOrDefault("obrigatorio",false),b.get("vigencia_inicio"),b.get("vigencia_fim"));
+   return jdbc.queryForMap("select * from brasil_saas.bc_plm_documento where empresa_id=? order by id desc limit 1",u.getEmpresaId());
+  }
   String t=table(resource); Map<String,Object> d=sanitize(body); d.put("empresa_id",u.getEmpresaId()); d.put("created_by",u.getId());
   List<String> c=new ArrayList<>(d.keySet()); if(c.isEmpty()) throw new IllegalArgumentException("Nenhum campo informado");
   String sql="insert into brasil_saas."+t+" ("+String.join(",",c)+") values ("+String.join(",",Collections.nCopies(c.size(),"?"))+") returning *";
@@ -188,6 +200,11 @@ public class SupplyChainEnterpriseController {
     "APROVAR".equals(acao)?"APROVADO":"OBSOLETO",u.getId(),acao,id,u.getEmpresaId());
   }
  }
+ private void ensure(String sql,Object a,Object b,String message){
+  Integer n=jdbc.queryForObject(sql,Integer.class,a,b);
+  if(n==null||n==0) throw new NoSuchElementException(message);
+ }
+ private double number(Object v){return v==null?0d:Double.parseDouble(v.toString());}
  private String table(String r){String t=TABLES.get(r);if(t==null)throw new IllegalArgumentException("Recurso inválido");return t;}
  private Map<String,Object> sanitize(Map<String,Object> s){
   Map<String,Object> d=new LinkedHashMap<>(); s.forEach((k,v)->{if(k!=null&&k.matches("[a-z][a-z0-9_]*")&&!Set.of("id","uuid","empresa_id","created_by","updated_by","deleted_at").contains(k))d.put(k,v);});return d;
