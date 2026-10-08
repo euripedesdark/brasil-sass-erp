@@ -40,6 +40,15 @@ public class TransferenciaEstoqueController {
         return transferenciaRepository.findByEmpresaIdAndDeletedAtIsNullOrderByDataTransferenciaDesc(user.getEmpresaId());
     }
 
+    @GetMapping("/{id}/itens")
+    @PreAuthorize("hasAuthority('estoque:transferencia:leitura')")
+    public List<TransferenciaEstoqueItem> itens(@AuthenticationPrincipal AuthenticatedUser user,
+                                                @PathVariable Long id) {
+        transferenciaRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, user.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Transferência não encontrada"));
+        return itemRepository.findByTransferenciaId(id);
+    }
+
     @PostMapping
     @Transactional
     @PreAuthorize("hasAuthority('estoque:transferencia:escrita')")
