@@ -169,7 +169,7 @@ public class SupplyChainEnterpriseController {
  @PostMapping("/ehs/inspecoes/{id}/reabrir")
  @PreAuthorize("hasAuthority('ehs:escrita')")
  public Map<String,Object> reabrirInspecao(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
-  int n=jdbc.update("update brasil_saas.bc_ehs_inspecao set status='ABERTA',updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
+  int n=jdbc.update("update brasil_saas.bc_ehs_inspecao set status='ABERTA' where id=? and empresa_id=?",id,u.getEmpresaId());
   if(n==0) throw new NoSuchElementException("Inspeção EHS não encontrada");
   return jdbc.queryForMap("select * from brasil_saas.bc_ehs_inspecao where id=? and empresa_id=?",id,u.getEmpresaId());
  }
