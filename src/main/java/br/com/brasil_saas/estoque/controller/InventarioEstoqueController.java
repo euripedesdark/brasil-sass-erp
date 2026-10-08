@@ -128,6 +128,19 @@ public class InventarioEstoqueController {
         return inventarioRepository.save(inv);
     }
 
+    @PostMapping("/{id}/cancelar")
+    @Transactional
+    @PreAuthorize("hasAuthority('estoque:inventario:escrita')")
+    public InventarioEstoque cancelar(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
+        InventarioEstoque inv = inventarioRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, user.getEmpresaId())
+                .orElseThrow(() -> new BusinessException("Inventário não encontrado"));
+        if (!"ABERTO".equals(inv.getStatus()))
+            throw new BusinessException("Somente inventário ABERTO pode ser cancelado");
+        inv.setStatus("CANCELADO");
+        inv.setUpdatedAt(LocalDateTime.now());
+        return inventarioRepository.save(inv);
+    }
+
     public record CriarRequest(@NotNull Long depositoId,String observacoes) {}
     public record ContagemRequest(@NotNull Long produtoId,Long loteId,Long enderecoId,@NotNull @DecimalMin("0.000") BigDecimal quantidadeContada,String observacao) {}
 }
