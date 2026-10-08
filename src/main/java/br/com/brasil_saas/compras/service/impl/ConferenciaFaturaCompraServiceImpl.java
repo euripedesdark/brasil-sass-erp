@@ -141,8 +141,12 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         BigDecimal tolerancia = nz(request.tolerancia());
         BigDecimal limite = tolerancia.abs();
 
-        boolean totaisOk = valorFatura.subtract(valorPedido).abs().compareTo(limite) <= 0
-                && valorFatura.subtract(valorRecebido).abs().compareTo(limite) <= 0;
+        // Uma NF pode faturar um recebimento parcial, sem faturar o pedido todo.
+        // O total fiscal e' a fonte do valor, nao somente o informado na tela.
+        boolean totaisOk = nfe.getValorTotal() != null
+                && valorFatura.subtract(nfe.getValorTotal()).abs().compareTo(limite) <= 0
+                && valorFatura.subtract(valorRecebido).abs().compareTo(limite) <= 0
+                && valorRecebido.subtract(valorPedido).compareTo(limite) <= 0;
 
         List<ConferenciaFaturaCompraItem> itens = compararItens(
                 empresaId,
@@ -152,7 +156,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                 nfeItemRepository.findByNfeIdOrderByNumeroItem(nfe.getId()));
 
         long divergentes = itens.stream().filter(i -> !Boolean.TRUE.equals(i.getConforme())).count();
-        boolean aprovada = totaisOk && divergentes == 0;
+        boolean aprovada = totaisOk && !itens.isEmpty() && divergentes == 0;
 
         ConferenciaFaturaCompra conferencia = new ConferenciaFaturaCompra();
         conferencia.setEmpresaId(empresaId);
@@ -166,7 +170,8 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         conferencia.setTolerancia(tolerancia);
         conferencia.setStatus(aprovada ? "APROVADA" : "DIVERGENTE");
         conferencia.setDivergencia(aprovada ? null
-                : descrever(valorPedido, valorRecebido, valorFatura, tolerancia, totaisOk, divergentes, itens.size()));
+                : descrever(valorPedido, valorRecebido, valorFatura, tolerancia, totaisOk, divergentes, itens.size())
+                    + ", total NF-e=" + nfe.getValorTotal());
 
         ConferenciaFaturaCompra salva = repository.save(conferencia);
 
@@ -259,12 +264,32 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                         : faturados.keySet().stream().filter(k -> k.startsWith(prefixo)).findFirst().orElse(null);
                 String chaveRec = recebidos.containsKey(entry.getKey()) ? entry.getKey()
                         : recebidos.keySet().stream().filter(k -> k.startsWith(prefixo)).findFirst().orElse(null);
-                linhas.add(linha(empresaId, pedido, recebidos.remove(chaveRec), faturados.remove(chaveNfe)));
+                RecebimentoCompraItem recebido = recebidos.remove(chaveRec);
+                NfeItem faturado = faturados.remove(chaveNfe);
+                // Itens ainda nao entregues nao fazem parte desta conferencia.
+                if (faturado != null || (recebido != null && nz(recebido.getQuantidadeRecebida()).signum() != 0)) {
+                    linhas.add(linha(empresaId, pedido, recebido, faturado));
+                }
                 pendentes.remove();
             }
         }
         // Toda linha fiscal nao consumida e' divergente, inclusive texto livre.
         faturados.values().forEach(item -> linhas.add(linhaNaoPedida(empresaId, item)));
+        recebidos.values().stream().filter(item -> nz(item.getQuantidadeRecebida()).signum() != 0)
+                .forEach(item -> {
+                    var linha = new ConferenciaFaturaCompraItem();
+                    linha.setEmpresaId(empresaId);
+                    linha.setProdutoId(item.getProdutoId());
+                    linha.setRecebimentoItemId(item.getId());
+                    linha.setQuantidadeRecebida(nz(item.getQuantidadeRecebida()));
+                    linha.setValorUnitarioRecebido(nz(item.getValorUnitario()));
+                    linha.setValorTotalRecebido(total(item.getQuantidadeRecebida(), item.getValorUnitario()));
+                    linha.setConforme(false);
+                    linha.setStatus("DIVERGENTE");
+                    linha.setTipoDivergencia(ITEM_NAO_PEDIDO);
+                    linha.setDivergencia("Linha do recebimento sem correspondencia no pedido");
+                    linhas.add(linha);
+                });
         return linhas;
     }
 
@@ -364,7 +389,9 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     private static String descrever(BigDecimal valorPedido, BigDecimal valorRecebido, BigDecimal valorFatura,
                                     BigDecimal tolerancia, boolean totaisOk, long divergentes, int totalItens) {
         StringBuilder texto = new StringBuilder();
+        if (totalItens == 0) texto.append("Conferencia sem itens do recebimento ou da NF-e");
         if (!totaisOk) {
+            if (texto.length() > 0) texto.append(" | ");
             texto.append("Divergencia 3-way: pedido=").append(valorPedido)
                     .append(", recebido=").append(valorRecebido)
                     .append(", fatura=").append(valorFatura)

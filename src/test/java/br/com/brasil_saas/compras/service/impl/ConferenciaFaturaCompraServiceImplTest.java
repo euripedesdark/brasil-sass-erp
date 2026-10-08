@@ -163,4 +163,26 @@ class ConferenciaFaturaCompraServiceImplTest {
         assertEquals(2, linhas.size());
         assertEquals("ITEM_NAO_PEDIDO", linhas.get(1).getTipoDivergencia());
     }
+
+    @Test
+    void apontaProdutoRecebidoSemLinhaNoPedido() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "1", "5")),
+                List.of(recebimento(10L, "1", "5"), recebimento(99L, "1", "7")),
+                List.of(nfe(10L, "1", "5")));
+        assertEquals(2, linhas.size());
+        assertTrue(linhas.get(0).getConforme());
+        assertFalse(linhas.get(1).getConforme());
+        assertEquals("ITEM_NAO_PEDIDO", linhas.get(1).getTipoDivergencia());
+        assertEquals(new BigDecimal("7.00"), linhas.get(1).getValorTotalRecebido());
+    }
+
+    @Test
+    void itemFaturadoSemRecebimentoNaoEIgnoradoComoEntregaFutura() {
+        var linhas = ConferenciaFaturaCompraServiceImpl.compararItens(1L,
+                List.of(pedido(10L, "10", "5")), List.of(), List.of(nfe(10L, "1", "5")));
+        assertEquals(1, linhas.size());
+        assertFalse(linhas.get(0).getConforme());
+        assertEquals("QUANTIDADE_FATURADA_MAIOR_QUE_RECEBIDA", linhas.get(0).getTipoDivergencia());
+    }
 }
