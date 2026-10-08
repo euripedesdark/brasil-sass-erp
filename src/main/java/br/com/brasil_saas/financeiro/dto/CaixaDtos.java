@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class CaixaDtos {
 
@@ -27,4 +28,19 @@ public class CaixaDtos {
             BigDecimal saldo,
             String status,
             boolean ativo) {}
+
+    public record MovimentoRequest(
+            @NotBlank String tipo,
+            @NotNull @DecimalMin(value = "0.01", message = "Valor deve ser positivo") BigDecimal valor,
+            @Size(max = 500) String observacao) {}
+
+    public record MovimentoResponse(
+            Long id,
+            Long caixaId,
+            String tipo,
+            BigDecimal valor,
+            BigDecimal saldoAnterior,
+            BigDecimal saldoPosterior,
+            String observacao,
+            LocalDateTime createdAt) {}
 }

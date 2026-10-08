@@ -1,8 +1,11 @@
 package br.com.brasil_saas.financeiro.service.impl;
 
 import br.com.brasil_saas.financeiro.dto.CaixaDtos.CaixaRequest;
+import br.com.brasil_saas.financeiro.dto.CaixaDtos.MovimentoRequest;
 import br.com.brasil_saas.financeiro.model.Caixa;
+import br.com.brasil_saas.financeiro.model.MovimentoCaixa;
 import br.com.brasil_saas.financeiro.repository.CaixaRepository;
+import br.com.brasil_saas.financeiro.repository.MovimentoCaixaRepository;
 import br.com.brasil_saas.financeiro.service.CaixaService;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
@@ -12,13 +15,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CaixaServiceImpl implements CaixaService {
 
     private final CaixaRepository repository;
+    private final MovimentoCaixaRepository movimentoRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -39,52 +45,79 @@ public class CaixaServiceImpl implements CaixaService {
     @Override
     @Transactional
     public Caixa criar(CaixaRequest request, Long empresaId) {
-        String nome = request.nome().trim();
-        if (repository.findByEmpresaIdAndNomeIgnoreCaseAndDeletedAtIsNull(empresaId, nome).isPresent()) {
-            throw new BusinessException("Ja existe um caixa com esse nome");
-        }
-
-        Caixa caixa = new Caixa();
-        caixa.setEmpresaId(empresaId);
-        caixa.setNome(nome);
-        caixa.setSaldo(request.saldo());
-        caixa.setStatus(normaliza(request.status(), "ATIVO"));
-        return repository.save(caixa);
+        Caixa c = new Caixa();
+        c.setEmpresaId(empresaId);
+        c.setNome(request.nome().trim());
+        c.setSaldo(request.saldo() != null ? request.saldo() : BigDecimal.ZERO);
+        c.setStatus(request.status() != null && !request.status().isBlank() ? request.status() : "ATIVO");
+        return repository.save(c);
     }
 
     @Override
     @Transactional
     public Caixa atualizar(Long id, CaixaRequest request, Long empresaId) {
-        Caixa caixa = buscarPorId(id, empresaId);
-        String nome = request.nome().trim();
-
-        repository.findByEmpresaIdAndNomeIgnoreCaseAndDeletedAtIsNull(empresaId, nome)
-                .filter(outro -> !outro.getId().equals(id))
-                .ifPresent(outro -> { throw new BusinessException("Ja existe um caixa com esse nome"); });
-
-        caixa.setNome(nome);
-        caixa.setSaldo(request.saldo());
-        caixa.setStatus(normaliza(request.status(), caixa.getStatus()));
-        return repository.save(caixa);
+        Caixa c = buscarPorId(id, empresaId);
+        c.setNome(request.nome().trim());
+        if (request.status() != null && !request.status().isBlank()) {
+            c.setStatus(request.status());
+        }
+        return repository.save(c);
     }
 
     @Override
     @Transactional
     public void desativar(Long id, Long empresaId) {
-        Caixa caixa = buscarPorId(id, empresaId);
-        caixa.setStatus("INATIVO");
-        caixa.setDeletedAt(LocalDateTime.now());
-        repository.save(caixa);
+        Caixa c = buscarPorId(id, empresaId);
+        c.setStatus("INATIVO");
+        c.setDeletedAt(LocalDateTime.now());
+        repository.save(c);
     }
 
-    private static String normaliza(String status, String padrao) {
-        if (status == null || status.isBlank()) {
-            return padrao == null || padrao.isBlank() ? "ATIVO" : padrao;
+    @Override
+    @Transactional
+    public MovimentoCaixa movimentar(Long empresaId, Long caixaId, MovimentoRequest request) {
+        String tipo = request.tipo() == null ? "" : request.tipo().trim().toUpperCase();
+        if (!"SANGRIA".equals(tipo) && !"SUPRIMENTO".equals(tipo)) {
+            throw new BusinessException("Tipo deve ser SANGRIA ou SUPRIMENTO");
         }
-        String s = status.trim().toUpperCase();
-        if (!"ATIVO".equals(s) && !"INATIVO".equals(s)) {
-            throw new BusinessException("Status invalido: use ATIVO ou INATIVO");
+        if (request.valor() == null || request.valor().signum() <= 0) {
+            throw new BusinessException("Valor do movimento deve ser positivo");
         }
-        return s;
+
+        Caixa c = buscarPorId(caixaId, empresaId);
+        if (!c.isAtivo()) {
+            throw new BusinessException("Caixa inativo nao aceita movimentos");
+        }
+
+        BigDecimal anterior = c.getSaldo() == null ? BigDecimal.ZERO : c.getSaldo();
+        BigDecimal posterior;
+        if ("SANGRIA".equals(tipo)) {
+            if (anterior.compareTo(request.valor()) < 0) {
+                throw new BusinessException("Saldo insuficiente para sangria");
+            }
+            posterior = anterior.subtract(request.valor());
+        } else {
+            posterior = anterior.add(request.valor());
+        }
+
+        c.setSaldo(posterior);
+        repository.save(c);
+
+        MovimentoCaixa m = new MovimentoCaixa();
+        m.setEmpresaId(empresaId);
+        m.setCaixaId(caixaId);
+        m.setTipo(tipo);
+        m.setValor(request.valor());
+        m.setSaldoAnterior(anterior);
+        m.setSaldoPosterior(posterior);
+        m.setObservacao(request.observacao());
+        return movimentoRepository.save(m);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MovimentoCaixa> listarMovimentos(Long empresaId, Long caixaId) {
+        buscarPorId(caixaId, empresaId);
+        return movimentoRepository.findByEmpresaIdAndCaixaIdOrderByCreatedAtDesc(empresaId, caixaId);
     }
 }

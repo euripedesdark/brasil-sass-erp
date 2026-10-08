@@ -1,11 +1,5 @@
 import { api } from './ApiConfig';
 
-// A tela Caixa.jsx chamava "/api/caixa", que nao existia em lugar nenhum do
-// backend: nem entidade, nem tabela, nem controller. O caminho segue o padrao
-// do modulo financeiro (/api/financeiro/...).
-//
-// O import tambem estava errado: o default de ApiConfig e o objeto de
-// configuracao, sem `.get`; a instancia do axios e o export nomeado `api`.
 const BASE = '/api/financeiro/caixas';
 
 export const CaixaService = {
@@ -29,10 +23,6 @@ export const CaixaService = {
         return response.data;
     },
 
-    /**
-     * Remove. O backend desativa em vez de apagar, para nao quebrar o
-     * historico de um caixa que ja teve movimento.
-     */
     delete: async (id) => {
         const response = await api.delete(`${BASE}/${id}`);
         return response.data;
@@ -43,6 +33,16 @@ export const CaixaService = {
             ? `${BASE}?busca=${encodeURIComponent(term)}&page=${page}&size=${size}`
             : `${BASE}?page=${page}&size=${size}`;
         const response = await api.get(url);
+        return response.data;
+    },
+
+    movimentar: async (id, tipo, valor, observacao) => {
+        const response = await api.post(`${BASE}/${id}/movimentos`, { tipo, valor, observacao });
+        return response.data;
+    },
+
+    listarMovimentos: async (id) => {
+        const response = await api.get(`${BASE}/${id}/movimentos`);
         return response.data;
     }
 };
