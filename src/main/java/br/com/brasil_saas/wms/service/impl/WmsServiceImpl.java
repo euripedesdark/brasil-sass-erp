@@ -105,12 +105,13 @@ public class WmsServiceImpl implements WmsService {
         return ondas.save(o);
     }
     @Override @Transactional public WmsOndaItem separar(Long empresaId, Long ondaId, Long itemId, BigDecimal qtd, Long enderecoId) {
-        exigirOnda(empresaId, ondaId);
+        if (qtd == null || qtd.signum() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade separada deve ser positiva");
         WmsOnda o = exigirOnda(empresaId, ondaId);
         if (!"EM_SEPARACAO".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda nao esta em separacao");
         WmsOndaItem i = exigir(itens.findByIdAndEmpresaIdAndDeletedAtIsNull(itemId, empresaId), "Item inexistente");
         if (!ondaId.equals(i.getOndaId())) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item de outra onda");
-        BigDecimal nova = (i.getQtdSeparada() == null ? BigDecimal.ZERO : i.getQtdSeparada()).add(qtd == null ? BigDecimal.ZERO : qtd);
+        BigDecimal nova = (i.getQtdSeparada() == null ? BigDecimal.ZERO : i.getQtdSeparada()).add(qtd);
         if (nova.compareTo(i.getQtdSolicitada()) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade acima da solicitada");
         i.setQtdSeparada(nova);
         if (enderecoId != null) {
@@ -148,7 +149,11 @@ public class WmsServiceImpl implements WmsService {
         return volumes.findByExpedicaoIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId);
     }
     @Override @Transactional public WmsVolume criarVolume(Long empresaId, WmsVolume v) {
-        exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(v.getExpedicaoId(), empresaId), "Expedicao inexistente");
+        ExpedicaoEstoque exp = exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(v.getExpedicaoId(), empresaId), "Expedicao inexistente");
+        if ("EXPEDIDA".equals(exp.getStatus()) || "CANCELADA".equals(exp.getStatus()))
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Expedicao encerrada nao aceita novos volumes");
+        if (v.getCodigo() == null || v.getCodigo().isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Codigo do volume obrigatorio");
         v.setId(null);
         v.setEmpresaId(empresaId);
         v.setStatus("ABERTO");
@@ -165,6 +170,13 @@ public class WmsServiceImpl implements WmsService {
             WmsOndaItem oi = exigir(itens.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getOndaItemId(), empresaId), "Item da onda inexistente");
             if (!Objects.equals(oi.getProdutoId(), i.getProdutoId()))
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto nao corresponde ao item da onda");
+            // Nao embalar mais do que foi separado, somando todos os volumes.
+            BigDecimal jaEmbalado = volumeItens.findByOndaItemIdAndEmpresaIdAndDeletedAtIsNull(oi.getId(), empresaId).stream()
+                .map(x -> x.getQuantidade() == null ? BigDecimal.ZERO : x.getQuantidade())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal separado = oi.getQtdSeparada() == null ? BigDecimal.ZERO : oi.getQtdSeparada();
+            if (jaEmbalado.add(i.getQuantidade()).compareTo(separado) > 0)
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade embalada acima da separada");
         }
         i.setId(null);
         i.setEmpresaId(empresaId);
@@ -173,6 +185,9 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public WmsVolume fecharVolume(Long empresaId, Long id) {
         WmsVolume v = exigir(volumes.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Volume inexistente");
+        if ("FECHADO".equals(v.getStatus())) return v;
+        if (volumeItens.findByVolumeIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).isEmpty())
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Volume vazio nao pode ser fechado");
         v.setStatus("FECHADO");
         return volumes.save(v);
     }
@@ -224,7 +239,7 @@ public class WmsServiceImpl implements WmsService {
             item.setStatus("EXPEDIDO");
             expedicaoItens.save(item);
             if (item.getReservaId() != null) {
-                reservas.findById(item.getReservaId()).ifPresent(r -> {
+                reservas.findById(item.getReservaId()).filter(r -> empresaId.equals(r.getEmpresaId())).ifPresent(r -> {
                     if ("RESERVADA".equals(r.getStatus()) || "SEPARACAO".equals(r.getStatus()))
                         r.setStatus("CONSUMIDA");
                     reservas.save(r);
