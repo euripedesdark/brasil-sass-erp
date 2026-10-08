@@ -137,6 +137,51 @@ public class SupplyChainEnterpriseController {
   jdbc.update("update brasil_saas.bc_plm_mudanca set status='IMPLEMENTADA',implementado_em=now(),updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
   return workflow(u,id);
  }
+ @GetMapping("/ehs/riscos/{id}/workflow")
+ @PreAuthorize("hasAuthority('ehs:leitura')")
+ public Map<String,Object> riscoWorkflow(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
+  ensure("select count(*) from brasil_saas.bc_ehs_risco where id=? and empresa_id=?",id,u.getEmpresaId(),"Risco EHS não encontrado");
+  Map<String,Object> r=new LinkedHashMap<>();
+  r.put("risco",jdbc.queryForMap("select * from brasil_saas.bc_ehs_risco where id=? and empresa_id=?",id,u.getEmpresaId()));
+  r.put("acoes",jdbc.queryForList("select * from brasil_saas.bc_ehs_acao where empresa_id=? and (ocorrencia_id is null or ocorrencia_id is not null) order by prazo nulls last,id desc",u.getEmpresaId()));
+  return r;
+ }
+
+ @PostMapping("/ehs/acoes")
+ @PreAuthorize("hasAuthority('ehs:escrita')")
+ public Map<String,Object> criarAcaoEhs(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object> b){
+  Object descricao=b.get("descricao");
+  if(descricao==null||descricao.toString().isBlank()) throw new IllegalArgumentException("descricao é obrigatória");
+  jdbc.update("insert into brasil_saas.bc_ehs_acao(empresa_id,ocorrencia_id,inspecao_id,descricao,responsavel,prazo,status,evidencia) values(?,?,?,?,?,?,?,?)",
+   u.getEmpresaId(),longValue(b.get("ocorrenciaId")),longValue(b.get("inspecaoId")),descricao.toString(),b.get("responsavel"),b.get("prazo"),b.getOrDefault("status","ABERTA"),b.get("evidencia"));
+  return jdbc.queryForMap("select * from brasil_saas.bc_ehs_acao where empresa_id=? order by id desc limit 1",u.getEmpresaId());
+ }
+
+ @PostMapping("/ehs/acoes/{id}/concluir")
+ @PreAuthorize("hasAuthority('ehs:escrita')")
+ public Map<String,Object> concluirAcaoEhs(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
+  int n=jdbc.update("update brasil_saas.bc_ehs_acao set status='CONCLUIDA',concluida_em=now(),evidencia=coalesce(?,evidencia) where id=? and empresa_id=?",
+   b.get("evidencia"),id,u.getEmpresaId());
+  if(n==0) throw new NoSuchElementException("Ação EHS não encontrada");
+  return jdbc.queryForMap("select * from brasil_saas.bc_ehs_acao where id=? and empresa_id=?",id,u.getEmpresaId());
+ }
+
+ @PostMapping("/ehs/inspecoes/{id}/reabrir")
+ @PreAuthorize("hasAuthority('ehs:escrita')")
+ public Map<String,Object> reabrirInspecao(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
+  int n=jdbc.update("update brasil_saas.bc_ehs_inspecao set status='ABERTA',updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
+  if(n==0) throw new NoSuchElementException("Inspeção EHS não encontrada");
+  return jdbc.queryForMap("select * from brasil_saas.bc_ehs_inspecao where id=? and empresa_id=?",id,u.getEmpresaId());
+ }
+
+ @PostMapping("/ehs/permissoes/{id}/cancelar")
+ @PreAuthorize("hasAuthority('ehs:escrita')")
+ public Map<String,Object> cancelarPermissao(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
+  int n=jdbc.update("update brasil_saas.bc_ehs_permissao_trabalho set status='CANCELADA' where id=? and empresa_id=? and status not in ('CONCLUIDA','CANCELADA')",id,u.getEmpresaId());
+  if(n==0) throw new NoSuchElementException("Permissão não encontrada ou já encerrada");
+  return jdbc.queryForMap("select * from brasil_saas.bc_ehs_permissao_trabalho where id=? and empresa_id=?",id,u.getEmpresaId());
+ }
+
  @PostMapping("/ehs/riscos/{id}/reavaliar")
  @PreAuthorize("hasAuthority('ehs:escrita')")
  public Map<String,Object> reavaliarRisco(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody Map<String,Object> b){
