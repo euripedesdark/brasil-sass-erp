@@ -1,0 +1,326 @@
+package br.com.brasil_saas.compras.service.impl;
+
+import br.com.brasil_saas.compras.model.ConferenciaFaturaCompra;
+import br.com.brasil_saas.compras.model.ConferenciaFaturaCompraItem;
+import br.com.brasil_saas.compras.model.ItemPedidoCompra;
+import br.com.brasil_saas.compras.model.PedidoCompra;
+import br.com.brasil_saas.compras.model.RecebimentoCompra;
+import br.com.brasil_saas.compras.model.RecebimentoCompraItem;
+import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository;
+import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraRepository;
+import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
+import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
+import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
+import br.com.brasil_saas.compras.service.ConferenciaFaturaCompraService;
+import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import br.com.brasil_saas.fiscal.model.Nfe;
+import br.com.brasil_saas.fiscal.model.NfeItem;
+import br.com.brasil_saas.fiscal.repository.NfeItemRepository;
+import br.com.brasil_saas.fiscal.repository.NfeRepository;
+import br.com.brasil_saas.shared.exception.BusinessException;
+import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Conferencia 3-way da compra: pedido x recebimento x NF-e de entrada.
+ *
+ * <p>A conferencia comparava so' os totais: uma fatura de mesmo valor total
+ * passava mesmo com item trocado, quantidade diferente ou preco unitario
+ * outro. Agora cada item do pedido e' confrontado com a linha do recebimento
+ * e com a linha da NF-e, e a divergencia fica gravada linha a linha.
+ *
+ * <p>A ordem de severidade define o tipo gravado quando a linha acumula mais
+ * de um problema: item sem fatura, faturado acima do recebido, recebido acima
+ * do pedido, quantidade diferente, preco diferente. O texto da divergencia
+ * lista todos os problemas encontrados, nao so' o mais grave.
+ */
+@Service
+@RequiredArgsConstructor
+public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaCompraService {
+
+    static final String OK = "OK";
+    static final String ITEM_NAO_FATURADO = "ITEM_NAO_FATURADO";
+    static final String QUANTIDADE_FATURADA_MAIOR_QUE_RECEBIDA = "QUANTIDADE_FATURADA_MAIOR_QUE_RECEBIDA";
+    static final String QUANTIDADE_RECEBIDA_MAIOR_QUE_PEDIDO = "QUANTIDADE_RECEBIDA_MAIOR_QUE_PEDIDO";
+    static final String QUANTIDADE_FATURADA_DIVERGENTE = "QUANTIDADE_FATURADA_DIVERGENTE";
+    static final String PRECO_DIVERGENTE = "PRECO_DIVERGENTE";
+    static final String ITEM_NAO_PEDIDO = "ITEM_NAO_PEDIDO";
+
+    private final ConferenciaFaturaCompraRepository repository;
+    private final ConferenciaFaturaCompraItemRepository itemRepository;
+    private final PedidoCompraRepository pedidoRepository;
+    private final RecebimentoCompraRepository recebimentoRepository;
+    private final RecebimentoCompraItemRepository recebimentoItemRepository;
+    private final TituloRepository tituloRepository;
+    private final NfeRepository nfeRepository;
+    private final NfeItemRepository nfeItemRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConferenciaFaturaCompra> listar(Long empresaId) {
+        return repository.findByEmpresaIdOrderByCreatedAtDesc(empresaId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ConferenciaFaturaCompraItem> listarItens(Long empresaId, Long conferenciaId) {
+        repository.findByIdAndEmpresaIdAndDeletedAtIsNull(conferenciaId, empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conferencia nao encontrada"));
+        return itemRepository.findByEmpresaIdAndConferenciaIdOrderByNumeroItemAsc(empresaId, conferenciaId);
+    }
+
+    @Override
+    @Transactional
+    public ConferenciaFaturaCompra conferir(Long empresaId, Request request) {
+        PedidoCompra pedido = pedidoRepository.findByIdForUpdate(request.pedidoId())
+                .filter(p -> p.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
+
+        if ("CANCELADO".equals(pedido.getStatus())) {
+            throw new BusinessException("Pedido de compra cancelado nao pode entrar em conferencia");
+        }
+        if (request.recebimentoId() == null) {
+            throw new BusinessException("O 3-way match exige um recebimento");
+        }
+        if (request.nfeId() == null) {
+            throw new BusinessException("O 3-way match exige o documento fiscal de entrada");
+        }
+
+        RecebimentoCompra recebimento = recebimentoRepository
+                .findByIdAndEmpresaIdAndDeletedAtIsNull(request.recebimentoId(), empresaId)
+                .filter(r -> pedido.getId().equals(r.getPedidoId()))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Recebimento nao encontrado para o pedido informado"));
+
+        Nfe nfe = nfeRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.nfeId(), empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Documento fiscal nao encontrado"));
+        if (!"E".equalsIgnoreCase(nfe.getTipoOperacao())) {
+            throw new BusinessException("Documento fiscal deve ser de entrada");
+        }
+        if (nfe.getPedidoCompraId() != null && !pedido.getId().equals(nfe.getPedidoCompraId())) {
+            throw new BusinessException("Documento fiscal vinculado a outro pedido");
+        }
+        if (nfe.getStatus() != null
+                && !("AUTORIZADA".equalsIgnoreCase(nfe.getStatus()) || "AUTORIZADO".equalsIgnoreCase(nfe.getStatus()))) {
+            throw new BusinessException("Documento fiscal ainda nao esta autorizado");
+        }
+
+        if (request.tituloId() != null) {
+            tituloRepository.findById(request.tituloId())
+                    .filter(t -> t.getEmpresaId().equals(empresaId))
+                    .orElseThrow(() -> new ResourceNotFoundException("Titulo informado nao encontrado"));
+        }
+
+        BigDecimal valorPedido = nz(pedido.getValorTotal());
+        BigDecimal valorRecebido = nz(recebimento.getValorTotal());
+        BigDecimal valorFatura = nz(request.valorFatura());
+        BigDecimal tolerancia = nz(request.tolerancia());
+        BigDecimal limite = tolerancia.abs();
+
+        boolean totaisOk = valorFatura.subtract(valorPedido).abs().compareTo(limite) <= 0
+                && valorFatura.subtract(valorRecebido).abs().compareTo(limite) <= 0;
+
+        List<ConferenciaFaturaCompraItem> itens = compararItens(
+                empresaId,
+                pedido.getItens(),
+                recebimentoItemRepository.findByEmpresaIdAndRecebimentoIdAndDeletedAtIsNullOrderByIdAsc(
+                        empresaId, recebimento.getId()),
+                nfeItemRepository.findByNfeIdOrderByNumeroItem(nfe.getId()));
+
+        long divergentes = itens.stream().filter(i -> !Boolean.TRUE.equals(i.getConforme())).count();
+        boolean aprovada = totaisOk && divergentes == 0;
+
+        ConferenciaFaturaCompra conferencia = new ConferenciaFaturaCompra();
+        conferencia.setEmpresaId(empresaId);
+        conferencia.setPedidoId(pedido.getId());
+        conferencia.setRecebimentoId(recebimento.getId());
+        conferencia.setTituloId(request.tituloId());
+        conferencia.setNfeId(nfe.getId());
+        conferencia.setValorPedido(valorPedido);
+        conferencia.setValorRecebido(valorRecebido);
+        conferencia.setValorFatura(valorFatura);
+        conferencia.setTolerancia(tolerancia);
+        conferencia.setStatus(aprovada ? "APROVADA" : "DIVERGENTE");
+        conferencia.setDivergencia(aprovada ? null
+                : descrever(valorPedido, valorRecebido, valorFatura, tolerancia, totaisOk, divergentes, itens.size()));
+
+        ConferenciaFaturaCompra salva = repository.save(conferencia);
+
+        for (ConferenciaFaturaCompraItem item : itens) {
+            item.setConferenciaId(salva.getId());
+        }
+        itemRepository.saveAll(itens);
+        return salva;
+    }
+
+    /**
+     * Confronta item a item o pedido, o recebimento e a NF-e de entrada.
+     *
+     * <p>O casamento e' pelo produto. O item do pedido sem produto cadastrado
+     * (item de texto livre) cai para o numero do item na NF-e, que e' a unica
+     * chave que sobra.
+     */
+    static List<ConferenciaFaturaCompraItem> compararItens(Long empresaId,
+                                                          List<ItemPedidoCompra> itensPedido,
+                                                          List<RecebimentoCompraItem> itensRecebimento,
+                                                          List<NfeItem> itensNfe) {
+        Map<Long, RecebimentoCompraItem> recebimentoPorProduto = new LinkedHashMap<>();
+        for (RecebimentoCompraItem item : itensRecebimento) {
+            if (item.getProdutoId() != null) {
+                recebimentoPorProduto.put(item.getProdutoId(), item);
+            }
+        }
+
+        Map<Long, NfeItem> nfePorProduto = new LinkedHashMap<>();
+        Map<Integer, NfeItem> nfePorNumero = new LinkedHashMap<>();
+        for (NfeItem item : itensNfe) {
+            if (item.getProdutoId() != null) {
+                nfePorProduto.put(item.getProdutoId(), item);
+            }
+            if (item.getNumeroItem() != null) {
+                nfePorNumero.put(item.getNumeroItem(), item);
+            }
+        }
+
+        List<ConferenciaFaturaCompraItem> linhas = new ArrayList<>();
+        Set<Long> produtosDoPedido = new LinkedHashSet<>();
+        for (ItemPedidoCompra itemPedido : itensPedido) {
+            RecebimentoCompraItem itemRecebimento = itemPedido.getProdutoId() == null
+                    ? null
+                    : recebimentoPorProduto.get(itemPedido.getProdutoId());
+            NfeItem itemNfe = itemPedido.getProdutoId() == null
+                    ? nfePorNumero.get(itemPedido.getNumeroItem())
+                    : nfePorProduto.get(itemPedido.getProdutoId());
+            linhas.add(linha(empresaId, itemPedido, itemRecebimento, itemNfe));
+            if (itemPedido.getProdutoId() != null) {
+                produtosDoPedido.add(itemPedido.getProdutoId());
+            }
+        }
+
+        for (NfeItem itemNfe : itensNfe) {
+            if (itemNfe.getProdutoId() == null || produtosDoPedido.contains(itemNfe.getProdutoId())) {
+                continue;
+            }
+            linhas.add(linhaNaoPedida(empresaId, itemNfe));
+        }
+        return linhas;
+    }
+
+    private static ConferenciaFaturaCompraItem linha(Long empresaId, ItemPedidoCompra itemPedido,
+                                                     RecebimentoCompraItem itemRecebimento, NfeItem itemNfe) {
+        BigDecimal quantidadePedida = nz(itemPedido.getQuantidade());
+        BigDecimal valorUnitarioPedido = nz(itemPedido.getValorUnitario());
+        BigDecimal quantidadeRecebida = itemRecebimento == null
+                ? BigDecimal.ZERO : nz(itemRecebimento.getQuantidadeRecebida());
+        BigDecimal valorUnitarioRecebido = itemRecebimento == null
+                ? BigDecimal.ZERO : nz(itemRecebimento.getValorUnitario());
+        BigDecimal quantidadeFaturada = itemNfe == null ? BigDecimal.ZERO : nz(itemNfe.getQuantidade());
+        BigDecimal valorUnitarioFaturado = itemNfe == null ? BigDecimal.ZERO : nz(itemNfe.getValorUnitario());
+
+        List<String> problemas = new ArrayList<>();
+        String tipo = OK;
+
+        if (itemNfe == null) {
+            tipo = ITEM_NAO_FATURADO;
+            problemas.add("o item nao tem linha na NF-e de entrada");
+        } else {
+            if (quantidadeFaturada.compareTo(quantidadeRecebida) > 0) {
+                tipo = QUANTIDADE_FATURADA_MAIOR_QUE_RECEBIDA;
+                problemas.add("faturado " + quantidadeFaturada + " maior que o recebido " + quantidadeRecebida);
+            } else if (quantidadeFaturada.compareTo(quantidadeRecebida) != 0) {
+                tipo = QUANTIDADE_FATURADA_DIVERGENTE;
+                problemas.add("faturado " + quantidadeFaturada + " diferente do recebido " + quantidadeRecebida);
+            }
+            if (valorUnitarioFaturado.compareTo(valorUnitarioPedido) != 0) {
+                if (OK.equals(tipo)) {
+                    tipo = PRECO_DIVERGENTE;
+                }
+                problemas.add("preco faturado " + valorUnitarioFaturado
+                        + " diferente do pedido " + valorUnitarioPedido);
+            }
+        }
+
+        if (quantidadeRecebida.compareTo(quantidadePedida) > 0) {
+            if (OK.equals(tipo)) {
+                tipo = QUANTIDADE_RECEBIDA_MAIOR_QUE_PEDIDO;
+            }
+            problemas.add("recebido " + quantidadeRecebida + " maior que o pedido " + quantidadePedida);
+        }
+
+        ConferenciaFaturaCompraItem linha = new ConferenciaFaturaCompraItem();
+        linha.setEmpresaId(empresaId);
+        linha.setProdutoId(itemPedido.getProdutoId());
+        linha.setNumeroItem(itemPedido.getNumeroItem());
+        linha.setDescricao(itemPedido.getDescricao());
+        linha.setQuantidadePedida(quantidadePedida);
+        linha.setQuantidadeRecebida(quantidadeRecebida);
+        linha.setQuantidadeFaturada(quantidadeFaturada);
+        linha.setValorUnitarioPedido(valorUnitarioPedido);
+        linha.setValorUnitarioRecebido(valorUnitarioRecebido);
+        linha.setValorUnitarioFaturado(valorUnitarioFaturado);
+        linha.setValorTotalPedido(total(quantidadePedida, valorUnitarioPedido));
+        linha.setValorTotalRecebido(total(quantidadeRecebida, valorUnitarioRecebido));
+        linha.setValorTotalFaturado(itemNfe != null && itemNfe.getValorTotal() != null
+                ? itemNfe.getValorTotal()
+                : total(quantidadeFaturada, valorUnitarioFaturado));
+        linha.setConforme(problemas.isEmpty());
+        linha.setTipoDivergencia(problemas.isEmpty() ? OK : tipo);
+        linha.setDivergencia(problemas.isEmpty() ? null : String.join("; ", problemas));
+        return linha;
+    }
+
+    private static ConferenciaFaturaCompraItem linhaNaoPedida(Long empresaId, NfeItem itemNfe) {
+        ConferenciaFaturaCompraItem linha = new ConferenciaFaturaCompraItem();
+        linha.setEmpresaId(empresaId);
+        linha.setProdutoId(itemNfe.getProdutoId());
+        linha.setNumeroItem(itemNfe.getNumeroItem());
+        linha.setDescricao("Item da NF-e de entrada sem linha no pedido de compra");
+        linha.setQuantidadeFaturada(nz(itemNfe.getQuantidade()));
+        linha.setValorUnitarioFaturado(nz(itemNfe.getValorUnitario()));
+        linha.setValorTotalFaturado(itemNfe.getValorTotal() != null
+                ? itemNfe.getValorTotal()
+                : total(nz(itemNfe.getQuantidade()), nz(itemNfe.getValorUnitario())));
+        linha.setConforme(false);
+        linha.setTipoDivergencia(ITEM_NAO_PEDIDO);
+        linha.setDivergencia("o produto " + itemNfe.getProdutoId()
+                + " esta na NF-e de entrada e nao tem linha no pedido de compra");
+        return linha;
+    }
+
+    private static String descrever(BigDecimal valorPedido, BigDecimal valorRecebido, BigDecimal valorFatura,
+                                    BigDecimal tolerancia, boolean totaisOk, long divergentes, int totalItens) {
+        StringBuilder texto = new StringBuilder();
+        if (!totaisOk) {
+            texto.append("Divergencia 3-way: pedido=").append(valorPedido)
+                    .append(", recebido=").append(valorRecebido)
+                    .append(", fatura=").append(valorFatura)
+                    .append(", tolerancia=").append(tolerancia);
+        }
+        if (divergentes > 0) {
+            if (texto.length() > 0) {
+                texto.append(" | ");
+            }
+            texto.append(divergentes).append(" de ").append(totalItens).append(" item(ns) com divergencia");
+        }
+        return texto.toString();
+    }
+
+    private static BigDecimal total(BigDecimal quantidade, BigDecimal valorUnitario) {
+        return nz(quantidade).multiply(nz(valorUnitario)).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal nz(BigDecimal valor) {
+        return valor == null ? BigDecimal.ZERO : valor;
+    }
+}
