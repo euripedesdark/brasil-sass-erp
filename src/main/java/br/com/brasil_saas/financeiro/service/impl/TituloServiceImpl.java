@@ -58,7 +58,15 @@ public class TituloServiceImpl implements TituloService {
                 .orElseThrow(() -> new ResourceNotFoundException("Condição de pagamento não encontrada"));
             if (cond.getDias() != null && !cond.getDias().isBlank()) {
                 for (String d : cond.getDias().split("[,;/\\s]+")) {
-                    if (!d.isBlank()) dias.add(Integer.parseInt(d.trim()));
+                    if (d.isBlank()) continue;
+                    int prazo;
+                    try {
+                        prazo = Integer.parseInt(d.trim());
+                    } catch (NumberFormatException ex) {
+                        throw new BusinessException("Condição de pagamento com prazo inválido: " + d.trim());
+                    }
+                    if (prazo < 0) throw new BusinessException("Condição de pagamento com prazo negativo");
+                    dias.add(prazo);
                 }
             }
         }
@@ -171,11 +179,33 @@ public class TituloServiceImpl implements TituloService {
             }
             parcelaRepository.save(parcela);
             saldoRestante = parcela.getValorSaldo();
+        } else {
+            ratearBaixaNasParcelas(empresaId, tituloId, reducao);
         }
 
         return new BaixaResponse(baixa.getId(), tituloId, r.parcelaId(), baixa.getValorBaixa(),
             baixa.getValorDesconto(), baixa.getValorJuro(), baixa.getValorMulta(),
             baixa.getDataBaixa(), saldoRestante, titulo.getStatus());
+    }
+
+    /**
+     * Baixa sem parcela informada: abate as parcelas abertas por ordem de numero,
+     * para que a soma dos saldos das parcelas continue igual ao saldo do titulo.
+     */
+    private void ratearBaixaNasParcelas(Long empresaId, Long tituloId, BigDecimal reducao) {
+        BigDecimal restante = reducao;
+        for (TituloParcela candidata : parcelaRepository.findByTituloIdAndDeletedAtIsNullOrderByNumeroParcela(tituloId)) {
+            if (restante.signum() <= 0) break;
+            if ("CANCELADO".equalsIgnoreCase(candidata.getStatus())) continue;
+            TituloParcela parcela = parcelaRepository.findForUpdate(candidata.getId(), empresaId).orElse(candidata);
+            BigDecimal saldo = parcela.getValorSaldo() == null ? BigDecimal.ZERO : parcela.getValorSaldo();
+            if (saldo.signum() <= 0) continue;
+            BigDecimal abatido = restante.min(saldo);
+            parcela.setValorSaldo(saldo.subtract(abatido));
+            if (parcela.getValorSaldo().signum() <= 0) parcela.setStatus("BAIXADA");
+            parcelaRepository.save(parcela);
+            restante = restante.subtract(abatido);
+        }
     }
 
     private void registrarMovimentoConta(Long empresaId, Titulo titulo, ContaBancaria conta,
