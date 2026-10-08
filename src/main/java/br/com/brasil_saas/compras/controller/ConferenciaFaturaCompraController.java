@@ -19,15 +19,17 @@ import br.com.brasil_saas.fiscal.repository.NfeItemRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +52,7 @@ public class ConferenciaFaturaCompraController {
     @GetMapping
     @PreAuthorize("hasAuthority('compras:pedido:leitura')")
     public List<ConferenciaFaturaCompra> listar(@AuthenticationPrincipal AuthenticatedUser user) {
-        return repository.findByEmpresaIdOrderByCreatedAtDesc(user.getEmpresaId());
+        return service.listar(user.getEmpresaId());
     }
 
     @GetMapping("/{id}/itens")
@@ -64,7 +66,6 @@ public class ConferenciaFaturaCompraController {
     }
 
     @PostMapping
-    @Transactional
     @PreAuthorize("hasAuthority('compras:pedido:escrita')")
     public ConferenciaFaturaCompra conferir(@AuthenticationPrincipal AuthenticatedUser user,
                                             @Valid @RequestBody Request request) {
@@ -212,6 +213,11 @@ public class ConferenciaFaturaCompraController {
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    public record Request(@NotNull Long pedidoId, @NotNull BigDecimal valorFatura,
-                          Long recebimentoId, Long tituloId, Long nfeId, BigDecimal tolerancia) {}
+    /** Itens conferidos: pedido x recebimento x NF-e, com a divergencia de cada linha. */
+    @GetMapping("/{id}/itens")
+    @PreAuthorize("hasAuthority('compras:pedido:leitura')")
+    public List<ConferenciaFaturaCompraItem> listarItens(@AuthenticationPrincipal AuthenticatedUser user,
+                                                         @PathVariable Long id) {
+        return service.listarItens(user.getEmpresaId(), id);
+    }
 }
