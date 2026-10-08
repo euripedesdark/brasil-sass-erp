@@ -102,6 +102,8 @@ public class ReservaEstoqueController {
                     .orElseThrow(() -> new ResourceNotFoundException("Lote nao encontrado"));
             if (!request.produtoId().equals(lote.getProdutoId()) || !request.depositoId().equals(lote.getDepositoId()))
                 throw new BusinessException("Lote nao pertence ao produto/deposito informado");
+            if (!"ATIVO".equals(lote.getStatus()))
+                throw new BusinessException("Lote " + lote.getCodigo() + " nao esta ATIVO (status=" + lote.getStatus() + ")");
             BigDecimal reservadoLote = repository.sumAtivasPorLote(user.getEmpresaId(), request.depositoId(),
                     request.produtoId(), request.loteId());
             BigDecimal disponivelLote = lote.getQuantidade().subtract(reservadoLote == null ? BigDecimal.ZERO : reservadoLote);
