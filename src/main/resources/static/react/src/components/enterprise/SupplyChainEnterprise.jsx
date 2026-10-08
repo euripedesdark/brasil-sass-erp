@@ -22,7 +22,11 @@ const fields={
  reposicao:['produto_id','deposito_id','metodo','estoque_minimo','estoque_maximo','estoque_seguranca','ponto_pedido','lote_economico','lead_time_dias','fornecedor_preferencial_id','ativo'],
  transportes:['numero','tipo','status','origem','destino','transportadora_id','veiculo','motorista','data_prevista','valor_frete','peso','volume'],
  ehs:['numero','tipo','severidade','data_ocorrencia','local_ocorrencia','funcionario_id','ativo_id','descricao','causa_raiz','acao_corretiva','status','prazo'],
- 'contratos-servico':['numero','cliente_id','descricao','inicio','fim','tipo','sla_horas','valor_mensal','franquia_horas','status','renovacao_automatica']
+ 'contratos-servico':['numero','cliente_id','descricao','inicio','fim','tipo','sla_horas','valor_mensal','franquia_horas','status','renovacao_automatica'],
+ 'ehs-riscos':['codigo','perigo','atividade','localizacao','probabilidade','impacto','nivel','controle_existente','responsavel','status'],
+ 'ehs-inspecoes':['numero','tipo','localizacao','responsavel','data_inspecao','status','resultado','observacao'],
+ 'ehs-acoes':['ocorrencia_id','inspecao_id','descricao','responsavel','prazo','status','evidencia'],
+ 'ehs-permissoes':['numero','tipo','localizacao','solicitante','responsavel','inicio','fim','riscos','controles','status','aprovada_por','aprovada_em']
 };
 const effectTypes=[
  {label:'Revisão de produto',value:'REVISAO_PRODUTO'},{label:'Estrutura / BOM',value:'ESTRUTURA'},
