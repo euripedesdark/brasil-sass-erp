@@ -11,28 +11,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 @Service @RequiredArgsConstructor
 public class CreditoService {
     private final ClienteRepository clientes;
     private final TituloRepository titulos;
     private final PedidoVendaRepository pedidos;
-    @Transactional(readOnly = true) public Map<String, Object> analisar(Long empresaId, Long clienteId) {
-        Cliente c = clientes.findById(clienteId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente inexistente"));
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> analisar(Long empresaId, Long clienteId) {
+        Cliente c = clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente inexistente"));
         Long pessoaId = c.getPessoa() == null ? null : c.getPessoa().getId();
         BigDecimal emAberto = BigDecimal.ZERO;
         BigDecimal vencido = BigDecimal.ZERO;
         java.time.LocalDate hoje = java.time.LocalDate.now();
         if (pessoaId != null) for (Titulo t : titulos.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, pessoaId)) {
-            if ("ABERTO".equals(t.getStatus()) == false && "PARCIAL".equals(t.getStatus()) == false) continue;
+            if (!"ABERTO".equals(t.getStatus()) && !"PARCIAL".equals(t.getStatus())) continue;
             BigDecimal s = t.getValorSaldo() == null ? BigDecimal.ZERO : t.getValorSaldo();
             emAberto = emAberto.add(s);
             if (t.getDataVencimento() != null && t.getDataVencimento().isBefore(hoje)) vencido = vencido.add(s);
         }
         BigDecimal emPedidos = BigDecimal.ZERO;
         for (PedidoVenda p : pedidos.findByEmpresaIdAndClienteId(empresaId, clienteId)) {
-            if ("ABERTO".equals(p.getStatus()) == false) continue;
+            if (!"ABERTO".equals(p.getStatus())) continue;
             emPedidos = emPedidos.add(p.getValorTotal() == null ? BigDecimal.ZERO : p.getValorTotal());
         }
         BigDecimal limite = c.getLimiteCredito() == null ? BigDecimal.ZERO : c.getLimiteCredito();
@@ -49,5 +51,18 @@ public class CreditoService {
         m.put("disponivel", disponivel);
         m.put("situacao", situacao);
         return m;
+    }
+
+    /** Atualiza somente o limite de crédito do cliente (multiempresa). */
+    @Transactional
+    public Map<String, Object> definirLimite(Long empresaId, Long clienteId, BigDecimal novoLimite) {
+        if (novoLimite == null || novoLimite.signum() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Limite deve ser zero ou positivo");
+        }
+        Cliente c = clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente inexistente"));
+        c.setLimiteCredito(novoLimite);
+        clientes.save(c);
+        return analisar(empresaId, clienteId);
     }
 }
