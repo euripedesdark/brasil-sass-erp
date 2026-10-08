@@ -152,7 +152,7 @@ public class ApontamentoProducaoServiceImpl implements ApontamentoProducaoServic
     @Override
     @Transactional(readOnly = true)
     public List<ApontamentoProducao> listarPorFuncionario(Long empresaId, Long funcionarioId) {
-        return apontamentoRepository.findByEmpresaIdAndFuncionarioId(empresaId, producaoId);
+        return apontamentoRepository.findByEmpresaIdAndFuncionarioId(empresaId, funcionarioId);
     }
 
     @Override
