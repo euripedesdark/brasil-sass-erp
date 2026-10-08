@@ -20,7 +20,7 @@ public class RomaneioProducaoController {
     private final RomaneioProducaoService service;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
     public ResponseEntity<RomaneioProducao> criar(
         @AuthenticationPrincipal AuthenticatedUser u,
         @RequestBody RomaneioProducaoRequest request
@@ -29,8 +29,26 @@ public class RomaneioProducaoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:leitura')")
     public ResponseEntity<List<RomaneioProducao>> listar(@AuthenticationPrincipal AuthenticatedUser u) {
         return ResponseEntity.ok(service.listar(u.getEmpresaId()));
+    }
+
+    @PostMapping("/{id}/conferir")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
+    public ResponseEntity<RomaneioProducao> conferir(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        return ResponseEntity.ok(service.conferir(u.getEmpresaId(), id));
+    }
+
+    @PostMapping("/{id}/liberar")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
+    public ResponseEntity<RomaneioProducao> liberar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        return ResponseEntity.ok(service.liberar(u.getEmpresaId(), id));
+    }
+
+    @PostMapping("/{id}/cancelar")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN') or hasAuthority('producao:escrita')")
+    public ResponseEntity<RomaneioProducao> cancelar(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id) {
+        return ResponseEntity.ok(service.cancelar(u.getEmpresaId(), id));
     }
 }
