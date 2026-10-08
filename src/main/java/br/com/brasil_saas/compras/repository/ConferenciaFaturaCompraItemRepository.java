@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ConferenciaFaturaCompraItemRepository extends JpaRepository<ConferenciaFaturaCompraItem, Long> {
-
-    List<ConferenciaFaturaCompraItem> findByEmpresaIdAndConferenciaIdOrderByNumeroItemAsc(
+    List<ConferenciaFaturaCompraItem> findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByIdAsc(
             Long empresaId, Long conferenciaId);
 }
