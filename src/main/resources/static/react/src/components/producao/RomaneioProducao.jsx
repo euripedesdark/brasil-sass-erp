@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -11,14 +11,8 @@ import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
+import { Toast } from 'primereact/toast';
 import RomaneioProducaoService from '../../services/RomaneioProducaoService';
-
-const STATUS = [
-    { label: 'Aberto', value: 'ABERTO' },
-    { label: 'Conferido', value: 'CONFERIDO' },
-    { label: 'Liberado', value: 'LIBERADO' },
-    { label: 'Cancelado', value: 'CANCELADO' }
-];
 
 const novoItem = () => ({
     produtoId: null,
@@ -31,6 +25,7 @@ const novoItem = () => ({
 
 export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
     const { t } = useTranslation();
+    const toast = useRef(null);
     const [romaneios, setRomaneios] = useState([]);
     const [loading, setLoading] = useState(false);
     const [visible, setVisible] = useState(false);
@@ -105,6 +100,7 @@ export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
                     : null
             };
             await RomaneioProducaoService.criar(empresaId, payload);
+            toast.current?.show({ severity: 'success', summary: 'Romaneio criado', life: 2500 });
             setVisible(false);
             await carregar();
         } catch (e) {
@@ -113,6 +109,19 @@ export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
             setLoading(false);
         }
     };
+
+    const acao = async (id, path, okMsg) => {
+        try {
+            await RomaneioProducaoService.acao(id, path);
+            toast.current?.show({ severity: 'success', summary: okMsg, life: 2500 });
+            carregar();
+        } catch (e) {
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message || 'Operação não realizada', life: 4500 });
+        }
+    };
+    const conferirRomaneio = (id) => acao(id, 'conferir', 'Romaneio conferido');
+    const liberarRomaneio = (id) => acao(id, 'liberar', 'Romaneio liberado');
+    const cancelarRomaneio = (id) => acao(id, 'cancelar', 'Romaneio cancelado');
 
     const statusTemplate = (row) => (
         <Tag value={row.status} severity={
@@ -123,9 +132,11 @@ export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
     );
 
     return (
+        <div>
+            <Toast ref={toast} />
         <Card title="Romaneios de Produção" className="prod-romaneio-card">
             <div className="flex justify-content-between align-items-center mb-3">
-                <span className="text-muted">Documentos de movimentação e conferência da produção.</span>
+                <span className="text-muted">Ciclo: ABERTO → conferir → CONFERIDO → liberar → LIBERADO</span>
                 <Button label={t('legacyUi.romaneio.new')} icon="pi pi-file-plus" onClick={abrirNovo} />
             </div>
 
@@ -138,6 +149,16 @@ export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
                 <Column field="destino" header={t('legacyUi.romaneio.destination')} />
                 <Column field="status" header={t('legacyUi.romaneio.status')} body={statusTemplate} />
                 <Column field="itens.length" header={t('legacyUi.romaneio.items')} />
+                <Column header="Ações" body={(row) => (
+                    <div className="flex gap-1">
+                        <Button icon="pi pi-eye" className="p-button-rounded p-button-text p-button-info" tooltip="Conferir"
+                            disabled={row.status !== 'ABERTO'} onClick={() => conferirRomaneio(row.id)} />
+                        <Button icon="pi pi-check" className="p-button-rounded p-button-text p-button-success" tooltip="Liberar"
+                            disabled={row.status !== 'CONFERIDO'} onClick={() => liberarRomaneio(row.id)} />
+                        <Button icon="pi pi-times" className="p-button-rounded p-button-text p-button-danger" tooltip="Cancelar"
+                            disabled={row.status !== 'ABERTO'} onClick={() => cancelarRomaneio(row.id)} />
+                    </div>
+                )} />
             </DataTable>
 
             <Dialog
@@ -227,6 +248,7 @@ export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
                 </div>
             </Dialog>
         </Card>
+        </div>
     );
 };
 
