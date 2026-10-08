@@ -8,6 +8,7 @@ import br.com.brasil_saas.producao.repository.RomaneioProducaoRepository;
 import br.com.brasil_saas.producao.service.RomaneioProducaoItemRequest;
 import br.com.brasil_saas.producao.service.RomaneioProducaoRequest;
 import br.com.brasil_saas.producao.service.RomaneioProducaoService;
+import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,18 +28,18 @@ public class RomaneioProducaoServiceImpl implements RomaneioProducaoService {
     @Transactional
     public RomaneioProducao criar(Long empresaId, RomaneioProducaoRequest request) {
         if (request.numero() == null || request.numero().isBlank()) {
-            throw new IllegalArgumentException("Número do romaneio é obrigatório");
+            throw new BusinessException("Número do romaneio é obrigatório");
         }
         if (request.producaoId() == null) {
-            throw new IllegalArgumentException("Ordem de produção é obrigatória");
+            throw new BusinessException("Ordem de produção é obrigatória");
         }
         if (request.itens() == null || request.itens().isEmpty()) {
-            throw new IllegalArgumentException("O romaneio deve possuir ao menos um item");
+            throw new BusinessException("O romaneio deve possuir ao menos um item");
         }
 
         Producao producao = producaoRepository.findById(request.producaoId())
             .filter(p -> empresaId.equals(p.getEmpresaId()))
-            .orElseThrow(() -> new IllegalArgumentException("Ordem de produção não encontrada para a empresa"));
+            .orElseThrow(() -> new BusinessException("Ordem de produção não encontrada para a empresa"));
 
         RomaneioProducao romaneio = new RomaneioProducao();
         romaneio.setEmpresaId(empresaId);
@@ -48,13 +49,13 @@ public class RomaneioProducaoServiceImpl implements RomaneioProducaoService {
         romaneio.setDestino(request.destino());
         romaneio.setResponsavelId(request.responsavelId());
         romaneio.setVeiculoId(request.veiculoId());
-        romaneio.setStatus(request.status() != null && !request.status().isBlank() ? request.status() : "ABERTO");
+        romaneio.setStatus("ABERTO");
         romaneio.setObservacoes(request.observacoes());
 
         List<RomaneioProducaoItem> itens = new ArrayList<>();
         for (RomaneioProducaoItemRequest itemRequest : request.itens()) {
             if (itemRequest.produtoId() == null || itemRequest.quantidade() == null || itemRequest.quantidade().signum() <= 0) {
-                throw new IllegalArgumentException("Cada item deve possuir produto e quantidade maior que zero");
+                throw new BusinessException("Cada item deve possuir produto e quantidade maior que zero");
             }
 
             RomaneioProducaoItem item = new RomaneioProducaoItem();
@@ -76,5 +77,41 @@ public class RomaneioProducaoServiceImpl implements RomaneioProducaoService {
     @Transactional(readOnly = true)
     public List<RomaneioProducao> listar(Long empresaId) {
         return repository.findByEmpresaIdAndDeletedAtIsNullOrderByDataRomaneioDesc(empresaId);
+    }
+
+    private RomaneioProducao carregar(Long empresaId, Long id) {
+        return repository.findById(id)
+            .filter(r -> empresaId.equals(r.getEmpresaId()) && r.getDeletedAt() == null)
+            .orElseThrow(() -> new BusinessException("Romaneio não encontrado"));
+    }
+
+    @Override
+    @Transactional
+    public RomaneioProducao conferir(Long empresaId, Long id) {
+        RomaneioProducao r = carregar(empresaId, id);
+        if (!"ABERTO".equals(r.getStatus()))
+            throw new BusinessException("Somente romaneio ABERTO pode ser conferido (status=" + r.getStatus() + ")");
+        r.setStatus("CONFERIDO");
+        return repository.save(r);
+    }
+
+    @Override
+    @Transactional
+    public RomaneioProducao liberar(Long empresaId, Long id) {
+        RomaneioProducao r = carregar(empresaId, id);
+        if (!"CONFERIDO".equals(r.getStatus()))
+            throw new BusinessException("Somente romaneio CONFERIDO pode ser liberado (status=" + r.getStatus() + ")");
+        r.setStatus("LIBERADO");
+        return repository.save(r);
+    }
+
+    @Override
+    @Transactional
+    public RomaneioProducao cancelar(Long empresaId, Long id) {
+        RomaneioProducao r = carregar(empresaId, id);
+        if (!"ABERTO".equals(r.getStatus()))
+            throw new BusinessException("Somente romaneio ABERTO pode ser cancelado (status=" + r.getStatus() + ")");
+        r.setStatus("CANCELADO");
+        return repository.save(r);
     }
 }
