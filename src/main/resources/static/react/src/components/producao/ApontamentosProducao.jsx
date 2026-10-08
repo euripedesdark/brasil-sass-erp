@@ -9,7 +9,6 @@ import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
-import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
@@ -60,18 +59,6 @@ const vazio = () => ({
     observacoes: '', maquinaEquipamentoId: null, turno: 'MANHA', operacaoRoteiroId: null
 });
 
-/**
- * Apontamentos de produção.
- *
- * A tela existia e só tinha "Consultar por ID da produção", digitado à mão. As
- * seis rotas de escrita e de filtro do ApontamentoProducaoController — criar,
- * finalizar, por funcionário, por período, por status e as estatísticas — não
- * tinham por onde ser acessadas.
- *
- * A empresa não vai na URL: vem do token. A tela antiga mandava
- * `?empresaId=${user?.empresaId}` e, quando o usuário não tinha o campo
- * preenchido, mandava `?empresaId=` vazio.
- */
 export const ApontamentosProducao = () => {
     const { t } = useTranslation();
     const toast = React.useRef(null);
@@ -104,7 +91,6 @@ export const ApontamentosProducao = () => {
     const [salvando, setSalvando] = useState(false);
     const [form, setForm] = useState(vazio());
 
-    // as ordens de produção vêm do próprio módulo: melhor que digitar o id
     useEffect(() => {
         Promise.all([
             apiFetch('/api/producao'),
@@ -140,7 +126,6 @@ export const ApontamentosProducao = () => {
             } else if (f.tipo === 'status') {
                 url = `${BASE}/por-status?status=${encodeURIComponent(f.status)}`;
             } else {
-                // o backend exige ISO completo: 2026-09-01T00:00:00
                 const de = f.de.toISOString().slice(0, 19);
                 const ate = f.ate.toISOString().slice(0, 19);
                 url = `${BASE}/por-periodo?dataInicio=${encodeURIComponent(de)}&dataFim=${encodeURIComponent(ate)}`;
@@ -153,8 +138,6 @@ export const ApontamentosProducao = () => {
             }
             setApontamentos(listaDe(await r.json()));
 
-            // as estatísticas são por ordem; só faz sentido junto do filtro de
-            // produção, nas demais ficariam vazias sem explicar por quê
             if (f.tipo === 'producao') {
                 const s = await apiFetch(`${BASE}/estatisticas/${f.producaoId}`);
                 if (s.ok) setStats((await s.json())?.data ?? null);
@@ -168,7 +151,7 @@ export const ApontamentosProducao = () => {
         } finally {
             setCarregando(false);
         }
-    }, []);
+    }, [t]);
 
     const salvar = async () => {
         if (!form.producaoId) { setErro('Escolha a ordem de produção'); return; }
@@ -193,7 +176,7 @@ export const ApontamentosProducao = () => {
                 const j = await r.json().catch(() => null);
                 throw new Error(j?.errors?.[0]?.message || t('legacyUi.apontamento.saveError'));
             }
-            mostrar('success', t('legacyUi.apontamento.saved'), t('legacyUi.apontamento.savedDetail'));
+            mostrar('success', t('legacyUi.apontamento.saved'), 'Se a OP estava ABERTO, ela passou a EM_PROCESSO automaticamente.');
             setDialogo(false);
             setForm(vazio());
             aplicar(filtro);
@@ -233,7 +216,13 @@ export const ApontamentosProducao = () => {
         refugo: apontamentos.reduce((s, a) => s + num(a.quantidadeRefugo), 0)
     }), [apontamentos]);
 
-    const producoesOpts = producoes.map((p) => ({ label: `${p.numero} — ${p.tipoProducao || ''}`.trim(), value: p.id }));
+    const producoesOpts = producoes.map((p) => ({
+        label: `${p.numero} — ${p.status || ''} — ${p.tipoProducao || ''}`.trim(),
+        value: p.id,
+        status: p.status,
+    }));
+    const producoesAbertasOpts = producoesOpts.filter((p) => p.status === 'ABERTO' || p.status === 'EM_PROCESSO');
+
     const campo = (id, rotulo, children, w) => (
         <div className={w || 'col-12 md:col-6'}>
             <label className="bc-label" htmlFor={id}>{rotulo}</label>
@@ -248,7 +237,7 @@ export const ApontamentosProducao = () => {
 
             <div className="flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <span className="bc-muted">
-                    Horas trabalhadas, produzido e refugo por ordem de produção.
+                    Horas, produzido e refugo. O primeiro apontamento em OP ABERTO inicia a ordem (EM_PROCESSO).
                 </span>
                 <Button label={t('legacyUi.apontamento.new')} icon="pi pi-plus"
                         onClick={() => { setErro(''); setForm({ ...vazio(), producaoId: filtro.producaoId }); setDialogo(true); }} />
@@ -338,7 +327,7 @@ export const ApontamentosProducao = () => {
                     <Column field="funcionarioId" header={t('legacyUi.apontamento.employee')} sortable style={{ width: '120px' }}
                         body={(r) => (r.funcionarioId ? `#${r.funcionarioId}` : '—')} />
                     <Column field="dataApontamento" header={t('common.date')} sortable body={(r) => dataHora(r.dataApontamento)} />
-                    <Column field="horasTrabalhadas" header={t('common.description')} sortable body={(r) => money(r.horasTrabalhadas)} />
+                    <Column field="horasTrabalhadas" header="Horas" sortable body={(r) => money(r.horasTrabalhadas)} />
                     <Column field="quantidadeProduzida" header="Produzido" sortable body={(r) => money(r.quantidadeProduzida)} />
                     <Column field="quantidadeRefugo" header="Refugo" sortable body={(r) => money(r.quantidadeRefugo)} />
                     <Column field="turno" header="Turno" sortable style={{ width: '110px' }} />
@@ -371,48 +360,41 @@ export const ApontamentosProducao = () => {
                 }
             >
                 <div className="grid p-fluid">
-                    {campo('aprod', 'Ordem de produção *',
-                        <Dropdown id="aprod" value={form.producaoId} options={producoesOpts}
+                    {campo('aprod', 'Ordem de produção * (ABERTO ou EM_PROCESSO)',
+                        <Dropdown id="aprod" value={form.producaoId} options={producoesAbertasOpts}
                                   placeholder="Escolha a ordem" filter
                                   onChange={(e) => { setForm({ ...form, producaoId: e.value, operacaoRoteiroId: null }); carregarOperacoes(e.value); }} />, 'col-12')}
 
-                    
-                    {operacoes.length > 0 && campo('aop', 'Operacao do roteiro',
-                        <Dropdown id="aop" value={form.operacaoRoteiroId} options={operacoes.map((o) => ({ label: (o.sequencia ?? "") + ' - ' + (o.descricao || o.nome || ('Op ' + o.id)), value: o.id }))}
-                                  placeholder="Escolha a operacao" showClear
+                    {operacoes.length > 0 && campo('aop', 'Operação do roteiro',
+                        <Dropdown id="aop" value={form.operacaoRoteiroId} options={operacoes.map((o) => ({ label: (o.sequencia ?? '') + ' - ' + (o.descricao || o.nome || ('Op ' + o.id)), value: o.id }))}
+                                  placeholder="Escolha a operação" showClear
                                   onChange={(e) => setForm({ ...form, operacaoRoteiroId: e.value ?? null })} />)}
 
-{campo('afunc', 'Funcionário (id)',
+                    {campo('afunc', 'Funcionário (id)',
                         <InputNumber id="afunc" value={form.funcionarioId} useGrouping={false}
                                      onValueChange={(e) => setForm({ ...form, funcionarioId: e.value })} />)}
+
+                    {campo('ahoras', 'Horas trabalhadas',
+                        <InputNumber id="ahoras" value={form.horasTrabalhadas} minFractionDigits={2} maxFractionDigits={2}
+                                     onValueChange={(e) => setForm({ ...form, horasTrabalhadas: e.value })} />)}
+
+                    {campo('aqprod', 'Quantidade produzida',
+                        <InputNumber id="aqprod" value={form.quantidadeProduzida} minFractionDigits={3}
+                                     onValueChange={(e) => setForm({ ...form, quantidadeProduzida: e.value })} />)}
+
+                    {campo('aqref', 'Quantidade refugo',
+                        <InputNumber id="aqref" value={form.quantidadeRefugo} minFractionDigits={3}
+                                     onValueChange={(e) => setForm({ ...form, quantidadeRefugo: e.value })} />)}
 
                     {campo('aturno', 'Turno',
                         <Dropdown id="aturno" value={form.turno} options={TURNOS}
                                   onChange={(e) => setForm({ ...form, turno: e.value })} />)}
 
-                    {campo('ahoras', 'Horas trabalhadas *',
-                        <InputNumber id="ahoras" value={form.horasTrabalhadas} minFractionDigits={2} maxFractionDigits={2}
-                                     suffix=" h" onValueChange={(e) => setForm({ ...form, horasTrabalhadas: e.value ?? 0 })} />)}
-
-                    {campo('aprodqtd', 'Quantidade produzida',
-                        <InputNumber id="aprodqtd" value={form.quantidadeProduzida} minFractionDigits={0}
-                                     onValueChange={(e) => setForm({ ...form, quantidadeProduzida: e.value ?? 0 })} />)}
-
-                    {campo('arefugo', 'Quantidade de refugo',
-                        <InputNumber id="arefugo" value={form.quantidadeRefugo} minFractionDigits={0}
-                                     onValueChange={(e) => setForm({ ...form, quantidadeRefugo: e.value ?? 0 })} />)}
-
-                    {campo('amaq', 'Máquina / equipamento (id)',
-                        <InputNumber id="amaq" value={form.maquinaEquipamentoId} useGrouping={false}
-                                     onValueChange={(e) => setForm({ ...form, maquinaEquipamentoId: e.value })} />)}
-
-                    {campo('aitem', 'Item da produção (id)',
-                        <InputNumber id="aitem" value={form.itemProducaoId} useGrouping={false}
-                                     onValueChange={(e) => setForm({ ...form, itemProducaoId: e.value })} />, 'col-12')}
-
                     {campo('aobs', 'Observações',
-                        <InputTextarea id="aobs" value={form.observacoes} rows={3} autoResize
+                        <InputTextarea id="aobs" rows={3} value={form.observacoes || ''}
                                        onChange={(e) => setForm({ ...form, observacoes: e.target.value })} />, 'col-12')}
+
+                    {erro && <div className="col-12"><Message severity="error" text={erro} /></div>}
                 </div>
             </Dialog>
         </div>
