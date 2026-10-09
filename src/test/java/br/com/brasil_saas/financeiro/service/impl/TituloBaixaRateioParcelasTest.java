@@ -86,6 +86,45 @@ class TituloBaixaRateioParcelasTest {
     }
 
     @Test
+    void parcelaSemCondicaoPreservaVencimentoDoTitulo() {
+        titulo.setDataVencimento(LocalDate.of(2026, 1, 31));
+        when(parcelas.findByTituloIdAndDeletedAtIsNullOrderByNumeroParcela(10L)).thenReturn(List.of());
+        when(parcelas.save(any())).thenAnswer(i -> i.getArgument(0));
+        var geradas = service.gerarParcelas(1L, 10L, null);
+        assertEquals(1, geradas.size());
+        assertEquals(titulo.getDataVencimento(), geradas.get(0).dataVencimento());
+        assertEquals(new BigDecimal("100.00"), geradas.get(0).valorParcela());
+    }
+
+    @Test
+    void centavosNaoProduzemUltimaParcelaNegativa() {
+        titulo.setValorSaldo(new BigDecimal("0.02"));
+        var cond = new CondicaoPagamento(); cond.setDias("1,2,3,4");
+        when(parcelas.findByTituloIdAndDeletedAtIsNullOrderByNumeroParcela(10L)).thenReturn(List.of());
+        when(condicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(5L, 1L)).thenReturn(Optional.of(cond));
+        when(parcelas.save(any())).thenAnswer(i -> i.getArgument(0));
+        var geradas = service.gerarParcelas(1L, 10L, 5L);
+        assertEquals(4, geradas.size());
+        assertTrue(geradas.stream().allMatch(p -> p.valorParcela().signum() >= 0));
+        assertEquals(new BigDecimal("0.02"), geradas.stream().map(p -> p.valorParcela()).reduce(BigDecimal.ZERO, BigDecimal::add));
+        assertEquals(List.of(new BigDecimal("0.01"), new BigDecimal("0.01"), new BigDecimal("0.00"), new BigDecimal("0.00")),
+                geradas.stream().map(p -> p.valorParcela()).toList());
+    }
+
+    @Test
+    void condicaoExplicitaMantemOsPrazosConfigurados() {
+        titulo.setDataVencimento(LocalDate.of(2026, 1, 31));
+        var cond = new CondicaoPagamento(); cond.setDias("0,15,60");
+        when(parcelas.findByTituloIdAndDeletedAtIsNullOrderByNumeroParcela(10L)).thenReturn(List.of());
+        when(condicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(5L, 1L)).thenReturn(Optional.of(cond));
+        when(parcelas.save(any())).thenAnswer(i -> i.getArgument(0));
+        var geradas = service.gerarParcelas(1L, 10L, 5L);
+        assertEquals(List.of(titulo.getDataEmissao(), titulo.getDataEmissao().plusDays(15), titulo.getDataEmissao().plusDays(60)),
+                geradas.stream().map(p -> p.dataVencimento()).toList());
+        assertEquals(new BigDecimal("100.00"), geradas.stream().map(p -> p.valorParcela()).reduce(BigDecimal.ZERO, BigDecimal::add));
+    }
+
+    @Test
     void condicaoComPrazoInvalidoViraErroDeNegocio() {
         var cond = new CondicaoPagamento();
         cond.setDias("30,abc");

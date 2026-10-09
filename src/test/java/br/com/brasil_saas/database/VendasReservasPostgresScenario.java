@@ -89,11 +89,13 @@ final class VendasReservasPostgresScenario {
         assertEquals("R", titulo.getTipo()); igual("100", titulo.getValorOriginal()); igual("100", titulo.getValorSaldo());
         var recebiveis = parcelas.findByTituloIdAndDeletedAtIsNullOrderByNumeroParcela(titulo.getId());
         assertEquals(1, recebiveis.size()); igual("100", recebiveis.get(0).getValorSaldo());
+        assertEquals(titulo.getDataVencimento(), recebiveis.get(0).getDataVencimento());
         assertEquals(2, documentos.porDocumento(empresa, "PEDIDO_VENDA", pedido.getId()).size());
         assertThrows(BusinessException.class, () -> service.faturar(pedido.getId(), empresa, true));
         var saidas = movimentos.findByEmpresaIdAndProdutoIdAndDeletedAtIsNullOrderByDataMovimentoDesc(empresa, empresa)
                 .stream().filter(m -> "SAIDA".equals(m.getTipo())).toList();
         assertEquals(2, saidas.size()); igual("-4", saidas.stream().map(m -> m.getQuantidade()).reduce(BigDecimal.ZERO, BigDecimal::add));
+        FinanceiroContabilidadePostgresScenario.validar(session, titulo.getId());
     }
 
     private static ReservaEstoque reserva(Long empresa, Long deposito, Long pedido, String status, String quantidade) {
