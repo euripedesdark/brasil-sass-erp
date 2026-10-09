@@ -65,13 +65,26 @@ public class WorkflowServiceImpl implements WorkflowService {
             instances.save(i);
             return;
         }
-        WkfTask t = new WkfTask();
-        t.setInstanceId(i.getId());
-        t.setStageId(s.getId());
-        t.setResponsavel(s.getAprovadores());
-        t.setStatus("PENDENTE");
-        t.setSlaLimite(LocalDateTime.now().plusHours(s.getSlaHoras() == null ? 48 : s.getSlaHoras()));
-        tasks.save(t);
+        // Multi-nível / multi-aprovador: se exigeTodos, cria uma tarefa por aprovador (lista separada por vírgula)
+        java.util.List<String> aprovadores = new java.util.ArrayList<>();
+        if (s.getAprovadores() != null && !s.getAprovadores().isBlank()) {
+            for (String p : s.getAprovadores().split("[,;]")) {
+                String x = p.trim();
+                if (!x.isEmpty()) aprovadores.add(x);
+            }
+        }
+        if (aprovadores.isEmpty()) aprovadores.add("GESTOR");
+        boolean multi = Boolean.TRUE.equals(s.getExigeTodos()) && aprovadores.size() > 1;
+        for (String resp : (multi ? aprovadores : java.util.List.of(String.join(",", aprovadores)))) {
+            WkfTask t = new WkfTask();
+            t.setInstanceId(i.getId());
+            t.setStageId(s.getId());
+            t.setResponsavel(resp);
+            t.setStatus("PENDENTE");
+            t.setSlaLimite(LocalDateTime.now().plusHours(s.getSlaHoras() == null ? 48 : s.getSlaHoras()));
+            tasks.save(t);
+            if (!multi) break;
+        }
     }
     @Override public List<WkfInstance> instances(Long empresaId, String status) {
         if (status == null || status.isBlank()) return instances.findByEmpresaIdAndDeletedAtIsNull(empresaId);
@@ -101,6 +114,17 @@ public class WorkflowServiceImpl implements WorkflowService {
             i.setConcludedAt(LocalDateTime.now());
             instances.save(i);
             return t;
+        }
+        // Se a etapa exige todos os aprovadores, só avança quando não restar PENDENTE na mesma stage
+        WkfStage stage = stages.findById(t.getStageId()).orElse(null);
+        if (stage != null && Boolean.TRUE.equals(stage.getExigeTodos())) {
+            boolean aindaPendente = tasks.findByInstanceIdAndEmpresaIdAndDeletedAtIsNull(i.getId(), empresaId)
+                    .stream()
+                    .filter(x -> t.getStageId().equals(x.getStageId()))
+                    .anyMatch(x -> "PENDENTE".equals(x.getStatus()));
+            if (aindaPendente) {
+                return t; // aguarda demais aprovadores desta etapa
+            }
         }
         i.setEtapaAtual(i.getEtapaAtual() + 1);
         instances.save(i);
