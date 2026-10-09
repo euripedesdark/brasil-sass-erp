@@ -1304,6 +1304,22 @@
       "summaryHelp": "Revise los datos principales antes de guardar.",
       "additionalInfoHelp": "Información adicional para la operación.",
       "additionalInfoPlaceholder": "Observaciones adicionales"
+    },
+    "settings": {
+      "title": "Configuración del sistema",
+      "generalTab": "General",
+      "systemName": "Nombre del sistema",
+      "imagesTab": "Imágenes",
+      "loginImage": "Imagen de inicio de sesión",
+      "backgroundImage": "Imagen de fondo",
+      "selectImage": "Seleccionar imagen",
+      "currentLoginImage": "Imagen de inicio de sesión actual",
+      "currentBackgroundImage": "Imagen de fondo actual",
+      "saveButton": "Guardar configuración",
+      "saved": "¡Configuración guardada correctamente!",
+      "imageUpdated": "¡La imagen de {{type}} se actualizó correctamente!",
+      "uploadFailed": "Error al subir el archivo: {{error}}",
+      "connectionError": "Error de conexión: {{error}}"
     }
   },
   "enterpriseOps": {
