@@ -15,6 +15,8 @@ import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.vendas.model.*;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
+import br.com.brasil_saas.vendas.dto.PedidoVendaRequest;
+import br.com.brasil_saas.vendas.dto.ItemPedidoVendaRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +43,40 @@ class PedidoVendaServiceImplTest {
     @Mock TituloService tituloService;
     @Mock DocumentoFluxoService fluxo;
     @InjectMocks PedidoVendaServiceImpl service;
+
+    private static PedidoVendaRequest novoPedido(String tipo, String status) {
+        return new PedidoVendaRequest(2L, 7L, null, tipo, status, null, null, null, null,
+                null, null, null, null, null, null,
+                List.of(new ItemPedidoVendaRequest(1, 7L, null, "Produto", BigDecimal.ONE, "UN", BigDecimal.TEN, null)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"FATURADO", "CANCELADO", "DESCONHECIDO"})
+    void criacaoNaoPodeSimularEtapaDoFluxo(String status) {
+        assertThrows(BusinessException.class, () -> service.criar(novoPedido("PEDIDO", status)));
+        verifyNoInteractions(pedidos, clientes, saldos, movimentos, titulos);
+    }
+
+    @Test
+    void tipoDesconhecidoRecusadoAntesDePersistir() {
+        assertThrows(BusinessException.class, () -> service.criar(novoPedido("QUALQUER", "ABERTO")));
+        verifyNoInteractions(pedidos, clientes);
+    }
+
+    @Test
+    void criacaoNormalizaTipoEStatusSemPularFaturamento() {
+        when(clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(7L, 2L)).thenReturn(Optional.of(new Cliente()));
+        when(pedidos.save(any(PedidoVenda.class))).thenAnswer(invocation -> {
+            PedidoVenda pedido = invocation.getArgument(0);
+            pedido.setId(10L);
+            return pedido;
+        });
+        var resposta = service.criar(novoPedido(" orcamento ", " aberto "));
+        assertEquals("ORCAMENTO", resposta.tipo());
+        assertEquals("ABERTO", resposta.status());
+        assertEquals(BigDecimal.TEN, resposta.valorTotal());
+        verifyNoInteractions(saldos, movimentos, titulos);
+    }
 
     @Test
     void creditoNaoConsultaClienteDeOutraEmpresa() {
@@ -93,7 +129,7 @@ class PedidoVendaServiceImplTest {
         SaldoEstoque saldo = new SaldoEstoque();
         saldo.setQuantidade(new BigDecimal("10"));
         when(pedidos.findByIdForUpdateAndEmpresaId(10L, 2L)).thenReturn(Optional.of(pedido));
-        when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(2L, "PADRAO")).thenReturn(Optional.of(deposito));
+        when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L, "PADRAO")).thenReturn(Optional.of(deposito));
         when(saldos.findForUpdate(2L, 3L, 7L)).thenReturn(Optional.of(saldo));
         when(reservas.sumAtivasDeOutrosPedidos(2L, 3L, 7L, 10L)).thenReturn(new BigDecimal("7"));
         assertThrows(BusinessException.class, () -> service.faturar(10L, 2L, true));
@@ -131,7 +167,7 @@ class PedidoVendaServiceImplTest {
         pessoa.setId(8L);
         cliente.setPessoa(pessoa);
         when(pedidos.findByIdForUpdateAndEmpresaId(10L, 2L)).thenReturn(Optional.of(pedido));
-        when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(2L, "PADRAO")).thenReturn(Optional.of(deposito));
+        when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L, "PADRAO")).thenReturn(Optional.of(deposito));
         when(saldos.findForUpdate(2L, 3L, 7L)).thenReturn(Optional.of(saldo));
         when(reservas.findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(2L, 10L)).thenReturn(List.of(reserva));
         when(clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(7L, 2L)).thenReturn(Optional.of(cliente));

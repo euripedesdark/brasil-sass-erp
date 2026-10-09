@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -62,12 +63,16 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         PedidoVenda pedido = new PedidoVenda();
         if (request.empresaId() == null) throw new BusinessException("Empresa obrigatoria");
         if (request.itens() == null || request.itens().isEmpty()) throw new BusinessException("Pedido precisa possuir ao menos um item");
+        String tipo = request.tipo() == null ? "PEDIDO" : request.tipo().trim().toUpperCase(Locale.ROOT);
+        String status = request.status() == null ? "ABERTO" : request.status().trim().toUpperCase(Locale.ROOT);
+        if (!"PEDIDO".equals(tipo) && !"ORCAMENTO".equals(tipo)) throw new BusinessException("Tipo deve ser PEDIDO ou ORCAMENTO");
+        if (!"ABERTO".equals(status)) throw new BusinessException("Novo pedido deve iniciar ABERTO; utilize o fluxo de faturamento ou cancelamento");
         pedido.setEmpresaId(request.empresaId());
         if (request.clienteId() == null || clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.clienteId(), request.empresaId()).isEmpty()) throw new ResourceNotFoundException("Cliente nao encontrado");
         pedido.setClienteId(request.clienteId());
         pedido.setVendedorId(request.vendedorId());
-        pedido.setTipo(request.tipo() != null ? request.tipo() : "PEDIDO");
-        pedido.setStatus(request.status() != null ? request.status() : "ABERTO");
+        pedido.setTipo(tipo);
+        pedido.setStatus(status);
         pedido.setDataEmissao(request.dataEmissao() != null ? request.dataEmissao() : LocalDate.now());
         pedido.setDataEntrega(request.dataEntrega());
         pedido.setCondicaoPagamentoId(request.condicaoPagamentoId());
@@ -330,9 +335,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void reservarEstoqueDoPedido(PedidoVenda pedido) {
-        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(pedido.getEmpresaId(), "PADRAO")
+        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId(), "PADRAO")
                 .map(d -> d.getId())
-                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(pedido.getEmpresaId()).map(d -> d.getId()).orElse(null));
+                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId()).map(d -> d.getId()).orElse(null));
         if (depositoPadrao == null) return;
         for (ItemPedidoVenda item : pedido.getItens()) {
             if (item.getProdutoId() == null) continue;
@@ -357,9 +362,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long pedidoId) {
-        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(empresaId, "PADRAO")
+        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId, "PADRAO")
                 .map(d -> d.getId())
-                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(empresaId).map(d -> d.getId()).orElse(null));
+                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId).map(d -> d.getId()).orElse(null));
         if (depositoPadrao == null) throw new BusinessException("Nenhum deposito ativo para baixa de estoque");
         SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(empresaId, depositoPadrao, produtoId)
                 .orElseThrow(() -> new BusinessException("Sem saldo do produto " + produtoId));
