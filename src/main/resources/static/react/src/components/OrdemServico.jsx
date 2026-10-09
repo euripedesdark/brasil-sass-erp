@@ -12,7 +12,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { AutoComplete } from 'primereact/autocomplete';
 import ApiConfig, { apiFetch } from '../services/ApiConfig';
 export default function OrdemServico() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [osList, setOsList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [totalRecords, setTotalRecords] = useState(0);
@@ -67,7 +67,7 @@ export default function OrdemServico() {
             setTotalRecords(0);
             toast.current.show({
                 severity: 'error',
-                summary: 'Erro',
+                summary: t('legacyUi.os.error'),
                 detail: t('legacyUi.os.loadError')
             });
         } finally {
@@ -184,7 +184,7 @@ export default function OrdemServico() {
     const salvarOS = async () => {
         try {
             if (!osSelecionada?.clienteId) {
-                toast.current?.show({ severity: 'warn', summary: 'Cliente', detail: 'Selecione um cliente cadastrado.', life: 4000 });
+                toast.current?.show({ severity: 'warn', summary: t('legacyUi.os.customer'), detail: t('legacyUi.os.selectCustomer'), life: 4000 });
                 return;
             }
 
@@ -239,8 +239,8 @@ export default function OrdemServico() {
                 if (emitirNota) {
                     toast.current?.show({
                         severity: 'info',
-                        summary: 'Emissão fiscal',
-                        detail: 'A OS foi salva. A emissão fiscal deve continuar pelo módulo Fiscal, pois a rota de NF-e ainda não está exposta nesta tela.',
+                        summary: t('legacyUi.os.fiscalTitle'),
+                        detail: t('legacyUi.os.fiscalHelp'),
                         life: 6000
                     });
                 }
@@ -251,14 +251,14 @@ export default function OrdemServico() {
                 const err = await response.text();
                 toast.current.show({
                     severity: 'error',
-                    summary: 'Erro',
+                    summary: t('legacyUi.os.error'),
                     detail: err || t('legacyUi.os.saveError')
                 });
             }
         } catch (error) {
             toast.current.show({
                 severity: 'error',
-                summary: 'Erro',
+                summary: t('legacyUi.os.error'),
                 detail: t('legacyUi.os.saveError')
             });
         }
@@ -306,18 +306,18 @@ export default function OrdemServico() {
     };
 
     const formatarMoeda = (valor) => {
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return valor.toLocaleString(i18n.language, { style: 'currency', currency: 'BRL' });
     };
 
     const formatarData = (data) => {
         if (!data) return '';
-        return new Date(data).toLocaleDateString('pt-BR');
+        return new Date(data).toLocaleDateString(i18n.language);
     };
 
     const statusTemplate = (rowData) => {
         const status = rowData.status || 'ABERTA';
         const fechado = status === 'FECHADA' || status === 'CANCELADA';
-        const statusLabel = status === 'FECHADA' ? 'Fechada' : status === 'CANCELADA' ? 'Cancelada' : 'Aberta';
+        const statusLabel = status === 'FECHADA' ? t('legacyUi.os.statusClosed') : status === 'CANCELADA' ? t('legacyUi.os.statusCancelled') : t('legacyUi.os.statusOpen');
         return <span className={`status-badge ${fechado ? 'status-baixado' : 'status-aberto'}`}>{statusLabel}</span>;
     };
 
@@ -332,10 +332,10 @@ export default function OrdemServico() {
                 carregarOS();
             } else {
                 const err = await response.text();
-                toast.current.show({ severity: 'error', summary: 'Erro', detail: err || t('legacyUi.os.closeError') });
+                toast.current.show({ severity: 'error', summary: t('legacyUi.os.error'), detail: err || t('legacyUi.os.closeError') });
             }
         } catch (error) {
-            toast.current.show({ severity: 'error', summary: 'Erro', detail: t('legacyUi.os.closeError') });
+            toast.current.show({ severity: 'error', summary: t('legacyUi.os.error'), detail: t('legacyUi.os.closeError') });
         }
     };
 
@@ -364,7 +364,7 @@ export default function OrdemServico() {
             a.click();
             URL.revokeObjectURL(url);
         } catch (error) {
-            toast.current.show({ severity: 'error', summary: 'Impressao', detail: t('legacyUi.os.printError') });
+            toast.current.show({ severity: 'error', summary: t('legacyUi.os.print'), detail: t('legacyUi.os.printError') });
         }
     };
 
@@ -372,7 +372,7 @@ export default function OrdemServico() {
     const apontarOS = async (os) => {
         const horas = Number(apontamento.horas);
         if (!(horas > 0)) {
-            toast.current.show({ severity: 'warn', summary: 'Apontamento', detail: t('legacyUi.os.hoursRequired') });
+            toast.current.show({ severity: 'warn', summary: t('legacyUi.os.timeEntry'), detail: t('legacyUi.os.hoursRequired') });
             return;
         }
         try {
@@ -385,12 +385,12 @@ export default function OrdemServico() {
                 const j = await resposta.json().catch(() => null);
                 throw new Error(j?.errors?.[0]?.message || t('legacyUi.os.pointingError'));
             }
-            toast.current.show({ severity: 'success', summary: 'Apontamento', detail: `${horas}h registradas na OS` });
+            toast.current.show({ severity: 'success', summary: t('legacyUi.os.timeEntry'), detail: `${horas}h ${t('legacyUi.os.hoursRecorded')}` });
             setApontando(false);
             setApontamento({ horas: 1, descricao: '' });
             carregarOS();
         } catch (error) {
-            toast.current.show({ severity: 'error', summary: 'Apontamento', detail: error.message || 'Falha ao apontar' });
+            toast.current.show({ severity: 'error', summary: t('legacyUi.os.timeEntry'), detail: error.message || t('legacyUi.os.pointingFailed') });
         }
     };
 
@@ -401,26 +401,26 @@ export default function OrdemServico() {
                     icon="pi pi-eye" 
                     className="p-button-info p-button-sm mr-2" 
                     onClick={() => abrirEdicao(rowData)}
-                    tooltip="Visualizar/Editar"
+                    tooltip={t('legacyUi.os.view')}
                 />
                 {rowData.status !== 'FECHADA' && rowData.status !== 'CANCELADA' && (
                     <>
                         <Button 
                             icon="pi pi-file-pdf" 
                             className="p-button-success p-button-sm mr-2" 
-                            tooltip="Imprimir OS"
+                            tooltip={t('legacyUi.os.print')}
                             onClick={() => imprimirOS(rowData)}
                         />
                         <Button 
                             icon="pi pi-clock" 
                             className="p-button-info p-button-sm mr-2" 
-                            tooltip="Apontar horas"
+                            tooltip={t('legacyUi.os.pointHours')}
                             onClick={() => { setOsSelecionada(rowData); setApontando(true); }}
                         />
                         <Button 
                             icon="pi pi-receipt" 
                             className="p-button-warning p-button-sm" 
-                            tooltip="Emitir Nota"
+                            tooltip={t('legacyUi.os.issueInvoice')}
                             onClick={() => {
                                 setOsSelecionada(rowData);
                                 setEmitirNota(true);
@@ -433,7 +433,7 @@ export default function OrdemServico() {
                     <Button
                         icon="pi pi-check-circle"
                         className="p-button-secondary p-button-sm"
-                        tooltip="Fechar OS"
+                        tooltip={t('legacyUi.os.close')}
                         onClick={() => fecharOS(rowData)}
                     />
                 )}
@@ -443,8 +443,8 @@ export default function OrdemServico() {
 
     const dialogFooter = (
         <div>
-            <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={() => setDialogVisible(false)} />
-            <Button label="Salvar e Imprimir OS" icon="pi pi-check" className="p-button-success" onClick={salvarOS} />
+            <Button label={t('legacyUi.os.cancel')} icon="pi pi-times" className="p-button-text" onClick={() => setDialogVisible(false)} />
+            <Button label={t('legacyUi.os.savePrint')} icon="pi pi-check" className="p-button-success" onClick={salvarOS} />
             {osSelecionada?.status !== 'FECHADA' && osSelecionada?.status !== 'CANCELADA' && (
                 <div className="mt-3">
                     <div className="p-checkbox">
@@ -456,7 +456,7 @@ export default function OrdemServico() {
                             className="p-checkbox-input"
                         />
                         <label htmlFor="emitirNota" className="p-checkbox-label ml-2">
-                            Emitir Nota Fiscal após salvar
+                            {t('legacyUi.os.issueInvoiceAfterSave')}
                         </label>
                     </div>
                 </div>
@@ -474,7 +474,7 @@ export default function OrdemServico() {
                 <div className="filtros-container">
                     <div className="p-fluid p-formgrid p-grid">
                         <div className="p-field p-col-12 p-md-6">
-                            <label htmlFor="cliente">Cliente</label>
+                            <label htmlFor="cliente">{t('legacyUi.os.customer')}</label>
                             <AutoComplete
                                 id="cliente"
                                 value={filtroCliente}
@@ -482,7 +482,7 @@ export default function OrdemServico() {
                                 completeMethod={buscarClientes}
                                 field="nome"
                                 onChange={(e) => setFiltroCliente(e.value)}
-                                placeholder="Digite o nome do cliente"
+                                placeholder={t('legacyUi.os.customerNamePlaceholder')}
                                 dropdown
                                 multiple
                             />
@@ -490,7 +490,7 @@ export default function OrdemServico() {
                         <div className="p-field p-col-12 p-md-6">
                             <label>&nbsp;</label>
                             <Button 
-                                label="Pesquisar" 
+                                label={t('legacyUi.os.search')} 
                                 icon="pi pi-search" 
                                 onClick={carregarOS}
                                 className="p-button-outlined"
@@ -501,7 +501,7 @@ export default function OrdemServico() {
                 
                 <div className="toolbar-container">
                     <Button 
-                        label="Nova Ordem de Serviço" 
+                        label={t('legacyUi.os.newOrder')} 
                         icon="pi pi-plus" 
                         className="p-button-success" 
                         onClick={abrirNovaOS}
@@ -519,16 +519,16 @@ export default function OrdemServico() {
                     onSort={onLazyLoad}
                     loading={loading}
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} OS"
+                    currentPageReportTemplate={t('legacyUi.os.pageReport')}
                     rowsPerPageOptions={[10, 20, 50, 100]}
                     sortField={lazyParams.sortField}
                     sortOrder={lazyParams.sortOrder}
-                    emptyMessage="Nenhuma ordem de serviço encontrada"
+                    emptyMessage={t('legacyUi.os.emptyOrders')}
                 >
-                    <Column field="idMov" header="Número OS" sortable style={{ width: '100px' }} />
-                    <Column field="cliente" header="Cliente" sortable filter filterPlaceholder="Buscar cliente" style={{ width: '250px' }} />
-                    <Column field="dataMov" header="Data" body={(row) => formatarData(row.aberturaAt || row.dataMov)} sortable style={{ width: '140px' }} />
-                    <Column field="valorTotal" header="Valor Total" body={(row) => formatarMoeda(row.valorTotal)} sortable style={{ width: '120px' }} />
+                    <Column field="idMov" header={t('legacyUi.os.number')} sortable style={{ width: '100px' }} />
+                    <Column field="cliente" header={t('legacyUi.os.customer')} sortable filter filterPlaceholder={t('legacyUi.os.filterCustomer')} style={{ width: '250px' }} />
+                    <Column field="dataMov" header={t('legacyUi.os.date')} body={(row) => formatarData(row.aberturaAt || row.dataMov)} sortable style={{ width: '140px' }} />
+                    <Column field="valorTotal" header={t('legacyUi.os.totalValue')} body={(row) => formatarMoeda(row.valorTotal)} sortable style={{ width: '120px' }} />
                     <Column field="status" header="Status" body={(row) => statusTemplate({ ...row, status: row.status || (row.baixaMov === 'N' ? 'ABERTA' : 'FECHADA') })} sortable style={{ width: '120px' }} />
                     <Column body={acoesTemplate} style={{ width: '200px' }} />
                 </DataTable>
@@ -537,7 +537,7 @@ export default function OrdemServico() {
             <Dialog 
                 visible={dialogVisible} 
                 style={{ width: '900px' }} 
-                header={osSelecionada?.idMov ? `Editar OS ${osSelecionada.idMov}` : 'Nova Ordem de Serviço'}
+                header={osSelecionada?.idMov ? t('legacyUi.os.editOrder', { id: osSelecionada.idMov }) : t('legacyUi.os.newOrder')}
                 footer={dialogFooter}
                 onHide={() => setDialogVisible(false)}
                 maximizable
@@ -546,7 +546,7 @@ export default function OrdemServico() {
                     <div className="p-grid">
                         <div className="p-col-8">
                             <div className="p-field">
-                                <label htmlFor="cliente">Cliente *</label>
+                                <label htmlFor="cliente">{t('legacyUi.os.customerRequired')}</label>
                                 <AutoComplete
                                     id="cliente"
                                     value={osSelecionada?.cliente}
@@ -561,7 +561,7 @@ export default function OrdemServico() {
                                             clienteId: cliente?.id ?? null
                                         });
                                     }}
-                                    placeholder="Busque pelo cliente"
+                                    placeholder={t('legacyUi.os.searchCustomerPlaceholder')}
                                     dropdown
                                     required
                                 />
@@ -569,7 +569,7 @@ export default function OrdemServico() {
                         </div>
                         <div className="p-col-4">
                             <div className="p-field">
-                                <label htmlFor="dataMov">Data OS *</label>
+                                <label htmlFor="dataMov">{t('legacyUi.os.orderDateRequired')}</label>
                                 <Calendar 
                                     id="dataMov"
                                     value={osSelecionada?.dataMov}
@@ -583,16 +583,16 @@ export default function OrdemServico() {
                     </div>
                     
                     <div className="p-field">
-                        <label htmlFor="equipamento">Equipamento</label>
+                        <label htmlFor="equipamento">{t('legacyUi.os.equipment')}</label>
                         <InputText
                             id="equipamento"
                             value={osSelecionada?.equipamento || ''}
                             onChange={(e) => setOsSelecionada({...osSelecionada, equipamento: e.target.value})}
-                            placeholder="Equipamento/ativo atendido"
+                            placeholder={t('legacyUi.os.equipmentPlaceholder')}
                         />
                     </div>
                     <div className="p-field">
-                        <label htmlFor="observacao">Descrição</label>
+                        <label htmlFor="observacao">{t('legacyUi.os.description')}</label>
                         <InputTextarea 
                             id="observacao"
                             value={osSelecionada?.descricao || ''}
@@ -603,9 +603,9 @@ export default function OrdemServico() {
                     
                     <div className="itens-os-section">
                         <div className="section-header">
-                            <h3>Itens da Ordem de Serviço</h3>
+                            <h3>{t('legacyUi.os.itemsTitle')}</h3>
                             <Button 
-                                label="Adicionar Item" 
+                                label={t('legacyUi.os.addItem')} 
                                 icon="pi pi-plus" 
                                 className="p-button-sm p-button-outlined" 
                                 onClick={adicionarItem}
@@ -615,10 +615,10 @@ export default function OrdemServico() {
                         <DataTable 
                             value={osSelecionada?.itens || []}
                             editableRows
-                            emptyMessage="Nenhum item adicionado"
+                            emptyMessage={t('legacyUi.os.emptyItems')}
                         >
                             <Column
-                                header="Produto"
+                                header={t('legacyUi.os.product')}
                                 body={(row, options) => (
                                     <AutoComplete
                                         value={row.produto || null}
@@ -640,14 +640,14 @@ export default function OrdemServico() {
                                             };
                                             setOsSelecionada({...osSelecionada, itens});
                                         }}
-                                        placeholder="Produto"
+                                        placeholder={t('legacyUi.os.product')}
                                         className="w-full"
                                     />
                                 )}
                                 style={{ width: '28%' }}
                             />
                             <Column
-                                header="Serviço"
+                                header={t('legacyUi.os.service')}
                                 body={(row, options) => (
                                     <AutoComplete
                                         value={row.servico || null}
@@ -669,7 +669,7 @@ export default function OrdemServico() {
                                             };
                                             setOsSelecionada({...osSelecionada, itens});
                                         }}
-                                        placeholder="Serviço"
+                                        placeholder={t('legacyUi.os.service')}
                                         className="w-full"
                                     />
                                 )}
@@ -677,20 +677,20 @@ export default function OrdemServico() {
                             />
                             <Column
                                 field="descricao"
-                                header="Descrição"
+                                header={t('legacyUi.os.description')}
                                 body={(row) => row.descricao || '—'} 
                                 editor={(options) => (
                                     <InputText 
                                         value={options.value} 
                                         onChange={(e) => options.editorCallback(e.target.value)}
-                                        placeholder="Descrição do serviço/produto"
+                                        placeholder={t('legacyUi.os.itemDescriptionPlaceholder')}
                                     />
                                 )}
                                 style={{ width: '40%' }}
                             />
                             <Column
                                 field="quantidade"
-                                header="Qtd"
+                                header={t('legacyUi.os.quantity')}
                                 body={(row, options) => (
                                     <InputNumber
                                         value={row.quantidade ?? 1}
@@ -704,14 +704,14 @@ export default function OrdemServico() {
                             />
                             <Column
                                 field="valorUnitario"
-                                header="Vl. Unitário"
+                                header={t('legacyUi.os.unitValue')}
                                 body={(row, options) => (
                                     <InputNumber
                                         value={row.valorUnitario ?? 0}
                                         onValueChange={(e) => atualizarItem(options.rowIndex, 'valorUnitario', e.value ?? 0)}
                                         mode="currency"
                                         currency="BRL"
-                                        locale="pt-BR"
+                                        locale={i18n.language}
                                         min={0}
                                     />
                                 )}
@@ -719,7 +719,7 @@ export default function OrdemServico() {
                             />
                             <Column 
                                 field="totalItem" 
-                                header="Total" 
+                                header={t('legacyUi.os.total')} 
                                 body={(row) => formatarMoeda(row.totalItem)}
                                 style={{ width: '120px' }}
                             />
@@ -736,7 +736,7 @@ export default function OrdemServico() {
                         </DataTable>
                         
                         <div className="total-os">
-                            <strong>Total da OS: {formatarMoeda(calcularTotalOS())}</strong>
+                            <strong>{t('legacyUi.os.orderTotal')}: {formatarMoeda(calcularTotalOS())}</strong>
                         </div>
                     </div>
                 </div>
@@ -745,19 +745,19 @@ export default function OrdemServico() {
             <Dialog
                 visible={apontando}
                 onHide={() => setApontando(false)}
-                header={`Apontar horas — OS ${osSelecionada?.numero || ''}`}
+                header={t('legacyUi.os.pointHoursHeader', { id: osSelecionada?.numero || '' })}
                 modal
                 style={{ width: 'min(96vw, 440px)' }}
                 footer={
                     <div>
-                        <Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={() => setApontando(false)} />
-                        <Button label="Registrar" icon="pi pi-check" className="p-button-success" onClick={() => apontarOS(osSelecionada)} />
+                        <Button label={t('legacyUi.os.cancel')} icon="pi pi-times" className="p-button-text" onClick={() => setApontando(false)} />
+                        <Button label={t('legacyUi.os.register')} icon="pi pi-check" className="p-button-success" onClick={() => apontarOS(osSelecionada)} />
                     </div>
                 }
             >
                 <div className="p-fluid grid">
                     <div className="field col-12">
-                        <label htmlFor="apHoras">Horas trabalhadas</label>
+                        <label htmlFor="apHoras">{t('legacyUi.os.hoursWorked')}</label>
                         <InputNumber
                             inputId="apHoras"
                             value={apontamento.horas}
@@ -768,14 +768,14 @@ export default function OrdemServico() {
                         />
                     </div>
                     <div className="field col-12">
-                        <label htmlFor="apDesc">O que foi feito</label>
+                        <label htmlFor="apDesc">{t('legacyUi.os.workDone')}</label>
                         <InputTextarea
                             id="apDesc"
                             value={apontamento.descricao}
                             onChange={(e) => setApontamento({ ...apontamento, descricao: e.target.value })}
                             rows={4}
                             autoResize
-                            placeholder="Troca do compressor, teste de pressão..."
+                            placeholder={t('legacyUi.os.workPlaceholder')}
                         />
                     </div>
                 </div>
