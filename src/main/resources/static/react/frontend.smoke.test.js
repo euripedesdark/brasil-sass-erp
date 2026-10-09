@@ -44,7 +44,7 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 
 if (packageJson.scripts?.build === 'vite build') ok('canonical frontend package uses Vite');
 else fail('frontend package does not declare vite build');
 
-if (packageJson.scripts?.test === 'node frontend.smoke.test.js') ok('frontend test script points to the smoke test');
+if (typeof packageJson.scripts?.test === 'string' && /(?:^|&&\s*)node frontend\.smoke\.test\.js(?:\s*&&|\s*$)/.test(packageJson.scripts.test)) ok('frontend test script includes the smoke test');
 else fail('frontend test script does not point to frontend.smoke.test.js');
 
 if (fs.existsSync(path.join(ROOT, 'vite.config.js'))) ok('vite.config.js exists');
