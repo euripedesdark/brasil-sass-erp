@@ -114,7 +114,8 @@
     "assistant": "ERP Assistant",
     "reports": "Reports",
     "settings": "Settings",
-    "aboutProject": "About the Project"
+    "aboutProject": "About the Project",
+    "analytics": "Analytics"
   },
   "menu": {
     "people": "People",
