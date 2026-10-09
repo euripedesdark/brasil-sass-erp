@@ -3,102 +3,259 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
-import { Card } from 'primereact/card';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
-import { InputText } from 'primereact/inputtext';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 
 const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const hojeISO = () => new Date().toISOString().slice(0, 10);
+const OP = '/api/financeiro/cobranca-op';
+const TIPOS_ACAO = ['LEMBRETE', 'AVISO', 'LIGACAO', 'EMAIL', 'WHATSAPP', 'NEGATIVACAO', 'OUTRO'];
 
 export const Cobranca = () => {
     const toast = useRef(null);
     const navigate = useNavigate();
-    const [rows, setRows] = useState([]);
-    const [sel, setSel] = useState([]);
-    const [contas, setContas] = useState([]);
-    const [tipos, setTipos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [dlgBaixa, setDlgBaixa] = useState(false);
-    const [alvo, setAlvo] = useState(null);
-    const [fBx, setFBx] = useState({});
-    const [dlgRem, setDlgRem] = useState(false);
-    const [bank, setBank] = useState('itau');
-    const [contaId, setContaId] = useState(null);
-    const js = async (r) => { const j = await r.json().catch(() => null); return Array.isArray(j) ? j : (j?.data ?? j?.lista ?? []); };
+    const [carteira, setCarteira] = useState([]);
+    const [promessas, setPromessas] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [dlgAcao, setDlgAcao] = useState(false);
+    const [dlgProm, setDlgProm] = useState(false);
+    const [selTitulo, setSelTitulo] = useState(null);
+    const [fAcao, setFAcao] = useState({ tipo: 'LEMBRETE', nivel: 1, observacao: '' });
+    const [fProm, setFProm] = useState({ valor: null, data: null, observacao: '' });
+    const [histAcoes, setHistAcoes] = useState([]);
+    const [dlgHist, setDlgHist] = useState(false);
+
+    const js = async (r) => {
+        const j = await r.json().catch(() => null);
+        return Array.isArray(j) ? j : (j?.data ?? j?.content ?? j ?? []);
+    };
+
     const carregar = useCallback(async () => {
         setLoading(true);
         try {
-            const [t, c, tp] = await Promise.all([apiFetch('/api/financeiro/titulos').then(js), apiFetch('/api/financeiro/contas-bancarias').then(js).catch(() => []), apiFetch('/api/financeiro/tipos-pagamento').then(js).catch(() => [])]);
-            setRows(t.filter((x) => x.status === 'ABERTO' || x.status === 'PARCIAL'));
-            setContas(c); setTipos(tp);
-        } catch (e) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha ao carregar carteira', life: 4000 }); }
-        finally { setLoading(false); }
+            const [c, p] = await Promise.all([
+                apiFetch(OP + '/carteira').then(js),
+                apiFetch(OP + '/promessas').then(js),
+            ]);
+            setCarteira(Array.isArray(c) ? c : []);
+            setPromessas(Array.isArray(p) ? p : []);
+        } catch {
+            toast.current?.show({ severity: 'error', summary: 'Erro ao carregar cobrança', life: 4000 });
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
     useEffect(() => { carregar(); }, [carregar]);
-    const diasAtraso = (v) => v ? Math.floor((Date.now() - new Date(v + 'T00:00:00').getTime()) / 86400000) : 0;
-    const vencidos = rows.filter((r) => diasAtraso(r.dataVencimento) > 0);
-    const totVenc = vencidos.reduce((s, r) => s + Number(r.valorSaldo || 0), 0);
-    const totAberto = rows.reduce((s, r) => s + Number(r.valorSaldo || 0), 0);
-    const abrirBaixa = (r) => { setAlvo(r); setFBx({ valor: Number(r.valorSaldo || 0), data: new Date(), conta: null, tipo: null }); setDlgBaixa(true); };
-    const confirmarBaixa = async () => {
-        const r = await apiFetch('/api/financeiro/titulos/' + alvo.id + '/baixar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valorBaixa: Number(fBx.valor || 0), dataBaixa: fBx.data ? fBx.data.toISOString().slice(0, 10) : hojeISO(), contaBancariaId: fBx.conta, tipoPagamentoId: fBx.tipo }) });
-        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Baixa recusada', life: 4000 }); return; }
-        setDlgBaixa(false); carregar();
+
+    const abrirAcao = (row) => {
+        setSelTitulo(row);
+        setFAcao({ tipo: 'LEMBRETE', nivel: Math.max(1, row.nivelSugerido || 1), observacao: '' });
+        setDlgAcao(true);
     };
-    const emitirBoleto = async (r) => {
-        const resp = await apiFetch('/api/financeiro/boletos/emitir?bank=' + bank + '&tituloId=' + r.id, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ valor: Number(r.valorSaldo || 0), vencimento: r.dataVencimento, descricao: r.descricao }) });
-        if (!resp.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Boleto recusado (confira banco/dados)', life: 5000 }); return; }
-        toast.current?.show({ severity: 'success', summary: 'Boleto emitido', life: 3000 });
+
+    const salvarAcao = async () => {
+        try {
+            const r = await apiFetch(OP + '/acoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tituloId: selTitulo.tituloId,
+                    tipo: fAcao.tipo,
+                    nivel: fAcao.nivel,
+                    observacao: fAcao.observacao,
+                }),
+            });
+            if (!r.ok) {
+                const j = await r.json().catch(() => null);
+                throw new Error(j?.message || 'Falha ao registrar ação');
+            }
+            toast.current?.show({ severity: 'success', summary: 'Ação registrada', life: 3000 });
+            setDlgAcao(false);
+            carregar();
+        } catch (e) {
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 });
+        }
     };
-    const gerarRemessa = async () => {
-        if (!sel.length || !contaId) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Selecione títulos e conta', life: 3500 }); return; }
-        const itens = sel.map((r) => ({ tituloId: r.id, valor: Number(r.valorSaldo || 0), vencimento: r.dataVencimento }));
-        const r = await apiFetch('/api/financeiro/boletos/remessas?bank=' + bank + '&contaBancariaId=' + contaId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(itens) });
-        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Remessa recusada', life: 4000 }); return; }
-        toast.current?.show({ severity: 'success', summary: 'Remessa gerada', life: 3000 });
-        setSel([]); setDlgRem(false);
+
+    const abrirPromessa = (row) => {
+        setSelTitulo(row);
+        setFProm({ valor: Number(row.valorSaldo || 0), data: null, observacao: '' });
+        setDlgProm(true);
     };
+
+    const salvarPromessa = async () => {
+        if (!fProm.valor || !fProm.data) {
+            toast.current?.show({ severity: 'warn', summary: 'Informe valor e data', life: 3000 });
+            return;
+        }
+        try {
+            const iso = fProm.data.toISOString().slice(0, 10);
+            const r = await apiFetch(OP + '/promessas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tituloId: selTitulo.tituloId,
+                    valor: fProm.valor,
+                    dataPrometida: iso,
+                    observacao: fProm.observacao,
+                }),
+            });
+            if (!r.ok) {
+                const j = await r.json().catch(() => null);
+                throw new Error(j?.message || 'Falha ao gravar promessa');
+            }
+            toast.current?.show({ severity: 'success', summary: 'Promessa registrada', life: 3000 });
+            setDlgProm(false);
+            carregar();
+        } catch (e) {
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 });
+        }
+    };
+
+    const statusPromessa = async (id, status) => {
+        try {
+            const r = await apiFetch(OP + '/promessas/' + id + '/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+            if (!r.ok) throw new Error('Falha');
+            carregar();
+        } catch {
+            toast.current?.show({ severity: 'error', summary: 'Erro ao atualizar promessa', life: 3500 });
+        }
+    };
+
+    const processarVencidas = async () => {
+        const r = await apiFetch(OP + '/promessas/processar-vencidas', { method: 'POST' });
+        const j = await r.json().catch(() => ({}));
+        toast.current?.show({ severity: 'info', summary: `${j.quebradas || 0} promessa(s) marcada(s) como QUEBRADA`, life: 3500 });
+        carregar();
+    };
+
+    const verHist = async (row) => {
+        setSelTitulo(row);
+        const lista = await apiFetch(OP + '/acoes?tituloId=' + row.tituloId).then(js);
+        setHistAcoes(Array.isArray(lista) ? lista : []);
+        setDlgHist(true);
+    };
+
+    const sevAtraso = (d) => (d <= 0 ? 'success' : d <= 15 ? 'info' : d <= 30 ? 'warning' : 'danger');
+
     return (
-        <div className='p-4'>
+        <div className="p-4">
             <Toast ref={toast} />
-            <div className='mb-3'><h2 className='m-0'>Cobrança</h2><span className='bc-muted'>Carteira em aberto, baixa, boleto e remessa</span></div>
-            <div className='grid mb-3'>
-                <div className='bc-form-col-4 col-12 md:col-4'><Card><small>Vencidos</small><div className='text-2xl font-bold' style={{ color: 'var(--red-500)' }}>{vencidos.length} · {fmt(totVenc)}</div></Card></div>
-                <div className='bc-form-col-4 col-12 md:col-4'><Card><small>Em aberto</small><div className='text-2xl font-bold'>{rows.length} · {fmt(totAberto)}</div></Card></div>
-                <div className='bc-form-col-4 col-12 md:col-4'><Card><small>Ações em lote</small><div className='flex gap-2 mt-2'><Dropdown value={contaId} options={contas.map((c) => ({ label: (c.banco || '') + ' ' + (c.agencia || '') + '/' + (c.conta || ''), value: c.id }))} onChange={(e) => setContaId(e.value)} placeholder='Conta' /><InputText value={bank} onChange={(e) => setBank(e.target.value)} placeholder='Banco' style={{ width: '7rem' }} /><Button label='Remessa' icon='pi pi-send' outlined onClick={() => setDlgRem(true)} /></div></Card></div>
-            </div>
-            <DataTable value={rows} loading={loading} paginator rows={12} emptyMessage='Carteira zerada.' responsiveLayout='scroll' dataKey='id' selectionMode='checkbox' selection={sel} onSelectionChange={(e) => setSel(e.value)}> 
-                <Column selectionMode='multiple' style={{ width: '3rem' }} />
-                <Column field='descricao' header='Título' />
-                <Column field='dataVencimento' header='Venc.' style={{ width: '7rem' }} />
-                <Column header='Atraso' body={(r) => { const d = diasAtraso(r.dataVencimento); return d > 0 ? (<Tag value={d + 'd'} severity='danger' />) : (<Tag value='em dia' severity='success' />); }} style={{ width: '6rem' }} />
-                <Column header='Saldo' body={(r) => fmt(r.valorSaldo)} style={{ width: '9rem' }} />
-                <Column header='' body={(r) => (<div className='flex gap-1'>
-                    <Button label='Baixar' size='small' onClick={() => abrirBaixa(r)} />
-                    <Button label='Boleto' size='small' outlined onClick={() => emitirBoleto(r)} />
-                    <Button label='Reneg.' size='small' text onClick={() => navigate('/financeiro/renegociacao')} />
-                </div>)} style={{ width: '14rem' }} />
-            </DataTable>
-            <Dialog visible={dlgRem} onHide={() => setDlgRem(false)} header='Gerar remessa' modal>
-                <p>Enviar {sel.length} título(s) em remessa CNAB ({bank})?</p>
-                <div className='flex justify-end gap-2'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgRem(false)} /><Button label='Gerar' icon='pi pi-check' onClick={gerarRemessa} /></div>
-            </Dialog>
-            <Dialog visible={dlgBaixa} onHide={() => setDlgBaixa(false)} header='Baixar título' modal style={{ width: 'min(96vw, 480px)' }}>
-                <div className='grid p-fluid'>
-                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={fBx.valor} onValueChange={(e) => setFBx({ ...fBx, valor: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Data</label><Calendar value={fBx.data} onChange={(e) => setFBx({ ...fBx, data: e.value })} dateFormat='dd/mm/yy' showIcon /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Conta</label><Dropdown value={fBx.conta} options={contas.map((c) => ({ label: (c.banco || '') + ' ' + (c.agencia || '') + '/' + (c.conta || ''), value: c.id }))} onChange={(e) => setFBx({ ...fBx, conta: e.value })} placeholder='Conta' /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Tipo pgto</label><Dropdown value={fBx.tipo} options={tipos.map((t) => ({ label: t.descricao || t.nome || t.id, value: t.id }))} onChange={(e) => setFBx({ ...fBx, tipo: e.value })} placeholder='Tipo' /></div>
+            <div className="flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h2 className="m-0">Cobrança operacional</h2>
+                    <span className="bc-muted">Carteira, níveis de cobrança e promessas (FSCM-lite)</span>
                 </div>
-                <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgBaixa(false)} /><Button label='Baixar' icon='pi pi-check' severity='success' onClick={confirmarBaixa} /></div>
+                <div className="flex gap-2">
+                    <Button label="Processar promessas vencidas" icon="pi pi-sync" outlined onClick={processarVencidas} />
+                    <Button label="Renegociação" icon="pi pi-replay" text onClick={() => navigate('/financeiro/renegociacao')} />
+                    <Button icon="pi pi-refresh" rounded text onClick={carregar} />
+                </div>
+            </div>
+
+            <TabView>
+                <TabPanel header={`Carteira (${carteira.length})`}>
+                    <DataTable value={carteira} loading={loading} paginator rows={15} dataKey="tituloId" emptyMessage="Sem títulos em aberto a receber">
+                        <Column field="tituloId" header="#" style={{ width: '5rem' }} />
+                        <Column field="descricao" header="Descrição" />
+                        <Column field="dataVencimento" header="Vencimento" style={{ width: '8rem' }} />
+                        <Column header="Saldo" body={(r) => fmt(r.valorSaldo)} style={{ width: '9rem' }} />
+                        <Column header="Atraso" body={(r) => <Tag value={`${r.diasAtraso}d`} severity={sevAtraso(r.diasAtraso)} />} style={{ width: '6rem' }} />
+                        <Column header="Nível sug." body={(r) => r.nivelSugerido} style={{ width: '6rem' }} />
+                        <Column header="Último" body={(r) => r.ultimoNivel} style={{ width: '5rem' }} />
+                        <Column header="" style={{ width: '16rem' }} body={(r) => (
+                            <div className="flex gap-1 flex-wrap">
+                                <Button label="Ação" size="small" onClick={() => abrirAcao(r)} />
+                                <Button label="Promessa" size="small" outlined onClick={() => abrirPromessa(r)} />
+                                <Button icon="pi pi-history" rounded text tooltip="Histórico" onClick={() => verHist(r)} />
+                            </div>
+                        )} />
+                    </DataTable>
+                </TabPanel>
+                <TabPanel header={`Promessas (${promessas.length})`}>
+                    <DataTable value={promessas} loading={loading} paginator rows={10} dataKey="id" emptyMessage="Nenhuma promessa">
+                        <Column field="id" header="#" style={{ width: '5rem' }} />
+                        <Column field="tituloId" header="Título" />
+                        <Column header="Valor" body={(r) => fmt(r.valorPrometido)} />
+                        <Column field="dataPrometida" header="Data" />
+                        <Column field="status" header="Status" body={(r) => (
+                            <Tag value={r.status} severity={r.status === 'ABERTA' ? 'info' : r.status === 'CUMPRIDA' ? 'success' : r.status === 'QUEBRADA' ? 'danger' : 'secondary'} />
+                        )} />
+                        <Column field="observacao" header="Obs." />
+                        <Column header="" style={{ width: '12rem' }} body={(r) => r.status === 'ABERTA' ? (
+                            <div className="flex gap-1">
+                                <Button label="Cumprida" size="small" severity="success" onClick={() => statusPromessa(r.id, 'CUMPRIDA')} />
+                                <Button label="Quebrada" size="small" severity="danger" outlined onClick={() => statusPromessa(r.id, 'QUEBRADA')} />
+                            </div>
+                        ) : null} />
+                    </DataTable>
+                </TabPanel>
+            </TabView>
+
+            <Dialog visible={dlgAcao} onHide={() => setDlgAcao(false)} header={`Ação de cobrança — título #${selTitulo?.tituloId || ''}`} modal style={{ width: 'min(480px, 96vw)' }}>
+                <div className="grid p-fluid">
+                    <div className="col-12 md:col-6">
+                        <label>Tipo</label>
+                        <Dropdown value={fAcao.tipo} options={TIPOS_ACAO.map((t) => ({ label: t, value: t }))} onChange={(e) => setFAcao({ ...fAcao, tipo: e.value })} />
+                    </div>
+                    <div className="col-12 md:col-6">
+                        <label>Nível (1–5)</label>
+                        <InputNumber value={fAcao.nivel} onValueChange={(e) => setFAcao({ ...fAcao, nivel: e.value })} min={1} max={5} showButtons />
+                    </div>
+                    <div className="col-12">
+                        <label>Observação</label>
+                        <InputTextarea rows={3} value={fAcao.observacao} onChange={(e) => setFAcao({ ...fAcao, observacao: e.target.value })} />
+                    </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                    <Button label="Cancelar" text severity="secondary" onClick={() => setDlgAcao(false)} />
+                    <Button label="Registrar" icon="pi pi-check" onClick={salvarAcao} />
+                </div>
+            </Dialog>
+
+            <Dialog visible={dlgProm} onHide={() => setDlgProm(false)} header={`Promessa — título #${selTitulo?.tituloId || ''}`} modal style={{ width: 'min(420px, 96vw)' }}>
+                <div className="grid p-fluid">
+                    <div className="col-12">
+                        <label>Valor prometido *</label>
+                        <InputNumber value={fProm.valor} onValueChange={(e) => setFProm({ ...fProm, valor: e.value })} mode="currency" currency="BRL" locale="pt-BR" min={0.01} />
+                    </div>
+                    <div className="col-12">
+                        <label>Data prometida *</label>
+                        <Calendar value={fProm.data} onChange={(e) => setFProm({ ...fProm, data: e.value })} dateFormat="dd/mm/yy" showIcon minDate={new Date()} />
+                    </div>
+                    <div className="col-12">
+                        <label>Observação</label>
+                        <InputTextarea rows={2} value={fProm.observacao} onChange={(e) => setFProm({ ...fProm, observacao: e.target.value })} />
+                    </div>
+                    <div className="col-12"><small className="bc-muted">Saldo do título: {fmt(selTitulo?.valorSaldo)}</small></div>
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                    <Button label="Cancelar" text severity="secondary" onClick={() => setDlgProm(false)} />
+                    <Button label="Salvar promessa" icon="pi pi-check" severity="success" onClick={salvarPromessa} />
+                </div>
+            </Dialog>
+
+            <Dialog visible={dlgHist} onHide={() => setDlgHist(false)} header={`Histórico de ações — #${selTitulo?.tituloId || ''}`} modal style={{ width: 'min(640px, 96vw)' }}>
+                <DataTable value={histAcoes} emptyMessage="Sem ações" size="small">
+                    <Column field="createdAt" header="Data" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—'} />
+                    <Column field="tipo" header="Tipo" />
+                    <Column field="nivel" header="Nível" />
+                    <Column field="observacao" header="Obs." />
+                </DataTable>
             </Dialog>
         </div>
     );
 };
+
 export default Cobranca;
