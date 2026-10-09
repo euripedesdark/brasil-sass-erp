@@ -12,6 +12,7 @@ import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
 import br.com.brasil_saas.compras.service.ConferenciaFaturaCompraService;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
 import br.com.brasil_saas.fiscal.model.Nfe;
 import br.com.brasil_saas.fiscal.model.NfeItem;
@@ -66,6 +67,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     private final TituloRepository tituloRepository;
     private final NfeRepository nfeRepository;
     private final NfeItemRepository nfeItemRepository;
+    private final DocumentoFluxoService documentoFluxoService;
 
     @Override
     @Transactional(readOnly = true)
@@ -243,6 +245,35 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
             item.setConferenciaId(salva.getId());
         }
         itemRepository.saveAll(itens);
+        return salva;
+    }
+
+    @Override
+    @Transactional
+    public ConferenciaFaturaCompra aprovarExcepcional(Long empresaId, Long userId, Long conferenciaId, String motivo) {
+        String justo = motivo == null ? "" : motivo.trim();
+        if (justo.length() < 10 || justo.length() > 500) {
+            throw new BusinessException("Motivo obrigatorio, entre 10 e 500 caracteres");
+        }
+        ConferenciaFaturaCompra conferencia = repository.findByIdForUpdate(conferenciaId, empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Conferencia nao encontrada"));
+        if (!"DIVERGENTE".equals(conferencia.getStatus())) {
+            throw new BusinessException("Somente conferencia divergente aceita aprovacao excepcional");
+        }
+        long posteriores = repository.countPosterioresMesmoPar(empresaId, conferencia.getPedidoId(),
+                conferencia.getNfeId(), conferencia.getRecebimentoId(), conferencia.getId());
+        if (posteriores > 0) {
+            throw new BusinessException("Conferencia superada por reavaliacao posterior");
+        }
+        conferencia.setStatus("APROVADA");
+        String base = conferencia.getDivergencia() == null ? "" : conferencia.getDivergencia() + " ";
+        conferencia.setDivergencia((base + "| APROVACAO EXCEPCIONAL por " + userId
+                + " em " + java.time.LocalDateTime.now() + ": " + justo).trim());
+        ConferenciaFaturaCompra salva = repository.save(conferencia);
+        documentoFluxoService.ligar(empresaId, userId,
+                "CONFERENCIA_COMPRA", salva.getId(), null,
+                "PEDIDO_COMPRA", salva.getPedidoId(), null,
+                "APROVACAO_EXCEPCIONAL");
         return salva;
     }
 

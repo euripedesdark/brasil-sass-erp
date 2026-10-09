@@ -340,3 +340,31 @@ Arquivos da entrega:
 Validacao: 2 casos novos (preco dentro da tolerancia aprova e grava o
 campo na linha; preco acima diverge com o tipo preservado). Suite
 completa: 375 testes, zero falhas, zero erros, JDK 21.
+
+## Entrega — aprovacao excepcional de divergencias com trilha
+
+Branch codex/conferencia-aprovacao-excepcional. Sem migration, sem tela nova, sem status novo.
+
+- Antes, uma conferencia DIVERGENTE travava o pagamento sem saida legitima:
+  ou reconferia ate aprovar, ou o titulo ficava parado.
+- Agora  libera: so de DIVERGENTE para APROVADA, com
+  motivo obrigatorio (10 a 500 caracteres), trava pessimista da conferencia
+  e bloqueio se reavaliacao posterior superou a linha. O motivo, o aprovador
+  e a data vao para a divergencia preservada e para o documento_fluxo
+  (relacao APROVACAO_EXCEPCIONAL), sem apagar o historico.
+- Endpoint POST com autoridade nova , no mesmo
+  padrao das aprovacoes existentes. Baixa, vigentes e telas nao mudam:
+  o vocabulario de status continua o mesmo.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/compras/service/ConferenciaFaturaCompraService.java
+    src/main/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImpl.java
+    src/main/java/br/com/brasil_saas/compras/repository/ConferenciaFaturaCompraRepository.java
+    src/main/java/br/com/brasil_saas/compras/controller/ConferenciaFaturaCompraController.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/ConferenciaAprovacaoExcepcionalTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 5 casos novos (aprova com motivo e audita, motivo curto ou
+ausente, nao divergente, superada por reavaliacao, mesma trava do titulo).
+Suite completa: 380 testes, zero falhas, zero erros, JDK 21.
