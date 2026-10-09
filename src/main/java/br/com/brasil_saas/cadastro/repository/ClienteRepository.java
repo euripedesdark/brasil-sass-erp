@@ -9,6 +9,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from Cliente c where c.id = :id and c.empresaId = :empresaId and c.deletedAt is null")
+    Optional<Cliente> findForUpdate(@Param("id") Long id, @Param("empresaId") Long empresaId);
     Page<Cliente> findByDeletedAtIsNull(Pageable pageable);
     Page<Cliente> findByEmpresaIdAndDeletedAtIsNull(Long empresaId, Pageable pageable);
     Optional<Cliente> findByPessoaIdAndDeletedAtIsNull(Long pessoaId);

@@ -111,6 +111,7 @@ class DevolucaoServiceTest {
         when(devolucoes.findByIdForUpdate(70L, 2L)).thenReturn(Optional.of(devolucao));
         when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L, "PADRAO"))
                 .thenReturn(Optional.of(deposito));
+        when(depositos.findAtivoForUpdate(3L, 2L)).thenReturn(Optional.of(deposito));
         when(itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(70L, 2L)).thenReturn(List.of(item));
         when(saldos.findForUpdate(2L, 3L, 6L)).thenReturn(saldoExistente ? Optional.of(saldo) : Optional.empty());
         when(devolucoes.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -153,4 +154,11 @@ class DevolucaoServiceTest {
         assertThrows(ResponseStatusException.class, () -> service.decidir(2L, 5L, 70L, false));
         verify(devolucoes, times(1)).save(any());
     }
+    @ParameterizedTest @ValueSource(strings={"0", "-1", "0.0001", "11"})
+    void quantidadeInvalidaNaoGravaSolicitacao(String quantidade) {
+        pedidoFaturadoComDezUnidades();
+        assertThrows(ResponseStatusException.class,()->service.solicitar(2L,1L,"Defeito",Map.of(6L,new BigDecimal(quantidade))));
+        verify(devolucoes,never()).save(any()); verify(itens,never()).save(any());
+    }
+
 }

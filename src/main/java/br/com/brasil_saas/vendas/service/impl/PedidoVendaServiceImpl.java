@@ -291,6 +291,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
 
     private void validarCredito(PedidoVenda pedido) {
         if (pedido.getClienteId() == null) return;
+        // Serializa faturamentos concorrentes do mesmo cliente antes de somar os recebiveis.
+        clienteRepository.findForUpdate(pedido.getClienteId(), pedido.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente nao encontrado"));
         java.math.BigDecimal[] v = somarCredito(pedido.getEmpresaId(), pedido.getClienteId());
         java.math.BigDecimal pedidoValor = pedido.getValorTotal() == null ? java.math.BigDecimal.ZERO : pedido.getValorTotal();
         if (v[1].add(pedidoValor).compareTo(v[0]) > 0) throw new BusinessException("Limite de credito estourado: disponivel " + v[0].subtract(v[1]));

@@ -27,6 +27,7 @@ public class CreditoService {
         BigDecimal vencido = BigDecimal.ZERO;
         java.time.LocalDate hoje = java.time.LocalDate.now();
         if (pessoaId != null) for (Titulo t : titulos.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, pessoaId)) {
+            if (!"R".equals(t.getTipo())) continue;
             if (!"ABERTO".equals(t.getStatus()) && !"PARCIAL".equals(t.getStatus())) continue;
             BigDecimal s = t.getValorSaldo() == null ? BigDecimal.ZERO : t.getValorSaldo();
             emAberto = emAberto.add(s);
@@ -34,7 +35,7 @@ public class CreditoService {
         }
         BigDecimal emPedidos = BigDecimal.ZERO;
         for (PedidoVenda p : pedidos.findByEmpresaIdAndClienteId(empresaId, clienteId)) {
-            if (!"ABERTO".equals(p.getStatus())) continue;
+            if (p.getDeletedAt() != null || !"PEDIDO".equalsIgnoreCase(p.getTipo()) || !"ABERTO".equals(p.getStatus())) continue;
             emPedidos = emPedidos.add(p.getValorTotal() == null ? BigDecimal.ZERO : p.getValorTotal());
         }
         BigDecimal limite = c.getLimiteCredito() == null ? BigDecimal.ZERO : c.getLimiteCredito();
@@ -59,7 +60,7 @@ public class CreditoService {
         if (novoLimite == null || novoLimite.signum() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Limite deve ser zero ou positivo");
         }
-        Cliente c = clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId)
+        Cliente c = clientes.findForUpdate(clienteId, empresaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente inexistente"));
         c.setLimiteCredito(novoLimite);
         clientes.save(c);
