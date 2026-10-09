@@ -22,6 +22,14 @@ const temPermissao = (user, perm) =>
 
 /** tipo no back: R = receber, P = pagar */
 
+const STATUS_OPTS = [
+  { label: 'Abertos', value: 'ABERTO' },
+  { label: 'Parciais', value: 'PARCIAL' },
+  { label: 'Baixados', value: 'BAIXADO' },
+  { label: 'Cancelados', value: 'CANCELADO' },
+  { label: 'Todos', value: '' },
+];
+
 
 export const Titulo = () => {
     const { t } = useTranslation();
