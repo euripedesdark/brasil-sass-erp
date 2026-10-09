@@ -5,8 +5,10 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { FileUpload } from 'primereact/fileupload';
 import { Messages } from 'primereact/messages';
+import { useTranslation } from 'react-i18next';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 export const Configuracoes = () => {
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState(0);
     const [configuracoes, setConfiguracoes] = useState({
         nomeSistema: 'Brasil SaaS ERP',
@@ -18,7 +20,7 @@ export const Configuracoes = () => {
     const messages = React.useRef(null);
 
     const handleSave = () => {
-        messages.current.show({severity:'success', summary: 'Sucesso', detail: 'Configurações salvas com sucesso!'});
+        messages.current.show({severity:'success', summary: t('common.success'), detail: t('legacyUi.settings.saved')});
     };
 
     const handleImageUpload = async (event, tipo) => {
@@ -37,14 +39,14 @@ export const Configuracoes = () => {
             });
 
             if (response.ok) {
-                messages.current.show({severity:'success', summary: 'Sucesso', detail: `Imagem de ${tipo} atualizada com sucesso!`});
+                messages.current.show({severity:'success', summary: t('common.success'), detail: t('legacyUi.settings.imageUpdated', { type: tipo === 'login' ? t('legacyUi.settings.loginImage') : t('legacyUi.settings.backgroundImage') })});
                 carregarPrevia();
             } else {
                 const err = await response.text();
-                messages.current.show({severity:'error', summary: 'Erro', detail: `Falha ao upload: ${err}`});
+                messages.current.show({severity:'error', summary: t('common.error'), detail: t('legacyUi.settings.uploadFailed', { error: err })});
             }
         } catch (error) {
-            messages.current.show({severity:'error', summary: 'Erro', detail: `Erro de conexão: ${error.message}`});
+            messages.current.show({severity:'error', summary: t('common.error'), detail: t('legacyUi.settings.connectionError', { error: error.message })});
         }
     };
 
@@ -81,11 +83,11 @@ export const Configuracoes = () => {
     return (
         <div className="configuracoes-card">
             <Messages ref={messages} />
-            <Card title="Configurações do Sistema">
+            <Card title={t('legacyUi.settings.title')}>
                 <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
-                    <TabPanel header="Gerais">
+                    <TabPanel header={t('legacyUi.settings.generalTab)}>
                         <div className="p-field p-grid">
-                            <label className="p-col-12 p-md-2">Nome do Sistema</label>
+                            <label className="p-col-12 p-md-2">{t('legacyUi.settings.systemName')}</label>
                             <div className="p-col-12 p-md-10">
                                 <InputText
                                     value={configuracoes.nomeSistema}
@@ -96,9 +98,9 @@ export const Configuracoes = () => {
                         </div>
                     </TabPanel>
 
-                    <TabPanel header="Imagens">
+                    <TabPanel header={t('legacyUi.settings.imagesTab)}>
                         <div className="p-field p-grid">
-                            <label className="p-col-12 p-md-2">Imagem de Login</label>
+                            <label className="p-col-12 p-md-2">{t('legacyUi.settings.loginImage')}</label>
                             <div className="p-col-12 p-md-10">
                                 <FileUpload
                                     mode="basic"
@@ -106,13 +108,13 @@ export const Configuracoes = () => {
                                     accept="image/*"
                                     maxFileSize={10000000}
                                     onSelect={(e) => handleImageUpload(e, 'login')}
-                                    label="Selecionar Imagem"
+                                    label={t('legacyUi.settings.selectImage')}
                                     auto
                                 />
                                 {previa.SISTEMA_LOGIN && (
                                     <img
                                         src={previa.SISTEMA_LOGIN}
-                                        alt="Imagem de login atual"
+                                        alt={t('legacyUi.settings.currentLoginImage')}
                                         style={{ maxHeight: 120, marginTop: 8, borderRadius: 4 }}
                                     />
                                 )}
@@ -120,7 +122,7 @@ export const Configuracoes = () => {
                         </div>
 
                         <div className="p-field p-grid">
-                            <label className="p-col-12 p-md-2">Imagem de Background</label>
+                            <label className="p-col-12 p-md-2">{t('legacyUi.settings.backgroundImage')}</label>
                             <div className="p-col-12 p-md-10">
                                 <FileUpload
                                     mode="basic"
@@ -134,7 +136,7 @@ export const Configuracoes = () => {
                                 {previa.SISTEMA_BACKGROUND && (
                                     <img
                                         src={previa.SISTEMA_BACKGROUND}
-                                        alt="Background atual"
+                                        alt={t('legacyUi.settings.currentBackgroundImage')}
                                         style={{ maxHeight: 120, marginTop: 8, borderRadius: 4 }}
                                     />
                                 )}
@@ -144,7 +146,7 @@ export const Configuracoes = () => {
                 </TabView>
 
                 <div className="p-grid p-justify-end p-pt-3">
-                    <Button label="Salvar Configurações" icon="pi pi-save" onClick={handleSave} />
+                    <Button label={t('legacyUi.settings.saveButton')} icon="pi pi-save" onClick={handleSave} />
                 </div>
             </Card>
         </div>
