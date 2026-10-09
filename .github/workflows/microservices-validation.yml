@@ -3,8 +3,14 @@ name: Microservices Validation
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'src/main/resources/microservices/**'
+      - '.github/workflows/microservices-validation.yml'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'src/main/resources/microservices/**'
+      - '.github/workflows/microservices-validation.yml'
   workflow_dispatch:
 
 jobs:

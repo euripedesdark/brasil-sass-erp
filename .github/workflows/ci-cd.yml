@@ -6,8 +6,16 @@ permissions:
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/ci-cd.yml'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/ci-cd.yml'
   workflow_dispatch:
 
 concurrency:
