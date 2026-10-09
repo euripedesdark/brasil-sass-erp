@@ -4,14 +4,21 @@ import br.com.brasil_saas.fiscal.model.RegraTributaria;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface RegraTributariaRepository extends JpaRepository<RegraTributaria, Long> {
+
+    List<RegraTributaria> findByEmpresaIdAndDeletedAtIsNullOrderByPrioridadeDescIdDesc(Long empresaId);
+
+    Optional<RegraTributaria> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
+
     @Query("""
         SELECT r FROM RegraTributaria r
-        WHERE r.empresaId = :empresaId AND r.ativa = true
-          AND (:ncm IS NULL OR r.ncm = :ncm)
-          AND (:cfop IS NULL OR r.cfop = :cfop)
+        WHERE r.empresaId = :empresaId AND r.ativa = true AND r.deletedAt IS NULL
+          AND (:ncm IS NULL OR r.ncm = :ncm OR r.ncm IS NULL)
+          AND (:cfop IS NULL OR r.cfop = :cfop OR r.cfop IS NULL)
           AND (r.ufOrigem IS NULL OR r.ufOrigem = :ufOrigem)
           AND (r.ufDestino IS NULL OR r.ufDestino = :ufDestino)
         ORDER BY

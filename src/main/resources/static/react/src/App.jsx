@@ -86,6 +86,8 @@ import { Obrigacoes } from './components/fiscal/Obrigacoes';
 import { Reinf } from './components/fiscal/Reinf';
 import { Difal } from './components/fiscal/Difal';
 import { IcmsSt } from './components/fiscal/IcmsSt';
+import { RegrasTributarias } from './components/fiscal/RegrasTributarias';
+import { TributacaoSimulador } from './components/fiscal/TributacaoSimulador';
 import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
@@ -285,6 +287,8 @@ function App() {
                     <Route path="fiscal/reinf" element={<Reinf />} />
                     <Route path="fiscal/difal" element={<Difal />} />
                     <Route path="fiscal/icms-st" element={<IcmsSt />} />
+                    <Route path="fiscal/regras-tributarias" element={<RegrasTributarias />} />
+                    <Route path="fiscal/simulador" element={<TributacaoSimulador />} />
                     <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />

@@ -26,6 +26,8 @@ const items=[
  ['EFD-Reinf','Eventos R-2010/R-2020/R-2099 a partir das NFS-e','pi pi-book','/fiscal/reinf'],
  ['ICMS DIFAL','Calculadora EC 87/2015 + FCP','pi pi-percentage','/fiscal/difal'],
  ['ICMS-ST','Substituição tributária por MVA','pi pi-percentage','/fiscal/icms-st'],
+ ['Regras tributárias','NCM/CFOP/UF, MVA, FCP','pi pi-list','/fiscal/regras-tributarias'],
+ ['Simulador','ICMS+PIS+COFINS+DIFAL+ST','pi pi-calculator','/fiscal/simulador'],
  ['Apurações','Apuração ICMS/IPI/PIS/COFINS/ISS','pi pi-calculator','/fiscal/apuracoes'],
  ['menu.sefaz','fiscal.sefazDesc','pi pi-cloud','/fiscal/sefaz']
 ];
