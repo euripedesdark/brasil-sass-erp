@@ -59,6 +59,18 @@ public class RegraTributaria extends TenantEntity {
     @Column(name = "aliquota_st", precision = 7, scale = 4)
     private BigDecimal aliquotaSt;
 
+    @Column(precision = 7, scale = 4)
+    private BigDecimal mva;
+
+    @Column(name = "aliquota_fcp", precision = 7, scale = 4)
+    private BigDecimal aliquotaFcp;
+
+    @Column(name = "aliquota_interna", precision = 7, scale = 4)
+    private BigDecimal aliquotaInterna;
+
+    @Column(name = "reducao_base_pct", precision = 7, scale = 4)
+    private BigDecimal reducaoBasePct;
+
     @Column(nullable = false)
     private Boolean ativa = Boolean.TRUE;
 

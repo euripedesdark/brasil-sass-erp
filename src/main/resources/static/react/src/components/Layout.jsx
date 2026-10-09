@@ -208,6 +208,8 @@ export const Layout = () => {
                     item('EFD-Reinf', 'pi pi-book', '/fiscal/reinf'),
                     item('ICMS DIFAL', 'pi pi-percentage', '/fiscal/difal'),
                     item('ICMS-ST (MVA)', 'pi pi-percentage', '/fiscal/icms-st'),
+                    item('Regras tributárias', 'pi pi-list', '/fiscal/regras-tributarias'),
+                    item('Simulador tributação', 'pi pi-calculator', '/fiscal/simulador'),
                     item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz'),
                     item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
                     item('menu.obrigacoes', 'pi pi-calendar-check', '/fiscal/obrigacoes'),
