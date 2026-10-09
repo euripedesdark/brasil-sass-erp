@@ -45,7 +45,7 @@
     "unknownError": "Ocorreu um erro inesperado.",
     "expandMenu": "Expandir menu",
     "collapseMenu": "Recolher menu",
-    "user": "USUÁRIO",
+    "user": "Usuário",
     "available": "Disponível",
     "notChecked": "Não consultado",
     "send": "Enviar",
@@ -70,7 +70,9 @@
     "tryAgain": "Tentar novamente",
     "select": "Selecione",
     "title": "Título",
-    "location": "Local"
+    "location": "Local",
+    "username": "Nome de usuário",
+    "password": "Senha"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -1340,6 +1342,40 @@
         "TAREFA": "Tarefa",
         "OUTRO": "Outro"
       }
+    },
+    "users": {
+      "loadError": "Erro ao carregar usuários",
+      "usernameRequired": "O nome de usuário é obrigatório",
+      "passwordMin": "A senha precisa ter pelo menos 6 caracteres",
+      "userSaved": "Usuário salvo",
+      "userCreated": "Usuário criado",
+      "saveError": "Erro ao salvar usuário",
+      "deactivateConfirm": "Desativar o usuário “{{name}}”? Ele não poderá mais entrar, mas seu histórico (notas, vendas e auditoria) será preservado.",
+      "deactivateTitle": "Desativar usuário",
+      "confirmDeactivate": "Sim, desativar",
+      "userDeactivated": "Usuário desativado",
+      "deactivateError": "Erro ao desativar usuário",
+      "permissionError": "Erro ao atualizar permissão",
+      "noRole": "Sem perfil",
+      "editUser": "Editar usuário",
+      "deactivateUser": "Desativar usuário",
+      "roles": "Perfis",
+      "changeRoles": "Alterar perfis",
+      "setModules": "Definir módulos acessíveis",
+      "title": "Gestão de hierarquia e usuários",
+      "subtitle": "Gerencie os níveis de acesso e perfis de todos os usuários do sistema.",
+      "newUser": "Novo usuário",
+      "role": "Perfil",
+      "modules": "Módulos",
+      "actions": "Ações",
+      "passwordHint": "Mínimo de 6 caracteres.",
+      "selectRole": "Selecione o perfil",
+      "activeUser": "Usuário ativo",
+      "createUser": "Criar usuário",
+      "changeAccessLevel": "Alterar nível de acesso",
+      "roleHelp": "Selecione o novo perfil de acordo com a hierarquia permitida.",
+      "permissionUpdated": "Permissão atualizada com sucesso!",
+      "newRole": "Novo perfil"
     }
   },
   "enterpriseOps": {
