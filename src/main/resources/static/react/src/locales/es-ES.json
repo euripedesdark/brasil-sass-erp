@@ -1606,5 +1606,30 @@
     "nbs": "NBS",
     "saved": "¡Servicio guardado correctamente!",
     "value": "Valor"
+  },
+  "salesContracts": {
+    "title": "Contratos comerciales de venta",
+    "new": "Nuevo contrato",
+    "draft": "Borradores",
+    "active": "Activos",
+    "closed": "Cerrados",
+    "empty": "No se encontraron contratos",
+    "number": "N.º",
+    "contractTitle": "Título",
+    "client": "Cliente",
+    "value": "Importe",
+    "status": "Estado",
+    "actions": "Acciones",
+    "activate": "Activar",
+    "close": "Cerrar",
+    "dialogTitle": "Contrato comercial",
+    "titleLabel": "Título",
+    "clientId": "ID del cliente",
+    "save": "Guardar",
+    "required": "El título y el ID del cliente son obligatorios.",
+    "loadError": "No se pudieron cargar los contratos.",
+    "saveError": "No se pudo guardar el contrato.",
+    "actionError": "No se pudo actualizar el contrato.",
+    "currency": "EUR"
   }
 }
