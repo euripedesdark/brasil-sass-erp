@@ -27,6 +27,10 @@ public interface ReservaEstoqueRepository extends JpaRepository<ReservaEstoque, 
     @Query("select coalesce(sum(r.quantidade),0) from ReservaEstoque r where r.empresaId = :empresaId and r.depositoId = :depositoId and r.produtoId = :produtoId and r.deletedAt is null and r.status in ('RESERVADA','SEPARACAO')")
     BigDecimal sumAtivas(@Param("empresaId") Long empresaId, @Param("depositoId") Long depositoId, @Param("produtoId") Long produtoId);
 
+    @Query("select coalesce(sum(r.quantidade),0) from ReservaEstoque r where r.empresaId = :empresaId and r.depositoId = :depositoId and r.produtoId = :produtoId and r.deletedAt is null and r.status in ('RESERVADA','SEPARACAO') and (r.pedidoVendaId is null or r.pedidoVendaId <> :pedidoId)")
+    BigDecimal sumAtivasDeOutrosPedidos(@Param("empresaId") Long empresaId, @Param("depositoId") Long depositoId,
+                                       @Param("produtoId") Long produtoId, @Param("pedidoId") Long pedidoId);
+
     @Query("select coalesce(sum(r.quantidade),0) from ReservaEstoque r where r.empresaId = :empresaId and r.depositoId = :depositoId and r.produtoId = :produtoId and r.enderecoId = :enderecoId and r.deletedAt is null and r.status in ('RESERVADA','SEPARACAO')")
     BigDecimal sumAtivasPorEndereco(@Param("empresaId") Long empresaId, @Param("depositoId") Long depositoId,
                                     @Param("produtoId") Long produtoId, @Param("enderecoId") Long enderecoId);

@@ -25,15 +25,15 @@ public class ContratoFornecimento extends TenantEntity {
     private String tipo = "QUANTIDADE";
     @Column(nullable = false, length = 20)
     private String status = RASCUNHO;
-    @Column(name = "vigencia_inicio", nullable = false)
+    @Column(name = "data_inicio", nullable = false)
     private LocalDate vigenciaInicio;
-    @Column(name = "vigencia_fim", nullable = false)
+    @Column(name = "data_fim")
     private LocalDate vigenciaFim;
     @Column(name = "condicao_pagamento_id")
     private Long condicaoPagamentoId;
     @Column(name = "valor_limite", precision = 15, scale = 2)
     private BigDecimal valorLimite;
-    @Column(name = "valor_liberado", precision = 15, scale = 2, nullable = false)
+    @Column(name = "valor_utilizado", precision = 15, scale = 2, nullable = false)
     private BigDecimal valorLiberado = BigDecimal.ZERO;
     @Column(columnDefinition = "TEXT")
     private String observacao;

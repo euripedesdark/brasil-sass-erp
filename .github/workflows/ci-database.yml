@@ -6,10 +6,14 @@ on:
     paths:
       - 'src/main/resources/db/migration/**'
       - 'pom.xml'
+      - '.github/workflows/ci-database.yml'
+      - 'src/test/java/br/com/brasil_saas/database/**'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/main/resources/db/migration/**'
+      - '.github/workflows/ci-database.yml'
+      - 'src/test/java/br/com/brasil_saas/database/**'
   workflow_dispatch:
 
 concurrency:
@@ -66,25 +70,30 @@ jobs:
           FLYWAY_URL: jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas
           FLYWAY_USER: brasil-saas
           FLYWAY_PASSWORD: test123
+          ERP_BOOTSTRAP_TEST_URL: jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas
+          ERP_BOOTSTRAP_TEST_USER: brasil-saas
+          ERP_BOOTSTRAP_TEST_PASSWORD: test123
         run: |
           set -euo pipefail
           PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
           
 
-          # First, try to apply all migrations
+          # Instala em banco vazio, valida todas as entidades e grava/rele contratos.
+          mvn -B -ntp test -Dtest=BootstrapPostgresTest
+
+          # A segunda aplicacao deve preservar o historico instalado pelo teste.
           mvn -B -ntp flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
-          
-          # Check if migrations were applied successfully
-          PGPASSWORD=$FLYWAY_PASSWORD psql -h localhost -U $FLYWAY_USER -d brasil-saas -c "\dt" > tables.txt
+          mvn -B -ntp flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
           
           # Count applied migrations
-          APPLIED=$(PGPASSWORD=$FLYWAY_PASSWORD psql -h localhost -U $FLYWAY_USER -d brasil-saas -t -c "SELECT COUNT(*) FROM brasil_saas.flyway_schema_history")
+          APPLIED=$(PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -Atc "SELECT COUNT(*) FROM brasil_saas.flyway_schema_history WHERE success AND version IS NOT NULL")
           echo "Applied migrations: $APPLIED"
           
           # Verify all expected tables exist
-          EXPECTED_TABLES=("empresa" "usuario" "pessoa" "cliente" "fornecedor" "produto" "titulo" "lancamento_contabil")
+          EXPECTED_TABLES=("bc_core_empresa" "bc_core_usuario" "bc_cad_pessoa" "bc_cad_cliente" "bc_cad_fornecedor" "bc_cad_produto" "bc_fin_titulo" "bc_fin_lancamento_contabil" "bc_fin_lancamento_partida")
           for table in "${EXPECTED_TABLES[@]}"; do
-            if ! grep -q "$table" tables.txt; then
+            exists=$(PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -Atc "SELECT to_regclass('brasil_saas.$table') IS NOT NULL")
+            if [ "$exists" != "t" ]; then
               echo "ERROR: Table $table not found!"
               exit 1
             fi

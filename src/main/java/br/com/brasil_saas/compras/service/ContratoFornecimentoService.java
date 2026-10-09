@@ -85,7 +85,7 @@ public class ContratoFornecimentoService {
     public List<ContratoFornecimentoResponse> aVencer(Long empresaId, int dias) {
         LocalDate limite = LocalDate.now().plusDays(dias);
         return repo.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, ContratoFornecimento.ATIVO).stream()
-                .filter(c -> !c.getVigenciaFim().isAfter(limite))
+                .filter(c -> c.getVigenciaFim() != null && !c.getVigenciaFim().isAfter(limite))
                 .map(ContratoFornecimentoResponse::from).toList();
     }
 
@@ -159,7 +159,8 @@ public class ContratoFornecimentoService {
     /** Regra pura: contrato precisa estar ATIVO e dentro da vigência. */
     static void validarLiberavel(ContratoFornecimento c, LocalDate hoje) {
         if (!ContratoFornecimento.ATIVO.equals(c.getStatus())) throw new BusinessException("Contrato não está ATIVO");
-        if (hoje.isBefore(c.getVigenciaInicio()) || hoje.isAfter(c.getVigenciaFim()))
+        if (c.getVigenciaInicio() == null) throw new BusinessException("Contrato sem inicio de vigencia");
+        if (hoje.isBefore(c.getVigenciaInicio()) || (c.getVigenciaFim() != null && hoje.isAfter(c.getVigenciaFim())))
             throw new BusinessException("Contrato fora da vigência");
     }
 

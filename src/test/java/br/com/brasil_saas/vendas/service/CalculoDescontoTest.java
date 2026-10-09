@@ -145,4 +145,43 @@ class CalculoDescontoTest {
 
         assertEquals(0, b("50.00").compareTo(c.getValorTotal()));
     }
+
+    @Test
+    void descontoNegativoNaoPodeSerCompensadoPorOutroItem() {
+        assertThrows(BusinessException.class, () -> CalculoDesconto.de(List.of(
+                new CalculoDesconto.Item(b("1"), b("10"), b("-2")),
+                new CalculoDesconto.Item(b("1"), b("10"), b("3"))), null, null, null));
+    }
+
+    @Test
+    void descontoAcimaDoItemNaoPodeSerCompensadoPorOutroItem() {
+        assertThrows(BusinessException.class, () -> CalculoDesconto.de(List.of(
+                new CalculoDesconto.Item(b("1"), b("10"), b("11")),
+                new CalculoDesconto.Item(b("1"), b("100"), Z)), null, null, null));
+    }
+
+    @Test
+    void freteNegativoRecusadoMesmoComTotalPositivo() {
+        assertThrows(BusinessException.class, () -> CalculoDesconto.de(
+                List.of(new CalculoDesconto.Item(b("1"), b("100"), Z)), null, null, b("-1")));
+    }
+
+    @Test
+    void percentualAcimaDeCemRecusadoMesmoComBaseZero() {
+        assertThrows(BusinessException.class, () -> CalculoDesconto.de(
+                List.of(new CalculoDesconto.Item(b("1"), Z, Z)), b("101"), null, null));
+    }
+
+    @Test
+    void descontoIntegralPermitido() {
+        CalculoDesconto calculo = CalculoDesconto.de(
+                List.of(new CalculoDesconto.Item(b("1"), b("100"), Z)), b("100"), null, b("5"));
+        assertEquals(0, b("5").compareTo(calculo.getValorTotal()));
+    }
+
+    @Test
+    void quantidadeZeroRecusadaNoCalculoCompartilhado() {
+        assertThrows(BusinessException.class, () -> CalculoDesconto.de(
+                List.of(new CalculoDesconto.Item(Z, b("100"), Z)), null, null, null));
+    }
 }
