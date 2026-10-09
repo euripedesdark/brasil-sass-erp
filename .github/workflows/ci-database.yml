@@ -72,7 +72,7 @@ jobs:
           
 
           # First, try to apply all migrations
-          mvn -B -ntp flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas -Dflyway.ignoreMigrationPatterns=17:ignored
+          mvn -B -ntp flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
           
           # Check if migrations were applied successfully
           PGPASSWORD=$FLYWAY_PASSWORD psql -h localhost -U $FLYWAY_USER -d brasil-saas -c "\dt" > tables.txt
@@ -177,7 +177,7 @@ jobs:
           PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
           
           # Apply all migrations
-          mvn flyway:migrate -Dflyway.url=$FLYWAY_URL -Dflyway.user=$FLYWAY_USER -Dflyway.password=$FLYWAY_PASSWORD -Dflyway.ignoreMigrationPatterns=17:ignored
+          mvn flyway:migrate -Dflyway.url=$FLYWAY_URL -Dflyway.user=$FLYWAY_USER -Dflyway.password=$FLYWAY_PASSWORD
           
           # Get the latest migration
           LATEST_VERSION=$(PGPASSWORD=$FLYWAY_PASSWORD psql -h localhost -U $FLYWAY_USER -d brasil-saas -t -c "SELECT version FROM brasil_saas.flyway_schema_history ORDER BY installed_rank DESC LIMIT 1" | tr -d ' ')

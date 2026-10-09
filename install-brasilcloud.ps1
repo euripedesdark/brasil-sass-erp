@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-SYSFLUXO - Instalador Platform (Windows)
+BrasilCloudERP - Instalador Platform (Windows)
 Compatível com: Windows 10/11, Windows Server 2019/2022
 Requisitos Atualizados: JDK 25 Oracle, Node.js 20+, Maven 3.9+, Git
 Arquitetura: Spring Boot 4.1.1 (Tomcat Embutido) + PrimeReact (Vite)
@@ -14,11 +14,11 @@ if (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     Write-Host "ERRO: Execute como Administrador." -ForegroundColor Red; exit 1
 }
 
-$BASE_DIR = "C:\opt\sysfluxo"
-$PROJECT_DIR = "$env:USERPROFILE\sysfluxo-web"
+$BASE_DIR = "C:\opt\brasilcloud"
+$PROJECT_DIR = "$env:USERPROFILE\brasilcloud-web"
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  SYSFLUXO - Instalador de Ambiente (JDK 25 + React)" -ForegroundColor Cyan
+Write-Host "  BrasilCloudERP - Instalador de Ambiente (JDK 25 + React)" -ForegroundColor Cyan
 Write-Host "  Spring Boot 4.1.1 (Tomcat) + PrimeReact + PostgreSQL" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
@@ -91,20 +91,20 @@ Write-Host "  ✓ Diretórios criados em $BASE_DIR" -ForegroundColor Green
 # Configurar Firewall do Windows
 $PortsTCP = @(80, 443, 5432, 8080)
 Write-Host "`n[5/6] Configurando firewall do Windows..." -ForegroundColor Green
-Remove-NetFirewallRule -DisplayName "SysFluxo (TCP)" -ErrorAction SilentlyContinue
-New-NetFirewallRule -DisplayName "SysFluxo (TCP)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort $PortsTCP | Out-Null
+Remove-NetFirewallRule -DisplayName "BrasilCloudERP (TCP)" -ErrorAction SilentlyContinue
+New-NetFirewallRule -DisplayName "BrasilCloudERP (TCP)" -Direction Inbound -Action Allow -Protocol TCP -LocalPort $PortsTCP | Out-Null
 Write-Host "  ✓ Portas liberadas: $($PortsTCP -join ', ')" -ForegroundColor Green
 
 # Configurar hosts (opcional)
 $HostsPath = "$env:windir\System32\drivers\etc\hosts"
-$Domain = "sysfluxo.local"
+$Domain = "brasilcloud.local"
 if (!(Select-String -Path $HostsPath -Pattern "\b$Domain\b" -Quiet)) {
     Add-Content -Path $HostsPath -Value "`n127.0.0.1`t$Domain"
     Write-Host "  ✓ Domínio $Domain adicionado ao hosts" -ForegroundColor Green
 }
 
 # Executar build do frontend e backend
-Write-Host "`n[6/6] Configurando projeto SysFluxo..." -ForegroundColor Green
+Write-Host "`n[6/6] Configurando projeto BrasilCloudERP..." -ForegroundColor Green
 if (Test-Path "$PROJECT_DIR\pom.xml") {
     Write-Host "  Projeto encontrado em $PROJECT_DIR" -ForegroundColor Cyan
     Set-Location -Path $PROJECT_DIR
@@ -129,12 +129,12 @@ if (Test-Path "$PROJECT_DIR\pom.xml") {
     if (!(Test-Path ".git")) {
         git init | Out-Null
         git add . | Out-Null
-        git commit -m "Commit inicial - SysFluxo com Spring Boot 4.1.1 + PrimeReact" | Out-Null
+        git commit -m "Commit inicial - BrasilCloudERP com Spring Boot 4.1.1 + PrimeReact" | Out-Null
         Write-Host "  ✓ Repositório Git inicializado" -ForegroundColor Green
     }
 } else {
     Write-Host "  ! Aviso: Projeto não encontrado em $PROJECT_DIR." -ForegroundColor Yellow
-    Write-Host "  Clone o repositório primeiro: git clone https://github.com/euripedesdark/sysfluxo.git" -ForegroundColor Yellow
+    Write-Host "  Clone o repositório primeiro: git clone https://github.com/euripedesdark/brasil-sass-erp.git" -ForegroundColor Yellow
 }
 
 # Resumo final

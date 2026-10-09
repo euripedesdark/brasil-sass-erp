@@ -1,6 +1,0 @@
-2026-09-12 INFO Mapa funcional do SYSFLUXO gerado em MAPA-FUNCIONALIDADES.md.
-2026-09-12 INFO Logs configurados para a pasta logs na raiz do projeto.
-2026-09-12 INFO Nenhuma pasta existente ou arquivo em src/main/resources foi movido.
-2026-09-12 INFO Build e testes Maven validados anteriormente com Oracle JDK 25.
-2026-09-12 INFO Coluna fproduto.valor_servico criada no PostgreSQL.
-2026-09-12 INFO Credenciais, tokens, certificados e chaves privadas nao foram registrados.

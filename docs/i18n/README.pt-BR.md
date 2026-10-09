@@ -565,7 +565,6 @@ BRASIL-SAAS-ERP/
 │   ├── V5__financeiro.sql              # Financeiro completo (439 linhas)
 │   ├── V15__seed_perfis_permissoes.sql # Seed de perfis e permissões
 │   ├── V16__seed_tabelas_oficiais.sql  # Tabelas oficiais (municípios, etc)
-│   ├── V17__migracao_sysfluxo.sql      # Migração do legado SysFluxo
 │   ├── V18__seed_permissoes_cadastro.sql
 │   ├── V19__seed_permissoes_fiscais.sql
 │   ├── V20__vendas.sql                 # Módulo de vendas
@@ -616,7 +615,7 @@ BRASIL-SAAS-ERP/
 │   ├── manage_services.sh    # Gerenciamento mestre
 │   ├── build_module.sh        # Build individual
 │   ├── installbase.sh         # Instalação Linux (também está na raiz)
-│   ├── install-sysfluxo.ps1   # Instalação Windows
+│   ├── install-brasilcloud.ps1   # Instalação Windows
 │   ├── test_db_connection.sh  # Smoke test DB
 │   ├── test_erp_operations.sh # Teste operações
 │   ├── check_mongodb.sh       # Validação MongoDB
@@ -755,7 +754,7 @@ em silêncio.
 
 ```powershell
 # Executar PowerShell como Administrador
-.\install-sysfluxo.ps1
+.\install-brasilcloud.ps1
 ```
 
 **O script irá:**
@@ -1427,7 +1426,6 @@ Os seguintes arquivos e diretórios são backups ou não estão em uso ativo:
 | 📁 Backup | `old-service-backup/` | Services antigos (backup) |
 | 📁 Backup | `old-java-backup/` | Classes Java antigas (backup) |
 | 📁 Backup | `bkp/` | Diretório de backups gerais |
-| 📁 Backup | `sysfluxo - bkp/` | Backup do sistema legado SysFluxo |
 | 📄 Backup | `pom.xml2` | Versão alternativa do POM |
 | 🐍 Script | `compilar.py` | Script Python de compilação (legado) |
 | 🐍 Script | `importa_ncm.py` | Importação NCM (uso pontual) |

@@ -107,7 +107,6 @@ mongo_*.zip
 # Dump do Postgres. .dump e binario e nao casa com nenhum outro padrao, e este
 # arquivo estava entrando no repo. Sao 42 MB de dump do schema.
 *.dump
-sysfluxo_backup_antes_refatoracao.dump
 
 # Dados cadastrais de pessoa fisica: 11 CPF e 23 e-mail. Este arquivo e' a
 # captura de tela do vazamento, entao e' justamente o que nao pode ser

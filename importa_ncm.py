@@ -22,7 +22,7 @@ dados = df[['Codigo', 'Descricao']].values.tolist()
 print(f"{len(dados)} NCMs válidos encontrados. Inserindo no banco de dados...")
 
 # CONECTA NO SEU BANCO DE DADOS (Ajuste a senha se necessário)
-conn = psycopg2.connect(dbname="SYSFLUXO", user="postgres", password="ALTERE_ME", host="localhost")
+conn = psycopg2.connect(dbname="brasil-saas", user="postgres", password="ALTERE_ME", host="localhost")
 cursor = conn.cursor()
 
 # Insere em lote de forma muito rápida. O "ON CONFLICT DO NOTHING" evita duplicidade se rodar 2x
