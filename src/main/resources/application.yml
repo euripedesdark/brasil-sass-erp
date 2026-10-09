@@ -138,6 +138,15 @@ management:
   endpoint:
     health:
       show-details: when_authorized
+  health:
+    # Nao ha servidor SMTP neste ambiente e nunca houve: o log registra
+    # falha de conexao em localhost:25 desde 2026-09-28. O unico consumidor
+    # de e-mail e o envio de relatorio agendado (BI), que nao e usado aqui.
+    # Deixar o indicador ativo fazia o health geral responder DOWN
+    # permanentemente, mascarando a saude real do ERP.
+    # Para reativar: configure spring.mail e remova o bloco abaixo.
+    mail:
+      enabled: false
 
 brasil-saas:
   bootstrap:
