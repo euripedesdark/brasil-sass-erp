@@ -485,7 +485,11 @@
     "deleteError": "No se pudo eliminar el cliente",
     "created": "Cliente creado correctamente",
     "updated": "Cliente actualizado correctamente",
-    "deleted": "Cliente eliminado correctamente"
+    "deleted": "Cliente eliminado correctamente",
+    "editTitle": "Editar cliente: {{name}}",
+    "newTitle": "Nuevo cliente",
+    "logoHelp": "Logotipo vinculado al registro del cliente.",
+    "savedSuccess": "¡Cliente guardado correctamente!"
   },
   "supplier": {
     "title": "Proveedores",
@@ -498,7 +502,11 @@
     "deleteError": "No se pudo eliminar el proveedor",
     "created": "Proveedor creado correctamente",
     "updated": "Proveedor actualizado correctamente",
-    "deleted": "Proveedor eliminado correctamente"
+    "deleted": "Proveedor eliminado correctamente",
+    "editTitle": "Editar proveedor: {{name}}",
+    "newTitle": "Nuevo proveedor",
+    "logoHelp": "Logotipo vinculado al registro del proveedor.",
+    "savedSuccess": "¡Proveedor guardado correctamente!"
   },
   "bankAccount": {
     "title": "Cuentas Bancarias",
@@ -1271,6 +1279,30 @@
       "states": "Todos los estados",
       "search": "Buscar brecha...",
       "status": "Estado"
+    },
+    "partnerForm": {
+      "legalName": "Nombre / Razón social",
+      "taxId": "NIF (CPF/CNPJ)",
+      "creditLimit": "Límite de crédito",
+      "website": "Sitio web",
+      "visualIdentity": "Identidad visual",
+      "logo": "Logotipo",
+      "identification": "Identificación",
+      "identificationHelp": "Datos principales del registro.",
+      "personType": "Tipo de persona",
+      "legalNamePlaceholder": "Nombre o razón social",
+      "rgStateRegistration": "RG / Inscripción estatal",
+      "rgStateRegistrationPlaceholder": "RG o inscripción estatal",
+      "contact": "Contacto",
+      "contactHelp": "Canales de atención y comunicación.",
+      "creditLimitCurrency": "Límite de crédito (BRL)",
+      "address": "Dirección",
+      "addressHelp": "Dirección principal del registro.",
+      "addressPlaceholder": "Calle, número, complemento, barrio, ciudad/provincia",
+      "summary": "Resumen",
+      "summaryHelp": "Revise los datos principales antes de guardar.",
+      "additionalInfoHelp": "Información adicional para la operación.",
+      "additionalInfoPlaceholder": "Observaciones adicionales"
     }
   },
   "enterpriseOps": {
