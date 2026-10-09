@@ -3,6 +3,7 @@ package br.com.brasil_saas.vendas.controller;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import br.com.brasil_saas.vendas.dto.PedidoVendaRequest;
 import br.com.brasil_saas.vendas.dto.PedidoVendaResponse;
+import br.com.brasil_saas.vendas.service.AtpService;
 import br.com.brasil_saas.vendas.service.PedidoVendaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,18 +22,8 @@ import java.util.Map;
 public class PedidoVendaController {
 
     private final PedidoVendaService service;
+    private final AtpService atpService;
 
-    /**
-     * O tenant vem do token, nunca do cliente.
-     *
-     * Antes a listagem aceitava {@code ?empresaId=} e as demais rotas nem
-     * olhavam a empresa: bastava trocar o id na URL para ler, confirmar,
-     * faturar ou cancelar pedido de outra empresa. Numainstallacao com mais de
-     * uma empresa isso e vazamento de dados entre elas — e o service tambem nao
-     * conferia, porque recebia so o id.
-     *
-     * O mesmo padrao ja valia no RelatorioController.
-     */
     private Long empresaDoToken(AuthenticatedUser user) {
         if (user == null || user.getEmpresaId() == null) {
             throw new org.springframework.security.access.AccessDeniedException(
@@ -46,15 +37,15 @@ public class PedidoVendaController {
     public ResponseEntity<PedidoVendaResponse> criar(
             @Valid @RequestBody PedidoVendaRequest request,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        // A empresa do corpo e sobrescrita pela do token: aceitar a do cliente
-        // permitiria criar pedido em nome de outra empresa.
         PedidoVendaRequest seguro = request.comEmpresaDa(empresaDoToken(user));
         return ResponseEntity.status(HttpStatus.CREATED).body(service.criar(seguro));
     }
 
     @GetMapping("/clientes/{clienteId}/credito")
     @PreAuthorize("hasAuthority('vendas:pedido:leitura')")
-    public Map<String, Object> credito(@PathVariable Long clienteId, @AuthenticationPrincipal AuthenticatedUser user) { return service.credito(empresaDoToken(user), clienteId); }
+    public Map<String, Object> credito(@PathVariable Long clienteId, @AuthenticationPrincipal AuthenticatedUser user) {
+        return service.credito(empresaDoToken(user), clienteId);
+    }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('vendas:pedido:leitura')")
@@ -69,6 +60,14 @@ public class PedidoVendaController {
     public ResponseEntity<List<PedidoVendaResponse>> listarPorEmpresa(
             @AuthenticationPrincipal AuthenticatedUser user) {
         return ResponseEntity.ok(service.listarPorEmpresa(empresaDoToken(user)));
+    }
+
+    @GetMapping("/{id}/atp")
+    @PreAuthorize("hasAuthority('vendas:pedido:leitura') or hasAuthority('vendas:pedido:escrita')")
+    public Map<String, Object> atp(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return atpService.verificar(empresaDoToken(user), id);
     }
 
     @PostMapping("/{id}/confirmar")
@@ -90,13 +89,18 @@ public class PedidoVendaController {
         return ResponseEntity.ok().build();
     }
 
-        public record PosVendaReq(String motivo, String equipamento) {}
+    public record PosVendaReq(String motivo, String equipamento) {}
+
     @PostMapping("/{id}/posvenda")
     @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
-    public ResponseEntity<Map<String, Object>> posvenda(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser user, @RequestBody PosVendaReq r) {
+    public ResponseEntity<Map<String, Object>> posvenda(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @RequestBody PosVendaReq r) {
         return ResponseEntity.ok(service.abrirPosVenda(id, empresaDoToken(user), user.getId(), r.motivo(), r.equipamento()));
     }
-@PostMapping("/{id}/cancelar")
+
+    @PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
     public ResponseEntity<Void> cancelar(
             @PathVariable Long id,
