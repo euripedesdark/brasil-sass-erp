@@ -129,6 +129,9 @@ import { Servicos } from './components/servicos/Servicos';
 import OrdemServico from './components/OrdemServico';
 import { Producao } from './components/producao/Producao';
 import Qualidade from './components/qualidade/Qualidade';
+import { Helpdesk } from './components/helpdesk/Helpdesk';
+import { Agenda } from './components/agenda/Agenda';
+import { OperacoesPainel } from './components/operacoes/OperacoesPainel';
 import Ativos from './components/ativos/Ativos';
 import IndicadoresAtivos from './components/ativos/IndicadoresAtivos';
 import ManutencaoAtivos from './components/ativos/ManutencaoAtivos';
@@ -324,6 +327,9 @@ function App() {
                     <Route path="producao/oee" element={<OEE />} />
                     <Route path="producao/capacidade" element={<Capacidade />} />
                     <Route path="qualidade" element={<Qualidade />} />
+                    <Route path="helpdesk" element={<Helpdesk />} />
+                    <Route path="agenda" element={<Agenda />} />
+                    <Route path="operacoes" element={<OperacoesPainel />} />
                     <Route path="ativos" element={<Ativos />} />
                     <Route path="ativos/indicadores" element={<IndicadoresAtivos />} />
                     <Route path="ativos/manutencao" element={<ManutencaoAtivos />} />
