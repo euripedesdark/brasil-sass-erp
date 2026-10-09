@@ -1304,6 +1304,22 @@
       "summaryHelp": "Vérifiez les informations principales avant l’enregistrement.",
       "additionalInfoHelp": "Informations supplémentaires pour les opérations.",
       "additionalInfoPlaceholder": "Observations supplémentaires"
+    },
+    "settings": {
+      "title": "Paramètres du système",
+      "generalTab": "Général",
+      "systemName": "Nom du système",
+      "imagesTab": "Images",
+      "loginImage": "Image de connexion",
+      "backgroundImage": "Image d’arrière-plan",
+      "selectImage": "Sélectionner une image",
+      "currentLoginImage": "Image de connexion actuelle",
+      "currentBackgroundImage": "Image d’arrière-plan actuelle",
+      "saveButton": "Enregistrer les paramètres",
+      "saved": "Paramètres enregistrés avec succès !",
+      "imageUpdated": "L’image {{type}} a été mise à jour avec succès !",
+      "uploadFailed": "Échec du téléversement : {{error}}",
+      "connectionError": "Erreur de connexion : {{error}}"
     }
   },
   "enterpriseOps": {
