@@ -199,6 +199,9 @@ public class EfdPeriodoService {
     private boolean cancelada(String status) {
         return status != null && status.trim().toUpperCase().startsWith("CANCEL");
     }
+    private String moedaOuZero(BigDecimal v) {
+        return v == null ? "0,00" : v.setScale(2, RoundingMode.HALF_UP).toPlainString().replace(".", ",");
+    }
     private String moeda(BigDecimal v) {
         if (v == null || v.signum() == 0) return null;
         return v.setScale(2, RoundingMode.HALF_UP).toPlainString().replace(".", ",");

@@ -36,7 +36,6 @@ class FiscalProntidaoServiceTest {
         when(apuracaoRepository.findByEmpresaIdOrderByCompetenciaDesc(anyLong())).thenReturn(List.of());
         when(stripeFinanceService.statusConfig(anyLong())).thenReturn(Map.of("habilitado", false, "motivo", "off"));
         when(boletoService.servicoDisponivel()).thenReturn(false);
-        when(boletoService.urlServico()).thenReturn("http://cnab");
 
         Map<String, Object> r = svc.checklist(1L);
         assertNotNull(r.get("itens"));

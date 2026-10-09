@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 /**
  * Garante que todo endpoint que o frontend chama exista de fato.
@@ -128,7 +129,11 @@ class CoberturaFrontendBackendTest {
     @DisplayName("Financeiro: lancamento tem partidas, edicao e exclusao")
     void financeiroLancamento() throws Exception {
         var auth = comoAdmin("financeiro:lancamento:leitura", "financeiro:lancamento:escrita");
-        perform(get("/api/financeiro/lancamentos/1/partidas"), auth).andExpect(status().isOk());
+        // A consulta valida o lançamento da empresa antes de listar partidas.
+        // A mensagem de domínio comprova que o controller foi alcançado.
+        perform(get("/api/financeiro/lancamentos/999999/partidas").accept(org.springframework.http.MediaType.APPLICATION_JSON), auth)
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errors[0].message").value("Lançamento não encontrado"));
         perform(put("/api/financeiro/lancamentos/1"), auth).andExpect(status().isBadRequest());
         perform(delete("/api/financeiro/lancamentos/999999"), auth).andExpect(status().isNotFound());
     }
