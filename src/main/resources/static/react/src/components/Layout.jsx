@@ -416,6 +416,31 @@ export const Layout = () => {
             command: () => handleNavigation('/agenda')
         });
         items.push({
+            label: 'Metas comerciais',
+            icon: 'pi pi-chart-bar',
+            command: () => handleNavigation('/vendas/metas')
+        });
+        items.push({
+            label: 'Contratos de venda',
+            icon: 'pi pi-file',
+            command: () => handleNavigation('/vendas/contratos')
+        });
+        items.push({
+            label: 'Notificações',
+            icon: 'pi pi-bell',
+            command: () => handleNavigation('/notificacoes')
+        });
+        items.push({
+            label: 'Conhecimento',
+            icon: 'pi pi-book',
+            command: () => handleNavigation('/conhecimento')
+        });
+        items.push({
+            label: 'Go-live',
+            icon: 'pi pi-flag',
+            command: () => handleNavigation('/golive')
+        });
+        items.push({
             label: 'Empresas (Stripe/Cert)',
             icon: 'pi pi-key',
             command: () => handleNavigation('/empresas-credenciais')

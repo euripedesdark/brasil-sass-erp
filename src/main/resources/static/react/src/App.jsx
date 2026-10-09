@@ -132,6 +132,11 @@ import Qualidade from './components/qualidade/Qualidade';
 import { Helpdesk } from './components/helpdesk/Helpdesk';
 import { Agenda } from './components/agenda/Agenda';
 import { OperacoesPainel } from './components/operacoes/OperacoesPainel';
+import { MetasComerciais } from './components/metas/MetasComerciais';
+import { Notificacoes } from './components/notificacoes/Notificacoes';
+import { Conhecimento } from './components/conhecimento/Conhecimento';
+import { ContratosVenda } from './components/contratosvenda/ContratosVenda';
+import { GoLive } from './components/golive/GoLive';
 import Ativos from './components/ativos/Ativos';
 import IndicadoresAtivos from './components/ativos/IndicadoresAtivos';
 import ManutencaoAtivos from './components/ativos/ManutencaoAtivos';
@@ -330,6 +335,11 @@ function App() {
                     <Route path="helpdesk" element={<Helpdesk />} />
                     <Route path="agenda" element={<Agenda />} />
                     <Route path="operacoes" element={<OperacoesPainel />} />
+                    <Route path="vendas/metas" element={<MetasComerciais />} />
+                    <Route path="vendas/contratos" element={<ContratosVenda />} />
+                    <Route path="notificacoes" element={<Notificacoes />} />
+                    <Route path="conhecimento" element={<Conhecimento />} />
+                    <Route path="golive" element={<GoLive />} />
                     <Route path="ativos" element={<Ativos />} />
                     <Route path="ativos/indicadores" element={<IndicadoresAtivos />} />
                     <Route path="ativos/manutencao" element={<ManutencaoAtivos />} />
