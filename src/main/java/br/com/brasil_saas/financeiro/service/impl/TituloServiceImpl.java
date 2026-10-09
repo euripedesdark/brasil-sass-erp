@@ -5,6 +5,11 @@ import br.com.brasil_saas.financeiro.model.*;
 import br.com.brasil_saas.financeiro.repository.*;
 import br.com.brasil_saas.financeiro.service.TituloService;
 import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraRepository;
+import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository;
+import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
+import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
+import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
+import br.com.brasil_saas.fiscal.repository.NfeRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +19,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.List;
 
 @Service @RequiredArgsConstructor
@@ -25,6 +34,11 @@ public class TituloServiceImpl implements TituloService {
     private final ContaBancariaRepository contaBancariaRepository;
     private final ExtratoRepository extratoRepository;
     private final ConferenciaFaturaCompraRepository conferenciaCompraRepository;
+    private final ConferenciaFaturaCompraItemRepository conferenciaItemRepository;
+    private final PedidoCompraRepository pedidoCompraRepository;
+    private final RecebimentoCompraRepository recebimentoRepository;
+    private final RecebimentoCompraItemRepository recebimentoItemRepository;
+    private final NfeRepository nfeRepository;
 
     @Override @Transactional(readOnly = true)
     public List<TituloResponse> listar(Long empresaId, String status) {
@@ -103,10 +117,12 @@ public class TituloServiceImpl implements TituloService {
         Titulo titulo = tituloRepository.findForUpdate(tituloId, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Título não encontrado"));
 
-        if (conferenciaCompraRepository.findVigentesParaTitulo(empresaId, tituloId).stream()
+        var vigentesCompra = conferenciaCompraRepository.findVigentesParaTitulo(empresaId, tituloId);
+        if (vigentesCompra.stream()
                 .anyMatch(c -> !"APROVADA".equals(c.getStatus()))) {
             throw new BusinessException("Título bloqueado por conferência de compra pendente ou divergente");
         }
+        exigirCoberturaTotalCompra(empresaId, tituloId, vigentesCompra);
 
         if (r.valorBaixa() == null || r.valorBaixa().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("Valor da baixa deve ser maior que zero");
@@ -263,5 +279,69 @@ public class TituloServiceImpl implements TituloService {
     private ParcelaResponse toParcela(TituloParcela p) {
         return new ParcelaResponse(p.getId(), p.getNumeroParcela(), p.getValorParcela(),
             p.getValorSaldo(), p.getDataVencimento(), p.getStatus());
+    }
+
+    /**
+     * Cobertura total antes do pagamento (compra). Quando ha contexto
+     * de compra (pedidos vinculados ao titulo ou conferencias vigentes),
+     * todo recebimento e toda NF-e autorizada do pedido precisam estar
+     * cobertos por conferencia APROVADA vigente, no valor e na quantidade
+     * por produto. Titulos sem nenhum documento de compra seguem
+     * liberados, como antes.
+     */
+    private void exigirCoberturaTotalCompra(Long empresaId, Long tituloId,
+            java.util.List<br.com.brasil_saas.compras.model.ConferenciaFaturaCompra> vigentes) {
+        Set<Long> pedidoIds = new LinkedHashSet<>();
+        for (var c : vigentes) {
+            if (c.getPedidoId() != null) pedidoIds.add(c.getPedidoId());
+        }
+        for (var pedido : pedidoCompraRepository.findByEmpresaIdAndTituloIdAndDeletedAtIsNull(empresaId, tituloId)) {
+            pedidoIds.add(pedido.getId());
+        }
+        if (pedidoIds.isEmpty()) {
+            return;
+        }
+        Set<Long> recCobertos = new LinkedHashSet<>();
+        Set<Long> nfCobertas = new LinkedHashSet<>();
+        for (var c : vigentes) {
+            if (!"APROVADA".equals(c.getStatus())) continue;
+            if (c.getRecebimentoId() != null) recCobertos.add(c.getRecebimentoId());
+            if (c.getNfeId() != null) nfCobertas.add(c.getNfeId());
+        }
+        for (Long pedidoId : pedidoIds) {
+            for (var rec : recebimentoRepository.findByEmpresaIdAndPedidoIdAndDeletedAtIsNullOrderByDataRecebimentoDesc(empresaId, pedidoId)) {
+                if (!recCobertos.contains(rec.getId())) {
+                    throw new BusinessException("Pagamento bloqueado: recebimento " + rec.getId() + " sem conferencia aprovada");
+                }
+                Map<Long, BigDecimal> recebidoPorProduto = new LinkedHashMap<>();
+                for (var ri : recebimentoItemRepository.findByEmpresaIdAndRecebimentoIdAndDeletedAtIsNullOrderByIdAsc(empresaId, rec.getId())) {
+                    if (ri.getProdutoId() == null) continue;
+                    recebidoPorProduto.merge(ri.getProdutoId(), ri.getQuantidadeRecebida() == null ? BigDecimal.ZERO : ri.getQuantidadeRecebida(), BigDecimal::add);
+                }
+                if (recebidoPorProduto.isEmpty()) continue;
+                Map<Long, BigDecimal> faturadoPorProduto = new LinkedHashMap<>();
+                for (var c : vigentes) {
+                    if (!"APROVADA".equals(c.getStatus()) || !rec.getId().equals(c.getRecebimentoId())) continue;
+                    for (var li : conferenciaItemRepository.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByNumeroItemAsc(empresaId, c.getId())) {
+                        if (li.getProdutoId() == null) continue;
+                        faturadoPorProduto.merge(li.getProdutoId(), li.getQuantidadeFaturada() == null ? BigDecimal.ZERO : li.getQuantidadeFaturada(), BigDecimal::add);
+                    }
+                }
+                for (var e : recebidoPorProduto.entrySet()) {
+                    BigDecimal conf = faturadoPorProduto.getOrDefault(e.getKey(), BigDecimal.ZERO);
+                    if (conf.compareTo(e.getValue()) < 0) {
+                        throw new BusinessException("Pagamento bloqueado: recebimento " + rec.getId() + " parcialmente conferido (produto " + e.getKey() + ": recebido " + e.getValue() + ", conferido " + conf + ")");
+                    }
+                }
+            }
+            for (var nf : nfeRepository.findByEmpresaIdAndPedidoCompraIdAndDeletedAtIsNull(empresaId, pedidoId)) {
+                boolean autorizada = nf.getStatus() == null
+                        || "AUTORIZADA".equalsIgnoreCase(nf.getStatus())
+                        || "AUTORIZADO".equalsIgnoreCase(nf.getStatus());
+                if (autorizada && !nfCobertas.contains(nf.getId())) {
+                    throw new BusinessException("Pagamento bloqueado: NF-e " + nf.getId() + " sem conferencia aprovada");
+                }
+            }
+        }
     }
 }

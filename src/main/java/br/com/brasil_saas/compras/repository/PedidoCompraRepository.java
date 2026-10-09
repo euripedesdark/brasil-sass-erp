@@ -18,5 +18,6 @@ public interface PedidoCompraRepository extends JpaRepository<PedidoCompra, Long
     Optional<PedidoCompra> findByIdForUpdateAndEmpresaId(Long id, Long empresaId);
     Optional<PedidoCompra> findByIdAndEmpresaId(Long id, Long empresaId);
     List<PedidoCompra> findByEmpresaIdOrderByDataEmissaoDesc(Long empresaId);
+    List<PedidoCompra> findByEmpresaIdAndTituloIdAndDeletedAtIsNull(Long empresaId, Long tituloId);
     List<PedidoCompra> findByEmpresaIdAndStatus(Long empresaId, String status);
 }

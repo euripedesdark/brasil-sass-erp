@@ -284,3 +284,38 @@ bloqueia, reavaliacao do mesmo par nao soma em duplicata) e 1 caso antigo
 atualizado para a nova regra (consumo total bloqueia, NF reutilizada
 bloqueia). Bloco compras: 33 casos sem falha. Suite completa: 368 testes,
 zero falhas, zero erros, JDK 21, incluindo contexto Spring real.
+
+## Entrega — cobertura total antes do pagamento (compra)
+
+Branch codex/devolucao-integracao-financeira (mesmo bloco). Sem migration, sem tela nova.
+
+- Antes, a baixa bloqueava titulo com conferencia vigente pendente ou
+  divergente, mas um titulo com recebimento ou NF-e nunca conferidos
+  passava livre.
+- Agora, havendo contexto de compra (pedidos vinculados ao titulo ou
+  conferencias vigentes), o pagamento exige: todo recebimento coberto por
+  conferencia APROVADA vigente, na quantidade por produto; toda NF-e
+  autorizada do pedido coberta por conferencia APROVADA vigente.
+- Titulos sem nenhum documento de compra seguem liberados, como antes;
+  pedido sem recebimento, NF-e e conferencia nao tem o que exigir
+  (adiantamento e servico preservados).
+- Mensagens dizem o documento faltante (recebimento, produto com recebido
+  e conferido, NF-e), sem alterar o bloqueio anterior.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/financeiro/service/impl/TituloServiceImpl.java
+    src/main/java/br/com/brasil_saas/compras/repository/PedidoCompraRepository.java
+    src/main/java/br/com/brasil_saas/fiscal/repository/NfeRepository.java
+    src/test/java/br/com/brasil_saas/financeiro/service/impl/TituloCoberturaTotalCompraTest.java
+    src/test/java/br/com/brasil_saas/financeiro/service/impl/TituloConferenciaCompraTest.java
+    src/test/java/br/com/brasil_saas/financeiro/service/impl/TituloBaixaRateioParcelasTest.java
+    src/test/java/br/com/brasil_saas/database/DevolucoesCreditoPostgresScenario.java
+    src/test/java/br/com/brasil_saas/database/VendasReservasPostgresScenario.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 5 casos novos de cobertura (recebimento sem conferencia,
+parcialmente conferido, NF autorizada sem conferencia, cobertura total
+libera, sem contexto libera) e 11 preservados do bloco financeiro.
+Suite completa: 373 testes, zero falhas, zero erros, JDK 21, incluindo
+contexto Spring real; package valido.
