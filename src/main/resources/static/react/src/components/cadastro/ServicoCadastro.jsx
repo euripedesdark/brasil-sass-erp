@@ -30,7 +30,7 @@ const normalizarSugestoes = (dados) => {
 };
 
 export const ServicoCadastro = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
 
     // Cache por empresa. O dicionario de sugestoes e por termo, e termo e igual
@@ -104,20 +104,18 @@ export const ServicoCadastro = () => {
     const aplicarSugestoes = (lista, atual) => {
         setSugestoesNome(lista);
         if (!lista || lista.length === 0) {
-            setSugestoesAviso('Nenhum servico com esse nome. Se e novo, siga.');
+            setSugestoesAviso(t('serviceScreen.noSimilarService'));
             return;
         }
         const nomeAtual = (atual?.nome || '').trim().toLowerCase();
         const exato = lista.find(s => (s.nome || '').trim().toLowerCase() === nomeAtual);
         const semCodigo = lista.filter(s => !s.codigoTributacaoMunicipal);
         if (exato) {
-            setSugestoesAviso(`Ja existe o servico "${exato.nome}" (${exato.codigo}). `
-                + 'Selecione na lista para trazer o codigo municipal.');
+            setSugestoesAviso(t('serviceScreen.existingServiceHint', { name: exato.nome, code: exato.codigo }));
         } else if (semCodigo.length > 0) {
-            setSugestoesAviso(`${semCodigo.length} servico(s) parecido(s) sem codigo municipal. `
-                + 'Sem ele a prefeitura recusa com erro 306.');
+            setSugestoesAviso(t('serviceScreen.missingMunicipalCodeHint', { count: semCodigo.length }));
         } else {
-            setSugestoesAviso(`${lista.length} servico(s) parecido(s). Verifique se e o mesmo.`);
+            setSugestoesAviso(t('serviceScreen.similarServicesHint', { count: lista.length }));
         }
     };
     const [first, setFirst] = useState(0);
@@ -153,8 +151,8 @@ export const ServicoCadastro = () => {
             console.error('Erro ao carregar servicos', err);
             toast.current?.show({
                 severity: 'error',
-                summary: 'Erro',
-                detail: 'Nao foi possivel carregar os servicos',
+                summary: t('serviceScreen.error'),
+                detail: t('serviceScreen.loadError'),
                 life: 3000
             });
         } finally {
@@ -182,16 +180,16 @@ export const ServicoCadastro = () => {
                 const response = await ServicoCadastroService.atualizar(servicoParaSalvar.id, servicoParaSalvar);
                 toast.current?.show({
                     severity: 'success',
-                    summary: 'Sucesso',
-                    detail: 'Servico atualizado com sucesso',
+                    summary: t('common.success'),
+                    detail: t('serviceScreen.updated'),
                     life: 3000
                 });
             } else {
                 const response = await ServicoCadastroService.criar(servicoParaSalvar);
                 toast.current?.show({
                     severity: 'success',
-                    summary: 'Sucesso',
-                    detail: 'Servico criado com sucesso',
+                    summary: t('common.success'),
+                    detail: t('serviceScreen.created'),
                     life: 3000
                 });
             }
@@ -202,11 +200,11 @@ export const ServicoCadastro = () => {
                 resetForm();
             }, 1500);
         } catch (err) {
-            setError(err.message || 'Erro ao salvar servico');
+            setError(err.message || t('serviceScreen.saveError'));
             toast.current?.show({
                 severity: 'error',
-                summary: 'Erro',
-                detail: err.message || 'Nao foi possivel salvar o servico',
+                summary: t('serviceScreen.error'),
+                detail: err.message || t('serviceScreen.saveError'),
                 life: 3000
             });
         } finally {
@@ -219,16 +217,16 @@ export const ServicoCadastro = () => {
             await ServicoCadastroService.excluir(id);
             toast.current?.show({
                 severity: 'success',
-                summary: 'Sucesso',
-                detail: 'Servico excluido com sucesso',
+                summary: t('common.success'),
+                detail: t('serviceScreen.deleted'),
                 life: 3000
             });
             fetchServicos(first / rows, rows);
         } catch (err) {
             toast.current?.show({
                 severity: 'error',
-                summary: 'Erro',
-                detail: err.message || 'Nao foi possivel excluir o servico',
+                summary: t('serviceScreen.error'),
+                detail: err.message || t('serviceScreen.deleteError'),
                 life: 3000
             });
         }
@@ -276,7 +274,7 @@ export const ServicoCadastro = () => {
     const statusTemplate = (rowData) => {
         return (
             <Tag
-                value={rowData.ativo ? 'ATIVO' : 'INATIVO'}
+                value={rowData.ativo ? t('serviceScreen.active') : t('serviceScreen.inactive')}
                 severity={rowData.ativo ? 'success' : 'warning'}
                 className={rowData.ativo ? 'tag-ativo' : 'tag-inativo'}
             />
@@ -286,7 +284,7 @@ export const ServicoCadastro = () => {
     const valorTemplate = (rowData) => {
         return (
             <span className="valor-formatado">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rowData.valorUnitario || 0)}
+                {new Intl.NumberFormat(i18n.language, { style: 'currency', currency: 'BRL' }).format(rowData.valorUnitario || 0)}
             </span>
         );
     };
@@ -298,13 +296,13 @@ export const ServicoCadastro = () => {
                     icon="pi pi-pencil"
                     className="p-button-info p-button-sm p-button-text"
                     onClick={() => abrirDialog(rowData)}
-                    tooltip="Editar"
+                    tooltip={t('common.edit')}
                 />
                 <Button
                     icon="pi pi-trash"
                     className="p-button-danger p-button-sm p-button-text"
                     onClick={() => excluirServico(rowData.id)}
-                    tooltip="Excluir"
+                    tooltip={t('common.delete')}
                 />
             </div>
         );
@@ -313,7 +311,7 @@ export const ServicoCadastro = () => {
     const dialogFooter = (
         <div>
             <Button
-                label="Cancelar"
+                label={t('common.cancel')}
                 icon="pi pi-times"
                 className="p-button-text"
                 onClick={() => {
@@ -322,7 +320,7 @@ export const ServicoCadastro = () => {
                 }}
             />
             <Button
-                label="Salvar Servico"
+                label={t('serviceScreen.saveService')}
                 icon="pi pi-save"
                 className="p-button-success"
                 onClick={salvarServico}
@@ -335,13 +333,13 @@ export const ServicoCadastro = () => {
         <div className="servico-cadastro-enterprise-container">
             <Toast ref={toast} />
             
-            <Card title="Cadastro de Servicos" className="servico-cadastro-main-card">
+            <Card title={t('serviceScreen.title')} className="servico-cadastro-main-card">
                 <div className="servico-cadastro-header-actions mb-4 flex justify-content-between align-items-center">
                     <div className="servico-cadastro-info">
-                        <p className="text-muted m-0">Gestao de servicos para ordens de servico e vendas.</p>
+                        <p className="text-muted m-0">{t('serviceScreen.subtitle')}</p>
                     </div>
                     <Button
-                        label="Novo Servico"
+                        label={t('serviceScreen.newService')}
                         icon="pi pi-plus"
                         onClick={() => abrirDialog()}
                         className="p-button-success"
@@ -359,22 +357,22 @@ export const ServicoCadastro = () => {
                     onPageChange={onPageChange}
                     responsiveLayout="scroll"
                     className="p-datatable-sm"
-                    emptyMessage="Nenhum servico encontrado"
+                    emptyMessage={t('serviceScreen.empty')}
                 >
-                    <Column field="codigo" header="Codigo" sortable style={{ width: '120px' }} />
-                    <Column field="nome" header="Nome" sortable style={{ width: '250px' }} />
-                    <Column field="descricao" header="Descricao" sortable style={{ width: '400px' }} />
-                    <Column body={valorTemplate} header="Valor Unitario" sortable style={{ width: '150px' }} />
+                    <Column field="codigo" header={t('serviceScreen.code')} sortable style={{ width: '120px' }} />
+                    <Column field="nome" header={t('serviceScreen.name')} sortable style={{ width: '250px' }} />
+                    <Column field="descricao" header={t('serviceScreen.description')} sortable style={{ width: '400px' }} />
+                    <Column body={valorTemplate} header={t('serviceScreen.unitPrice')} sortable style={{ width: '150px' }} />
                     <Column field="lc116Codigo" header="LC 116" sortable style={{ width: '100px' }} />
-                    <Column field="codigoTributacaoMunicipal" header="Cod. SP" sortable style={{ width: '100px' }} />
-                    <Column field="codigoTributacaoNacional" header="Trib. Nacional" sortable style={{ width: '130px' }} />
-                    <Column body={statusTemplate} header="Status" sortable style={{ width: '120px' }} />
+                    <Column field="codigoTributacaoMunicipal" header={t('serviceScreen.municipalCodeShort')} sortable style={{ width: '100px' }} />
+                    <Column field="codigoTributacaoNacional" header={t('serviceScreen.nationalTaxCodeShort')} sortable style={{ width: '130px' }} />
+                    <Column body={statusTemplate} header={t('common.status')} sortable style={{ width: '120px' }} />
                     <Column body={acoesTemplate} style={{ width: '120px' }} />
                 </DataTable>
             </Card>
 
             <Dialog
-                header={novoServico.id ? `Editar Servico: ${novoServico.nome}` : 'Novo Servico'}
+                header={novoServico.id ? t('serviceScreen.editService', { name: novoServico.nome }) : t('serviceScreen.newService')}
                 visible={dialogVisible}
                 style={{ width: '600px' }}
                 onHide={() => {
@@ -386,11 +384,11 @@ export const ServicoCadastro = () => {
             >
                 <div className="p-fluid">
                     {error && <Message severity="error" text={error} className="w-full mb-3" />}
-                    {success && <Message severity="success" text="Servico salvo com sucesso!" className="w-full mb-3" />}
+                    {success && <Message severity="success" text={t('serviceScreen.saved')} className="w-full mb-3" />}
 
                     <div className="grid">
                         <div className="col-12 md:col-6 field">
-                            <label className="font-bold mb-2 block">Codigo *</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.codeRequired')}</label>
                             <InputText
                                 value={novoServico.codigo}
                                 onChange={(e) => setNovoServico({...novoServico, codigo: e.target.value})}
@@ -399,7 +397,7 @@ export const ServicoCadastro = () => {
                             />
                         </div>
                         <div className="col-12 md:col-6 field">
-                            <label className="font-bold mb-2 block">Nome *</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.nameRequired')}</label>
                             {/* Sugere servico ja cadastrado enquanto a pessoa digita.
                                 Sem isto, dois cadastros com o mesmo servico quase
                                 nao nome caem no banco, e o codigo municipal diverge
@@ -413,15 +411,15 @@ export const ServicoCadastro = () => {
                                 minLength={2}
                                 delay={300}
                                 loading={buscandoSugestoes}
-                                placeholder="Nome do servico"
+                                placeholder={t('serviceScreen.serviceNamePlaceholder')}
                                 dropdownClassName="p-autocomplete-dropdown"
                                 itemTemplate={(s) => (
                                     <div>
                                         <strong>{s.nome}</strong>
                                         <small className="ml-2 text-color-secondary">
                                             {s.codigo}
-                                            {s.codigoTributacaoMunicipal ? ` · cod. ${s.codigoTributacaoMunicipal}` : ' · SEM CODIGO MUNICIPAL'}
-                                            {!s.ativo ? ' · inativo' : ''}
+                                            {s.codigoTributacaoMunicipal ? ` · cod. ${s.codigoTributacaoMunicipal}` : ` · ${t('serviceScreen.noMunicipalCode')}`}
+                                            {!s.ativo ? ` · ${t('serviceScreen.inactive').toLowerCase()}` : ''}
                                         </small>
                                     </div>
                                 )}
@@ -456,46 +454,46 @@ export const ServicoCadastro = () => {
                             )}
                         </div>
                         <div className="col-12 field">
-                            <label className="font-bold mb-2 block">Descricao</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.description')}</label>
                             <InputTextarea
                                 value={novoServico.descricao}
                                 onChange={(e) => setNovoServico({...novoServico, descricao: e.target.value})}
-                                placeholder="Descricao detalhada do servico"
+                                placeholder={t('serviceScreen.descriptionPlaceholder')}
                                 rows={3}
                             />
                         </div>
                         <div className="col-12 md:col-6 field">
-                            <label className="font-bold mb-2 block">Valor Unitario (R$)</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.unitPriceBRL')}</label>
                             <InputNumber
                                 value={novoServico.valorUnitario}
                                 onChange={(e) => setNovoServico({...novoServico, valorUnitario: e.value || 0})}
                                 mode="currency"
                                 currency="BRL"
-                                locale="pt-BR"
-                                placeholder="0,00"
+                                locale={i18n.language}
+                                placeholder={i18n.language === 'en-US' ? '0.00' : '0,00'}
                             />
                         </div>
                         <div className="col-12 md:col-6 field">
-                            <label className="font-bold mb-2 block">Aliquota ISS</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.issRate')}</label>
                             <InputNumber
                                 value={novoServico.aliquotaIss}
                                 onChange={(e) => setNovoServico({...novoServico, aliquotaIss: e.value || 0})}
                                 mode="percent"
-                                locale="pt-BR"
-                                placeholder="0,00"
+                                locale={i18n.language}
+                                placeholder={i18n.language === 'en-US' ? '0.00' : '0,00'}
                             />
                         </div>
 
                         <div className="col-12">
                             <Message
                                 severity="info"
-                                text="Codigos fiscais. O codigo municipal de São Paulo e o que vai no RPS da NFS-e; sem ele a prefeitura recusa a emissao. Para servico de TI: 01.07 (LC 116) = 2919 (municipal)."
+                                text={t('serviceScreen.taxCodeHelp')}
                                 className="w-full mb-3"
                             />
                         </div>
 
                         <div className="col-12 md:col-4 field">
-                            <label className="font-bold mb-2 block">Codigo LC 116</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.lc116Code')}</label>
                             <InputText
                                 value={novoServico.lc116Codigo}
                                 onChange={(e) => setNovoServico({...novoServico, lc116Codigo: e.target.value})}
@@ -503,7 +501,7 @@ export const ServicoCadastro = () => {
                             />
                         </div>
                         <div className="col-12 md:col-4 field">
-                            <label className="font-bold mb-2 block">Codigo municipal SP *</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.municipalCodeRequired')}</label>
                             <InputText
                                 value={novoServico.codigoTributacaoMunicipal}
                                 onChange={(e) => setNovoServico({...novoServico, codigoTributacaoMunicipal: e.target.value})}
@@ -512,7 +510,7 @@ export const ServicoCadastro = () => {
                             />
                         </div>
                         <div className="col-12 md:col-4 field">
-                            <label className="font-bold mb-2 block">Tributacao Nacional NFS-e</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.nationalNfseTaxCode')}</label>
                             <InputText
                                 value={novoServico.codigoTributacaoNacional}
                                 onChange={(e) => setNovoServico({...novoServico, codigoTributacaoNacional: e.target.value.replace(/\D/g, '').slice(0, 6)})}
@@ -520,10 +518,10 @@ export const ServicoCadastro = () => {
                                 maxLength={6}
                                 keyfilter="int"
                             />
-                            <small className="text-color-secondary">6 digitos. Obrigatorio para SEFIN Nacional.</small>
+                            <small className="text-color-secondary">{t('serviceScreen.sixDigitsRequired')}</small>
                         </div>
                         <div className="col-12 md:col-4 field">
-                            <label className="font-bold mb-2 block">NBS</label>
+                            <label className="font-bold mb-2 block">{t('serviceScreen.nbs')}</label>
                             <InputText
                                 value={novoServico.nbs}
                                 onChange={(e) => setNovoServico({...novoServico, nbs: e.target.value})}
@@ -532,7 +530,7 @@ export const ServicoCadastro = () => {
                             />
                         </div>
                         <div className="col-12 md:col-6 field">
-                            <label className="font-bold mb-2 block">Status</label>
+                            <label className="font-bold mb-2 block">{t('common.status')}</label>
                             <div className="p-inputswitch">
                                 <Button
                                     label={novoServico.ativo ? 'ATIVO' : 'INATIVO'}
@@ -547,16 +545,16 @@ export const ServicoCadastro = () => {
                     <Divider />
                     <div className="servico-cadastro-resumo flex justify-content-between align-items-center p-3 bg-gray-100 border-round">
                         <div>
-                            <span className="font-bold">Codigo: </span>
+                            <span className="font-bold">{t('serviceScreen.code')}: </span>
                             <span>{novoServico.codigo}</span>
                         </div>
                         <div>
-                            <span className="font-bold">Nome: </span>
+                            <span className="font-bold">{t('serviceScreen.name')}: </span>
                             <span>{novoServico.nome}</span>
                         </div>
                         <div>
-                            <span className="font-bold">Valor: </span>
-                            <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(novoServico.valorUnitario || 0)}</span>
+                            <span className="font-bold">{t('serviceScreen.value')}: </span>
+                            <span>{new Intl.NumberFormat(i18n.language, { style: 'currency', currency: 'BRL' }).format(novoServico.valorUnitario || 0)}</span>
                         </div>
                     </div>
                 </div>
