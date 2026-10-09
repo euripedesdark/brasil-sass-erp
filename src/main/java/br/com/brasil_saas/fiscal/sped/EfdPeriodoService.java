@@ -203,4 +203,11 @@ public class EfdPeriodoService {
         if (v == null || v.signum() == 0) return null;
         return v.setScale(2, RoundingMode.HALF_UP).toPlainString().replace(".", ",");
     }
+    // Variante de moeda() que nunca devolve nulo: o registro E110 exige o
+    // valor "0,00" no lugar de campo zerado, enquanto os demais registros
+    // esperam campo vazio quando nao ha valor.
+    private String moedaOuZero(BigDecimal v) {
+        if (v == null) return "0,00";
+        return v.setScale(2, RoundingMode.HALF_UP).toPlainString().replace(".", ",");
+    }
 }
