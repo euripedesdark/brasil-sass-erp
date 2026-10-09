@@ -72,7 +72,8 @@
     "title": "Título",
     "location": "Local",
     "username": "Nome de usuário",
-    "password": "Senha"
+    "password": "Senha",
+    "success": "Sucesso"
   },
   "login": {
     "title": "BrasilCloudERP",
