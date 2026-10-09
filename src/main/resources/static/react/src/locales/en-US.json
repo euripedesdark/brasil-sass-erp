@@ -1630,6 +1630,6 @@
     "loadError": "Could not load contracts.",
     "saveError": "Could not save the contract.",
     "actionError": "Could not update the contract.",
-    "currency": "USD"
+    "currency": "BRL"
   }
 }
