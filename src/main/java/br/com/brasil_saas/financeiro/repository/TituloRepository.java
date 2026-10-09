@@ -12,6 +12,7 @@ public interface TituloRepository extends JpaRepository<Titulo, Long> {
     List<Titulo> findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(Long empresaId, Long pessoaId);
     List<Titulo> findByEmpresaIdAndStatusAndDeletedAtIsNullOrderByDataVencimento(Long empresaId, String status);
     Optional<Titulo> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
+    List<Titulo> findByEmpresaIdAndNumeroDocumentoAndDeletedAtIsNull(Long empresaId, String numeroDocumento);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from Titulo t where t.id = :id and t.empresaId = :empresaId and t.deletedAt is null")

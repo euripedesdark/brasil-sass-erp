@@ -24,6 +24,10 @@ class DevCompraServiceTest {
     @Mock MovimentacaoEstoqueRepository movimentacoes;
     @Mock DepositoRepository depositos;
     @Mock ReservaEstoqueRepository reservas;
+    @Mock br.com.brasil_saas.financeiro.repository.TituloRepository tituloRepository;
+    @Mock br.com.brasil_saas.financeiro.repository.BaixaRepository baixaRepository;
+    @Mock br.com.brasil_saas.financeiro.service.TituloService tituloService;
+    @Mock br.com.brasil_saas.core.service.DocumentoFluxoService documentoFluxoService;
     @InjectMocks DevCompraService service;
 
     void pedido() {
@@ -76,5 +80,84 @@ class DevCompraServiceTest {
         var d=new DevCompra();d.setStatus("SOLICITADA");when(devolucoes.findForUpdate(8L,2L)).thenReturn(Optional.of(d));
         when(devolucoes.save(any())).thenAnswer(i->i.getArgument(0));assertEquals("CANCELADA",service.cancelar(2L,8L).getStatus());
         assertThrows(BusinessException.class,()->service.devolver(2L,8L));verify(devolucoes,times(2)).findForUpdate(8L,2L);
+    }
+
+    // ---- integracao financeira automatica (devolver) ----
+    private PedidoCompra pedidoRecebidoComTitulo(Long tituloId) {
+        var x = new PedidoCompra();
+        x.setId(1L); x.setEmpresaId(2L); x.setFornecedorId(5L);
+        x.setStatus("RECEBIDO"); x.setNumero("PC-1"); x.setTituloId(tituloId);
+        x.setValorTotal(new BigDecimal("100.00"));
+        var i = new ItemPedidoCompra();
+        i.setProdutoId(6L); i.setQuantidade(new BigDecimal("10"));
+        i.setQuantidadeRecebida(new BigDecimal("10"));
+        i.setValorTotal(new BigDecimal("100.00"));
+        x.setItens(new ArrayList<>(List.of(i)));
+        return x;
+    }
+    private void devolucaoSolicitada4un() {
+        var d = new DevCompra(); d.setId(8L); d.setPedidoId(1L); d.setStatus("SOLICITADA");
+        when(devolucoes.findForUpdate(8L, 2L)).thenReturn(Optional.of(d));
+        var i = new DevCompraItem(); i.setProdutoId(6L); i.setQuantidade(new BigDecimal("4"));
+        when(itens.findByEmpresaIdAndDevolucaoIdAndDeletedAtIsNull(2L, 8L)).thenReturn(List.of(i));
+        var dep = new Deposito(); dep.setId(3L); dep.setCodigo("CD");
+        when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L, "PADRAO")).thenReturn(Optional.of(dep));
+        when(depositos.findAtivoForUpdate(3L, 2L)).thenReturn(Optional.of(dep));
+        var s = new SaldoEstoque(); s.setQuantidade(BigDecimal.TEN);
+        when(saldos.findForUpdate(2L, 3L, 6L)).thenReturn(Optional.of(s));
+        when(reservas.sumAtivas(2L, 3L, 6L)).thenReturn(BigDecimal.ZERO);
+        when(devolucoes.save(any())).thenAnswer(i2 -> i2.getArgument(0));
+    }
+    private br.com.brasil_saas.financeiro.model.Titulo tituloPagarAberto() {
+        var t = new br.com.brasil_saas.financeiro.model.Titulo();
+        t.setId(9L); t.setEmpresaId(2L); t.setTipo("P"); t.setStatus("ABERTO");
+        t.setNumeroDocumento("PC-1"); t.setDescricao("Compra - Pedido PC-1");
+        t.setPessoaId(55L);
+        t.setValorOriginal(new BigDecimal("100.00")); t.setValorSaldo(new BigDecimal("100.00"));
+        t.setDataEmissao(java.time.LocalDate.now().minusDays(5));
+        t.setDataVencimento(java.time.LocalDate.now().plusDays(25));
+        return t;
+    }
+    @Test void devolverComTituloAbertoReduzAPagar() {
+        devolucaoSolicitada4un();
+        when(pedidos.findByIdForUpdateAndEmpresaId(1L, 2L)).thenReturn(Optional.of(pedidoRecebidoComTitulo(9L)));
+        when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(tituloPagarAberto()));
+        when(baixaRepository.findByTituloIdAndDeletedAtIsNull(9L)).thenReturn(List.of());
+        assertEquals("DEVOLVIDA", service.devolver(2L, 8L).getStatus());
+        var captor = ArgumentCaptor.forClass(br.com.brasil_saas.financeiro.dto.FinanceiroDtos.BaixaRequest.class);
+        verify(tituloService).baixar(eq(2L), eq(9L), captor.capture());
+        assertEquals(new BigDecimal("40.00"), captor.getValue().valorBaixa());
+        assertTrue(captor.getValue().observacao().contains("DEVOLUCAO_COMPRA#8"));
+        verify(documentoFluxoService).ligar(eq(2L), eq(null),
+                eq("DEVOLUCAO_COMPRA"), eq(8L), any(),
+                eq("TITULO"), eq(9L), any(), eq("AJUSTE_DEVOLUCAO"));
+    }
+    @Test void devolverComTituloBaixadoGeraCreditoReceber() {
+        devolucaoSolicitada4un();
+        when(pedidos.findByIdForUpdateAndEmpresaId(1L, 2L)).thenReturn(Optional.of(pedidoRecebidoComTitulo(9L)));
+        var t = tituloPagarAberto();
+        t.setStatus("BAIXADO"); t.setValorSaldo(BigDecimal.ZERO);
+        when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(t));
+        when(tituloRepository.findByEmpresaIdAndNumeroDocumentoAndDeletedAtIsNull(eq(2L), any())).thenReturn(List.of());
+        when(tituloRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        assertEquals("DEVOLVIDA", service.devolver(2L, 8L).getStatus());
+        verify(tituloService, never()).baixar(any(), any(), any());
+        var captor = ArgumentCaptor.forClass(br.com.brasil_saas.financeiro.model.Titulo.class);
+        verify(tituloRepository).save(captor.capture());
+        assertEquals("R", captor.getValue().getTipo());
+        assertEquals(new BigDecimal("40.00"), captor.getValue().getValorSaldo());
+        assertEquals(55L, captor.getValue().getPessoaId());
+        verify(documentoFluxoService).ligar(eq(2L), eq(null),
+                eq("DEVOLUCAO_COMPRA"), eq(8L), any(),
+                eq("TITULO"), any(), any(), eq("CREDITO_DEVOLUCAO"));
+    }
+    @Test void devolverSemTituloSoRegistraFluxo() {
+        devolucaoSolicitada4un();
+        when(pedidos.findByIdForUpdateAndEmpresaId(1L, 2L)).thenReturn(Optional.of(pedidoRecebidoComTitulo(null)));
+        assertEquals("DEVOLVIDA", service.devolver(2L, 8L).getStatus());
+        verifyNoInteractions(tituloService, baixaRepository);
+        verify(documentoFluxoService).ligar(eq(2L), eq(null),
+                eq("DEVOLUCAO_COMPRA"), eq(8L), any(),
+                eq("PEDIDO_COMPRA"), eq(1L), any(), eq("DEVOLVIDA_SEM_TITULO"));
     }
 }

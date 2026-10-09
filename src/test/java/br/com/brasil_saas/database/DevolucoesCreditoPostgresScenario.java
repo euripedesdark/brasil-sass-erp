@@ -7,8 +7,17 @@ import br.com.brasil_saas.vendas.devolucao.*;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import br.com.brasil_saas.cadastro.repository.ClienteRepository;
 import br.com.brasil_saas.estoque.repository.*;
+import br.com.brasil_saas.core.repository.DocumentoFluxoRepository;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
+import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraRepository;
 import br.com.brasil_saas.financeiro.model.Titulo;
+import br.com.brasil_saas.financeiro.repository.BaixaRepository;
+import br.com.brasil_saas.financeiro.repository.CondicaoPagamentoRepository;
+import br.com.brasil_saas.financeiro.repository.ContaBancariaRepository;
+import br.com.brasil_saas.financeiro.repository.ExtratoRepository;
+import br.com.brasil_saas.financeiro.repository.TituloParcelaRepository;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import br.com.brasil_saas.financeiro.service.impl.TituloServiceImpl;
 import br.com.brasil_saas.financeiro.service.CreditoService;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import org.hibernate.Session;
@@ -30,7 +39,14 @@ final class DevolucoesCreditoPostgresScenario {
         var movimentos=factory.getRepository(MovimentacaoEstoqueRepository.class);
         var pedidosVenda=factory.getRepository(PedidoVendaRepository.class);
         var devVenda=factory.getRepository(VenDevolucaoRepository.class);
-        var venda=new DevolucaoService(devVenda,factory.getRepository(VenDevolucaoItemRepository.class),pedidosVenda,saldos,movimentos,depositos);
+        var titulosVenda=factory.getRepository(TituloRepository.class);
+        var baixasVenda=factory.getRepository(BaixaRepository.class);
+        var tituloSvcVenda=new TituloServiceImpl(titulosVenda,factory.getRepository(TituloParcelaRepository.class),baixasVenda,
+                factory.getRepository(CondicaoPagamentoRepository.class),factory.getRepository(ContaBancariaRepository.class),
+                factory.getRepository(ExtratoRepository.class),factory.getRepository(ConferenciaFaturaCompraRepository.class));
+        var fluxoVenda=new DocumentoFluxoService(factory.getRepository(DocumentoFluxoRepository.class));
+        var venda=new DevolucaoService(devVenda,factory.getRepository(VenDevolucaoItemRepository.class),pedidosVenda,saldos,movimentos,depositos,
+                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda);
         var retorno=venda.solicitar(empresa,pedidoVendaId,"Teste sintetico",Map.of(empresa,BigDecimal.ONE));
         assertEquals(empresa,retorno.getClienteId()); assertNotNull(retorno.getNumero());
         venda.decidir(empresa,null,retorno.getId(),true);venda.receber(empresa,retorno.getId());session.flush();
@@ -47,7 +63,8 @@ final class DevolucoesCreditoPostgresScenario {
         var pedidosCompra=factory.getRepository(PedidoCompraRepository.class);pedidosCompra.save(pc);
         var devCompra=factory.getRepository(DevCompraRepository.class);
         var compra=new DevCompraService(devCompra,factory.getRepository(DevCompraItemRepository.class),pedidosCompra,saldos,movimentos,
-                depositos,factory.getRepository(ReservaEstoqueRepository.class));
+                depositos,factory.getRepository(ReservaEstoqueRepository.class),
+                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda);
         var devolucao=compra.solicitar(empresa,pc.getId(),"Teste sintetico",List.of(
                 Map.of("produtoId",empresa,"quantidade","1"),Map.of("produtoId",empresa,"quantidade","1")));
         compra.devolver(empresa,devolucao.getId());session.flush();
@@ -63,7 +80,7 @@ final class DevolucoesCreditoPostgresScenario {
         compra.cancelar(empresa,reservada.getId());
 
         var clientes=factory.getRepository(ClienteRepository.class);
-        var titulos=factory.getRepository(TituloRepository.class);
+        var titulos=titulosVenda;
         var pagar=new Titulo();pagar.setEmpresaId(empresa);pagar.setPessoaId(empresa);pagar.setTipo("P");
         pagar.setDescricao("Conta a pagar sintetica");pagar.setValorOriginal(new BigDecimal("900"));pagar.setValorSaldo(new BigDecimal("900"));
         pagar.setDataEmissao(LocalDate.now());pagar.setDataVencimento(LocalDate.now().minusDays(1));titulos.save(pagar);
