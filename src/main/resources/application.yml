@@ -147,11 +147,13 @@ brasil-saas:
       password: ${BRASIL_SAAS_BOOTSTRAP_ADMIN_PASSWORD:}
       email: ${BRASIL_SAAS_BOOTSTRAP_ADMIN_EMAIL:}
   auth-service:
-    # A identidade do usuário vem exclusivamente do Auth Service, que autentica
-    # contra o Active Directory srvcloud.cloud.
+    # IAM compartilhado, executado separadamente: providers AD e POSTGRES.
+    # Certificados e credenciais sao validados pelo IAM; ERP mantem a representacao local.
     enabled: ${BRASIL_SAAS_AUTH_SERVICE_ENABLED:true}
     base-url: ${BRASIL_SAAS_AUTH_SERVICE_URL:http://localhost:8181}
     authenticate-path: ${BRASIL_SAAS_AUTH_SERVICE_AUTHENTICATE_PATH:/api/v1/identity/authenticate}
+    connect-timeout-ms: ${BRASIL_SAAS_AUTH_SERVICE_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${BRASIL_SAAS_AUTH_SERVICE_READ_TIMEOUT_MS:10000}
 
   jwt:
     secret: ${JWT_SECRET:brasil-saas-erp-dev-secret-key-minimo-32-bytes-0123456789}

@@ -33,7 +33,12 @@ public class JwtService {
     }
 
     public String generateToken(Long userId, String username, Long empresaId, Collection<String> adGroups) {
+        return generateToken(userId, username, empresaId, adGroups, "AD");
+    }
+
+    public String generateToken(Long userId, String username, Long empresaId, Collection<String> adGroups, String provider) {
         return Jwts.builder()
+                .claim("authProvider", provider)
                 .subject(username)
                 .claim("userId", userId)
                 .claim("empresaId", empresaId)
@@ -49,7 +54,12 @@ public class JwtService {
     }
 
     public String generateRefreshToken(Long userId, String username, Collection<String> adGroups) {
+        return generateRefreshToken(userId, username, adGroups, "AD");
+    }
+
+    public String generateRefreshToken(Long userId, String username, Collection<String> adGroups, String provider) {
         return Jwts.builder()
+                .claim("authProvider", provider)
                 .subject(username)
                 .claim("userId", userId)
                 .claim("type", "refresh")
@@ -103,6 +113,11 @@ public class JwtService {
                     .toList();
         }
         return List.of();
+    }
+
+    public String authProvider(String token) {
+        String provider = parse(token).get("authProvider", String.class);
+        return provider == null ? "AD" : provider;
     }
 
     public Long empresaId(String token) {

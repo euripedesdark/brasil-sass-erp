@@ -40,9 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 try {
                     UserDetails user = userDetailsService.loadUserByUsername(
                             jwtService.username(token), jwtService.adGroups(token));
-                    var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
+                    if (user.isEnabled() && user.isAccountNonLocked() && user.isAccountNonExpired()
+                            && user.isCredentialsNonExpired()) {
+                        var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    }
                 } catch (Exception e) {
                     log.warn(
                             "Falha ao carregar usuário do JWT. uri='{}', username='{}'",

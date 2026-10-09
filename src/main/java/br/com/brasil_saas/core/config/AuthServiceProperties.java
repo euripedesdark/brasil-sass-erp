@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 public class AuthServiceProperties {
+    private int connectTimeoutMs = 5000;
+    private int readTimeoutMs = 10000;
     private boolean enabled = true;
     private String baseUrl = "http://localhost:8181";
     private String authenticatePath = "/api/v1/identity/authenticate";

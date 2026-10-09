@@ -11,6 +11,6 @@ public class LoginRequest {
     @NotBlank(message = "password é obrigatório")
     private String password;
 
-    /** Fonte de identidade: AD (Managed) ou DB (Unmanaged). */
+    /** Provider do IAM: AD ou POSTGRES; DB é alias legado de POSTGRES. */
     private String provider = "AD";
 }
