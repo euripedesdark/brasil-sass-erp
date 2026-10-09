@@ -401,6 +401,21 @@ export const Layout = () => {
             command: () => handleNavigation('/gestao-empresarial')
         });
         items.push({
+            label: 'Operações (painel)',
+            icon: 'pi pi-th-large',
+            command: () => handleNavigation('/operacoes')
+        });
+        items.push({
+            label: 'Helpdesk',
+            icon: 'pi pi-ticket',
+            command: () => handleNavigation('/helpdesk')
+        });
+        items.push({
+            label: 'Agenda',
+            icon: 'pi pi-calendar',
+            command: () => handleNavigation('/agenda')
+        });
+        items.push({
             label: 'Empresas (Stripe/Cert)',
             icon: 'pi pi-key',
             command: () => handleNavigation('/empresas-credenciais')
