@@ -67,7 +67,8 @@
     "note": "Observação",
     "notes": "Observações",
     "communicationError": "Falha de comunicação",
-    "tryAgain": "Tentar novamente"
+    "tryAgain": "Tentar novamente",
+    "select": "Selecione"
   },
   "login": {
     "title": "BrasilCloudERP",
