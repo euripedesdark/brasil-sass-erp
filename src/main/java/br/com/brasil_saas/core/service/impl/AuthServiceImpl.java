@@ -198,8 +198,11 @@ public class AuthServiceImpl implements AuthService {
         String username = jwtService.username(refreshToken);
         Long userId = jwtService.userId(refreshToken);
 
-        Usuario usuario = usuarioRepository.findByUsernameWithAuthorities(username)
+        Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado", "USER_NOT_FOUND"));
+        if (!usuario.getUsername().equals(username)) {
+            throw new BusinessException("Refresh token inválido", "INVALID_REFRESH_TOKEN");
+        }
 
         if (!Boolean.TRUE.equals(usuario.getAtivo())) {
             throw new BusinessException("Usuário inativo", "USER_INACTIVE");
@@ -228,14 +231,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public UserProfileResponse me(Long usuarioId) {
-        Usuario usuario = usuarioRepository.findByUsernameWithAuthorities(null)
-                .or(() -> usuarioRepository.findById(usuarioId))
+        Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado", "USER_NOT_FOUND"));
-
-        if (!usuario.getId().equals(usuarioId)) {
-            usuario = usuarioRepository.findByUsernameWithAuthorities(usuario.getUsername())
-                    .orElse(usuario);
-        }
 
         Set<String> perfis = usuario.getPerfis().stream()
                 .map(Perfil::getNome).collect(Collectors.toSet());
