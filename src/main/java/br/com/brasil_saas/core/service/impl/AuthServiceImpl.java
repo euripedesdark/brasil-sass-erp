@@ -127,8 +127,9 @@ public class AuthServiceImpl implements AuthService {
             // Administrador do AD e SUPERUSER no ERP, resolvido aqui e nao por
             // insercao manual: qualquer conta que o administrador do dominio
             // criar entra com SUPERUSER no primeiro login, sem passo previo.
-            // A avaliacao acontece a CADA login, e nao só na criacao: quem sai
-            // do grupo administrador perde o perfil SUPERUSER no acesso seguinte.
+            // Concessao apenas: a revogacao e manual, na tela de administracao.
+            // Remocao automatica nao existe porque o perfil concedido e o
+            // mesmo objeto do atribuido manualmente, sem como distinguir.
             Perfil superuser = perfilRepository.findAll().stream()
                     .filter(p -> PERFIL_SUPERUSER.equalsIgnoreCase(p.getNome()))
                     .findFirst()
@@ -137,12 +138,6 @@ public class AuthServiceImpl implements AuthService {
                     .noneMatch(atual -> superuser.getId().equals(atual.getId()))) {
                 usuario.getPerfis().add(superuser);
             }
-        } else if (!usuario.getPerfis().isEmpty() && usuario.getEmpresaId() != null) {
-            // Deixou de ser administrador do dominio: retira o SUPERUSER que o
-            // provisionamento anterior concedeu. Perfis atribuidos manualmente
-            // por um administrador do ERP sao preservados.
-            usuario.getPerfis().removeIf(p -> PERFIL_SUPERUSER.equalsIgnoreCase(p.getNome())
-                    && superuserConcedidoPeloProvisionamento(p));
         } else if (usuario.getPerfis().isEmpty() && usuario.getEmpresaId() != null) {
             Perfil usuarioPerfil = findOrCreateProfile(
                     empresaRepository.findById(usuario.getEmpresaId()).orElseThrow(),
@@ -306,23 +301,6 @@ public class AuthServiceImpl implements AuthService {
                 .modulos(modulos)
                 .modulosSomenteLeitura(somenteLeitura)
                 .build();
-    }
-
-    /**
-     * Diz se o SUPERUSER deste usuario veio do provisionamento por grupo do AD
-     * e nao de uma atribuicao manual na tela de administracao. Sem esta
-     * distincao, perder o grupo no AD levaria junto um SUPERUSER que um
-     * administrador do ERP concedeu de proposito.
-     *
-     * <p>O vinculo hoje e 1:1 (um SUPERUSER por perfil base, como o proprio
-     * migration V89 define), entao basta comparar o perfil com o SUPERUSER
-     * cadastrado. A atribuicao manual e feita pelo {@code UsuarioAdminController},
-     * que nao passa por este metodo.
-     */
-    private boolean superuserConcedidoPeloProvisionamento(Perfil perfil) {
-        return perfilRepository.findAll().stream()
-                .filter(p -> PERFIL_SUPERUSER.equalsIgnoreCase(p.getNome()))
-                .anyMatch(base -> base.getId().equals(perfil.getId()));
     }
 
     private Perfil findOrCreateProfile(

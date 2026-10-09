@@ -42,14 +42,18 @@ export const ExigeEmpresa = ({ children }) => {
         apiFetch('/api/core/minha-empresa')
             .then((r) => (r.ok ? r.json() : null))
             .then((json) => {
-                if (!cancelado) setCadastrada(json?.data?.cadastrada === true);
+                if (cancelado) return;
+                setCadastrada(json?.data?.cadastrada === true);
+                setVerificando(false);
             })
             .catch(() => {
                 // Falha ao consultar nao pode trancar a tela: sem rede, o
                 // usuario ficaria preso sem caminho para sair. O backend ja
                 // recusa o dado de empresa, entao o sistema abre vazio em vez
                 // de fechar.
-                if (!cancelado) setCadastrada(true);
+                if (cancelado) return;
+                setCadastrada(true);
+                setVerificando(false);
             });
         return () => { cancelado = true; };
     }, [caminho, liberada, isSuperuser]);
