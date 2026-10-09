@@ -1377,6 +1377,43 @@
       "roleHelp": "Seleccione el nuevo perfil según la jerarquía permitida.",
       "permissionUpdated": "¡Permiso actualizado correctamente!",
       "newRole": "Nuevo perfil"
+    },
+    "moduleSelector": {
+      "updated": "Módulos actualizados",
+      "noAccess": "{{username}} ya no tiene acceso a ningún módulo.",
+      "accessCount": "{{username}} tiene acceso a {{count}} módulo(s).",
+      "header": "Módulos de {{username}}",
+      "selected": "{{selected}} de {{total}} seleccionados",
+      "markAll": "Seleccionar todos",
+      "unmarkAll": "Desmarcar todos",
+      "loading": "Cargando módulos...",
+      "restricted": "Restringido",
+      "readOnly": "Solo lectura",
+      "sensitiveWarning": "Este módulo contiene documentos sensibles y requiere SUPERUSER."
+    },
+    "stripePayments": {
+      "title": "Stripe — pagos",
+      "subtitle": "Checkout y facturas vinculados a cuentas por cobrar",
+      "credentials": "Clave API / certificado de la empresa",
+      "refresh": "Actualizar",
+      "enabled": "Stripe habilitado",
+      "disabled": "Stripe deshabilitado",
+      "key": "Clave: {{key}}",
+      "records": "Registros: {{count}}",
+      "webhook": "Webhook (panel de Stripe):",
+      "emptyPayments": "No hay pagos de Stripe. Use el botón de tarjeta en las cuentas por cobrar.",
+      "titleId": "Cuenta por cobrar",
+      "amount": "Importe",
+      "status": "Estado",
+      "session": "Sesión",
+      "invoice": "Factura",
+      "url": "URL",
+      "open": "Abrir",
+      "webhookEvents": "Eventos de webhook recibidos",
+      "noEvents": "Todavía no hay eventos",
+      "eventId": "ID del evento",
+      "type": "Tipo",
+      "error": "Error"
     }
   },
   "enterpriseOps": {
