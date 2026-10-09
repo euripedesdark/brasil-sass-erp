@@ -1606,5 +1606,42 @@
     "nbs": "NBS",
     "saved": "Service enregistré avec succès !",
     "value": "Valeur"
+  },
+  "salesContracts": {
+    "title": "Contrats commerciaux de vente",
+    "new": "Nouveau contrat",
+    "draft": "Brouillons",
+    "active": "Actifs",
+    "closed": "Clôturés",
+    "empty": "Aucun contrat trouvé",
+    "number": "N°",
+    "contractTitle": "Titre",
+    "client": "Client",
+    "value": "Montant",
+    "status": "Statut",
+    "actions": "Actions",
+    "activate": "Activer",
+    "close": "Clôturer",
+    "dialogTitle": "Contrat commercial",
+    "titleLabel": "Titre",
+    "clientId": "ID du client",
+    "save": "Enregistrer",
+    "required": "Le titre et l’identifiant du client sont obligatoires.",
+    "loadError": "Impossible de charger les contrats.",
+    "saveError": "Impossible d’enregistrer le contrat.",
+    "actionError": "Impossible de mettre à jour le contrat.",
+    "currency": "BRL"
+  },
+  "cashFlow": {
+    "title": "Trésorerie prévisionnelle",
+    "subtitle": "Entrées et sorties hebdomadaires à partir des pièces financières",
+    "days": "{{count}} jours",
+    "inflows": "Entrées",
+    "outflows": "Sorties",
+    "net": "Solde net",
+    "accumulated": "Cumulé",
+    "empty": "Aucune pièce financière sur cette période.",
+    "week": "Semaine",
+    "loadError": "Impossible de prévoir la trésorerie."
   }
 }

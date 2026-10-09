@@ -1606,5 +1606,42 @@
     "nbs": "NBS",
     "saved": "Service saved successfully!",
     "value": "Value"
+  },
+  "salesContracts": {
+    "title": "Sales contracts",
+    "new": "New contract",
+    "draft": "Drafts",
+    "active": "Active",
+    "closed": "Closed",
+    "empty": "No contracts found",
+    "number": "No.",
+    "contractTitle": "Title",
+    "client": "Customer",
+    "value": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "activate": "Activate",
+    "close": "Close",
+    "dialogTitle": "Sales contract",
+    "titleLabel": "Title",
+    "clientId": "Customer ID",
+    "save": "Save",
+    "required": "Title and customer ID are required.",
+    "loadError": "Could not load contracts.",
+    "saveError": "Could not save the contract.",
+    "actionError": "Could not update the contract.",
+    "currency": "BRL"
+  },
+  "cashFlow": {
+    "title": "Projected cash flow",
+    "subtitle": "Weekly inflows and outflows based on financial receivables and payables",
+    "days": "{{count}} days",
+    "inflows": "Inflows",
+    "outflows": "Outflows",
+    "net": "Net balance",
+    "accumulated": "Cumulative",
+    "empty": "No financial items for this period.",
+    "week": "Week",
+    "loadError": "Could not project cash flow."
   }
 }
