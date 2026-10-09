@@ -32,6 +32,14 @@ class PedidoVendaService {
         return axios.post(`${API_URL}/${id}/faturar` + (forcar ? '?forcar=true' : ''));
     }
 
+    preverTributacao(body, { ufDestino, consumidorFinal = true, contribuinte = false } = {}) {
+        const qs = new URLSearchParams();
+        if (ufDestino) qs.set('ufDestino', ufDestino);
+        qs.set('consumidorFinal', String(!!consumidorFinal));
+        qs.set('contribuinte', String(!!contribuinte));
+        return axios.post(`${API_URL}/tributacao/prever?${qs.toString()}`, body);
+    }
+
     posvenda(id, body) {
         return axios.post(`${API_URL}/${id}/posvenda`, body);
     }
