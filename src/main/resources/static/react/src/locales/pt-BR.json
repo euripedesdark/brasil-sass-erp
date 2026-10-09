@@ -67,7 +67,8 @@
     "note": "Observação",
     "notes": "Observações",
     "communicationError": "Falha de comunicação",
-    "tryAgain": "Tentar novamente"
+    "tryAgain": "Tentar novamente",
+    "select": "Selecione"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -485,7 +486,11 @@
     "deleteError": "Não foi possível excluir o cliente",
     "created": "Cliente criado com sucesso",
     "updated": "Cliente atualizado com sucesso",
-    "deleted": "Cliente excluído com sucesso"
+    "deleted": "Cliente excluído com sucesso",
+    "editTitle": "Editar cliente: {{name}}",
+    "newTitle": "Novo cliente",
+    "logoHelp": "Logo vinculada ao cadastro de cliente.",
+    "savedSuccess": "Cliente salvo com sucesso!"
   },
   "supplier": {
     "title": "Fornecedores",
@@ -498,7 +503,11 @@
     "deleteError": "Não foi possível excluir o fornecedor",
     "created": "Fornecedor criado com sucesso",
     "updated": "Fornecedor atualizado com sucesso",
-    "deleted": "Fornecedor excluído com sucesso"
+    "deleted": "Fornecedor excluído com sucesso",
+    "editTitle": "Editar fornecedor: {{name}}",
+    "newTitle": "Novo fornecedor",
+    "logoHelp": "Logo vinculada ao cadastro de fornecedor.",
+    "savedSuccess": "Fornecedor salvo com sucesso!"
   },
   "bankAccount": {
     "title": "Contas Bancárias",
@@ -560,7 +569,25 @@
       "legalDataHelp": "Informações utilizadas nos cadastros e documentos fiscais.",
       "stateRegistration": "Inscrição estadual",
       "cityRegistration": "Inscrição municipal",
-      "notesHelp": "Informações livres para apoio operacional."
+      "notesHelp": "Informações livres para apoio operacional.",
+      "postalCodeLookupSuccess": "CEP consultado",
+      "postalCodeLookupDetail": "Endereço preenchido pelo serviço externo; município resolvido no cadastro interno.",
+      "postalCodeLookup": "Consultar CEP externamente",
+      "postalCodeLookupError": "Não foi possível consultar o CEP.",
+      "cityIdPlaceholder": "Preenchido após consulta do CEP",
+      "optional": "Opcional",
+      "mainAddress": "Endereço principal",
+      "addressHelp": "CEP é consultado externamente; município é selecionado do catálogo interno do ERP.",
+      "postalCode": "CEP",
+      "street": "Logradouro",
+      "number": "Número",
+      "complement": "Complemento",
+      "neighborhood": "Bairro",
+      "state": "UF",
+      "cityInternal": "Município (cadastro interno)",
+      "addressSourceHelp": "Fonte externa: ViaCEP. Fonte interna: /api/municipios. Se a consulta externa falhar, os campos continuam editáveis manualmente.",
+      "situation": "Situação",
+      "internalId": "ID interno"
     }
   },
   "compras": {},
@@ -1083,7 +1110,17 @@
       "passwordLength": "A nova senha deve ter no mínimo 8 caracteres",
       "loadError": "Falha ao carregar o perfil",
       "saveError": "Falha ao salvar",
-      "passwordError": "Falha ao alterar a senha"
+      "passwordError": "Falha ao alterar a senha",
+      "profileTitle": "Meu Perfil",
+      "fullName": "Nome completo",
+      "username": "Nome de usuário",
+      "roles": "Perfis",
+      "noRoles": "Nenhum perfil atribuído",
+      "changePasswordTitle": "Alterar senha",
+      "currentPassword": "Senha atual",
+      "newPasswordHelp": "Nova senha (mínimo de 8 caracteres)",
+      "confirmNewPassword": "Confirmar nova senha",
+      "changePasswordButton": "Alterar senha"
     },
     "cargo": {
       "title": "Cargos",
@@ -1243,6 +1280,30 @@
       "states": "Todos os estados",
       "search": "Buscar gap...",
       "status": "Estado"
+    },
+    "partnerForm": {
+      "legalName": "Nome / Razão social",
+      "taxId": "CPF/CNPJ",
+      "creditLimit": "Limite de crédito",
+      "website": "Site",
+      "visualIdentity": "Identidade visual",
+      "logo": "Logo",
+      "identification": "Identificação",
+      "identificationHelp": "Dados cadastrais principais.",
+      "personType": "Tipo de pessoa",
+      "legalNamePlaceholder": "Nome ou razão social",
+      "rgStateRegistration": "RG / Inscrição estadual",
+      "rgStateRegistrationPlaceholder": "RG ou inscrição estadual",
+      "contact": "Contato",
+      "contactHelp": "Canais usados para atendimento e comunicação.",
+      "creditLimitCurrency": "Limite de crédito (R$)",
+      "address": "Endereço",
+      "addressHelp": "Localização principal do cadastro.",
+      "addressPlaceholder": "Rua, número, complemento, bairro, cidade/UF",
+      "summary": "Resumo",
+      "summaryHelp": "Confira os dados principais antes de salvar.",
+      "additionalInfoHelp": "Informações adicionais para operação.",
+      "additionalInfoPlaceholder": "Observações adicionais"
     }
   },
   "enterpriseOps": {

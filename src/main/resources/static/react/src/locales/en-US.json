@@ -67,7 +67,8 @@
     "note": "Note",
     "notes": "Notes",
     "communicationError": "Communication failure",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "select": "Select"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -485,7 +486,11 @@
     "deleteError": "Unable to delete customer",
     "created": "Customer created successfully",
     "updated": "Customer updated successfully",
-    "deleted": "Customer deleted successfully"
+    "deleted": "Customer deleted successfully",
+    "editTitle": "Edit customer: {{name}}",
+    "newTitle": "New customer",
+    "logoHelp": "Logo linked to the customer record.",
+    "savedSuccess": "Customer saved successfully!"
   },
   "supplier": {
     "title": "Suppliers",
@@ -498,7 +503,11 @@
     "deleteError": "Unable to delete supplier",
     "created": "Supplier created successfully",
     "updated": "Supplier updated successfully",
-    "deleted": "Supplier deleted successfully"
+    "deleted": "Supplier deleted successfully",
+    "editTitle": "Edit supplier: {{name}}",
+    "newTitle": "New supplier",
+    "logoHelp": "Logo linked to the supplier record.",
+    "savedSuccess": "Supplier saved successfully!"
   },
   "bankAccount": {
     "title": "Bank Accounts",
@@ -560,7 +569,25 @@
       "legalDataHelp": "Information used in records and tax documents.",
       "stateRegistration": "State registration",
       "cityRegistration": "City registration",
-      "notesHelp": "Free-form information for operational support."
+      "notesHelp": "Free-form information for operational support.",
+      "postalCodeLookupSuccess": "Postal code lookup completed",
+      "postalCodeLookupDetail": "The address was populated by the external service; the city was resolved against the internal registry.",
+      "postalCodeLookup": "Look up postal code",
+      "postalCodeLookupError": "Unable to look up the postal code.",
+      "cityIdPlaceholder": "Filled after postal code lookup",
+      "optional": "Optional",
+      "mainAddress": "Primary address",
+      "addressHelp": "The postal code is looked up externally; the city is selected from the ERP's internal catalog.",
+      "postalCode": "Postal code",
+      "street": "Street address",
+      "number": "Number",
+      "complement": "Address line 2",
+      "neighborhood": "Neighborhood",
+      "state": "State",
+      "cityInternal": "City (internal registry)",
+      "addressSourceHelp": "External source: ViaCEP. Internal source: /api/municipios. If the external lookup fails, fields remain editable manually.",
+      "situation": "Status",
+      "internalId": "Internal ID"
     }
   },
   "compras": {},
@@ -1083,7 +1110,17 @@
       "passwordLength": "The new password must be at least 8 characters",
       "loadError": "Failed to load profile",
       "saveError": "Failed to save",
-      "passwordError": "Failed to change password"
+      "passwordError": "Failed to change password",
+      "profileTitle": "My Profile",
+      "fullName": "Full name",
+      "username": "Username",
+      "roles": "Roles",
+      "noRoles": "No roles assigned",
+      "changePasswordTitle": "Change password",
+      "currentPassword": "Current password",
+      "newPasswordHelp": "New password (at least 8 characters)",
+      "confirmNewPassword": "Confirm new password",
+      "changePasswordButton": "Change password"
     },
     "cargo": {
       "title": "Positions",
@@ -1243,6 +1280,30 @@
       "states": "All states",
       "search": "Search gap...",
       "status": "Status"
+    },
+    "partnerForm": {
+      "legalName": "Name / Legal name",
+      "taxId": "Tax ID (CPF/CNPJ)",
+      "creditLimit": "Credit limit",
+      "website": "Website",
+      "visualIdentity": "Visual identity",
+      "logo": "Logo",
+      "identification": "Identification",
+      "identificationHelp": "Primary registration details.",
+      "personType": "Person type",
+      "legalNamePlaceholder": "Name or legal name",
+      "rgStateRegistration": "RG / State registration",
+      "rgStateRegistrationPlaceholder": "RG or state registration",
+      "contact": "Contact",
+      "contactHelp": "Channels used for service and communication.",
+      "creditLimitCurrency": "Credit limit (BRL)",
+      "address": "Address",
+      "addressHelp": "Primary address for this record.",
+      "addressPlaceholder": "Street, number, unit, neighborhood, city/state",
+      "summary": "Summary",
+      "summaryHelp": "Review the main details before saving.",
+      "additionalInfoHelp": "Additional operational information.",
+      "additionalInfoPlaceholder": "Additional notes"
     }
   },
   "enterpriseOps": {

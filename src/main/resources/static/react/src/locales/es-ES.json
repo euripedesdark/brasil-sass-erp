@@ -67,7 +67,8 @@
     "note": "Observación",
     "notes": "Observaciones",
     "communicationError": "Fallo de comunicación",
-    "tryAgain": "Intentar de nuevo"
+    "tryAgain": "Intentar de nuevo",
+    "select": "Seleccionar"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -485,7 +486,11 @@
     "deleteError": "No se pudo eliminar el cliente",
     "created": "Cliente creado correctamente",
     "updated": "Cliente actualizado correctamente",
-    "deleted": "Cliente eliminado correctamente"
+    "deleted": "Cliente eliminado correctamente",
+    "editTitle": "Editar cliente: {{name}}",
+    "newTitle": "Nuevo cliente",
+    "logoHelp": "Logotipo vinculado al registro del cliente.",
+    "savedSuccess": "¡Cliente guardado correctamente!"
   },
   "supplier": {
     "title": "Proveedores",
@@ -498,7 +503,11 @@
     "deleteError": "No se pudo eliminar el proveedor",
     "created": "Proveedor creado correctamente",
     "updated": "Proveedor actualizado correctamente",
-    "deleted": "Proveedor eliminado correctamente"
+    "deleted": "Proveedor eliminado correctamente",
+    "editTitle": "Editar proveedor: {{name}}",
+    "newTitle": "Nuevo proveedor",
+    "logoHelp": "Logotipo vinculado al registro del proveedor.",
+    "savedSuccess": "¡Proveedor guardado correctamente!"
   },
   "bankAccount": {
     "title": "Cuentas Bancarias",
@@ -560,7 +569,25 @@
       "legalDataHelp": "Información utilizada en registros y documentos fiscales.",
       "stateRegistration": "Inscripción estatal",
       "cityRegistration": "Inscripción municipal",
-      "notesHelp": "Información libre para apoyo operativo."
+      "notesHelp": "Información libre para apoyo operativo.",
+      "postalCodeLookupSuccess": "Consulta del código postal completada",
+      "postalCodeLookupDetail": "La dirección se completó con el servicio externo; el municipio se resolvió en el registro interno.",
+      "postalCodeLookup": "Consultar código postal",
+      "postalCodeLookupError": "No se pudo consultar el código postal.",
+      "cityIdPlaceholder": "Se completa tras consultar el código postal",
+      "optional": "Opcional",
+      "mainAddress": "Dirección principal",
+      "addressHelp": "El código postal se consulta externamente; el municipio se selecciona del catálogo interno del ERP.",
+      "postalCode": "Código postal",
+      "street": "Calle",
+      "number": "Número",
+      "complement": "Complemento",
+      "neighborhood": "Barrio",
+      "state": "Provincia/Estado",
+      "cityInternal": "Municipio (registro interno)",
+      "addressSourceHelp": "Fuente externa: ViaCEP. Fuente interna: /api/municipios. Si falla la consulta externa, los campos siguen siendo editables manualmente.",
+      "situation": "Estado",
+      "internalId": "ID interno"
     }
   },
   "compras": {},
@@ -1083,7 +1110,17 @@
       "passwordLength": "La nueva contraseña debe tener al menos 8 caracteres",
       "loadError": "Error al cargar el perfil",
       "saveError": "Error al guardar",
-      "passwordError": "Error al cambiar la contraseña"
+      "passwordError": "Error al cambiar la contraseña",
+      "profileTitle": "Mi perfil",
+      "fullName": "Nombre completo",
+      "username": "Nombre de usuario",
+      "roles": "Perfiles",
+      "noRoles": "No hay perfiles asignados",
+      "changePasswordTitle": "Cambiar contraseña",
+      "currentPassword": "Contraseña actual",
+      "newPasswordHelp": "Nueva contraseña (mínimo 8 caracteres)",
+      "confirmNewPassword": "Confirmar nueva contraseña",
+      "changePasswordButton": "Cambiar contraseña"
     },
     "cargo": {
       "title": "Cargos",
@@ -1243,6 +1280,30 @@
       "states": "Todos los estados",
       "search": "Buscar brecha...",
       "status": "Estado"
+    },
+    "partnerForm": {
+      "legalName": "Nombre / Razón social",
+      "taxId": "NIF (CPF/CNPJ)",
+      "creditLimit": "Límite de crédito",
+      "website": "Sitio web",
+      "visualIdentity": "Identidad visual",
+      "logo": "Logotipo",
+      "identification": "Identificación",
+      "identificationHelp": "Datos principales del registro.",
+      "personType": "Tipo de persona",
+      "legalNamePlaceholder": "Nombre o razón social",
+      "rgStateRegistration": "RG / Inscripción estatal",
+      "rgStateRegistrationPlaceholder": "RG o inscripción estatal",
+      "contact": "Contacto",
+      "contactHelp": "Canales de atención y comunicación.",
+      "creditLimitCurrency": "Límite de crédito (BRL)",
+      "address": "Dirección",
+      "addressHelp": "Dirección principal del registro.",
+      "addressPlaceholder": "Calle, número, complemento, barrio, ciudad/provincia",
+      "summary": "Resumen",
+      "summaryHelp": "Revise los datos principales antes de guardar.",
+      "additionalInfoHelp": "Información adicional para la operación.",
+      "additionalInfoPlaceholder": "Observaciones adicionales"
     }
   },
   "enterpriseOps": {

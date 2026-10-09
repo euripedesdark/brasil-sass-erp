@@ -67,7 +67,8 @@
     "note": "Observation",
     "notes": "Observations",
     "communicationError": "Échec de communication",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "select": "Sélectionner"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -485,7 +486,11 @@
     "deleteError": "Impossible de supprimer le client",
     "created": "Client créé avec succès",
     "updated": "Client mis à jour avec succès",
-    "deleted": "Client supprimé avec succès"
+    "deleted": "Client supprimé avec succès",
+    "editTitle": "Modifier le client : {{name}}",
+    "newTitle": "Nouveau client",
+    "logoHelp": "Logo associé à la fiche client.",
+    "savedSuccess": "Client enregistré avec succès !"
   },
   "supplier": {
     "title": "Fournisseurs",
@@ -498,7 +503,11 @@
     "deleteError": "Impossible de supprimer le fournisseur",
     "created": "Fournisseur créé avec succès",
     "updated": "Fournisseur mis à jour avec succès",
-    "deleted": "Fournisseur supprimé avec succès"
+    "deleted": "Fournisseur supprimé avec succès",
+    "editTitle": "Modifier le fournisseur : {{name}}",
+    "newTitle": "Nouveau fournisseur",
+    "logoHelp": "Logo associé à la fiche fournisseur.",
+    "savedSuccess": "Fournisseur enregistré avec succès !"
   },
   "bankAccount": {
     "title": "Comptes bancaires",
@@ -560,7 +569,25 @@
       "legalDataHelp": "Informations utilisées dans les fiches et documents fiscaux.",
       "stateRegistration": "Immatriculation régionale",
       "cityRegistration": "Immatriculation municipale",
-      "notesHelp": "Informations libres pour le support opérationnel."
+      "notesHelp": "Informations libres pour le support opérationnel.",
+      "postalCodeLookupSuccess": "Recherche du code postal terminée",
+      "postalCodeLookupDetail": "L’adresse a été renseignée par le service externe ; la commune a été résolue dans le référentiel interne.",
+      "postalCodeLookup": "Rechercher le code postal",
+      "postalCodeLookupError": "Impossible de rechercher le code postal.",
+      "cityIdPlaceholder": "Renseigné après la recherche du code postal",
+      "optional": "Facultatif",
+      "mainAddress": "Adresse principale",
+      "addressHelp": "Le code postal est recherché à l’extérieur ; la commune est sélectionnée dans le catalogue interne de l’ERP.",
+      "postalCode": "Code postal",
+      "street": "Rue",
+      "number": "Numéro",
+      "complement": "Complément",
+      "neighborhood": "Quartier",
+      "state": "État / région",
+      "cityInternal": "Commune (référentiel interne)",
+      "addressSourceHelp": "Source externe : ViaCEP. Source interne : /api/municipios. En cas d’échec de la recherche externe, les champs restent modifiables manuellement.",
+      "situation": "Statut",
+      "internalId": "ID interne"
     }
   },
   "compras": {},
@@ -1071,7 +1098,7 @@
     },
     "perfil": {
       "title": "Mon profil",
-      "photo": "Photo utilisateur",
+      "photo": "Photo de l’utilisateur",
       "save": "Enregistrer les modifications",
       "password": "Modifier le mot de passe",
       "passwordCurrent": "Mot de passe actuel",
@@ -1083,7 +1110,17 @@
       "passwordLength": "Le nouveau mot de passe doit comporter au moins 8 caractères",
       "loadError": "Impossible de charger le profil",
       "saveError": "Impossible d'enregistrer",
-      "passwordError": "Impossible de modifier le mot de passe"
+      "passwordError": "Impossible de modifier le mot de passe",
+      "profileTitle": "Mon profil",
+      "fullName": "Nom complet",
+      "username": "Nom d’utilisateur",
+      "roles": "Rôles",
+      "noRoles": "Aucun rôle attribué",
+      "changePasswordTitle": "Modifier le mot de passe",
+      "currentPassword": "Mot de passe actuel",
+      "newPasswordHelp": "Nouveau mot de passe (8 caractères minimum)",
+      "confirmNewPassword": "Confirmer le nouveau mot de passe",
+      "changePasswordButton": "Modifier le mot de passe"
     },
     "cargo": {
       "title": "Postes",
@@ -1243,6 +1280,30 @@
       "states": "Tous les états",
       "search": "Rechercher un écart...",
       "status": "Statut"
+    },
+    "partnerForm": {
+      "legalName": "Nom / Raison sociale",
+      "taxId": "Identifiant fiscal (CPF/CNPJ)",
+      "creditLimit": "Limite de crédit",
+      "website": "Site web",
+      "visualIdentity": "Identité visuelle",
+      "logo": "Logo",
+      "identification": "Identification",
+      "identificationHelp": "Données principales de la fiche.",
+      "personType": "Type de personne",
+      "legalNamePlaceholder": "Nom ou raison sociale",
+      "rgStateRegistration": "RG / Immatriculation régionale",
+      "rgStateRegistrationPlaceholder": "RG ou immatriculation régionale",
+      "contact": "Contact",
+      "contactHelp": "Coordonnées utilisées pour le service et la communication.",
+      "creditLimitCurrency": "Limite de crédit (BRL)",
+      "address": "Adresse",
+      "addressHelp": "Adresse principale de la fiche.",
+      "addressPlaceholder": "Rue, numéro, complément, quartier, ville/région",
+      "summary": "Résumé",
+      "summaryHelp": "Vérifiez les informations principales avant l’enregistrement.",
+      "additionalInfoHelp": "Informations supplémentaires pour les opérations.",
+      "additionalInfoPlaceholder": "Observations supplémentaires"
     }
   },
   "enterpriseOps": {

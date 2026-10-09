@@ -32,8 +32,8 @@ export const Fornecedor = () => {
     const [rows, setRows] = useState(20);
 
     const tipoPessoaOptions = [
-        { label: 'FISICA', value: 'FISICA' },
-        { label: 'JURIDICA', value: 'JURIDICA' }
+        { label: t('cadastro.people.individual'), value: 'FISICA' },
+        { label: t('cadastro.people.legal'), value: 'JURIDICA' }
     ];
 
     const [novoFornecedor, setNovoFornecedor] = useState({
@@ -63,7 +63,7 @@ export const Fornecedor = () => {
             console.error('Erro ao carregar fornecedores', err);
             toast.current?.show({
                 severity: 'error',
-                summary: 'Erro',
+                summary: t('common.error'),
                 detail: t('supplier.loadError'),
                 life: 3000
             });
@@ -257,18 +257,18 @@ export const Fornecedor = () => {
                     className="p-datatable-sm"
                     emptyMessage={t('supplier.empty')}
                 >
-                    <Column field="nome" header="Nome/Razao Social" sortable style={{ width: '250px' }} />
-                    <Column field="cpfCnpj" header="CPF/CNPJ" sortable style={{ width: '150px' }} />
-                    <Column body={tipoPessoaTemplate} header="Tipo" sortable style={{ width: '100px' }} />
-                    <Column field="telefone" header="Telefone" sortable style={{ width: '130px' }} />
-                    <Column field="email" header="Email" sortable style={{ width: '200px' }} />
-                    <Column field="site" header="Site" sortable style={{ width: '200px' }} />
+                    <Column field="nome" header={t('legacyUi.partnerForm.legalName')} sortable style={{ width: '250px' }} />
+                    <Column field="cpfCnpj" header={t('legacyUi.partnerForm.taxId')} sortable style={{ width: '150px' }} />
+                    <Column body={tipoPessoaTemplate} header={t('common.type')} sortable style={{ width: '100px' }} />
+                    <Column field="telefone" header={t('common.phone')} sortable style={{ width: '130px' }} />
+                    <Column field="email" header={t('common.email')} sortable style={{ width: '200px' }} />
+                    <Column field="site" header={t('legacyUi.partnerForm.website')} sortable style={{ width: '200px' }} />
                     <Column body={acoesTemplate} style={{ width: '120px' }} />
                 </DataTable>
             </Card>
 
             <Dialog
-                header={novoFornecedor.id ? `Editar Fornecedor: ${novoFornecedor.nome}` : 'Novo Fornecedor'}
+                header={novoFornecedor.id ? t('supplier.editTitle', { name: novoFornecedor.nome }) : t('supplier.newTitle')}
                 visible={dialogVisible}
                 style={{ width: 'min(94vw, 980px)' }}
                 onHide={() => {
@@ -285,14 +285,14 @@ export const Fornecedor = () => {
                             <div className="bc-form-section-title">
                                 <i className="pi pi-image" aria-hidden="true" />
                                 <div>
-                                    <h3>Identidade visual</h3>
-                                    <span>Logo vinculada ao cadastro de fornecedor.</span>
+                                    <h3>{t('legacyUi.partnerForm.visualIdentity')}</h3>
+                                    <span>{t('supplier.logoHelp')}</span>
                                 </div>
                             </div>
                             <div className="col-12">
                             <ImagemRegistro
                                 registroId={novoFornecedor.id}
-                                rotulo="Logo"
+                                rotulo={t('legacyUi.partnerForm.logo')}
                                 lerUrl={`/api/cadastro/fornecedores/logo/${novoFornecedor.id}`}
                                 enviarUrl={`/api/cadastro/fornecedores/logo?id=${novoFornecedor.id}`}
                                 removerUrl={`/api/cadastro/fornecedores/logo?id=${novoFornecedor.id}`}
@@ -304,7 +304,7 @@ export const Fornecedor = () => {
                     {(error || success) && (
                         <div>
                             {error && <Message severity="error" text={error} className="w-full mb-3" />}
-                            {success && <Message severity="success" text="Fornecedor salvo com sucesso!" className="w-full mb-3" />}
+                            {success && <Message severity="success" text={t('supplier.savedSuccess')} className="w-full mb-3" />}
                         </div>
                     )}
 
@@ -312,32 +312,32 @@ export const Fornecedor = () => {
                         <div className="bc-form-section-title">
                             <i className="pi pi-id-card" aria-hidden="true" />
                             <div>
-                                <h3>Identificação</h3>
-                                <span>Dados cadastrais principais.</span>
+                                <h3>{t('legacyUi.partnerForm.identification')}</h3>
+                                <span>{t('legacyUi.partnerForm.identificationHelp')}</span>
                             </div>
                         </div>
                         <div className="bc-form-grid">
                             <div className="col-12 md:col-8">
-                                <label className="bc-label">Nome / Razão Social *</label>
+                                <label className="bc-label">{t('legacyUi.partnerForm.legalName')} *</label>
                                 <InputText
                                     value={novoFornecedor.nome}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, nome: e.target.value})}
-                                    placeholder="Nome ou razão social"
+                                    placeholder={t('legacyUi.partnerForm.legalNamePlaceholder')}
                                     required
                                 />
                             </div>
                             <div className="col-12 md:col-4">
-                                <label className="bc-label">Tipo de pessoa *</label>
+                                <label className="bc-label">{t('legacyUi.partnerForm.personType')} *</label>
                                 <Dropdown
                                     value={novoFornecedor.tipoPessoa}
                                     options={tipoPessoaOptions}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, tipoPessoa: e.value})}
                                     optionLabel="label"
-                                    placeholder="Selecione"
+                                    placeholder={t('common.select')}
                                 />
                             </div>
                             <div className="col-12 md:col-6">
-                                <label className="bc-label">CPF/CNPJ *</label>
+                                <label className="bc-label">{t('legacyUi.partnerForm.taxId')} *</label>
                                 <InputMask
                                     value={novoFornecedor.cpfCnpj}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, cpfCnpj: e.value})}
@@ -346,11 +346,11 @@ export const Fornecedor = () => {
                                 />
                             </div>
                             <div className="col-12 md:col-6">
-                                <label className="bc-label">RG / Inscrição Estadual</label>
+                                <label className="bc-label">{t('legacyUi.partnerForm.rgStateRegistration')}</label>
                                 <InputText
                                     value={novoFornecedor.rgIe}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, rgIe: e.target.value})}
-                                    placeholder="RG ou inscrição estadual"
+                                    placeholder={t('legacyUi.partnerForm.rgStateRegistrationPlaceholder')}
                                 />
                             </div>
                         </div>
@@ -360,13 +360,13 @@ export const Fornecedor = () => {
                         <div className="bc-form-section-title">
                             <i className="pi pi-address-book" aria-hidden="true" />
                             <div>
-                                <h3>Contato</h3>
-                                <span>Canais usados para atendimento e comunicação.</span>
+                                <h3>{t('legacyUi.partnerForm.contact')}</h3>
+                                <span>{t('legacyUi.partnerForm.contactHelp')}</span>
                             </div>
                         </div>
                         <div className="bc-form-grid">
                             <div className="col-12 md:col-6">
-                                <label className="bc-label">Telefone</label>
+                                <label className="bc-label">{t('common.phone')}</label>
                                 <InputMask
                                     value={novoFornecedor.telefone}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, telefone: e.value})}
@@ -375,7 +375,7 @@ export const Fornecedor = () => {
                                 />
                             </div>
                             <div className="col-12 md:col-6">
-                                <label className="bc-label">Email</label>
+                                <label className="bc-label">{t('common.email')}</label>
                                 <InputText
                                     value={novoFornecedor.email}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, email: e.target.value})}
@@ -384,7 +384,7 @@ export const Fornecedor = () => {
                                 />
                             </div>
                             <div className="col-12 md:col-6">
-                                <label className="bc-label">Site</label>
+                                <label className="bc-label">{t('legacyUi.partnerForm.website')}</label>
                                 <InputText
                                     value={novoFornecedor.site}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, site: e.target.value})}
@@ -399,17 +399,17 @@ export const Fornecedor = () => {
                         <div className="bc-form-section-title">
                             <i className="pi pi-map-marker" aria-hidden="true" />
                             <div>
-                                <h3>Endereço</h3>
-                                <span>Localização principal do cadastro.</span>
+                                <h3>{t('legacyUi.partnerForm.address')}</h3>
+                                <span>{t('legacyUi.partnerForm.addressHelp')}</span>
                             </div>
                         </div>
                         <div className="bc-form-grid">
                             <div className="col-12">
-                                <label className="bc-label">Endereço</label>
+                                <label className="bc-label">{t('legacyUi.partnerForm.address')}</label>
                                 <InputText
                                     value={novoFornecedor.endereco}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, endereco: e.target.value})}
-                                    placeholder="Rua, número, complemento, bairro, cidade/UF"
+                                    placeholder={t('legacyUi.partnerForm.addressPlaceholder')}
                                 />
                             </div>
                         </div>
@@ -419,17 +419,17 @@ export const Fornecedor = () => {
                         <div className="bc-form-section-title">
                             <i className="pi pi-file-edit" aria-hidden="true" />
                             <div>
-                                <h3>Observações</h3>
-                                <span>Informações adicionais para operação.</span>
+                                <h3>{t('common.notes')}</h3>
+                                <span>{t('legacyUi.partnerForm.additionalInfoHelp')}</span>
                             </div>
                         </div>
                         <div className="bc-form-grid">
                             <div className="col-12">
-                                <label className="bc-label">Observações</label>
+                                <label className="bc-label">{t('common.notes')}</label>
                                 <InputText
                                     value={novoFornecedor.observacao}
                                     onChange={(e) => setNovoFornecedor({...novoFornecedor, observacao: e.target.value})}
-                                    placeholder="Observações adicionais"
+                                    placeholder={t('legacyUi.partnerForm.additionalInfoPlaceholder')}
                                 />
                             </div>
                         </div>
@@ -439,14 +439,14 @@ export const Fornecedor = () => {
                         <div className="bc-form-section-title">
                             <i className="pi pi-eye" aria-hidden="true" />
                             <div>
-                                <h3>Resumo</h3>
-                                <span>Confira os dados principais antes de salvar.</span>
+                                <h3>{t('legacyUi.partnerForm.summary')}</h3>
+                                <span>{t('legacyUi.partnerForm.summaryHelp')}</span>
                             </div>
                         </div>
                         <div className="fornecedor-resumo flex justify-content-between align-items-center p-3 border-round flex-wrap gap-3">
-                            <div><span className="font-bold">Nome: </span><span>{novoFornecedor.nome || '—'}</span></div>
-                            <div><span className="font-bold">CPF/CNPJ: </span><span>{novoFornecedor.cpfCnpj || '—'}</span></div>
-                            <div><span className="font-bold">Tipo: </span><span>{novoFornecedor.tipoPessoa || '—'}</span></div>
+                            <div><span className="font-bold">{t('common.name')}: </span><span>{novoFornecedor.nome || '—'}</span></div>
+                            <div><span className="font-bold">{t('legacyUi.partnerForm.taxId')}: </span><span>{novoFornecedor.cpfCnpj || '—'}</span></div>
+                            <div><span className="font-bold">{t('common.type')}: </span><span>{novoFornecedor.tipoPessoa || '—'}</span></div>
                         </div>
                     </section>
                 </div>
