@@ -8,6 +8,7 @@ import { Usuarios } from './components/admin/Usuarios';
 import { Configuracoes } from './components/admin/Configuracoes';
 import { SqlConsole } from './components/admin/SqlConsole';
 import { Documentos } from './components/core/Documentos';
+import { DocumentoFluxoPage } from './components/core/DocumentoFluxoPage';
 import { ArmazenamentoImagens } from './components/admin/ArmazenamentoImagens';
 import RelatorioParidadeERP from './components/admin/RelatorioParidadeERP';
 import EndpointCoverage from './components/admin/EndpointCoverage';
@@ -82,6 +83,7 @@ import { SpedEfd } from './components/fiscal/SpedEfd';
 import { CteMdfe } from './components/fiscal/CteMdfe';
 import { Obrigacoes } from './components/fiscal/Obrigacoes';
 import { Reinf } from './components/fiscal/Reinf';
+import { Difal } from './components/fiscal/Difal';
 import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
@@ -197,6 +199,7 @@ function App() {
                     <Route path="admin/endpoints" element={<EndpointCoverage />} />
                     <Route path="perfil" element={<Perfil />} />
                     <Route path="documentos" element={<Documentos />} />
+                    <Route path="documento-fluxo" element={<DocumentoFluxoPage />} />
 
                     <Route path="cadastro/pessoas" element={<CadastroPessoas />} />
                     <Route path="cadastro/produtos" element={<CadastroProdutos />} />
@@ -277,6 +280,7 @@ function App() {
                     <Route path="fiscal/cte-mdfe" element={<CteMdfe />} />
                     <Route path="fiscal/obrigacoes" element={<Obrigacoes />} />
                     <Route path="fiscal/reinf" element={<Reinf />} />
+                    <Route path="fiscal/difal" element={<Difal />} />
                     <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />
