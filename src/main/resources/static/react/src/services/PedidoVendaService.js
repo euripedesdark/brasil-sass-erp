@@ -20,6 +20,10 @@ class PedidoVendaService {
         return axios.post(`${API_URL}/${id}/confirmar`);
     }
 
+    atp(id) {
+        return axios.get(`${API_URL}/${id}/atp`);
+    }
+
     credito(clienteId) {
         return axios.get(API_URL + '/clientes/' + clienteId + '/credito');
     }

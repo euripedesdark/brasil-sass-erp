@@ -24,6 +24,9 @@ public interface PedidoVendaService {
     void faturar(Long id, Long empresaId, boolean forcar);
     java.util.Map<String, Object> credito(Long empresaId, Long clienteId);
 
+    /** Available-to-Promise: saldo − reservas vs itens do pedido. */
+    java.util.Map<String, Object> atp(Long id, Long empresaId);
+
     void cancelar(Long id, Long empresaId);
     java.util.Map<String, Object> abrirPosVenda(Long id, Long empresaId, Long usuarioId, String motivo, String equipamento);
 }
