@@ -41,7 +41,7 @@ final class VendasReservasPostgresScenario {
         var titulos = factory.getRepository(TituloRepository.class);
         var parcelas = factory.getRepository(TituloParcelaRepository.class);
         var documentos = factory.getRepository(DocumentoFluxoRepository.class);
-        var tituloService = new TituloServiceImpl(titulos, parcelas, null, null, null, null, null);
+        var tituloService = new TituloServiceImpl(titulos, parcelas, null, null, null, null, null, factory.getRepository(br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository.class), factory.getRepository(br.com.brasil_saas.compras.repository.PedidoCompraRepository.class), factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraRepository.class), factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository.class), factory.getRepository(br.com.brasil_saas.fiscal.repository.NfeRepository.class));
         var service = new PedidoVendaServiceImpl(pedidos, factory.getRepository(ClienteRepository.class), null,
                 saldos, factory.getRepository(DepositoRepository.class), lotes,
                 factory.getRepository(EnderecoEstoqueRepository.class), movimentos, reservas, titulos,

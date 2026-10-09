@@ -248,3 +248,95 @@ incluindo 7 novos de integracao) e 62 no bloco vizinho
 build Maven completo. Pendente: ajuste contabil automatico (requer plano de
 contas por empresa), emissao fiscal automatica da devolucao e transmissao
 externa do Reinf.
+
+## Entrega — rateio de recebimento entre varias NFs com consumo acumulado
+
+Branch codex/devolucao-integracao-financeira (mesmo bloco). Sem migration, sem tela nova.
+
+- Antes, cada NF e cada recebimento so podiam ser consumidos por um par
+  aprovado: a segunda NF do mesmo recebimento caia em DIVERGENTE.
+- Agora o recebimento pode ser faturado por varias NFs. O consumo acumulado
+  e a soma do valor e das quantidades faturadas das conferencias APROVADAS
+  anteriores do mesmo recebimento (outras NFs); a reavaliacao do mesmo par
+  substitui a anterior e nao entra na soma.
+- Regras novas em conferir: a NF precisa caber na parte ainda nao consumida
+  do recebimento (valor); por produto, o faturado nao pode passar do
+  recebido menos o ja faturado (tipo novo CONSUMO_ACUMULADO_EXCEDIDO).
+- A mesma NF com outro recebimento continua bloqueada: uma NF pertence a
+  um unico recebimento.
+- Em linha: faturado menor que recebido passa a ser parcial valida; o teto
+  e dado pelo consumo acumulado, nao pela igualdade. Faturado acima do
+  recebido continua divergente, assim como preco divergente e item nao pedido.
+- A cobertura total antes do pagamento segue pendente (proximo passo
+  natural deste encadeamento).
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImpl.java
+    src/main/java/br/com/brasil_saas/compras/repository/ConferenciaFaturaCompraRepository.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/RecebimentoRateioMultiNfTest.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/RecebimentoParcialConferenciaTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 5 casos novos de rateio (primeira NF aprova, segunda aprova
+dentro do acumulado, terceira acima diverge, mesma NF em outro recebimento
+bloqueia, reavaliacao do mesmo par nao soma em duplicata) e 1 caso antigo
+atualizado para a nova regra (consumo total bloqueia, NF reutilizada
+bloqueia). Bloco compras: 33 casos sem falha. Suite completa: 368 testes,
+zero falhas, zero erros, JDK 21, incluindo contexto Spring real.
+
+## Entrega — cobertura total antes do pagamento (compra)
+
+Branch codex/devolucao-integracao-financeira (mesmo bloco). Sem migration, sem tela nova.
+
+- Antes, a baixa bloqueava titulo com conferencia vigente pendente ou
+  divergente, mas um titulo com recebimento ou NF-e nunca conferidos
+  passava livre.
+- Agora, havendo contexto de compra (pedidos vinculados ao titulo ou
+  conferencias vigentes), o pagamento exige: todo recebimento coberto por
+  conferencia APROVADA vigente, na quantidade por produto; toda NF-e
+  autorizada do pedido coberta por conferencia APROVADA vigente.
+- Titulos sem nenhum documento de compra seguem liberados, como antes;
+  pedido sem recebimento, NF-e e conferencia nao tem o que exigir
+  (adiantamento e servico preservados).
+- Mensagens dizem o documento faltante (recebimento, produto com recebido
+  e conferido, NF-e), sem alterar o bloqueio anterior.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/financeiro/service/impl/TituloServiceImpl.java
+    src/main/java/br/com/brasil_saas/compras/repository/PedidoCompraRepository.java
+    src/main/java/br/com/brasil_saas/fiscal/repository/NfeRepository.java
+    src/test/java/br/com/brasil_saas/financeiro/service/impl/TituloCoberturaTotalCompraTest.java
+    src/test/java/br/com/brasil_saas/financeiro/service/impl/TituloConferenciaCompraTest.java
+    src/test/java/br/com/brasil_saas/financeiro/service/impl/TituloBaixaRateioParcelasTest.java
+    src/test/java/br/com/brasil_saas/database/DevolucoesCreditoPostgresScenario.java
+    src/test/java/br/com/brasil_saas/database/VendasReservasPostgresScenario.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 5 casos novos de cobertura (recebimento sem conferencia,
+parcialmente conferido, NF autorizada sem conferencia, cobertura total
+libera, sem contexto libera) e 11 preservados do bloco financeiro.
+Suite completa: 373 testes, zero falhas, zero erros, JDK 21, incluindo
+contexto Spring real; package valido.
+
+## Entrega — tolerancia de preco por item
+
+Branch codex/devolucao-integracao-financeira (mesmo bloco). Sem migration, sem tela nova.
+
+- O campo de tolerancia por item (V173) existia na entidade mas nunca era
+  preenchido nem usado: toda diferenca de preco caia em PRECO_DIVERGENTE.
+- Agora cada linha recebe a tolerancia informada e a divergencia de preco
+  dentro do limite e absolvida (quantidade continua exata: so preco usa
+  tolerancia). Com tolerancia zero, o comportamento e identico ao anterior.
+- Sem efeito sobre rateio, consumo acumulado, pagamento ou reavaliacao.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImpl.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/RecebimentoParcialConferenciaTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 2 casos novos (preco dentro da tolerancia aprova e grava o
+campo na linha; preco acima diverge com o tipo preservado). Suite
+completa: 375 testes, zero falhas, zero erros, JDK 21.

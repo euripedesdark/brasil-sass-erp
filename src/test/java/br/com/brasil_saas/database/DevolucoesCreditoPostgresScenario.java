@@ -43,7 +43,7 @@ final class DevolucoesCreditoPostgresScenario {
         var baixasVenda=factory.getRepository(BaixaRepository.class);
         var tituloSvcVenda=new TituloServiceImpl(titulosVenda,factory.getRepository(TituloParcelaRepository.class),baixasVenda,
                 factory.getRepository(CondicaoPagamentoRepository.class),factory.getRepository(ContaBancariaRepository.class),
-                factory.getRepository(ExtratoRepository.class),factory.getRepository(ConferenciaFaturaCompraRepository.class));
+                factory.getRepository(ExtratoRepository.class),factory.getRepository(ConferenciaFaturaCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.PedidoCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository.class),factory.getRepository(br.com.brasil_saas.fiscal.repository.NfeRepository.class));
         var fluxoVenda=new DocumentoFluxoService(factory.getRepository(DocumentoFluxoRepository.class));
         var venda=new DevolucaoService(devVenda,factory.getRepository(VenDevolucaoItemRepository.class),pedidosVenda,saldos,movimentos,depositos,
                 titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda);

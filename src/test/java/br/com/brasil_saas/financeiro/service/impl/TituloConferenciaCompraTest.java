@@ -33,6 +33,11 @@ class TituloConferenciaCompraTest {
     @Mock ContaBancariaRepository contas;
     @Mock ExtratoRepository extratos;
     @Mock ConferenciaFaturaCompraRepository conferencias;
+    @Mock br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository conferenciaItens;
+    @Mock br.com.brasil_saas.compras.repository.PedidoCompraRepository pedidosCompra;
+    @Mock br.com.brasil_saas.compras.repository.RecebimentoCompraRepository recebimentosCompra;
+    @Mock br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository recebidosItens;
+    @Mock br.com.brasil_saas.fiscal.repository.NfeRepository nfes;
     @InjectMocks TituloServiceImpl service;
     private Titulo titulo;
 
