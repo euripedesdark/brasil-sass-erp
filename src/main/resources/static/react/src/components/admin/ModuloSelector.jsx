@@ -196,7 +196,7 @@ export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
 
                     <Message
                         severity="info"
-                        text="Desmarcar todos deixa a pessoa sem acesso a nenhum módulo do sistema."
+                        text={t('legacyUi.moduleSelector.unmarkHelp')}
                         className="mt-3"
                     />
                 </>
