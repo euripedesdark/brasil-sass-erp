@@ -68,7 +68,9 @@
     "notes": "Notes",
     "communicationError": "Communication failure",
     "tryAgain": "Try again",
-    "select": "Select"
+    "select": "Select",
+    "title": "Title",
+    "location": "Location"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -1320,6 +1322,24 @@
       "imageUpdated": "{{type}} image updated successfully!",
       "uploadFailed": "Upload failed: {{error}}",
       "connectionError": "Connection error: {{error}}"
+    },
+    "agenda": {
+      "title": "Calendar",
+      "subtitle": "Meetings, visits, and operational tasks",
+      "today": "Today",
+      "week": "Week",
+      "newEvent": "New event",
+      "noEvents": "No events",
+      "start": "Start",
+      "responsible": "Assignee",
+      "complete": "Complete",
+      "types": {
+        "REUNIAO": "Meeting",
+        "LIGACAO": "Call",
+        "VISITA": "Visit",
+        "TAREFA": "Task",
+        "OUTRO": "Other"
+      }
     }
   },
   "enterpriseOps": {
