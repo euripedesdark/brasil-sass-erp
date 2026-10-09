@@ -15,20 +15,23 @@ export const StripePagamentos = () => {
     const navigate = useNavigate();
     const [rows, setRows] = useState([]);
     const [status, setStatus] = useState(null);
+    const [hooks, setHooks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const carregar = async () => {
         setLoading(true);
         try {
-            const [p, s] = await Promise.all([
+            const [p, s, h] = await Promise.all([
                 apiFetch(BASE + '/pagamentos').then(async (r) => {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
                     return r.json();
                 }),
                 apiFetch(BASE + '/status').then(async (r) => (r.ok ? r.json() : null)).catch(() => null),
+                apiFetch(BASE + '/webhooks').then(async (r) => (r.ok ? r.json() : [])).catch(() => []),
             ]);
             setRows(Array.isArray(p) ? p : []);
             setStatus(s);
+            setHooks(Array.isArray(h) ? h : []);
         } catch (e) {
             toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 });
         } finally {
@@ -90,6 +93,12 @@ export const StripePagamentos = () => {
                 <Column field="checkoutSessionId" header="Session" style={{ maxWidth: '10rem' }} />
                 <Column field="invoiceId" header="Invoice" />
                 <Column header="URL" body={(r) => r.checkoutUrl ? <a href={r.checkoutUrl} target="_blank" rel="noreferrer">Abrir</a> : '—'} />
+            </DataTable>
+            <h3 className="mt-4">Eventos webhook recebidos</h3>
+            <DataTable value={hooks} emptyMessage="Nenhum evento ainda" size="small" paginator rows={10}>
+                <Column field="id" header="ID" style={{ width: '4rem' }} />
+                <Column field="stripeEventId" header="Event ID" />
+                <Column field="eventType" header="Tipo" />
             </DataTable>
         </div>
     );

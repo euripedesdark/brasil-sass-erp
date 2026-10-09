@@ -23,6 +23,7 @@ public class PedidoVendaController {
 
     private final PedidoVendaService service;
     private final AtpService atpService;
+    private final br.com.brasil_saas.vendas.service.PedidoTributacaoService tributacaoService;
 
     private Long empresaDoToken(AuthenticatedUser user) {
         if (user == null || user.getEmpresaId() == null) {
@@ -108,4 +109,19 @@ public class PedidoVendaController {
         service.cancelar(id, empresaDoToken(user));
         return ResponseEntity.ok().build();
     }
+
+    /** Prévia de impostos (NCM/CFOP do produto + DIFAL/ST se aplicável). Não grava documento. */
+    @PostMapping("/tributacao/prever")
+    @PreAuthorize("hasAuthority('vendas:pedido:leitura') or hasAuthority('vendas:pedido:escrita')")
+    public Map<String, Object> preverTributacao(
+            @RequestBody PedidoVendaRequest request,
+            @RequestParam(required = false) String ufDestino,
+            @RequestParam(required = false, defaultValue = "true") Boolean consumidorFinal,
+            @RequestParam(required = false, defaultValue = "false") Boolean contribuinte,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        Long empresaId = empresaDoToken(user);
+        return tributacaoService.prever(empresaId, request.comEmpresaDa(empresaId),
+                ufDestino, consumidorFinal, contribuinte);
+    }
+
 }

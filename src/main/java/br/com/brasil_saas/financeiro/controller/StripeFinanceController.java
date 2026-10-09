@@ -4,6 +4,7 @@ import br.com.brasil_saas.financeiro.dto.StripeDtos.CheckoutResponse;
 import br.com.brasil_saas.financeiro.dto.StripeDtos.InvoiceResponse;
 import br.com.brasil_saas.financeiro.dto.StripeDtos.WebhookResponse;
 import br.com.brasil_saas.financeiro.model.StripePayment;
+import br.com.brasil_saas.financeiro.model.StripeWebhookEvent;
 import br.com.brasil_saas.financeiro.service.StripeFinanceService;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,12 @@ public class StripeFinanceController {
     @PreAuthorize("isAuthenticated()")
     public Map<String, Object> status(@AuthenticationPrincipal AuthenticatedUser user) {
         return service.statusConfig(user.getEmpresaId());
+    }
+
+    @GetMapping("/webhooks")
+    @PreAuthorize("hasAuthority('financeiro:titulo:leitura') or isAuthenticated()")
+    public List<StripeWebhookEvent> webhooks(@AuthenticationPrincipal AuthenticatedUser user) {
+        return service.listarWebhooks(user.getEmpresaId());
     }
 
     @PostMapping("/webhook/{empresaId}")
