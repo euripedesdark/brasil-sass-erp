@@ -485,7 +485,11 @@
     "deleteError": "Impossible de supprimer le client",
     "created": "Client créé avec succès",
     "updated": "Client mis à jour avec succès",
-    "deleted": "Client supprimé avec succès"
+    "deleted": "Client supprimé avec succès",
+    "editTitle": "Modifier le client : {{name}}",
+    "newTitle": "Nouveau client",
+    "logoHelp": "Logo associé à la fiche client.",
+    "savedSuccess": "Client enregistré avec succès !"
   },
   "supplier": {
     "title": "Fournisseurs",
@@ -498,7 +502,11 @@
     "deleteError": "Impossible de supprimer le fournisseur",
     "created": "Fournisseur créé avec succès",
     "updated": "Fournisseur mis à jour avec succès",
-    "deleted": "Fournisseur supprimé avec succès"
+    "deleted": "Fournisseur supprimé avec succès",
+    "editTitle": "Modifier le fournisseur : {{name}}",
+    "newTitle": "Nouveau fournisseur",
+    "logoHelp": "Logo associé à la fiche fournisseur.",
+    "savedSuccess": "Fournisseur enregistré avec succès !"
   },
   "bankAccount": {
     "title": "Comptes bancaires",
@@ -1271,6 +1279,30 @@
       "states": "Tous les états",
       "search": "Rechercher un écart...",
       "status": "Statut"
+    },
+    "partnerForm": {
+      "legalName": "Nom / Raison sociale",
+      "taxId": "Identifiant fiscal (CPF/CNPJ)",
+      "creditLimit": "Limite de crédit",
+      "website": "Site web",
+      "visualIdentity": "Identité visuelle",
+      "logo": "Logo",
+      "identification": "Identification",
+      "identificationHelp": "Données principales de la fiche.",
+      "personType": "Type de personne",
+      "legalNamePlaceholder": "Nom ou raison sociale",
+      "rgStateRegistration": "RG / Immatriculation régionale",
+      "rgStateRegistrationPlaceholder": "RG ou immatriculation régionale",
+      "contact": "Contact",
+      "contactHelp": "Coordonnées utilisées pour le service et la communication.",
+      "creditLimitCurrency": "Limite de crédit (BRL)",
+      "address": "Adresse",
+      "addressHelp": "Adresse principale de la fiche.",
+      "addressPlaceholder": "Rue, numéro, complément, quartier, ville/région",
+      "summary": "Résumé",
+      "summaryHelp": "Vérifiez les informations principales avant l’enregistrement.",
+      "additionalInfoHelp": "Informations supplémentaires pour les opérations.",
+      "additionalInfoPlaceholder": "Observations supplémentaires"
     }
   },
   "enterpriseOps": {
