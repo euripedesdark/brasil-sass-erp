@@ -28,6 +28,7 @@ class DevCompraServiceTest {
     @Mock br.com.brasil_saas.financeiro.repository.BaixaRepository baixaRepository;
     @Mock br.com.brasil_saas.financeiro.service.TituloService tituloService;
     @Mock br.com.brasil_saas.core.service.DocumentoFluxoService documentoFluxoService;
+    @Mock br.com.brasil_saas.contabilidade.service.ContabilidadeService contabilidadeService;
     @InjectMocks DevCompraService service;
 
     void pedido() {
@@ -123,6 +124,7 @@ class DevCompraServiceTest {
         when(pedidos.findByIdForUpdateAndEmpresaId(1L, 2L)).thenReturn(Optional.of(pedidoRecebidoComTitulo(9L)));
         when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(tituloPagarAberto()));
         when(baixaRepository.findByTituloIdAndDeletedAtIsNull(9L)).thenReturn(List.of());
+        when(contabilidadeService.espelharAjusteDevolucao(eq(2L), eq(9L), eq(9L), argThat(p -> p != null && p.compareTo(new BigDecimal("0.4")) == 0), any())).thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(), "SEM_LANCAMENTO_ORIGINAL"));
         assertEquals("DEVOLVIDA", service.devolver(2L, 8L).getStatus());
         var captor = ArgumentCaptor.forClass(br.com.brasil_saas.financeiro.dto.FinanceiroDtos.BaixaRequest.class);
         verify(tituloService).baixar(eq(2L), eq(9L), captor.capture());
@@ -139,6 +141,7 @@ class DevCompraServiceTest {
         t.setStatus("BAIXADO"); t.setValorSaldo(BigDecimal.ZERO);
         when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(t));
         when(tituloRepository.findByEmpresaIdAndNumeroDocumentoAndDeletedAtIsNull(eq(2L), any())).thenReturn(List.of());
+        when(contabilidadeService.espelharAjusteDevolucao(any(), any(), any(), any(), any())).thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(), "SEM_LANCAMENTO_ORIGINAL"));
         when(tituloRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         assertEquals("DEVOLVIDA", service.devolver(2L, 8L).getStatus());
         verify(tituloService, never()).baixar(any(), any(), any());
@@ -159,5 +162,17 @@ class DevCompraServiceTest {
         verify(documentoFluxoService).ligar(eq(2L), eq(null),
                 eq("DEVOLUCAO_COMPRA"), eq(8L), any(),
                 eq("PEDIDO_COMPRA"), eq(1L), any(), eq("DEVOLVIDA_SEM_TITULO"));
+    }
+    @Test void devolverRegistraAjusteContabilAplicado() {
+        devolucaoSolicitada4un();
+        when(pedidos.findByIdForUpdateAndEmpresaId(1L, 2L)).thenReturn(Optional.of(pedidoRecebidoComTitulo(9L)));
+        when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(tituloPagarAberto()));
+        when(baixaRepository.findByTituloIdAndDeletedAtIsNull(9L)).thenReturn(List.of());
+        when(contabilidadeService.espelharAjusteDevolucao(eq(2L), eq(9L), eq(9L), argThat(x -> x != null && x.compareTo(new BigDecimal("0.4")) == 0), any()))
+                .thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(), "PERIODO_FECHADO"));
+        assertEquals("DEVOLVIDA", service.devolver(2L, 8L).getStatus());
+        verify(documentoFluxoService).ligar(eq(2L), eq(null),
+                eq("DEVOLUCAO_COMPRA"), eq(8L), any(),
+                eq("TITULO"), eq(9L), eq("PERIODO_FECHADO"), eq("AJUSTE_CONTABIL_PENDENTE"));
     }
 }

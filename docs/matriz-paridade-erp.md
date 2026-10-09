@@ -368,3 +368,37 @@ Arquivos da entrega:
 Validacao: 5 casos novos (aprova com motivo e audita, motivo curto ou
 ausente, nao divergente, superada por reavaliacao, mesma trava do titulo).
 Suite completa: 380 testes, zero falhas, zero erros, JDK 21.
+
+## Entrega — ajuste contabil automatico da devolucao por espelho
+
+Branch codex/conferencia-aprovacao-excepcional (mesmo bloco). Sem migration, sem tela nova.
+
+- Antes, a devolucao ajustava o financeiro mas nada na contabilidade: o
+  titulo baixado ou restituido ficava sem lancamento correspondente.
+- Agora espelharAjusteDevolucao inverte proporcionalmente as partidas dos
+  lancamentos LANCADOS do titulo de origem para o titulo destino, reusando
+  as contas do lancamento original: nenhum plano de contas inventado.
+  Arredondamento em 2 casas com correcao do residuo na maior partida, para
+  o lancamento sair sempre balanceado.
+- Periodo fechado ou origem nunca contabilizada viram pendencia explicita
+  na trilha (AJUSTE_CONTABIL_PENDENTE), sem travar o recebimento fisico
+  nem o financeiro. Proporcao fora de (0,1] e rejeitada.
+- Venda e compra chamam o espelho na baixa de ajuste e na restituicao ou
+  credito, registrando AJUSTE_CONTABIL por lancamento gerado.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/contabilidade/service/ContabilidadeService.java
+    src/main/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeServiceImpl.java
+    src/main/java/br/com/brasil_saas/vendas/devolucao/DevolucaoService.java
+    src/main/java/br/com/brasil_saas/compras/service/DevCompraService.java
+    src/test/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeEspelhoDevolucaoTest.java
+    src/test/java/br/com/brasil_saas/vendas/devolucao/DevolucaoServiceTest.java
+    src/test/java/br/com/brasil_saas/compras/service/DevCompraServiceTest.java
+    src/test/java/br/com/brasil_saas/database/DevolucoesCreditoPostgresScenario.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 4 casos novos do espelho (proporcional, sem original, periodo
+fechado, proporcao invalida) e 2 de ponta a ponta (venda aplica, compra
+registra pendencia de periodo). Suite completa: 386 testes, zero falhas,
+zero erros, JDK 21.
