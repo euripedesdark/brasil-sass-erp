@@ -45,7 +45,7 @@
     "unknownError": "An unexpected error occurred.",
     "expandMenu": "Expand menu",
     "collapseMenu": "Collapse menu",
-    "user": "USER",
+    "user": "User",
     "available": "Available",
     "notChecked": "Not checked",
     "send": "Send",
@@ -70,7 +70,9 @@
     "tryAgain": "Try again",
     "select": "Select",
     "title": "Title",
-    "location": "Location"
+    "location": "Location",
+    "username": "Username",
+    "password": "Password"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -1340,6 +1342,40 @@
         "TAREFA": "Task",
         "OUTRO": "Other"
       }
+    },
+    "users": {
+      "loadError": "Failed to load users",
+      "usernameRequired": "Username is required",
+      "passwordMin": "Password must contain at least 6 characters",
+      "userSaved": "User saved",
+      "userCreated": "User created",
+      "saveError": "Failed to save user",
+      "deactivateConfirm": "Deactivate user “{{name}}”? They will no longer be able to sign in, but their history (invoices, sales, and audit records) will be preserved.",
+      "deactivateTitle": "Deactivate user",
+      "confirmDeactivate": "Yes, deactivate",
+      "userDeactivated": "User deactivated",
+      "deactivateError": "Failed to deactivate user",
+      "permissionError": "Failed to update permission",
+      "noRole": "No role",
+      "editUser": "Edit user",
+      "deactivateUser": "Deactivate user",
+      "roles": "Roles",
+      "changeRoles": "Change roles",
+      "setModules": "Set accessible modules",
+      "title": "User and hierarchy management",
+      "subtitle": "Manage access levels and roles for all system users.",
+      "newUser": "New user",
+      "role": "Role",
+      "modules": "Modules",
+      "actions": "Actions",
+      "passwordHint": "At least 6 characters.",
+      "selectRole": "Select a role",
+      "activeUser": "Active user",
+      "createUser": "Create user",
+      "changeAccessLevel": "Change access level",
+      "roleHelp": "Select the new role according to the permitted hierarchy.",
+      "permissionUpdated": "Permission updated successfully!",
+      "newRole": "New role"
     }
   },
   "enterpriseOps": {
