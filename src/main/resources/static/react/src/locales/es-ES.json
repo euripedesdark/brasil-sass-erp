@@ -1630,6 +1630,6 @@
     "loadError": "No se pudieron cargar los contratos.",
     "saveError": "No se pudo guardar el contrato.",
     "actionError": "No se pudo actualizar el contrato.",
-    "currency": "EUR"
+    "currency": "BRL"
   }
 }
