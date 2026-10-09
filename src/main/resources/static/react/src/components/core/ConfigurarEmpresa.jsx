@@ -5,6 +5,10 @@ import { Button } from 'primereact/button';
 import { Dropdown } from 'primereact/dropdown';
 import { InputMask } from 'primereact/inputmask';
 import { InputText } from 'primereact/inputtext';
+import { Password } from 'primereact/password';
+import { Checkbox } from 'primereact/checkbox';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
 import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
@@ -33,7 +37,7 @@ const erroDe = (e, padrao) => {
  * empresa nao ve nada — e esta e a unica coisa que ele pode fazer ate ter uma.
  *
  * A tela funciona nos dois sentidos: sem empresa, cadastra; com empresa, edita
- * os dados dela (inclusive razao social, inscricoes, endereco e regime).
+ * os dados dela (razao social, inscricoes, endereco, regime, Stripe e certificado A1).
  */
 export const ConfigurarEmpresa = () => {
     const { t } = useTranslation();
@@ -44,7 +48,7 @@ export const ConfigurarEmpresa = () => {
     const [salvando, setSalvando] = useState(false);
     const [situacao, setSituacao] = useState(null);
     const [empresaId, setEmpresaId] = useState(null);
-    const podeConfigurarStripe = !!(
+    const podeConfigurarCredenciais = !!(
         user?.isSuperuser ||
         user?.isDiretoria ||
         user?.perfis?.includes('GESTOR') ||
@@ -59,6 +63,11 @@ export const ConfigurarEmpresa = () => {
     const [stripeEnabled, setStripeEnabled] = useState(false);
     const [stripeLoading, setStripeLoading] = useState(false);
     const [stripeTesting, setStripeTesting] = useState(false);
+    const [certCaminho, setCertCaminho] = useState('');
+    const [certSenha, setCertSenha] = useState('');
+    const [certSalvar, setCertSalvar] = useState(true);
+    const [certLoading, setCertLoading] = useState(false);
+    const [certGuardados, setCertGuardados] = useState([]);
 
     const vazio = {
         razaoSocial: '', nomeFantasia: '', cnpj: '',
@@ -101,7 +110,7 @@ export const ConfigurarEmpresa = () => {
             // cadastrar — antes disso nao ha logo para enviar
             if (s?.empresaId) {
                 setEmpresaId(s.empresaId);
-                if (podeConfigurarStripe) {
+                if (podeConfigurarCredenciais) {
                     try {
                         const sr = await apiFetch('/api/core/minha-empresa/stripe');
                         if (sr.ok) {
@@ -112,6 +121,15 @@ export const ConfigurarEmpresa = () => {
                         }
                     } catch (e) {
                         console.warn('Não foi possível carregar a configuração Stripe', e);
+                    }
+                    try {
+                        const cr = await apiFetch('/api/fiscal/certificados');
+                        if (cr.ok) {
+                            const cj = await cr.json();
+                            setCertGuardados(cj?.data || cj || []);
+                        }
+                    } catch (e) {
+                        console.warn('Não foi possível listar certificados da empresa', e);
                     }
                 }
             }
@@ -128,7 +146,7 @@ export const ConfigurarEmpresa = () => {
         } finally {
             setCarregando(false);
         }
-    }, [podeConfigurarStripe]);
+    }, [podeConfigurarCredenciais]);
 
     useEffect(() => { carregar(); }, [carregar]);
 
@@ -242,7 +260,7 @@ export const ConfigurarEmpresa = () => {
 
                         <div className="col-12"><hr className="mt-2 mb-0" /></div>
 
-                        {empresaId && podeConfigurarStripe && (
+                        {empresaId && podeConfigurarCredenciais && (
                             <>
                                 <div className="col-12 mt-3">
                                     <div className="flex align-items-center justify-content-between gap-3 flex-wrap">
@@ -374,6 +392,100 @@ export const ConfigurarEmpresa = () => {
                                             }
                                         }}
                                     />
+                                </div>
+                            </>
+                        )}
+
+                        {empresaId && podeConfigurarCredenciais && (
+                            <>
+                                <div className="col-12"><hr className="mt-2 mb-0" /></div>
+                                <div className="col-12 mt-3">
+                                    <div className="flex align-items-center justify-content-between gap-3 flex-wrap">
+                                        <div>
+                                            <h3 className="m-0">Certificado digital (A1) — desta empresa</h3>
+                                            <span className="bc-muted">
+                                                Matriz ou filial: cada empresa usa o próprio .pfx para NFe/NFS-e/CT-e.
+                                                Informe o caminho no servidor e a senha. A senha não é gravada no banco.
+                                            </span>
+                                        </div>
+                                        <Tag
+                                            severity={certGuardados.length ? 'success' : 'secondary'}
+                                            value={certGuardados.length ? `${certGuardados.length} guardado(s)` : 'Sem certificado'}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="col-12 md:col-8">
+                                    <label className="bc-label" htmlFor="certCaminho">Caminho do .pfx / .p12 no servidor</label>
+                                    <InputText
+                                        id="certCaminho"
+                                        className="w-full"
+                                        value={certCaminho}
+                                        onChange={(e) => setCertCaminho(e.target.value)}
+                                        placeholder="/caminho/do/certificado.pfx"
+                                    />
+                                </div>
+                                <div className="col-12 md:col-4">
+                                    <label className="bc-label" htmlFor="certSenha">Senha do certificado</label>
+                                    <Password
+                                        id="certSenha"
+                                        className="w-full"
+                                        inputClassName="w-full"
+                                        value={certSenha}
+                                        onChange={(e) => setCertSenha(e.target.value)}
+                                        feedback={false}
+                                        toggleMask
+                                    />
+                                </div>
+                                <div className="col-12 flex align-items-center gap-2">
+                                    <Checkbox inputId="certSalvar" checked={certSalvar} onChange={(e) => setCertSalvar(!!e.checked)} />
+                                    <label htmlFor="certSalvar">Guardar certificado no repositório da empresa (recomendado)</label>
+                                </div>
+                                <div className="col-12 flex gap-2 flex-wrap">
+                                    <Button
+                                        label="Carregar certificado"
+                                        icon="pi pi-upload"
+                                        loading={certLoading}
+                                        disabled={certLoading || !certCaminho.trim()}
+                                        onClick={async () => {
+                                            setCertLoading(true);
+                                            try {
+                                                const r = await apiFetch('/api/fiscal/certificados/carregar', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        caminho: certCaminho.trim(),
+                                                        senha: certSenha,
+                                                        salvar: certSalvar
+                                                    })
+                                                });
+                                                const j = await r.json();
+                                                if (!r.ok) throw new Error(j?.data || j?.errors?.[0]?.message || j?.message || ('HTTP ' + r.status));
+                                                setCertSenha('');
+                                                toast.current?.show({
+                                                    severity: 'success',
+                                                    summary: 'Certificado',
+                                                    detail: j?.data?.mensagem || 'Certificado processado para esta empresa',
+                                                    life: 5000
+                                                });
+                                                const cr = await apiFetch('/api/fiscal/certificados');
+                                                if (cr.ok) {
+                                                    const cj = await cr.json();
+                                                    setCertGuardados(cj?.data || cj || []);
+                                                }
+                                            } catch (e) {
+                                                toast.current?.show({ severity: 'error', summary: 'Certificado', detail: e.message, life: 7000 });
+                                            } finally {
+                                                setCertLoading(false);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div className="col-12">
+                                    <DataTable value={Array.isArray(certGuardados) ? certGuardados : []} size="small" emptyMessage="Nenhum certificado guardado nesta empresa">
+                                        <Column field="id" header="ID" style={{ width: '5rem' }} />
+                                        <Column field="nomeArquivo" header="Arquivo" body={(r) => r.nomeArquivo || r.nome || r.caminho || '—'} />
+                                        <Column field="createdAt" header="Quando" body={(r) => r.createdAt || r.criadoEm || '—'} />
+                                    </DataTable>
                                 </div>
                             </>
                         )}

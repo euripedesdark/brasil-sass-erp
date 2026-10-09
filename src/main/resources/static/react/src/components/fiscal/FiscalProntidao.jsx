@@ -16,7 +16,7 @@ const sev = (s) => {
 };
 
 const links = {
-    certificado: '/fiscal/certificados',
+    certificado: '/configurar-empresa',
     regras: '/fiscal/regras-tributarias',
     reinf: '/fiscal/reinf',
     apuracao: '/fiscal/apuracoes',

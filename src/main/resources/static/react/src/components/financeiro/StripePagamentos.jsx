@@ -64,7 +64,7 @@ export const StripePagamentos = () => {
                     <span className="text-color-secondary">Checkout e invoices ligados a títulos a receber</span>
                 </div>
                 <div className="flex gap-2">
-                    <Button label="Configurar empresa" icon="pi pi-cog" outlined onClick={() => navigate('/configurar-empresa')} />
+                    <Button label="API key / certificado (empresa)" icon="pi pi-cog" outlined onClick={() => navigate('/configurar-empresa')} />
                     <Button label="Atualizar" icon="pi pi-refresh" onClick={carregar} />
                 </div>
             </div>
