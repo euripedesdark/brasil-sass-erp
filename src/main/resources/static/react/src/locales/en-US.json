@@ -1101,7 +1101,17 @@
       "passwordLength": "The new password must be at least 8 characters",
       "loadError": "Failed to load profile",
       "saveError": "Failed to save",
-      "passwordError": "Failed to change password"
+      "passwordError": "Failed to change password",
+      "profileTitle": "My Profile",
+      "fullName": "Full name",
+      "username": "Username",
+      "roles": "Roles",
+      "noRoles": "No roles assigned",
+      "changePasswordTitle": "Change password",
+      "currentPassword": "Current password",
+      "newPasswordHelp": "New password (at least 8 characters)",
+      "confirmNewPassword": "Confirm new password",
+      "changePasswordButton": "Change password"
     },
     "cargo": {
       "title": "Positions",
