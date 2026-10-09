@@ -1631,5 +1631,17 @@
     "saveError": "Impossible d’enregistrer le contrat.",
     "actionError": "Impossible de mettre à jour le contrat.",
     "currency": "BRL"
+  },
+  "cashFlow": {
+    "title": "Trésorerie prévisionnelle",
+    "subtitle": "Entrées et sorties hebdomadaires à partir des pièces financières",
+    "days": "{{count}} jours",
+    "inflows": "Entrées",
+    "outflows": "Sorties",
+    "net": "Solde net",
+    "accumulated": "Cumulé",
+    "empty": "Aucune pièce financière sur cette période.",
+    "week": "Semaine",
+    "loadError": "Impossible de prévoir la trésorerie."
   }
 }
