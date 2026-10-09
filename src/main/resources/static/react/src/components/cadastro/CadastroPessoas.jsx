@@ -17,14 +17,14 @@ import CepService from '../../services/CepService';
 
 const BASE = '/api/cadastro/pessoas';
 
-const TIPO_OPCOES = [
-    { label: 'Pessoa Física', value: 'FISICA' },
-    { label: 'Pessoa Jurídica', value: 'JURIDICA' }
+const tipoOpcoes = t => [
+    { label: t('cadastro.people.individual'), value: 'FISICA' },
+    { label: t('cadastro.people.legal'), value: 'JURIDICA' }
 ];
 
-const STATUS_OPCOES = [
-    { label: 'Ativo', value: 'ATIVO' },
-    { label: 'Inativo', value: 'INATIVO' }
+const statusOpcoes = t => [
+    { label: t('common.active'), value: 'ATIVO' },
+    { label: t('common.inactive'), value: 'INATIVO' }
 ];
 
 const vazio = () => ({
@@ -158,15 +158,15 @@ export const CadastroPessoas = () => {
             });
             toast.current?.show({
                 severity: 'success',
-                summary: 'CEP consultado',
-                detail: 'Endereço preenchido pelo serviço externo; município resolvido no cadastro interno.',
+                summary: t('cadastro.people.postalCodeLookupSuccess'),
+                detail: t('cadastro.people.postalCodeLookupDetail'),
                 life: 4000
             });
         } catch (e) {
             toast.current?.show({
                 severity: 'warn',
-                summary: 'Consulta de CEP',
-                detail: e.message || 'Não foi possível consultar o CEP.',
+                summary: t('cadastro.people.postalCodeLookup'),
+                detail: e.message || t('cadastro.people.postalCodeLookupError'),
                 life: 5000
             });
         } finally {
@@ -360,7 +360,7 @@ export const CadastroPessoas = () => {
                         </div>
                         <div className="bc-form-grid">
                             {campo('tipo', `${t('common.type')} *`,
-                                <Dropdown id="tipo" value={form.tipo} options={TIPO_OPCOES}
+                                <Dropdown id="tipo" value={form.tipo} options={tipoOpcoes(t)}
                                           onChange={(e) => setForm({ ...form, tipo: e.value, documento: '' })}
                                           aria-label={t('cadastro.people.typeAria')} />)}
                             {campo('nome', `${t('cadastro.people.name')} *`,
@@ -377,7 +377,7 @@ export const CadastroPessoas = () => {
                                                onChange={(e) => setForm({ ...form, documento: e.target.value })}
                                                placeholder="00.000.000/0000-00" />)}
                             {campo('status', t('common.status'),
-                                <Dropdown id="status" value={form.status || 'ATIVO'} options={STATUS_OPCOES}
+                                <Dropdown id="status" value={form.status || 'ATIVO'} options={statusOpcoes(t)}
                                           onChange={(e) => setForm({ ...form, status: e.value })} />)}
                         </div>
                     </section>
@@ -426,43 +426,43 @@ export const CadastroPessoas = () => {
                         <div className="bc-form-section-title">
                             <i className="pi pi-map-marker" aria-hidden="true" />
                             <div>
-                                <h3>Endereço principal</h3>
-                                <span>CEP é consultado externamente; município é selecionado do catálogo interno do ERP.</span>
+                                <h3>{t('cadastro.people.mainAddress')}</h3>
+                                <span>{t('cadastro.people.addressHelp')}</span>
                             </div>
                         </div>
                         <div className="bc-form-grid">
-                            {campo('cep', 'CEP',
+                            {campo('cep', t('cadastro.people.postalCode'),
                                 <div className="p-inputgroup">
                                     <InputMask id="cep" mask="99999-999" value={endereco.cep || ''}
                                         onChange={(e) => atualizarEndereco('cep', e.value || '')}
                                         placeholder="00000-000" />
                                     <Button type="button" icon="pi pi-search" outlined
                                         loading={consultandoCep || consultandoMunicipio}
-                                        onClick={consultarCep} tooltip="Consultar CEP externamente" />
+                                        onClick={consultarCep} tooltip={t('cadastro.people.postalCodeLookup')} />
                                 </div>)}
-                            {campo('logradouro', 'Logradouro',
+                            {campo('logradouro', t('cadastro.people.street'),
                                 <InputText id="logradouro" value={endereco.logradouro || ''}
                                     onChange={(e) => atualizarEndereco('logradouro', e.target.value)} />)}
-                            {campo('numero', 'Número',
+                            {campo('numero', t('cadastro.people.number'),
                                 <InputText id="numero" value={endereco.numero || ''}
                                     onChange={(e) => atualizarEndereco('numero', e.target.value)} />)}
-                            {campo('complemento', 'Complemento',
+                            {campo('complemento', t('cadastro.people.complement'),
                                 <InputText id="complemento" value={endereco.complemento || ''}
                                     onChange={(e) => atualizarEndereco('complemento', e.target.value)} />)}
-                            {campo('bairro', 'Bairro',
+                            {campo('bairro', t('cadastro.people.neighborhood'),
                                 <InputText id="bairro" value={endereco.bairro || ''}
                                     onChange={(e) => atualizarEndereco('bairro', e.target.value)} />)}
-                            {campo('uf', 'UF',
+                            {campo('uf', t('cadastro.people.state'),
                                 <InputText id="uf" value={endereco.uf || ''} maxLength={2}
                                     onChange={(e) => atualizarEndereco('uf', e.target.value.toUpperCase())} />)}
-                            {campo('municipioId', 'Município (cadastro interno)',
+                            {campo('municipioId', t('cadastro.people.cityInternal'),
                                 <InputText id="municipioId"
                                     value={endereco.municipioId ? String(endereco.municipioId) : ''}
                                     readOnly
-                                    placeholder="Preenchido após consulta do CEP" />)}
+                                    placeholder={t('cadastro.people.cityIdPlaceholder')} />)}
                             <div className="col-12">
                                 <small className="bc-muted">
-                                    Fonte externa: ViaCEP. Fonte interna: /api/municipios. Se a consulta externa falhar, os campos continuam editáveis manualmente.
+                                    {t('cadastro.people.addressSourceHelp')}
                                 </small>
                             </div>
                         </div>
@@ -480,7 +480,7 @@ export const CadastroPessoas = () => {
                             {campo('obs', t('common.note'),
                                 <InputText id="obs" value={form.observacao || ''}
                                            onChange={(e) => setForm({ ...form, observacao: e.target.value })}
-                                           placeholder="Opcional" />,
+                                           placeholder={t('cadastro.people.optional')} />,
                                 'col-12')}
                         </div>
                     </section>
@@ -498,12 +498,12 @@ export const CadastroPessoas = () => {
             >
                 {detalhe && (
                     <div className="grid p-fluid">
-                        {campo('d1', 'Tipo', <span>{detalhe.tipo === 'JURIDICA' ? 'Pessoa Jurídica' : 'Pessoa Física'}</span>)}
-                        {campo('d2', 'Documento', <span>{detalhe.documento || '—'}</span>)}
-                        {campo('d3', 'Email', <span>{detalhe.email || '—'}</span>)}
-                        {campo('d4', 'Telefone', <span>{detalhe.telefone || '—'}</span>)}
-                        {campo('d5', 'Situação', <span>{detalhe.status || '—'}</span>)}
-                        {campo('d6', 'ID interno', <span>{detalhe.id}</span>)}
+                        {campo('d1', t('common.type'), <span>{detalhe.tipo === 'JURIDICA' ? t('cadastro.people.legal') : t('cadastro.people.individual')}</span>)}
+                        {campo('d2', t('common.document'), <span>{detalhe.documento || '—'}</span>)}
+                        {campo('d3', t('common.email'), <span>{detalhe.email || '—'}</span>)}
+                        {campo('d4', t('common.phone'), <span>{detalhe.telefone || '—'}</span>)}
+                        {campo('d5', t('cadastro.people.situation'), <span>{detalhe.status || '—'}</span>)}
+                        {campo('d6', t('cadastro.people.internalId'), <span>{detalhe.id}</span>)}
                         {detalhe.observacao && campo('d7', 'Observação', <span>{detalhe.observacao}</span>, 'col-12')}
                     </div>
                 )}
