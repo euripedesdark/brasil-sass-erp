@@ -70,14 +70,19 @@ public class TituloServiceImpl implements TituloService {
                 }
             }
         }
+        boolean usarVencimentoTitulo = dias.isEmpty();
         if (dias.isEmpty()) dias.add(0);
         int n = dias.size();
         BigDecimal valorBase = titulo.getValorSaldo();
-        BigDecimal porParcela = valorBase.divide(BigDecimal.valueOf(n), 2, RoundingMode.HALF_UP);
+        if (valorBase == null || valorBase.signum() < 0) throw new BusinessException("Saldo do titulo invalido para parcelamento");
+        BigDecimal porParcela = valorBase.divide(BigDecimal.valueOf(n), 2, RoundingMode.DOWN);
+        BigDecimal restante = valorBase.subtract(porParcela.multiply(BigDecimal.valueOf(n)));
         BigDecimal acumulado = BigDecimal.ZERO;
         List<TituloParcela> criadas = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            BigDecimal valor = (i == n - 1) ? valorBase.subtract(acumulado) : porParcela;
+            BigDecimal centavo = restante.min(new BigDecimal("0.01"));
+            BigDecimal valor = (i == n - 1) ? valorBase.subtract(acumulado) : porParcela.add(centavo);
+            restante = restante.subtract(centavo);
             acumulado = acumulado.add(valor);
             TituloParcela p = new TituloParcela();
             p.setEmpresaId(empresaId);
@@ -85,7 +90,8 @@ public class TituloServiceImpl implements TituloService {
             p.setNumeroParcela(i + 1);
             p.setValorParcela(valor);
             p.setValorSaldo(valor);
-            p.setDataVencimento(titulo.getDataEmissao().plusDays(dias.get(i)));
+            p.setDataVencimento(usarVencimentoTitulo && titulo.getDataVencimento() != null
+                    ? titulo.getDataVencimento() : titulo.getDataEmissao().plusDays(dias.get(i)));
             p.setStatus("ABERTO");
             criadas.add(parcelaRepository.save(p));
         }

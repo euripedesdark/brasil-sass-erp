@@ -47,7 +47,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return lancamentos.save(l);
     }
     private CtbLancamento exigirRascunho(Long empresaId, Long id) {
-        CtbLancamento l = exigir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Lancamento inexistente");
+        CtbLancamento l = exigir(lancamentos.findByIdForUpdate(id, empresaId), "Lancamento inexistente");
         if (!"RASCUNHO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente rascunho pode ser alterado");
         exigirAberto(empresaId, l.getPeriodo());
         return l;
@@ -57,7 +57,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(p.getContaId(), empresaId), "Conta inexistente");
         BigDecimal d = p.getDebito() == null ? BigDecimal.ZERO : p.getDebito();
         BigDecimal c = p.getCredito() == null ? BigDecimal.ZERO : p.getCredito();
-        if (!(d.signum() > 0 ^ c.signum() > 0)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Partida deve ter debito OU credito");
+        validarValoresPartida(d, c);
         p.setId(null);
         p.setLancamentoId(lancamentoId);
         p.setDebito(d);
@@ -82,10 +82,21 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     }
     @Override @Transactional public CtbLancamento lancar(Long empresaId, Long id) {
         CtbLancamento l = exigirRascunho(empresaId, id);
-        BigDecimal[] t = totais(empresaId, id);
+        // Importacoes e rascunhos antigos tambem precisam respeitar a regra na contabilizacao.
+        List<CtbPartida> ps = partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
+        for (CtbPartida p : ps) validarValoresPartida(p.getDebito(), p.getCredito());
+        BigDecimal[] t = {
+            ps.stream().map(CtbPartida::getDebito).reduce(BigDecimal.ZERO, BigDecimal::add),
+            ps.stream().map(CtbPartida::getCredito).reduce(BigDecimal.ZERO, BigDecimal::add)
+        };
         if (t[0].signum() <= 0 || t[0].compareTo(t[1]) != 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Lancamento desbalanceado");
         l.setStatus("LANCADO");
         return lancamentos.save(l);
+    }
+    private void validarValoresPartida(BigDecimal debito, BigDecimal credito) {
+        if (debito == null || credito == null || debito.signum() < 0 || credito.signum() < 0
+                || !(debito.signum() > 0 ^ credito.signum() > 0))
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Partida deve ter debito OU credito positivo, sem valores negativos");
     }
     @Override @Transactional public CtbLancamento estornar(Long empresaId, Long id, String motivo) {
         CtbLancamento l = exigir(lancamentos.findByIdForUpdate(id, empresaId), "Lancamento inexistente");
@@ -117,7 +128,8 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     }
     private List<CtbLancamento> lancadosNoPeriodo(Long empresaId, LocalDate de, LocalDate ate) {
         return lancamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
-            .filter(l -> "LANCADO".equals(l.getStatus()) && !l.getData().isBefore(de) && !l.getData().isAfter(ate))
+            .filter(l -> ("LANCADO".equals(l.getStatus()) || "ESTORNADO".equals(l.getStatus()))
+                    && !l.getData().isBefore(de) && !l.getData().isAfter(ate))
             .toList();
     }
     @Override public List<Map<String, Object>> razao(Long empresaId, Long contaId, LocalDate de, LocalDate ate) {
@@ -178,7 +190,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return new LinkedHashMap<>(grupo);
     }
     @Override @Transactional public CtbLancamento gerarDeTitulo(Long empresaId, Long userId, Long tituloId, Long contaDebitoId, Long contaCreditoId) {
-        Titulo t = exigir(titulos.findByIdAndEmpresaIdAndDeletedAtIsNull(tituloId, empresaId), "Titulo inexistente");
+        Titulo t = exigir(titulos.findForUpdate(tituloId, empresaId), "Titulo inexistente");
         exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaDebitoId, empresaId), "Conta debito inexistente");
         exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaCreditoId, empresaId), "Conta credito inexistente");
         // O lancamento de emissao usa o valor original; o saldo muda a cada baixa.
