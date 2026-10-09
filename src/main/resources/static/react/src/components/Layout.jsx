@@ -401,6 +401,16 @@ export const Layout = () => {
             command: () => handleNavigation('/gestao-empresarial')
         });
         items.push({
+            label: 'Empresas (Stripe/Cert)',
+            icon: 'pi pi-key',
+            command: () => handleNavigation('/empresas-credenciais')
+        });
+        items.push({
+            label: 'Configurar empresa',
+            icon: 'pi pi-cog',
+            command: () => handleNavigation('/configurar-empresa')
+        });
+        items.push({
             label: t('nav.workflow', { defaultValue: 'Workflow' }),
             icon: 'pi pi-sitemap',
             command: () => handleNavigation('/workflow')
