@@ -1377,6 +1377,43 @@
       "roleHelp": "Selecione o novo perfil de acordo com a hierarquia permitida.",
       "permissionUpdated": "Permissão atualizada com sucesso!",
       "newRole": "Novo perfil"
+    },
+    "moduleSelector": {
+      "updated": "Módulos atualizados",
+      "noAccess": "{{username}} ficou sem acesso a nenhum módulo.",
+      "accessCount": "{{username}} tem acesso a {{count}} módulo(s).",
+      "header": "Módulos de {{username}}",
+      "selected": "{{selected}} de {{total}} selecionado(s)",
+      "markAll": "Marcar todos",
+      "unmarkAll": "Desmarcar todos",
+      "loading": "Carregando módulos...",
+      "restricted": "Restrito",
+      "readOnly": "Somente leitura",
+      "sensitiveWarning": "Módulo com documentos sensíveis: exige SUPERUSER."
+    },
+    "stripePayments": {
+      "title": "Stripe — pagamentos",
+      "subtitle": "Checkout e faturas vinculados a títulos a receber",
+      "credentials": "Chave de API / certificado (empresa)",
+      "refresh": "Atualizar",
+      "enabled": "Stripe habilitado",
+      "disabled": "Stripe desabilitado",
+      "key": "Chave: {{key}}",
+      "records": "Registros: {{count}}",
+      "webhook": "Webhook (Dashboard Stripe):",
+      "emptyPayments": "Nenhum pagamento Stripe. Use o botão de cartão nos títulos a receber.",
+      "titleId": "Título",
+      "amount": "Valor",
+      "status": "Status",
+      "session": "Sessão",
+      "invoice": "Fatura",
+      "url": "URL",
+      "open": "Abrir",
+      "webhookEvents": "Eventos de webhook recebidos",
+      "noEvents": "Nenhum evento ainda",
+      "eventId": "ID do evento",
+      "type": "Tipo",
+      "error": "Erro"
     }
   },
   "enterpriseOps": {
