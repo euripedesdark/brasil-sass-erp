@@ -1631,5 +1631,17 @@
     "saveError": "Could not save the contract.",
     "actionError": "Could not update the contract.",
     "currency": "BRL"
+  },
+  "cashFlow": {
+    "title": "Projected cash flow",
+    "subtitle": "Weekly inflows and outflows based on financial receivables and payables",
+    "days": "{{count}} days",
+    "inflows": "Inflows",
+    "outflows": "Outflows",
+    "net": "Net balance",
+    "accumulated": "Cumulative",
+    "empty": "No financial items for this period.",
+    "week": "Week",
+    "loadError": "Could not project cash flow."
   }
 }
