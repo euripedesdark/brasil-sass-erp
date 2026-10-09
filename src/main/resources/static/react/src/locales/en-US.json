@@ -95,7 +95,7 @@
     "logout": "Sign out",
     "registrations": "Master Data",
     "sales": "Sales",
-    "purchases": "Purchasing",
+    "purchases": "Purchases",
     "inventory": "Inventory",
     "finance": "Finance",
     "tax": "Tax",
@@ -119,12 +119,12 @@
     "brands": "Brands",
     "serviceCatalog": "Services",
     "carriers": "Carriers",
-    "units": "Units of Measure",
+    "units": "Units",
     "cities": "IBGE Cities",
     "salesOrders": "Sales Orders",
     "pos": "POS",
     "priceTables": "Price Tables",
-    "purchaseOrders": "Purchase Orders",
+    "purchaseOrders": "Purchase orders",
     "supplyChain": "Supply: Requests and Quotes",
     "receipts": "Receipts",
     "threeWayMatch": "Three-way Match",
@@ -159,9 +159,9 @@
     "issqn": "ISSQN",
     "taxEntries": "Tax Entries",
     "taxes": "Taxes",
-    "sefaz": "SEFAZ Consultation",
-    "digitalCertificate": "Digital Certificate",
-    "sped": "SPED EFD",
+    "sefaz": "SEFAZ consultation",
+    "digitalCertificate": "Digital certificate",
+    "sped": "SPED",
     "productionOrders": "Production Orders",
     "productionWaybills": "Production Waybills",
     "bom": "BOM",
@@ -211,7 +211,7 @@
     "welcomeUser": "Welcome, {{name}}",
     "description": "Main Brasil SaaS ERP workspace. Use shortcuts for your daily workflows.",
     "salesOrders": "Sales Orders",
-    "purchaseOrders": "Purchase Orders",
+    "purchaseOrders": "Purchase orders",
     "revenue": "Revenue",
     "expenses": "Expenses",
     "indicators": "Indicators",
@@ -275,7 +275,7 @@
     "services": "Tax services",
     "servicesDesc": "CT-e and MDF-e availability at SEFAZ.",
     "checkStatus": "Check status",
-    "nfse": "São Paulo NFS-e",
+    "nfse": "NFS-e",
     "nfseDesc": "Issue, consult and view city responses",
     "entriesDesc": "Inbound NF-e and purchasing integration",
     "ncmDesc": "Goods tax classification",
@@ -302,7 +302,7 @@
     "emitTitle": "Issue New Invoice",
     "orderId": "Order ID",
     "environment": "Environment",
-    "invoiceType": "Type",
+    "invoiceType": "Invoice type",
     "cancelConfirm": "Are you sure you want to cancel this invoice? This operation cannot be undone.",
     "cancelTitle": "Confirm Cancellation",
     "invoiceIssued": "Invoice issued successfully!",
@@ -372,7 +372,7 @@
     "action": "Action"
   },
   "company": {
-    "checking": "Checking company..."
+    "checking": "Checking"
   },
   "messages": {
     "success": "Success",
@@ -427,7 +427,7 @@
   },
   "footer": {
     "supportProject": "Support Brasil SaaS ERP",
-    "pixLabel": "PIX:",
+    "pixLabel": "PIX key",
     "copyPix": "Copy PIX Key",
     "copied": "Copied"
   },
@@ -475,7 +475,7 @@
     "title": "About the Project"
   },
   "customer": {
-    "title": "Customers",
+    "title": "Customer",
     "description": "Manage company customers.",
     "new": "New Customer",
     "save": "Save Customer",
@@ -510,7 +510,7 @@
     "branch": "Branch",
     "account": "Account",
     "digit": "Digit",
-    "initialBalance": "Initial balance",
+    "initialBalance": "Opening balance",
     "deactivate": "Deactivate",
     "deactivated": "Account deactivated",
     "deactivateError": "Unable to deactivate",
@@ -1138,7 +1138,7 @@
       "finalizeError": "Unable to finalize"
     },
     "kpi": {
-      "title": "KPIs",
+      "title": "KPI",
       "new": "New KPI",
       "refresh": "Refresh values",
       "calculate": "Calculate value",
@@ -1176,7 +1176,7 @@
       "exportError": "Failed to generate file"
     },
     "bi": {
-      "title": "Business Intelligence",
+      "title": "BI",
       "dashboards": "Dashboards",
       "indicators": "Performance Indicators",
       "new": "New dashboard",
