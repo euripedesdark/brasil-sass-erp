@@ -31,8 +31,8 @@ public class AuthController {
     }
 
     /**
-     * Login explícito contra a identidade local armazenada no PostgreSQL.
-     * Este endpoint nunca consulta o Active Directory/Auth Service.
+     * Login pelo provider POSTGRES do IAM compartilhado.
+     * A validação de credenciais e certificados pertence ao Auth Service.
      */
     @PostMapping("/login/database")
     public ResponseEntity<ApiResponse<LoginResponse>> loginDatabase(
@@ -47,6 +47,7 @@ public class AuthController {
     @PostMapping("/login/ad")
     public ResponseEntity<ApiResponse<LoginResponse>> loginAd(
             @Valid @RequestBody LoginRequest request) {
+        request.setProvider("AD");
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }

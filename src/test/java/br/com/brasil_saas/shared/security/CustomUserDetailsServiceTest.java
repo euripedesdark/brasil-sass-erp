@@ -3,7 +3,6 @@ package br.com.brasil_saas.shared.security;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,19 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code Administrators} e {@code Domain Admins} — sao SUPERUSER do ERP. Eles
  * entram no contrato ao lado dos {@code GRP_*}; o restante do AD continua fora.
  *
- * <p>A traducao e um metodo estatico e privado, entao o teste o invoca direto por
- * reflexao. Nao ha mock de {@code JdbcTemplate} aqui de proposito: o caminho do
- * grupo nao passa pelo banco, e o Mockito nao instrumenta o {@code JdbcTemplate}
- * neste JDK.
+ * <p>A traducao e compartilhada pelo login e pelas requisicoes JWT.
+ * Os marcadores de escrita de modulo sao authorities sem prefixo ROLE_.
  */
 class CustomUserDetailsServiceTest {
 
-    /** Invoca o metodo privado e estatico que faz a traducao. */
-    @SuppressWarnings("unchecked")
-    private Set<String> rolesDe(Collection<String> grupos) throws Exception {
-        Method m = CustomUserDetailsService.class.getDeclaredMethod("rolesDosGrupos", Set.class);
-        m.setAccessible(true);
-        return (Set<String>) m.invoke(null, normalizados(grupos));
+    /** Usa o tradutor compartilhado pelo login e pelo filtro JWT. */
+    private Set<String> rolesDe(Collection<String> grupos) {
+        return CustomUserDetailsService.authoritiesDosGrupos(normalizados(grupos));
     }
 
     /** Os grupos chegam do Auth Service ja normalizados, como no codigo real. */
@@ -103,7 +97,6 @@ class CustomUserDetailsServiceTest {
                 "srvcloud",
                 "GROUP POLICY CREATOR OWNERS",
                 "ERP_EMPRESA_00000000000191",
-                "ERP_MODULO_FISCAL",
                 "GRP_ERP_ACESSO",
                 "GRP_ASTRAL_ADMIN"));
 

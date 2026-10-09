@@ -4,6 +4,7 @@ import br.com.brasil_saas.core.config.AuthServiceProperties;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
@@ -18,11 +19,18 @@ public class AuthServiceClient {
     private final AuthServiceProperties properties;
 
     public AuthServiceClient(RestClient.Builder builder, AuthServiceProperties properties) {
-        this.client = builder.baseUrl(properties.getBaseUrl()).build();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(properties.getConnectTimeoutMs());
+        factory.setReadTimeout(properties.getReadTimeoutMs());
+        this.client = builder.baseUrl(properties.getBaseUrl()).requestFactory(factory).build();
         this.properties = properties;
     }
 
     public AuthServiceIdentity authenticate(String username, String password) {
+        return authenticate(username, password, "AD");
+    }
+
+    public AuthServiceIdentity authenticate(String username, String password, String provider) {
         if (!properties.isEnabled()) {
             throw new IllegalStateException("Auth Service está desabilitado");
         }
@@ -30,11 +38,12 @@ public class AuthServiceClient {
         try {
             AuthServiceIdentity identity = client.post()
                     .uri(properties.getAuthenticatePath())
-                    .body(new LoginRequest(username, password, "AD"))
+                    .body(new LoginRequest(username, password, provider))
                     .retrieve()
                     .body(AuthServiceIdentity.class);
 
-            if (identity == null || identity.username() == null || identity.username().isBlank()) {
+            if (identity == null || identity.username() == null || identity.username().isBlank()
+                    || !provider.equalsIgnoreCase(identity.provider())) {
                 throw new BusinessException("Auth Service não retornou uma identidade válida",
                         "AUTH_SERVICE_INVALID_RESPONSE");
             }

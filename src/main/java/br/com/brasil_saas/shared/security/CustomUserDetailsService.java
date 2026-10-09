@@ -89,7 +89,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 empresaId = empresaDoAd;
             }
 
-            authorities.addAll(rolesDosGrupos(grupos));
+            authorities.addAll(authoritiesDosGrupos(grupos));
             return new AuthenticatedUser(
                     rs.getLong("id"),
                     usuario,
@@ -143,17 +143,22 @@ public class CustomUserDetailsService implements UserDetailsService {
             Map.entry("grp_rh",          "ROLE_RH"),
             Map.entry("grp_vendedor",    "ROLE_VENDEDOR"),
             Map.entry("grp_erp_admin",   "ROLE_ADMIN"),
-            Map.entry("grp_superuser",   "ROLE_SUPERUSER")
+            Map.entry("grp_superuser",   "ROLE_SUPERUSER"),
+            Map.entry("postgres_superuser", "ROLE_SUPERUSER")
     );
 
     /** Traduz somente os grupos explicitamente autorizados nas roles do ERP. */
-    private static Set<String> rolesDosGrupos(Set<String> grupos) {
+    public static Set<String> authoritiesDosGrupos(Collection<String> grupos) {
         Set<String> roles = new LinkedHashSet<>();
-        for (String grupo : grupos) {
+        if (grupos == null) return roles;
+        for (String valor : grupos) {
+            if (valor == null) continue;
+            String grupo = valor.trim().toLowerCase(Locale.ROOT);
             String role = GRUPOS_PARA_ROLES.get(grupo);
-            if (role != null) {
-                roles.add(role);
-            }
+            if (role != null) roles.add(role);
+            // Marcador de escrita de modulo, reconhecido pelo ModuloAcessoService.
+            // Nao concede role nem libera modulo que o perfil nao permite.
+            if (grupo.matches("erp_modulo_[a-z0-9_]+")) roles.add(grupo);
         }
         return roles;
     }

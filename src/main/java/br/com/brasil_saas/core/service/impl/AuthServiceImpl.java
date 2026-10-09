@@ -18,7 +18,6 @@ import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.security.AuthServiceClient;
 import br.com.brasil_saas.shared.security.AuthServiceIdentity;
 import br.com.brasil_saas.shared.security.JwtService;
-import br.com.brasil_saas.shared.security.PostgresRoleAuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +37,6 @@ public class AuthServiceImpl implements AuthService {
     private final ModuloAcessoService moduloAcessoService;
     private final PerfilRepository perfilRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PostgresRoleAuthenticationService postgresRoleAuthenticationService;
     private final JwtService jwtService;
     private final IdentidadeProperties identidade;
     private final AuthServiceClient authServiceClient;
@@ -46,65 +44,31 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse loginBanco(LoginRequest request) {
-        String username = request.getUsername().trim();
-
-        Usuario usuario = usuarioRepository.findByUsernameWithAuthorities(username)
-                .orElseThrow(() -> new BusinessException("Credenciais inválidas", "INVALID_CREDENTIALS"));
-
-        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
-            throw new BusinessException("Usuário inativo", "USER_INACTIVE");
-        }
-
-        if (usuario.getSenhaHash() == null
-                || !passwordEncoder.matches(request.getPassword(), usuario.getSenhaHash())) {
-            throw new BusinessException("Credenciais inválidas", "INVALID_CREDENTIALS");
-        }
-
-        log.info("Login ERP autenticado pela base local: username='{}', provider='POSTGRES'",
-                username);
-
-        return buildLoginResponse(usuario, false);
+        return loginComProvider(request, "POSTGRES");
     }
 
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        String username = request.getUsername().trim();
-        String provider = request.getProvider() == null
-                ? "AD"
+        String provider = request.getProvider() == null ? "AD"
                 : request.getProvider().trim().toUpperCase(java.util.Locale.ROOT);
+        if ("DB".equals(provider)) provider = "POSTGRES";
+        return loginComProvider(request, provider);
+    }
 
-        if ("DB".equals(provider)) {
-            // Unmanaged: valida a credencial diretamente na role PostgreSQL.
-            if (!postgresRoleAuthenticationService.authenticateSuperuser(username, request.getPassword())) {
-                throw new BusinessException("Credenciais do banco inválidas", "INVALID_CREDENTIALS");
-            }
-
-            Usuario usuario = ensurePostgresSuperuser(username);
-            if (!Boolean.TRUE.equals(usuario.getAtivo())) {
-                throw new BusinessException("Usuário inativo", "USER_INACTIVE");
-            }
-
-            log.info("Login ERP autenticado diretamente pelo PostgreSQL: username='{}', provider='DB'", username);
-            return buildLoginResponse(usuario, true);
-        }
-
-        if (!"AD".equals(provider)) {
+    private LoginResponse loginComProvider(LoginRequest request, String provider) {
+        if (!"AD".equals(provider) && !"POSTGRES".equals(provider)) {
             throw new BusinessException("Fonte de identidade inválida", "INVALID_AUTH_PROVIDER");
         }
-
-        // Managed: Auth Service/AD continua sendo a autoridade de identidade.
-        AuthServiceIdentity identity = authServiceClient.authenticate(username, request.getPassword());
+        AuthServiceIdentity identity = authServiceClient.authenticate(
+                request.getUsername().trim(), request.getPassword(), provider);
         Usuario usuario = provisionOrUpdateIdentity(identity);
-
         if (!Boolean.TRUE.equals(usuario.getAtivo())) {
             throw new BusinessException("Usuário inativo", "USER_INACTIVE");
         }
-
-        log.info("Login ERP autenticado pelo Auth Service/AD: username='{}', provider='{}'",
+        log.info("Login ERP autenticado pelo IAM: username='{}', provider='{}'",
                 identity.username(), identity.provider());
-
-        return buildLoginResponse(usuario, false, identity.groups());
+        return buildLoginResponse(usuario, identity.groups(), identity.provider());
     }
 
     /**
@@ -139,7 +103,12 @@ public class AuthServiceImpl implements AuthService {
         // Grupo AD NÃO cria perfil. Perfil é autorização ERP e determina
         // quais módulos o usuário pode abrir. Os grupos ERP_MODULO_* do AD
         // serão usados separadamente para determinar gravação.
-        if (usuario.getPerfis().isEmpty() && usuario.getEmpresaId() != null) {
+        boolean entradaDireta = identity.groups() != null && identity.groups().stream()
+                .filter(java.util.Objects::nonNull)
+                .map(g -> g.trim().toLowerCase(java.util.Locale.ROOT))
+                .anyMatch(g -> java.util.Set.of("administrators", "domain admins", "domain users",
+                        "postgres_superuser").contains(g));
+        if (!entradaDireta && usuario.getPerfis().isEmpty() && usuario.getEmpresaId() != null) {
             Perfil usuarioPerfil = findOrCreateProfile(
                     empresaRepository.findById(usuario.getEmpresaId()).orElseThrow(),
                     "USUARIO",
@@ -201,36 +170,29 @@ public class AuthServiceImpl implements AuthService {
         }
 
         log.info("Login ERP autenticado por tíquete SPNEGO: username='{}'", username);
-        return buildLoginResponse(usuario, false);
+        return buildLoginResponse(usuario, java.util.List.of(), "AD");
     }
 
-    private LoginResponse buildLoginResponse(Usuario usuario, boolean postgresSuperuser) {
-        return buildLoginResponse(usuario, postgresSuperuser, java.util.List.of());
-    }
-
-    private LoginResponse buildLoginResponse(Usuario usuario, boolean postgresSuperuser, java.util.Collection<String> adGroups) {
+    private LoginResponse buildLoginResponse(Usuario usuario,
+            java.util.Collection<String> adGroups, String provider) {
         Set<String> authorities = extractAuthorities(usuario);
-
-        if (postgresSuperuser) {
-            authorities.add("ROLE_ADMIN");
-            authorities.add("ROLE_SUPERADMIN");
-        }
+        authorities.addAll(br.com.brasil_saas.shared.security.CustomUserDetailsService.authoritiesDosGrupos(adGroups));
 
         return LoginResponse.builder()
-                .accessToken(jwtService.generateToken(usuario.getId(), usuario.getUsername(), usuario.getEmpresaId(), adGroups))
-                .refreshToken(jwtService.generateRefreshToken(usuario.getId(), usuario.getUsername(), adGroups))
+                .accessToken(jwtService.generateToken(usuario.getId(), usuario.getUsername(), usuario.getEmpresaId(), adGroups, provider))
+                .refreshToken(jwtService.generateRefreshToken(usuario.getId(), usuario.getUsername(), adGroups, provider))
                 .usuarioId(usuario.getId())
                 .empresaId(usuario.getEmpresaId())
                 .username(usuario.getUsername())
                 .authorities(authorities)
-                .authSource(postgresSuperuser ? "DB" : "AD")
+                .authSource(provider)
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public LoginResponse refresh(String refreshToken) {
-        if (refreshToken == null || !jwtService.validate(refreshToken)) {
+        if (refreshToken == null || !jwtService.validate(refreshToken) || !jwtService.isRefreshToken(refreshToken)) {
             throw new BusinessException("Refresh token inválido", "INVALID_REFRESH_TOKEN");
         }
         String username = jwtService.username(refreshToken);
@@ -239,20 +201,27 @@ public class AuthServiceImpl implements AuthService {
         Usuario usuario = usuarioRepository.findByUsernameWithAuthorities(username)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado", "USER_NOT_FOUND"));
 
+        if (!Boolean.TRUE.equals(usuario.getAtivo())) {
+            throw new BusinessException("Usuário inativo", "USER_INACTIVE");
+        }
+
         if (!usuario.getId().equals(userId)) {
             throw new BusinessException("Refresh token inválido", "INVALID_REFRESH_TOKEN");
         }
 
         Set<String> authorities = extractAuthorities(usuario);
+        String provider = jwtService.authProvider(refreshToken);
         java.util.List<String> adGroups = jwtService.adGroups(refreshToken);
+        authorities.addAll(br.com.brasil_saas.shared.security.CustomUserDetailsService.authoritiesDosGrupos(adGroups));
 
         return LoginResponse.builder()
-                .accessToken(jwtService.generateToken(usuario.getId(), usuario.getUsername(), usuario.getEmpresaId(), adGroups))
-                .refreshToken(jwtService.generateRefreshToken(usuario.getId(), usuario.getUsername(), adGroups))
+                .accessToken(jwtService.generateToken(usuario.getId(), usuario.getUsername(), usuario.getEmpresaId(), adGroups, provider))
+                .refreshToken(jwtService.generateRefreshToken(usuario.getId(), usuario.getUsername(), adGroups, provider))
                 .usuarioId(usuario.getId())
                 .empresaId(usuario.getEmpresaId())
                 .username(usuario.getUsername())
                 .authorities(authorities)
+                .authSource(provider)
                 .build();
     }
 
@@ -305,92 +274,6 @@ public class AuthServiceImpl implements AuthService {
                 .modulos(modulos)
                 .modulosSomenteLeitura(somenteLeitura)
                 .build();
-    }
-
-    /**
-     * Provisiona a representação ERP de uma role PostgreSQL SUPERUSER.
-     *
-     * A senha PostgreSQL não é copiada para senha_hash.
-     * O cadastro recebe uma senha BCrypt aleatória apenas para manter
-     * a entidade compatível com o modelo ERP. A autenticação posterior
-     * continua sendo feita pela role PostgreSQL.
-     */
-    private Usuario ensurePostgresSuperuser(String username) {
-        Usuario existente = usuarioRepository.findByUsernameWithAuthorities(username).orElse(null);
-
-        if (existente != null) {
-            ensureAdminProfile(existente);
-            return existente;
-        }
-
-        // A empresa que nasce com o banco vazio. Estes dados sao os reais da
-        // SRVCLOUD CONSULTORIA, e nao um placeholder: a empresa criada aqui
-        // recebe o id 1, que e' a empresa dona do certificado A1 e a que o
-        // dono administra. Com o placeholder anterior (cnpj 00000000000000,
-        // uf RS, fantasia "Brasil SaaS") a instalacao nova nascia com a
-        // empresa errada, e o erro so aparecia quando alguem emitia documento
-        // fiscal — tarde demais para descobrir.
-        //
-        // Fonte: dados publicos da Receita Federal, e o proprio certificado
-        // ICP-Brasil (CN=...:00000000000191), que concordam com o CNPJ.
-        Empresa empresa = empresaRepository.findAll().stream().findFirst().orElseGet(() -> {
-            Empresa nova = new Empresa();
-            nova.setRazaoSocial("EURIPEDES BATISTA DE PAIVA JUNIOR TECNOLOGIA DA INFORMACAO LTDA");
-            nova.setNomeFantasia("SRVCLOUD CONSULTORIA");
-            nova.setCnpj("00000000000191");
-            nova.setEndereco("RUA PAIS LEME");
-            nova.setNumero("215");
-            nova.setComplemento("CONJ 1713");
-            nova.setBairro("PINHEIROS");
-            nova.setCep("05424150");
-            nova.setUf("SP");
-            nova.setCodigoIbge("3550308");
-            nova.setRegimeTributario("SIMPLES");
-            nova.setTelefone("4197880145");
-            nova.setStatus("ATIVO");
-            return empresaRepository.save(nova);
-        });
-
-        Perfil admin = findOrCreateProfile(
-                empresa, "ADMIN", "Administrador com acesso total", 0);
-
-        Usuario novo = new Usuario();
-        novo.setEmpresaId(empresa.getId());
-        // O nome e' o proprio nome de usuario. Antes era
-        // "PostgreSQL Superuser - " + username, e esse rotulo interno aparecia
-        // na tela como se fosse o nome da pessoa. O ERP nao sabe o nome civil de
-        // quem entra por este caminho — ele so sabe o nome da conta. Inventar um
-        // rotulo e' pior que mostrar o que se sabe.
-        novo.setNome(username);
-        novo.setUsername(username);
-        // Email no formato do UPN do AD (usuario@dominio), nao "@localhost": o
-        // dominio vem da configuracao, e o padrao e' o proprio realm do AD.
-        novo.setEmail(identidade.emailPara(username));
-        novo.setSenhaHash(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
-        novo.setAtivo(true);
-        novo.setMfaHabilitado(false);
-        novo.setTentativasLogin(0);
-        novo.getPerfis().add(admin);
-
-        Usuario salvo = usuarioRepository.save(novo);
-        log.info("Usuário ERP '{}' provisionado para PostgreSQL SUPERUSER; usuarioId={}",
-                username, salvo.getId());
-        return salvo;
-    }
-
-    private void ensureAdminProfile(Usuario usuario) {
-        Empresa empresa = empresaRepository.findById(usuario.getEmpresaId()).orElse(null);
-        if (empresa == null) {
-            return;
-        }
-
-        Perfil admin = findOrCreateProfile(
-                empresa, "ADMIN", "Administrador com acesso total", 0);
-
-        if (usuario.getPerfis().stream().noneMatch(p -> admin.getId().equals(p.getId()))) {
-            usuario.getPerfis().add(admin);
-            usuarioRepository.save(usuario);
-        }
     }
 
     private Perfil findOrCreateProfile(
