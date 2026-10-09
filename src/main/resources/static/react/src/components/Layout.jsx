@@ -205,6 +205,7 @@ export const Layout = () => {
                     item('menu.taxEntries', 'pi pi-download', '/fiscal/entradas'),
                     item('menu.taxes', 'pi pi-percentage', '/fiscal/impostos'),
                     item('Painel fiscal', 'pi pi-chart-bar', '/fiscal/painel'),
+                    item('Prontidão fiscal', 'pi pi-check-circle', '/fiscal/prontidao'),
                     item('Apuracao', 'pi pi-calculator', '/fiscal/apuracoes'),
                     item('EFD-Reinf', 'pi pi-book', '/fiscal/reinf'),
                     item('ICMS DIFAL', 'pi pi-percentage', '/fiscal/difal'),
