@@ -223,7 +223,7 @@ export const Layout = () => {
                 modulo: 'bi',
                 icon: 'pi pi-chart-bar',
                 items: [
-                    item('BI Control Tower', 'pi pi-chart-line', '/bi/control-tower'),
+                    item('BI Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower'),
                     item('menu.kpis', 'pi pi-chart-bar', '/bi/kpis'),
                     item('menu.reports', 'pi pi-file', '/bi/relatorios')
                 ]
