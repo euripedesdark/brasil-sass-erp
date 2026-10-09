@@ -326,7 +326,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void reservarEstoqueDoPedido(PedidoVenda pedido) {
-        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrue(pedido.getEmpresaId(), "PADRAO")
+        Long depositoPadrao = depositoRepository.findByEmpresaIdAndPadraoTrueAndAtivoTrue(pedido.getEmpresaId())
                 .map(d -> d.getId())
                 .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(pedido.getEmpresaId()).map(d -> d.getId()).orElse(null));
         if (depositoPadrao == null) return;
@@ -353,7 +353,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long pedidoId) {
-        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrue(empresaId, "PADRAO")
+        Long depositoPadrao = depositoRepository.findByEmpresaIdAndPadraoTrueAndAtivoTrue(empresaId)
                 .map(d -> d.getId())
                 .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(empresaId).map(d -> d.getId()).orElse(null));
         if (depositoPadrao == null) throw new BusinessException("Nenhum deposito ativo para baixa de estoque");
@@ -369,11 +369,8 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         mov.setDepositoId(depositoPadrao);
         mov.setProdutoId(produtoId);
         mov.setTipo("SAIDA");
-        // A tabela bc_est_movimentacao nao tem documento_tipo/documento_id;
-        // o vinculo com o documento de origem usa origem/origem_id, mesmo
-        // padrao de PedidoCompraServiceImpl e InventarioEstoqueController.
-        mov.setOrigem("PEDIDO_VENDA");
-        mov.setOrigemId(pedidoId);
+        mov.setDocumentoTipo("PEDIDO_VENDA");
+        mov.setDocumentoId(pedidoId);
         mov.setQuantidade(quantidade.negate());
         mov.setSaldoApos(saldo.getQuantidade());
         mov.setObservacao("Baixa por venda");
