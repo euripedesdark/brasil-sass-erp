@@ -34,6 +34,9 @@ public class PedidoTributacaoService {
         Empresa emp = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new IllegalArgumentException("Empresa não encontrada"));
         String ufOrigem = emp.getUf();
+        if (ufDestino == null || ufDestino.isBlank()) {
+            ufDestino = ufOrigem;
+        }
         List<Map<String, Object>> itens = new ArrayList<>();
         int i = 0;
         if (req.itens() != null) {

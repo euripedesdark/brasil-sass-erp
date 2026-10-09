@@ -46,6 +46,9 @@ export const Vendas = () => {
     const [emAcao, setEmAcao] = useState(null);
     const [error, setError] = useState('');
     const [somenteLeitura, setSomenteLeitura] = useState(false);
+    const [ufDestinoTax, setUfDestinoTax] = useState('');
+    const [taxPrev, setTaxPrev] = useState(null);
+    const [taxDlg, setTaxDlg] = useState(false);
     const [clientes, setClientes] = useState([]);
     const [creditoCli, setCreditoCli] = useState(null);
     const [dlgAtp, setDlgAtp] = useState(false);
@@ -156,6 +159,38 @@ export const Vendas = () => {
         const d = Number(it.valorDesconto) || 0;
         return acc + (q * vu - d);
     }, 0);
+
+    
+    const previaTributaria = async () => {
+        if (!form.itens?.length) {
+            toast.current?.show({ severity: 'warn', summary: 'Itens', detail: 'Inclua itens antes da prévia', life: 3000 });
+            return;
+        }
+        setLoading(true);
+        try {
+            const body = {
+                empresaId, clienteId: form.clienteId || 0,
+                itens: form.itens.map((it, i) => ({
+                    numeroItem: it.numeroItem || i + 1,
+                    produtoId: it.produtoId || null,
+                    quantidade: it.quantidade,
+                    valorUnitario: it.valorUnitario,
+                    valorDesconto: it.valorDesconto || 0,
+                })),
+            };
+            const res = await PedidoVendaService.preverTributacao(body, {
+                ufDestino: ufDestinoTax || undefined,
+                consumidorFinal: true,
+                contribuinte: false,
+            });
+            setTaxPrev(res?.data?.data ?? res?.data ?? res);
+            setTaxDlg(true);
+        } catch (e) {
+            toast.current?.show({ severity: 'error', summary: 'Prévia tributária', detail: getApiErrorMessage(e, 'Falha'), life: 5000 });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const salvar = async () => {
         setError('');
@@ -304,7 +339,8 @@ export const Vendas = () => {
 
             <Dialog header={somenteLeitura ? 'Pedido (visualizacao)' : `${t('legacyUi.vendasLegacy.new')} de venda`} visible={dialogVisible}
                 style={{ width: '860px' }} onHide={() => setDialogVisible(false)} maximizable
-                footer={<div>
+                footer={<div className="flex gap-2 flex-wrap justify-content-end">
+                    <Button label="Prévia tributária" icon="pi pi-percentage" outlined onClick={previaTributaria} loading={loading} />
                     <Button label="Fechar" className="p-button-text" onClick={() => setDialogVisible(false)} />
                     {!somenteLeitura && <Button label="Salvar pedido" icon="pi pi-save" onClick={salvar} loading={loading} />}
                 </div>}>
@@ -350,7 +386,13 @@ export const Vendas = () => {
                     <Column field="valorUnitario" header="Unit." body={(r) => moeda(r.valorUnitario)} />
                     {!somenteLeitura && <Column body={(_, { rowIndex }) => <Button icon="pi pi-trash" className="p-button-text p-button-danger p-button-sm" onClick={() => removerItem(rowIndex)} />} style={{ width: '60px' }} />}
                 </DataTable>
-                <div className="text-right mt-3 font-bold">Subtotal itens: {moeda(totalItens())}</div>
+                <div className="flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                    <div className="flex align-items-center gap-2">
+                        <label>UF destino (prévia)</label>
+                        <InputText value={ufDestinoTax} onChange={(e) => setUfDestinoTax(e.target.value.toUpperCase())} maxLength={2} style={{ width: '4rem' }} placeholder="RJ" />
+                    </div>
+                    <div className="font-bold">Subtotal itens: {moeda(totalItens())}</div>
+                </div>
             </Dialog>
 
             <AtpConfirmDialog
@@ -368,8 +410,23 @@ export const Vendas = () => {
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgPos(false)} /><Button label='Abrir OS' icon='pi pi-check' onClick={confirmarPosvenda} /></div>
             </Dialog>
+            <Dialog header="Prévia de impostos" visible={taxDlg} onHide={() => setTaxDlg(false)} style={{ width: 'min(96vw, 560px)' }}>
+                {taxPrev && (
+                    <div className="grid">
+                        <div className="col-6"><b>UF</b> {taxPrev.ufOrigem || '—'} → {taxPrev.ufDestino || '—'}</div>
+                        <div className="col-6"><b>Total impostos</b> {moeda(taxPrev.totalImpostos)}</div>
+                        <div className="col-4"><b>ICMS</b> {moeda(taxPrev.totalIcms)}</div>
+                        <div className="col-4"><b>PIS</b> {moeda(taxPrev.totalPis)}</div>
+                        <div className="col-4"><b>COFINS</b> {moeda(taxPrev.totalCofins)}</div>
+                        <div className="col-4"><b>DIFAL</b> {moeda(taxPrev.totalDifal)}</div>
+                        <div className="col-4"><b>ICMS-ST</b> {moeda(taxPrev.totalIcmsSt)}</div>
+                        <div className="col-12 text-color-secondary text-sm">Cadastre regras em Fiscal → Regras tributárias (NCM/CFOP). Não emite NFe.</div>
+                    </div>
+                )}
+            </Dialog>
         </div>
     );
 };
 
 export default Vendas;
+
