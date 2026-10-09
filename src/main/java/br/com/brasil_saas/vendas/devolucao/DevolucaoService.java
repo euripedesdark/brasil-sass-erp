@@ -32,7 +32,7 @@ public class DevolucaoService {
     }
     @Transactional public VenDevolucao solicitar(Long empresaId, Long pedidoId, String motivo, Map<Long, BigDecimal> itensQtd) {
         // A trava do pedido serializa solicitacoes concorrentes sobre o mesmo pedido.
-        PedidoVenda p = exigir(pedidos.findByIdForUpdate(pedidoId).filter(x -> empresaId.equals(x.getEmpresaId())), "Pedido inexistente");
+        PedidoVenda p = exigir(pedidos.findByIdForUpdateAndEmpresaId(pedidoId, empresaId), "Pedido inexistente");
         if (!"FATURADO".equals(p.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente pedido faturado");
         if (motivo == null || motivo.isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo obrigatorio");
         if (itensQtd == null || itensQtd.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Informe ao menos um item");
@@ -70,7 +70,7 @@ public class DevolucaoService {
         return d;
     }
     @Transactional public VenDevolucao decidir(Long empresaId, Long userId, Long id, boolean aprovar) {
-        VenDevolucao d = exigir(devolucoes.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Devolucao inexistente");
+        VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
         if ("SOLICITADA".equals(d.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Devolucao ja decidida");
         d.setStatus(aprovar ? "APROVADA" : "REJEITADA");
         d.setDecididaPor(userId);
@@ -80,9 +80,11 @@ public class DevolucaoService {
     @Transactional public VenDevolucao receber(Long empresaId, Long id) {
         VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
         if ("APROVADA".equals(d.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprove antes de receber");
-        Long depId = depositos.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO").orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Deposito PADRAO inexistente")).getId();
+        Long depId = depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId, "PADRAO")
+                .or(() -> depositos.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Nenhum deposito ativo para receber devolucao")).getId();
         for (VenDevolucaoItem i : itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) {
-            SaldoEstoque s = saldos.findByEmpresaIdAndProdutoIdForUpdate(empresaId, i.getProdutoId()).orElseGet(() -> {
+            SaldoEstoque s = saldos.findForUpdate(empresaId, depId, i.getProdutoId()).orElseGet(() -> {
                 SaldoEstoque n = new SaldoEstoque();
                 n.setEmpresaId(empresaId);
                 n.setDepositoId(depId);
