@@ -529,7 +529,7 @@ export default function OrdemServico() {
                     <Column field="cliente" header={t('legacyUi.os.customer')} sortable filter filterPlaceholder={t('legacyUi.os.filterCustomer')} style={{ width: '250px' }} />
                     <Column field="dataMov" header={t('legacyUi.os.date')} body={(row) => formatarData(row.aberturaAt || row.dataMov)} sortable style={{ width: '140px' }} />
                     <Column field="valorTotal" header={t('legacyUi.os.totalValue')} body={(row) => formatarMoeda(row.valorTotal)} sortable style={{ width: '120px' }} />
-                    <Column field="status" header="Status" body={(row) => statusTemplate({ ...row, status: row.status || (row.baixaMov === 'N' ? 'ABERTA' : 'FECHADA') })} sortable style={{ width: '120px' }} />
+                    <Column field="status" header={t('common.status')} body={(row) => statusTemplate({ ...row, status: row.status || (row.baixaMov === 'N' ? 'ABERTA' : 'FECHADA') })} sortable style={{ width: '120px' }} />
                     <Column body={acoesTemplate} style={{ width: '200px' }} />
                 </DataTable>
             </div>
