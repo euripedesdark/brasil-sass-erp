@@ -1630,6 +1630,6 @@
     "loadError": "Impossible de charger les contrats.",
     "saveError": "Impossible d’enregistrer le contrat.",
     "actionError": "Impossible de mettre à jour le contrat.",
-    "currency": "EUR"
+    "currency": "BRL"
   }
 }
