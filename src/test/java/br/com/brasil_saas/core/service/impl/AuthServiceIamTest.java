@@ -83,7 +83,7 @@ class AuthServiceIamTest {
         when(jwt.username("refresh")).thenReturn("postgres");
         when(jwt.userId("refresh")).thenReturn(5L);
         var u = usuario(); u.setAtivo(false);
-        when(usuarios.findByUsernameWithAuthorities("postgres")).thenReturn(Optional.of(u));
+        when(usuarios.findById(5L)).thenReturn(Optional.of(u));
         assertThrows(BusinessException.class, () -> service.refresh("refresh"));
         verify(jwt, never()).generateRefreshToken(any(), any(), any(), any());
     }
