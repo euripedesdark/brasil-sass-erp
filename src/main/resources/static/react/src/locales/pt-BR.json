@@ -1631,5 +1631,17 @@
     "saveError": "Não foi possível salvar o contrato.",
     "actionError": "Não foi possível atualizar o contrato.",
     "currency": "BRL"
+  },
+  "cashFlow": {
+    "title": "Fluxo de caixa projetado",
+    "subtitle": "Entradas e saídas semanais com base nos títulos financeiros",
+    "days": "{{count}} dias",
+    "inflows": "Entradas",
+    "outflows": "Saídas",
+    "net": "Saldo líquido",
+    "accumulated": "Acumulado",
+    "empty": "Nenhum título no período.",
+    "week": "Semana",
+    "loadError": "Não foi possível projetar o fluxo de caixa."
   }
 }
