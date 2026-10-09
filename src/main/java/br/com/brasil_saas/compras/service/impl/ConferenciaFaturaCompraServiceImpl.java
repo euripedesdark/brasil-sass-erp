@@ -27,6 +27,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +56,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     static final String QUANTIDADE_FATURADA_DIVERGENTE = "QUANTIDADE_FATURADA_DIVERGENTE";
     static final String PRECO_DIVERGENTE = "PRECO_DIVERGENTE";
     static final String ITEM_NAO_PEDIDO = "ITEM_NAO_PEDIDO";
+    static final String CONSUMO_ACUMULADO_EXCEDIDO = "CONSUMO_ACUMULADO_EXCEDIDO";
 
     private final ConferenciaFaturaCompraRepository repository;
     private final ConferenciaFaturaCompraItemRepository itemRepository;
@@ -141,11 +144,27 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         BigDecimal tolerancia = nz(request.tolerancia());
         BigDecimal limite = tolerancia.abs();
 
+        // Rateio: um recebimento pode ser faturado por varias NFs, sem
+        // ultrapassar o recebido. O consumo acumulado e a soma do valor das
+        // conferencias APROVADAS anteriores deste recebimento (outras NFs).
+        // A reavaliacao do mesmo par substitui a anterior e nao entra aqui.
+        var anteriores = repository.findConsumoAcumuladoRecebimento(empresaId, recebimento.getId(), nfe.getId());
+        BigDecimal consumidoValor = BigDecimal.ZERO;
+        Map<Long, BigDecimal> consumidoQtd = new LinkedHashMap<>();
+        if (anteriores != null) for (var anterior : anteriores) {
+            consumidoValor = consumidoValor.add(nz(anterior.getValorFatura()));
+            for (var consumida : itemRepository.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByNumeroItemAsc(empresaId, anterior.getId())) {
+                if (consumida.getProdutoId() == null) continue;
+                consumidoQtd.merge(consumida.getProdutoId(), nz(consumida.getQuantidadeFaturada()), BigDecimal::add);
+            }
+        }
+        BigDecimal disponivelValor = valorRecebido.subtract(consumidoValor);
         // Uma NF pode faturar um recebimento parcial, sem faturar o pedido todo.
-        // O total fiscal e' a fonte do valor, nao somente o informado na tela.
+        // O total fiscal e a fonte do valor, nao somente o informado na tela.
+        // No rateio, a NF precisa caber na parte ainda nao consumida.
         boolean totaisOk = nfe.getValorTotal() != null
                 && valorFatura.subtract(nfe.getValorTotal()).abs().compareTo(limite) <= 0
-                && valorFatura.subtract(valorRecebido).abs().compareTo(limite) <= 0
+                && valorFatura.subtract(disponivelValor).compareTo(limite) <= 0
                 && valorRecebido.subtract(valorPedido).compareTo(limite) <= 0;
 
         List<ConferenciaFaturaCompraItem> itens = compararItens(
@@ -155,11 +174,34 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                         empresaId, recebimento.getId()),
                 nfeItemRepository.findByNfeIdOrderByNumeroItem(nfe.getId()));
 
+        // Consumo acumulado por produto: o faturado nesta NF nao pode passar
+        // do recebido menos o ja faturado por NFs anteriores.
+        Set<Long> excedidos = new LinkedHashSet<>();
+        for (var linha : itens) {
+            if (linha.getProdutoId() == null) continue;
+            BigDecimal disponivel = nz(linha.getQuantidadeRecebida())
+                    .subtract(consumidoQtd.getOrDefault(linha.getProdutoId(), BigDecimal.ZERO));
+            if (nz(linha.getQuantidadeFaturada()).compareTo(disponivel) > 0) {
+                linha.setConforme(false);
+                linha.setStatus("DIVERGENTE");
+                linha.setTipoDivergencia(CONSUMO_ACUMULADO_EXCEDIDO);
+                linha.setDivergencia("Faturado " + linha.getQuantidadeFaturada()
+                        + " acima do disponivel " + disponivel
+                        + " no recebimento (consumo acumulado)");
+                excedidos.add(linha.getProdutoId());
+            }
+        }
+
         long divergentes = itens.stream().filter(i -> !Boolean.TRUE.equals(i.getConforme())).count();
-        // Cada NF e cada recebimento so podem ser consumidos por um par aprovado.
+        // Uma NF pertence a um unico recebimento: a mesma NF com outro
+        // recebimento continua bloqueada. O reuso do recebimento por outra
+        // NF e o rateio acima, nao um conflito.
         var consumos = repository.findConsumosConflitantes(empresaId, recebimento.getId(), nfe.getId());
-        boolean reaproveitado = consumos != null && !consumos.isEmpty();
-        boolean aprovada = totaisOk && !itens.isEmpty() && divergentes == 0 && !reaproveitado;
+        var nfReaproveitada = consumos != null ? consumos.stream()
+                .filter(c -> nfe.getId().equals(c.getNfeId())
+                        && (c.getRecebimentoId() == null || !c.getRecebimentoId().equals(recebimento.getId())))
+                .findFirst().orElse(null) : null;
+        boolean aprovada = totaisOk && !itens.isEmpty() && divergentes == 0 && nfReaproveitada == null;
 
         ConferenciaFaturaCompra conferencia = new ConferenciaFaturaCompra();
         conferencia.setEmpresaId(empresaId);
@@ -175,8 +217,10 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         conferencia.setDivergencia(aprovada ? null
                 : descrever(valorPedido, valorRecebido, valorFatura, tolerancia, totaisOk, divergentes, itens.size())
                     + ", total NF-e=" + nfe.getValorTotal()
-                    + (reaproveitado ? " | NF-e ou recebimento ja consumido pela conferencia "
-                        + consumos.get(0).getId() : ""));
+                    + (nfReaproveitada != null ? " | NF-e ja consumida pela conferencia "
+                        + nfReaproveitada.getId() : "")
+                    + (!excedidos.isEmpty() ? " | consumo acumulado excedido no recebimento "
+                        + recebimento.getId() + " (produtos " + excedidos + ")" : ""));
 
         ConferenciaFaturaCompra salva = repository.save(conferencia);
 
@@ -324,12 +368,11 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
             tipo = ITEM_NAO_FATURADO;
             problemas.add("o item nao tem linha na NF-e de entrada");
         } else {
+            // Rateio: faturado menor que recebido e parcial valida; o teto e
+            // dado pelo consumo acumulado em conferir(), nao pela igualdade.
             if (quantidadeFaturada.compareTo(quantidadeRecebida) > 0) {
                 tipo = QUANTIDADE_FATURADA_MAIOR_QUE_RECEBIDA;
                 problemas.add("faturado " + quantidadeFaturada + " maior que o recebido " + quantidadeRecebida);
-            } else if (quantidadeFaturada.compareTo(quantidadeRecebida) != 0) {
-                tipo = QUANTIDADE_FATURADA_DIVERGENTE;
-                problemas.add("faturado " + quantidadeFaturada + " diferente do recebido " + quantidadeRecebida);
             }
             if (valorUnitarioFaturado.compareTo(valorUnitarioPedido) != 0) {
                 if (OK.equals(tipo)) {

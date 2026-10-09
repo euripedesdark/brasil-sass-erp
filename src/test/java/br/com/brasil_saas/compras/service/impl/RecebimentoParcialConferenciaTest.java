@@ -135,12 +135,27 @@ class RecebimentoParcialConferenciaTest {
     }
 
     @Test
-    void recebimentoJaConsumidoPorOutraNfNaoPodeSerAprovadoDeNovo() {
+    void recebimentoTotalmenteConsumidoBloqueiaNovaNf() {
         var anterior = new ConferenciaFaturaCompra(); anterior.setId(3L);
+        anterior.setStatus("APROVADA"); anterior.setRecebimentoId(4L);
+        anterior.setNfeId(6L); anterior.setValorFatura(new BigDecimal("40"));
+        when(conferencias.findConsumoAcumuladoRecebimento(2L, 4L, 5L)).thenReturn(List.of(anterior));
+        var consumida = new ConferenciaFaturaCompraItem();
+        consumida.setProdutoId(6L); consumida.setQuantidadeFaturada(new BigDecimal("4"));
+        when(itens.findByEmpresaIdAndConferenciaIdAndDeletedAtIsNullOrderByNumeroItemAsc(2L, 3L))
+                .thenReturn(List.of(consumida));
+        var c = conferir("40", "0");
+        assertEquals("DIVERGENTE", c.getStatus());
+        assertTrue(c.getDivergencia().contains("consumo acumulado excedido"));
+    }
+    @Test
+    void mesmaNfComOutroRecebimentoContinuaBloqueada() {
+        var anterior = new ConferenciaFaturaCompra(); anterior.setId(3L);
+        anterior.setNfeId(5L); anterior.setRecebimentoId(99L);
         when(conferencias.findConsumosConflitantes(2L, 4L, 5L)).thenReturn(List.of(anterior));
         var c = conferir("40", "0");
         assertEquals("DIVERGENTE", c.getStatus());
-        assertTrue(c.getDivergencia().contains("ja consumido pela conferencia 3"));
+        assertTrue(c.getDivergencia().contains("ja consumida pela conferencia 3"));
     }
 
     @Test

@@ -248,3 +248,39 @@ incluindo 7 novos de integracao) e 62 no bloco vizinho
 build Maven completo. Pendente: ajuste contabil automatico (requer plano de
 contas por empresa), emissao fiscal automatica da devolucao e transmissao
 externa do Reinf.
+
+## Entrega — rateio de recebimento entre varias NFs com consumo acumulado
+
+Branch codex/devolucao-integracao-financeira (mesmo bloco). Sem migration, sem tela nova.
+
+- Antes, cada NF e cada recebimento so podiam ser consumidos por um par
+  aprovado: a segunda NF do mesmo recebimento caia em DIVERGENTE.
+- Agora o recebimento pode ser faturado por varias NFs. O consumo acumulado
+  e a soma do valor e das quantidades faturadas das conferencias APROVADAS
+  anteriores do mesmo recebimento (outras NFs); a reavaliacao do mesmo par
+  substitui a anterior e nao entra na soma.
+- Regras novas em conferir: a NF precisa caber na parte ainda nao consumida
+  do recebimento (valor); por produto, o faturado nao pode passar do
+  recebido menos o ja faturado (tipo novo CONSUMO_ACUMULADO_EXCEDIDO).
+- A mesma NF com outro recebimento continua bloqueada: uma NF pertence a
+  um unico recebimento.
+- Em linha: faturado menor que recebido passa a ser parcial valida; o teto
+  e dado pelo consumo acumulado, nao pela igualdade. Faturado acima do
+  recebido continua divergente, assim como preco divergente e item nao pedido.
+- A cobertura total antes do pagamento segue pendente (proximo passo
+  natural deste encadeamento).
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImpl.java
+    src/main/java/br/com/brasil_saas/compras/repository/ConferenciaFaturaCompraRepository.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/RecebimentoRateioMultiNfTest.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/RecebimentoParcialConferenciaTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 5 casos novos de rateio (primeira NF aprova, segunda aprova
+dentro do acumulado, terceira acima diverge, mesma NF em outro recebimento
+bloqueia, reavaliacao do mesmo par nao soma em duplicata) e 1 caso antigo
+atualizado para a nova regra (consumo total bloqueia, NF reutilizada
+bloqueia). Bloco compras: 33 casos sem falha. Suite completa: 368 testes,
+zero falhas, zero erros, JDK 21, incluindo contexto Spring real.
