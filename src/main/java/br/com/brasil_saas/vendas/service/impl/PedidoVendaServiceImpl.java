@@ -5,6 +5,8 @@ import br.com.brasil_saas.estoque.model.SaldoEstoque;
 import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
+import br.com.brasil_saas.estoque.repository.LoteEstoqueRepository;
+import br.com.brasil_saas.estoque.repository.EnderecoEstoqueRepository;
 import br.com.brasil_saas.estoque.model.ReservaEstoque;
 import br.com.brasil_saas.estoque.repository.ReservaEstoqueRepository;
 import br.com.brasil_saas.financeiro.model.Titulo;
@@ -48,6 +50,8 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     private final OrdemServicoService osService;
     private final SaldoEstoqueRepository saldoEstoqueRepository;
     private final DepositoRepository depositoRepository;
+    private final LoteEstoqueRepository loteEstoqueRepository;
+    private final EnderecoEstoqueRepository enderecoEstoqueRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
     private final ReservaEstoqueRepository reservaEstoqueRepository;
     private final TituloRepository tituloRepository;
@@ -177,22 +181,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         }
         if (forcar == false) validarCredito(pedido);
 
-        for (ItemPedidoVenda item : pedido.getItens()) {
-            if (item.getProdutoId() != null && !Boolean.TRUE.equals(item.getCriadoEstoque())) {
-                baixarEstoque(pedido.getEmpresaId(), item.getProdutoId(), item.getQuantidade(), pedido.getId());
-                item.setCriadoEstoque(true);
-                reservaEstoqueRepository
-                        .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(pedido.getEmpresaId(), pedido.getId())
-                        .stream()
-                        .filter(reserva -> item.getProdutoId().equals(reserva.getProdutoId())
-                                && ("RESERVADA".equals(reserva.getStatus()) || "SEPARACAO".equals(reserva.getStatus())))
-                        .findFirst()
-                        .ifPresent(reserva -> {
-                            reserva.setStatus("CONSUMIDA");
-                            reservaEstoqueRepository.save(reserva);
-                        });
-            }
-        }
+        baixarEstoqueDoPedido(pedido);
 
         Titulo titulo = new Titulo();
         titulo.setEmpresaId(pedido.getEmpresaId());
@@ -361,30 +350,116 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         }
     }
 
-    private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long pedidoId) {
-        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId, "PADRAO")
-                .map(d -> d.getId())
-                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId).map(d -> d.getId()).orElse(null));
-        if (depositoPadrao == null) throw new BusinessException("Nenhum deposito ativo para baixa de estoque");
-        SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(empresaId, depositoPadrao, produtoId)
-                .orElseThrow(() -> new BusinessException("Sem saldo do produto " + produtoId));
-        BigDecimal reservadoOutros = reservaEstoqueRepository.sumAtivasDeOutrosPedidos(empresaId, depositoPadrao, produtoId, pedidoId);
-        reservadoOutros = reservadoOutros == null ? BigDecimal.ZERO : reservadoOutros;
-        if (saldo.getQuantidade().subtract(reservadoOutros).compareTo(quantidade) < 0) {
-            throw new BusinessException("Saldo insuficiente do produto " + produtoId);
+    private void baixarEstoqueDoPedido(PedidoVenda pedido) {
+        Map<Long, BigDecimal> quantidades = new java.util.TreeMap<>();
+        for (ItemPedidoVenda item : pedido.getItens()) {
+            if (item.getProdutoId() != null && !Boolean.TRUE.equals(item.getCriadoEstoque())) {
+                if (item.getQuantidade() == null || item.getQuantidade().signum() <= 0)
+                    throw new BusinessException("Quantidade invalida para faturamento");
+                quantidades.merge(item.getProdutoId(), item.getQuantidade(), BigDecimal::add);
+            }
         }
-        saldo.setQuantidade(saldo.getQuantidade().subtract(quantidade));
+        var reservas = reservaEstoqueRepository.findByPedidoForUpdate(pedido.getEmpresaId(), pedido.getId());
+        List<Alocacao> alocacoes = new ArrayList<>();
+        for (var produto : quantidades.entrySet()) {
+            BigDecimal reservada = BigDecimal.ZERO;
+            for (ReservaEstoque reserva : reservas) {
+                // WMS pode concluir a expedicao antes do faturamento. CONSUMIDA nao significa
+                // que o saldo ja foi baixado: essa baixa pertence ao faturamento do pedido.
+                if (!produto.getKey().equals(reserva.getProdutoId()) ||
+                        !List.of("RESERVADA", "SEPARACAO", "CONSUMIDA").contains(reserva.getStatus())) continue;
+                if (reserva.getQuantidade() == null || reserva.getQuantidade().signum() <= 0 || reserva.getDepositoId() == null)
+                    throw new BusinessException("Reserva do pedido possui quantidade/deposito invalidos");
+                reservada = reservada.add(reserva.getQuantidade());
+                alocacoes.add(new Alocacao(produto.getKey(), reserva.getDepositoId(), reserva.getLoteId(),
+                        reserva.getEnderecoId(), reserva.getQuantidade(), reserva));
+            }
+            if (reservada.compareTo(produto.getValue()) > 0)
+                throw new BusinessException("Reservas excedem quantidade do pedido para produto " + produto.getKey());
+            BigDecimal restante = produto.getValue().subtract(reservada);
+            if (restante.signum() > 0) {
+                Long deposito = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId(), "PADRAO")
+                        .or(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId()))
+                        .map(d -> d.getId()).orElseThrow(() -> new BusinessException("Nenhum deposito ativo para baixa de estoque"));
+                alocacoes.add(new Alocacao(produto.getKey(), deposito, null, null, restante, null));
+            }
+        }
+        // A ordem comum de travas evita pedidos concorrentes bloqueando depositos em ordem inversa.
+        alocacoes.sort(java.util.Comparator.comparing(Alocacao::depositoId).thenComparing(Alocacao::produtoId));
+        for (Alocacao alocacao : alocacoes) baixarEstoque(pedido, alocacao);
+        for (ItemPedidoVenda item : pedido.getItens()) {
+            if (item.getProdutoId() != null) item.setCriadoEstoque(true);
+        }
+    }
+
+    private record Alocacao(Long produtoId, Long depositoId, Long loteId, Long enderecoId,
+                            BigDecimal quantidade, ReservaEstoque reserva) {}
+
+    private void baixarEstoque(PedidoVenda pedido, Alocacao a) {
+        Long empresaId = pedido.getEmpresaId();
+        depositoRepository.findByIdAndEmpresaIdAndAtivoTrue(a.depositoId(), empresaId)
+                .filter(d -> d.getDeletedAt() == null)
+                .orElseThrow(() -> new BusinessException("Deposito da alocacao nao esta ativo nesta empresa"));
+        SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(empresaId, a.depositoId(), a.produtoId())
+                .orElseThrow(() -> new BusinessException("Sem saldo do produto " + a.produtoId()));
+        BigDecimal outros = reservaEstoqueRepository.sumAtivasDeOutrosPedidos(empresaId, a.depositoId(), a.produtoId(), pedido.getId());
+        if (saldo.getQuantidade().subtract(zero(outros)).compareTo(a.quantidade()) < 0)
+            throw new BusinessException("Saldo insuficiente do produto " + a.produtoId());
+        if (a.enderecoId() != null) {
+            var endereco = enderecoEstoqueRepository.findByIdAndEmpresaIdAndAtivoTrue(a.enderecoId(), empresaId)
+                    .filter(e -> e.getDeletedAt() == null)
+                    .orElseThrow(() -> new BusinessException("Endereco da reserva nao esta ativo nesta empresa"));
+            if (!a.depositoId().equals(endereco.getDepositoId()))
+                throw new BusinessException("Endereco da reserva pertence a outro deposito");
+            var posicoes = movimentacaoRepository.saldosPorEndereco(empresaId, a.depositoId(), a.produtoId(), null);
+            BigDecimal totalEndereco = posicoes.stream().filter(x -> a.enderecoId().equals(x.getEnderecoId()))
+                    .map(MovimentacaoEstoqueRepository.EnderecoSaldo::getQuantidade).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal outrosEndereco = reservaEstoqueRepository.sumAtivasDeOutrosPedidosPorEndereco(
+                    empresaId, a.depositoId(), a.produtoId(), a.enderecoId(), null, pedido.getId());
+            if (totalEndereco.subtract(zero(outrosEndereco)).compareTo(a.quantidade()) < 0)
+                throw new BusinessException("Saldo insuficiente no endereco reservado");
+            if (a.loteId() != null) {
+                BigDecimal saldoLoteEndereco = posicoes.stream()
+                        .filter(x -> a.enderecoId().equals(x.getEnderecoId()) && a.loteId().equals(x.getLoteId()))
+                        .map(MovimentacaoEstoqueRepository.EnderecoSaldo::getQuantidade).reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal outrosLoteEndereco = reservaEstoqueRepository.sumAtivasDeOutrosPedidosPorEndereco(
+                        empresaId, a.depositoId(), a.produtoId(), a.enderecoId(), a.loteId(), pedido.getId());
+                if (saldoLoteEndereco.subtract(zero(outrosLoteEndereco)).compareTo(a.quantidade()) < 0)
+                    throw new BusinessException("Saldo insuficiente no lote/endereco reservado");
+            }
+        }
+        if (a.loteId() != null) {
+            var lote = loteEstoqueRepository.findForUpdate(empresaId, a.loteId())
+                    .orElseThrow(() -> new BusinessException("Lote da reserva nao encontrado"));
+            if (!a.produtoId().equals(lote.getProdutoId()) || !a.depositoId().equals(lote.getDepositoId()) || !"ATIVO".equals(lote.getStatus()))
+                throw new BusinessException("Lote da reserva incompativel ou inativo");
+            BigDecimal outrosLote = reservaEstoqueRepository.sumAtivasDeOutrosPedidosPorLote(
+                    empresaId, a.depositoId(), a.produtoId(), a.loteId(), pedido.getId());
+            if (lote.getQuantidade().subtract(zero(outrosLote)).compareTo(a.quantidade()) < 0)
+                throw new BusinessException("Saldo insuficiente no lote reservado");
+            lote.setQuantidade(lote.getQuantidade().subtract(a.quantidade()));
+            loteEstoqueRepository.save(lote);
+        }
+        saldo.setQuantidade(saldo.getQuantidade().subtract(a.quantidade()));
         saldoEstoqueRepository.save(saldo);
         MovimentacaoEstoque mov = new MovimentacaoEstoque();
         mov.setEmpresaId(empresaId);
-        mov.setDepositoId(depositoPadrao);
-        mov.setProdutoId(produtoId);
+        mov.setDepositoId(a.depositoId());
+        mov.setProdutoId(a.produtoId());
+        mov.setLoteId(a.loteId());
+        mov.setEnderecoId(a.enderecoId());
         mov.setTipo("SAIDA");
         mov.setOrigem("PEDIDO_VENDA");
-        mov.setOrigemId(pedidoId);
-        mov.setQuantidade(quantidade.negate());
+        mov.setOrigemId(pedido.getId());
+        mov.setQuantidade(a.quantidade().negate());
         mov.setSaldoApos(saldo.getQuantidade());
         mov.setObservacao("Baixa por venda");
         movimentacaoRepository.save(mov);
+        if (a.reserva() != null && !"CONSUMIDA".equals(a.reserva().getStatus())) {
+            a.reserva().setStatus("CONSUMIDA");
+            reservaEstoqueRepository.save(a.reserva());
+        }
     }
+
+    private BigDecimal zero(BigDecimal valor) { return valor == null ? BigDecimal.ZERO : valor; }
 }

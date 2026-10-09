@@ -91,6 +91,7 @@ class BootstrapPostgresTest {
                         assertEquals("Contrato sintetico", vendaLida.getTitulo());
                         assertTrue(vendaLida.getRenovacaoAuto());
                         assertEquals(new BigDecimal("100.00"), vendaLida.getValor());
+                        VendasReservasPostgresScenario.validar(session);
                     } finally {
                         transaction.rollback();
                     }

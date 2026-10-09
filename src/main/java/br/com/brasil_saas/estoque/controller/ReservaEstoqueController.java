@@ -5,6 +5,7 @@ import br.com.brasil_saas.estoque.model.SaldoEstoque;
 import br.com.brasil_saas.estoque.model.LoteEstoque;
 import br.com.brasil_saas.estoque.model.EnderecoEstoque;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
+import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import br.com.brasil_saas.estoque.repository.LoteEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.ReservaEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
@@ -31,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReservaEstoqueController {
     private final ReservaEstoqueRepository repository;
+    private final PedidoVendaRepository pedidoRepository;
     private final SaldoEstoqueRepository saldoRepository;
     private final DepositoRepository depositoRepository;
     private final LoteEstoqueRepository loteRepository;
@@ -69,61 +71,79 @@ public class ReservaEstoqueController {
     @PreAuthorize("hasAuthority('estoque:reserva:escrita')")
     public ReservaEstoque reservar(@AuthenticationPrincipal AuthenticatedUser user,
                                    @Valid @RequestBody Request request) {
+        if (request.quantidade() == null || request.quantidade().signum() <= 0)
+            throw new BusinessException("Quantidade deve ser maior que zero");
+        if (request.dataExpiracao() != null && !request.dataExpiracao().isAfter(LocalDateTime.now()))
+            throw new BusinessException("Data de expiracao deve ser futura");
+        var pedido = request.pedidoVendaId() == null ? null : pedidoRepository
+                .findByIdForUpdateAndEmpresaId(request.pedidoVendaId(), user.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido nao encontrado nesta empresa"));
+        if (pedido != null && (pedido.getDeletedAt() != null || !"ABERTO".equals(pedido.getStatus()) || !"PEDIDO".equals(pedido.getTipo())))
+            throw new BusinessException("Somente pedido ABERTO pode receber reserva");
         depositoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.depositoId(), user.getEmpresaId())
+                .filter(d -> d.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("Deposito nao encontrado"));
-
         SaldoEstoque saldo = saldoRepository.findForUpdate(user.getEmpresaId(), request.depositoId(), request.produtoId())
                 .orElseThrow(() -> new BusinessException("Nao existe saldo do produto no deposito"));
-
+        var reservasPedido = pedido == null ? List.<ReservaEstoque>of() : repository
+                .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(user.getEmpresaId(), pedido.getId());
+        var mesmas = reservasPedido.stream()
+                .filter(r -> List.of("RESERVADA", "SEPARACAO").contains(r.getStatus()))
+                .filter(r -> request.depositoId().equals(r.getDepositoId()) && request.produtoId().equals(r.getProdutoId())
+                        && java.util.Objects.equals(request.loteId(), r.getLoteId())
+                        && java.util.Objects.equals(request.enderecoId(), r.getEnderecoId())).toList();
+        if (mesmas.size() > 1) throw new BusinessException("Existem varias reservas na mesma posicao; ajuste cada reserva antes de substituir a quantidade");
+        ReservaEstoque reserva = mesmas.isEmpty() ? new ReservaEstoque() : repository
+                .findWithLockByIdAndEmpresaIdAndDeletedAtIsNull(mesmas.get(0).getId(), user.getEmpresaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva nao encontrada"));
+        if (reserva.getId() != null && !"RESERVADA".equals(reserva.getStatus()))
+            throw new BusinessException("Somente reserva RESERVADA pode ter quantidade alterada");
+        BigDecimal propria = reserva.getId() == null ? BigDecimal.ZERO : reserva.getQuantidade();
+        if (pedido != null) {
+            BigDecimal pedida = pedido.getItens().stream().filter(i -> request.produtoId().equals(i.getProdutoId()))
+                    .map(i -> i.getQuantidade()).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal outrasDoPedido = reservasPedido.stream()
+                    .filter(r -> !java.util.Objects.equals(reserva.getId(), r.getId()))
+                    .filter(r -> request.produtoId().equals(r.getProdutoId())
+                            && List.of("RESERVADA", "SEPARACAO", "CONSUMIDA").contains(r.getStatus()))
+                    .map(ReservaEstoque::getQuantidade).reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (outrasDoPedido.add(request.quantidade()).compareTo(pedida) > 0)
+                throw new BusinessException("Reservas excedem a quantidade do produto no pedido");
+        }
         BigDecimal reservado = repository.sumAtivas(user.getEmpresaId(), request.depositoId(), request.produtoId());
-        BigDecimal disponivel = saldo.getQuantidade().subtract(reservado == null ? BigDecimal.ZERO : reservado);
-
-        EnderecoEstoque endereco = null;
+        BigDecimal disponivel = saldo.getQuantidade().subtract(zero(reservado)).add(propria);
+        if (disponivel.compareTo(request.quantidade()) < 0)
+            throw new BusinessException("Estoque disponivel insuficiente. Disponivel: " + disponivel);
         if (request.enderecoId() != null) {
-            endereco = enderecoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.enderecoId(), user.getEmpresaId())
+            var endereco = enderecoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.enderecoId(), user.getEmpresaId())
+                    .filter(e -> e.getDeletedAt() == null)
                     .orElseThrow(() -> new ResourceNotFoundException("Endereco nao encontrado"));
             if (!request.depositoId().equals(endereco.getDepositoId()))
                 throw new BusinessException("Endereco nao pertence ao deposito informado");
-
-            BigDecimal saldoEndereco = movimentacaoRepository.saldosPorEndereco(
-                    user.getEmpresaId(), request.depositoId(), request.produtoId(), request.loteId()).stream()
-                    .filter(x -> request.enderecoId().equals(x.getEnderecoId()))
-                    .map(MovimentacaoEstoqueRepository.EnderecoSaldo::getQuantidade)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal reservadoEndereco = repository.sumAtivasPorEndereco(
-                    user.getEmpresaId(), request.depositoId(), request.produtoId(), request.enderecoId());
-            BigDecimal disponivelEndereco = saldoEndereco.subtract(reservadoEndereco == null ? BigDecimal.ZERO : reservadoEndereco);
-            if (disponivelEndereco.compareTo(request.quantidade()) < 0)
-                throw new BusinessException("Quantidade insuficiente no endereco. Disponivel: " + disponivelEndereco);
+            var posicoes = movimentacaoRepository.saldosPorEndereco(user.getEmpresaId(), request.depositoId(), request.produtoId(), null);
+            BigDecimal saldoEndereco = posicoes.stream().filter(x -> request.enderecoId().equals(x.getEnderecoId()))
+                    .map(MovimentacaoEstoqueRepository.EnderecoSaldo::getQuantidade).reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal reservadoEndereco = repository.sumAtivasPorEndereco(user.getEmpresaId(), request.depositoId(), request.produtoId(), request.enderecoId());
+            if (saldoEndereco.subtract(zero(reservadoEndereco)).add(propria).compareTo(request.quantidade()) < 0)
+                throw new BusinessException("Quantidade insuficiente no endereco");
+            if (request.loteId() != null) {
+                BigDecimal saldoPosicao = posicoes.stream()
+                        .filter(x -> request.enderecoId().equals(x.getEnderecoId()) && request.loteId().equals(x.getLoteId()))
+                        .map(MovimentacaoEstoqueRepository.EnderecoSaldo::getQuantidade).reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal reservadoPosicao = repository.sumAtivasPorEnderecoELote(user.getEmpresaId(), request.depositoId(), request.produtoId(), request.enderecoId(), request.loteId());
+                if (saldoPosicao.subtract(zero(reservadoPosicao)).add(propria).compareTo(request.quantidade()) < 0)
+                    throw new BusinessException("Quantidade insuficiente no lote/endereco");
+            }
         }
-
         if (request.loteId() != null) {
-            LoteEstoque lote = loteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.loteId(), user.getEmpresaId())
+            LoteEstoque lote = loteRepository.findForUpdate(user.getEmpresaId(), request.loteId())
                     .orElseThrow(() -> new ResourceNotFoundException("Lote nao encontrado"));
             if (!request.produtoId().equals(lote.getProdutoId()) || !request.depositoId().equals(lote.getDepositoId()))
                 throw new BusinessException("Lote nao pertence ao produto/deposito informado");
-            if (!"ATIVO".equals(lote.getStatus()))
-                throw new BusinessException("Lote " + lote.getCodigo() + " nao esta ATIVO (status=" + lote.getStatus() + ")");
-            BigDecimal reservadoLote = repository.sumAtivasPorLote(user.getEmpresaId(), request.depositoId(),
-                    request.produtoId(), request.loteId());
-            BigDecimal disponivelLote = lote.getQuantidade().subtract(reservadoLote == null ? BigDecimal.ZERO : reservadoLote);
-            if (disponivelLote.compareTo(request.quantidade()) < 0)
-                throw new BusinessException("Quantidade insuficiente no lote " + lote.getCodigo() + ". Disponivel: " + disponivelLote);
-        }
-        if (disponivel.compareTo(request.quantidade()) < 0)
-            throw new BusinessException("Estoque disponivel insuficiente. Disponivel: " + disponivel);
-
-        if (request.pedidoVendaId() != null && repository.findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(user.getEmpresaId(), request.pedidoVendaId()).stream().anyMatch(r -> !List.of("LIBERADA","CANCELADA","CONSUMIDA").contains(r.getStatus()) && request.produtoId().equals(r.getProdutoId()) && request.depositoId().equals(r.getDepositoId()) && request.enderecoId() != null && request.enderecoId().equals(r.getEnderecoId()))) throw new BusinessException("Ja existe reserva ativa para este pedido/produto/endereco");
-
-        ReservaEstoque reserva;
-        if (request.loteId() == null) {
-            reserva = repository.findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndDeletedAtIsNull(
-                    user.getEmpresaId(), request.pedidoVendaId(), request.depositoId(), request.produtoId())
-                    .orElseGet(ReservaEstoque::new);
-        } else {
-            reserva = repository.findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndLoteIdAndDeletedAtIsNull(
-                    user.getEmpresaId(), request.pedidoVendaId(), request.depositoId(), request.produtoId(), request.loteId())
-                    .orElseGet(ReservaEstoque::new);
+            if (!"ATIVO".equals(lote.getStatus())) throw new BusinessException("Lote nao esta ATIVO");
+            BigDecimal reservadoLote = repository.sumAtivasPorLote(user.getEmpresaId(), request.depositoId(), request.produtoId(), request.loteId());
+            if (lote.getQuantidade().subtract(zero(reservadoLote)).add(propria).compareTo(request.quantidade()) < 0)
+                throw new BusinessException("Quantidade insuficiente no lote");
         }
 
         reserva.setEmpresaId(user.getEmpresaId());
@@ -132,7 +152,6 @@ public class ReservaEstoqueController {
         reserva.setPedidoVendaId(request.pedidoVendaId());
         reserva.setLoteId(request.loteId());
         reserva.setEnderecoId(request.enderecoId());
-        if (request.dataExpiracao() != null && request.dataExpiracao().isBefore(LocalDateTime.now())) throw new BusinessException("Data de expiracao deve ser futura");
         reserva.setQuantidade(request.quantidade());
         reserva.setStatus("RESERVADA");
         if (reserva.getDataReserva() == null) reserva.setDataReserva(LocalDateTime.now());
@@ -147,7 +166,7 @@ public class ReservaEstoqueController {
     public ReservaEstoque liberar(@AuthenticationPrincipal AuthenticatedUser user, @PathVariable Long id) {
         ReservaEstoque reserva = repository.findWithLockByIdAndEmpresaIdAndDeletedAtIsNull(id, user.getEmpresaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Reserva nao encontrada"));
-        if ("LIBERADA".equals(reserva.getStatus()) || "CANCELADA".equals(reserva.getStatus()))
+        if ("LIBERADA".equals(reserva.getStatus()) || "CANCELADA".equals(reserva.getStatus()) || "CONSUMIDA".equals(reserva.getStatus()))
             throw new BusinessException("Reserva ja esta encerrada");
         reserva.setStatus("LIBERADA");
         return repository.save(reserva);
@@ -181,6 +200,8 @@ public class ReservaEstoqueController {
         reserva.setStatus("CANCELADA");
         return repository.save(reserva);
     }
+
+    private BigDecimal zero(BigDecimal valor) { return valor == null ? BigDecimal.ZERO : valor; }
 
     public record Request(@NotNull Long depositoId, @NotNull Long produtoId, Long pedidoVendaId, Long loteId,
                           Long enderecoId, @NotNull @DecimalMin("0.001") BigDecimal quantidade, LocalDateTime dataExpiracao) {}

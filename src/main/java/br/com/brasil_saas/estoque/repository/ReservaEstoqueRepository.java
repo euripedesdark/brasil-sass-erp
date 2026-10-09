@@ -14,6 +14,19 @@ public interface ReservaEstoqueRepository extends JpaRepository<ReservaEstoque, 
     List<ReservaEstoque> findByEmpresaIdAndDeletedAtIsNullOrderByDataReservaDesc(Long empresaId);
     List<ReservaEstoque> findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(Long empresaId, Long pedidoVendaId);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from ReservaEstoque r where r.empresaId = :empresaId and r.pedidoVendaId = :pedidoId and r.deletedAt is null order by r.id")
+    List<ReservaEstoque> findByPedidoForUpdate(@Param("empresaId") Long empresaId, @Param("pedidoId") Long pedidoId);
+
+    @Query("select coalesce(sum(r.quantidade),0) from ReservaEstoque r where r.empresaId = :empresaId and r.depositoId = :depositoId and r.produtoId = :produtoId and r.loteId = :loteId and r.deletedAt is null and r.status in ('RESERVADA','SEPARACAO') and (r.pedidoVendaId is null or r.pedidoVendaId <> :pedidoId)")
+    BigDecimal sumAtivasDeOutrosPedidosPorLote(@Param("empresaId") Long empresaId, @Param("depositoId") Long depositoId,
+                                               @Param("produtoId") Long produtoId, @Param("loteId") Long loteId, @Param("pedidoId") Long pedidoId);
+
+    @Query("select coalesce(sum(r.quantidade),0) from ReservaEstoque r where r.empresaId = :empresaId and r.depositoId = :depositoId and r.produtoId = :produtoId and r.enderecoId = :enderecoId and (:loteId is null or r.loteId = :loteId) and r.deletedAt is null and r.status in ('RESERVADA','SEPARACAO') and (r.pedidoVendaId is null or r.pedidoVendaId <> :pedidoId)")
+    BigDecimal sumAtivasDeOutrosPedidosPorEndereco(@Param("empresaId") Long empresaId, @Param("depositoId") Long depositoId,
+                                                   @Param("produtoId") Long produtoId, @Param("enderecoId") Long enderecoId,
+                                                   @Param("loteId") Long loteId, @Param("pedidoId") Long pedidoId);
+
     Optional<ReservaEstoque> findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndDeletedAtIsNull(
             Long empresaId, Long pedidoVendaId, Long depositoId, Long produtoId);
 
