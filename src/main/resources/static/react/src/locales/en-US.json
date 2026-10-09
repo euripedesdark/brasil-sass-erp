@@ -72,7 +72,8 @@
     "title": "Title",
     "location": "Location",
     "username": "Username",
-    "password": "Password"
+    "password": "Password",
+    "success": "Success"
   },
   "login": {
     "title": "BrasilCloudERP",
