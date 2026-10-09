@@ -68,7 +68,9 @@
     "notes": "Observações",
     "communicationError": "Falha de comunicação",
     "tryAgain": "Tentar novamente",
-    "select": "Selecione"
+    "select": "Selecione",
+    "title": "Título",
+    "location": "Local"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -1320,6 +1322,24 @@
       "imageUpdated": "Imagem de {{type}} atualizada com sucesso!",
       "uploadFailed": "Falha no envio: {{error}}",
       "connectionError": "Erro de conexão: {{error}}"
+    },
+    "agenda": {
+      "title": "Agenda",
+      "subtitle": "Reuniões, visitas e tarefas operacionais",
+      "today": "Hoje",
+      "week": "Semana",
+      "newEvent": "Novo evento",
+      "noEvents": "Sem eventos",
+      "start": "Início",
+      "responsible": "Responsável",
+      "complete": "Concluir",
+      "types": {
+        "REUNIAO": "Reunião",
+        "LIGACAO": "Ligação",
+        "VISITA": "Visita",
+        "TAREFA": "Tarefa",
+        "OUTRO": "Outro"
+      }
     }
   },
   "enterpriseOps": {
