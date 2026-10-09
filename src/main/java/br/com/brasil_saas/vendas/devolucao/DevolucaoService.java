@@ -4,6 +4,12 @@ import br.com.brasil_saas.estoque.model.SaldoEstoque;
 import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
+import br.com.brasil_saas.financeiro.dto.FinanceiroDtos.BaixaRequest;
+import br.com.brasil_saas.financeiro.model.Titulo;
+import br.com.brasil_saas.financeiro.repository.BaixaRepository;
+import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import br.com.brasil_saas.financeiro.service.TituloService;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 @Service @RequiredArgsConstructor
@@ -22,6 +30,10 @@ public class DevolucaoService {
     private final SaldoEstoqueRepository saldos;
     private final MovimentacaoEstoqueRepository movimentacoes;
     private final DepositoRepository depositos;
+    private final TituloRepository tituloRepository;
+    private final BaixaRepository baixaRepository;
+    private final TituloService tituloService;
+    private final DocumentoFluxoService documentoFluxoService;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -113,8 +125,141 @@ public class DevolucaoService {
             i.setQtdRecebida(i.getQuantidade());
             itens.save(i);
         }
+        integrarFinanceiro(empresaId, d, linhas);
         d.setStatus("RECEBIDA");
         d.setRecebidaEm(LocalDateTime.now());
         return devolucoes.save(d);
+    }
+
+    /**
+     * Encadeamento automatico devolucao -> financeiro (venda).
+     * Calcula o valor devolvido proporcional aos itens do pedido (valorTotal
+     * por produto, rateando desconto da linha) e:
+     * - titulo ABERTO/PARCIAL com saldo: cria Baixa de ajuste sem conta
+     *   bancaria (sem movimentacao de caixa), via TituloService.baixar, que
+     *   mantem a mesma trava pessimista do titulo e rateia as parcelas;
+     * - titulo BAIXADO/saldo zerado: cria titulo P (a restituir ao cliente);
+     * - sem titulo ou titulo CANCELADO: so registra o fluxo, sem financeiro.
+     * Idempotente: confere Baixa/titulo de restituicao ja existentes pelo
+     * marcador antes de criar. Nao emite documento fiscal nem contabiliza:
+     * o titulo/Baixa gerados seguem o caminho existente (gerarDeTitulo) e
+     * a NF de devolucao permanece pendencia explicita (Fiscal por ultimo).
+     */
+    private void integrarFinanceiro(Long empresaId, VenDevolucao d, java.util.List<VenDevolucaoItem> linhas) {
+        var pedidoOpt = pedidos.findByIdForUpdateAndEmpresaId(d.getPedidoId(), empresaId);
+        if (pedidoOpt.isEmpty()) {
+            documentoFluxoService.ligar(empresaId, null,
+                    "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                    "PEDIDO_VENDA", d.getPedidoId(), null,
+                    "RECEBIDA_SEM_PEDIDO");
+            return;
+        }
+        PedidoVenda pedido = pedidoOpt.get();
+        BigDecimal valorDevolvido = calcularValorDevolvido(pedido, linhas);
+        if (pedido.getTituloId() == null) {
+            documentoFluxoService.ligar(empresaId, null,
+                    "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                    "PEDIDO_VENDA", pedido.getId(), pedido.getNumero(),
+                    "RECEBIDA_SEM_TITULO");
+            return;
+        }
+        String marcador = "DEVOLUCAO_VENDA#" + d.getId();
+        Titulo titulo = tituloRepository.findForUpdate(pedido.getTituloId(), empresaId)
+                .orElseThrow(() -> new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Titulo do pedido inexistente"));
+        if ("CANCELADO".equalsIgnoreCase(titulo.getStatus())) {
+            documentoFluxoService.ligar(empresaId, null,
+                    "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                    "TITULO", titulo.getId(), titulo.getNumeroDocumento(),
+                    "RECEBIDA_TITULO_CANCELADO");
+            return;
+        }
+        BigDecimal saldo = titulo.getValorSaldo() == null ? BigDecimal.ZERO : titulo.getValorSaldo();
+        boolean ajustavel = saldo.signum() > 0
+                && ("ABERTO".equalsIgnoreCase(titulo.getStatus()) || "PARCIAL".equalsIgnoreCase(titulo.getStatus()));
+        if (ajustavel && valorDevolvido.signum() > 0) {
+            BigDecimal valorBaixa = valorDevolvido.min(saldo);
+            boolean jaAjustado = baixaRepository.findByTituloIdAndDeletedAtIsNull(titulo.getId()).stream()
+                    .anyMatch(b -> b.getObservacao() != null && b.getObservacao().contains(marcador));
+            if (!jaAjustado && valorBaixa.signum() > 0) {
+                tituloService.baixar(empresaId, titulo.getId(), new BaixaRequest(
+                        null, null, null, LocalDate.now(), valorBaixa,
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                        marcador + " " + (d.getNumero() == null ? "" : d.getNumero())));
+            }
+            documentoFluxoService.ligar(empresaId, null,
+                    "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                    "TITULO", titulo.getId(), titulo.getNumeroDocumento(),
+                    "AJUSTE_DEVOLUCAO");
+            BigDecimal restante = valorDevolvido.subtract(valorBaixa);
+            if (restante.signum() > 0) {
+                criarTituloRestituicao(empresaId, d, pedido, titulo, restante, marcador);
+            }
+            return;
+        }
+        if (valorDevolvido.signum() > 0) {
+            criarTituloRestituicao(empresaId, d, pedido, titulo, valorDevolvido, marcador);
+            return;
+        }
+        documentoFluxoService.ligar(empresaId, null,
+                "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                "TITULO", titulo.getId(), titulo.getNumeroDocumento(),
+                "RECEBIDA_SEM_AJUSTE");
+    }
+
+    private void criarTituloRestituicao(Long empresaId, VenDevolucao d, PedidoVenda pedido, Titulo origem, BigDecimal valor, String marcador) {
+        String numeroDoc = "REST-" + (d.getNumero() == null ? ("DV" + d.getId()) : d.getNumero());
+        boolean jaExiste = !tituloRepository.findByEmpresaIdAndNumeroDocumentoAndDeletedAtIsNull(empresaId, numeroDoc).isEmpty();
+        if (jaExiste) {
+            return;
+        }
+        Titulo r = new Titulo();
+        r.setEmpresaId(empresaId);
+        r.setTipo("P");
+        r.setNumeroDocumento(numeroDoc);
+        r.setDescricao("Restituicao devolucao " + (d.getNumero() == null ? ("#" + d.getId()) : d.getNumero())
+                + " pedido " + (pedido.getNumero() == null ? ("#" + pedido.getId()) : pedido.getNumero()));
+        r.setPessoaId(origem.getPessoaId());
+        r.setValorOriginal(valor.setScale(2, RoundingMode.HALF_UP));
+        r.setValorSaldo(valor.setScale(2, RoundingMode.HALF_UP));
+        r.setDataEmissao(LocalDate.now());
+        r.setDataVencimento(LocalDate.now().plusDays(30));
+        r.setStatus("ABERTO");
+        Titulo salvo = tituloRepository.save(r);
+        documentoFluxoService.ligar(empresaId, null,
+                "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                "TITULO", salvo.getId(), salvo.getNumeroDocumento(),
+                "RESTITUICAO_DEVOLUCAO");
+    }
+
+    /**
+     * Valor devolvido proporcional: por produto, (qtdDevolvida / qtdVendida)
+     * * valorTotalVendido do produto, com HALF_UP em 2 casas. Rateia
+     * desconto da linha sem inventar regra de restituicao.
+     */
+    private BigDecimal calcularValorDevolvido(PedidoVenda pedido, java.util.List<VenDevolucaoItem> linhas) {
+        Map<Long, BigDecimal> qtdVendida = new HashMap<>();
+        Map<Long, BigDecimal> valorVendido = new HashMap<>();
+        if (pedido.getItens() != null) for (var it : pedido.getItens()) {
+            if (it.getDeletedAt() != null || it.getProdutoId() == null) continue;
+            BigDecimal q = it.getQuantidade() == null ? BigDecimal.ZERO : it.getQuantidade();
+            BigDecimal v = it.getValorTotal() == null ? BigDecimal.ZERO : it.getValorTotal();
+            qtdVendida.merge(it.getProdutoId(), q, BigDecimal::add);
+            valorVendido.merge(it.getProdutoId(), v, BigDecimal::add);
+        }
+        Map<Long, BigDecimal> qtdDev = new HashMap<>();
+        for (var i : linhas) {
+            if (i.getProdutoId() == null || i.getQuantidade() == null) continue;
+            qtdDev.merge(i.getProdutoId(), i.getQuantidade(), BigDecimal::add);
+        }
+        BigDecimal total = BigDecimal.ZERO;
+        for (var e : qtdDev.entrySet()) {
+            BigDecimal vendida = qtdVendida.getOrDefault(e.getKey(), BigDecimal.ZERO);
+            BigDecimal valor = valorVendido.getOrDefault(e.getKey(), BigDecimal.ZERO);
+            if (vendida.signum() <= 0 || e.getValue().signum() <= 0) continue;
+            BigDecimal proporcao = e.getValue().divide(vendida, 10, RoundingMode.HALF_UP);
+            if (proporcao.compareTo(BigDecimal.ONE) > 0) proporcao = BigDecimal.ONE;
+            total = total.add(valor.multiply(proporcao));
+        }
+        return total.setScale(2, RoundingMode.HALF_UP);
     }
 }

@@ -206,3 +206,45 @@ Links relativos ao repositório; `#L` informa o ponto inicial no GitHub. O ident
 - [Renegociacao.jsx](../src/main/resources/static/react/src/components/financeiro/Renegociacao.jsx).
 - [TipoPagamento.jsx](../src/main/resources/static/react/src/components/financeiro/TipoPagamento.jsx).
 - [Titulo.jsx](../src/main/resources/static/react/src/components/financeiro/Titulo.jsx).
+
+
+## Entrega — encadeamento automatico devolucao para financeiro (venda e compra)
+
+Branch codex/devolucao-integracao-financeira. Sem migration, sem tela nova, sem alteracao de contrato existente.
+
+- DevolucaoService.receber (venda): apos o recebimento fisico, calcula o
+  valor devolvido proporcional aos itens do pedido (valorTotal por produto,
+  rateando desconto da linha, HALF_UP em 2 casas) e, com a mesma trava
+  pessimista do titulo via TituloService.baixar:
+  - titulo ABERTO/PARCIAL com saldo: cria Baixa de ajuste sem conta
+    bancaria (sem movimentacao de caixa), rateando parcelas;
+  - titulo BAIXADO/saldo zerado: cria titulo P a restituir ao cliente;
+  - sem titulo ou titulo CANCELADO: so registra o fluxo, sem financeiro.
+- DevCompraService.devolver (compra): simetrico. Titulo P ABERTO/PARCIAL
+  tem a Baixa de ajuste (bloqueio por conferencia pendente preservado, via
+  baixar); titulo BAIXADO gera titulo R de credito junto ao fornecedor.
+- Idempotencia: confere Baixa/titulo de restituicao existentes pelo marcador
+  (DEVOLUCAO_VENDA id, DEVOLUCAO_COMPRA id) antes de criar; o recebimento
+  continua bloqueando reexecucao por status com trava pessimista.
+- Trilha documental: liga DEVOLUCAO_VENDA e DEVOLUCAO_COMPRA a
+  TITULO e PEDIDO em documento_fluxo em todos os caminhos.
+- Nao emite documento fiscal nem contabiliza automaticamente: o titulo/Baixa
+  gerados seguem o caminho existente (gerarDeTitulo) e a NF de devolucao
+  permanece pendencia explicita (Fiscal por ultimo, conforme objetivo).
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/vendas/devolucao/DevolucaoService.java
+    src/main/java/br/com/brasil_saas/compras/service/DevCompraService.java
+    src/main/java/br/com/brasil_saas/financeiro/repository/TituloRepository.java
+    src/test/java/br/com/brasil_saas/vendas/devolucao/DevolucaoServiceTest.java
+    src/test/java/br/com/brasil_saas/compras/service/DevCompraServiceTest.java
+    src/test/java/br/com/brasil_saas/database/DevolucoesCreditoPostgresScenario.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 28 casos nos dois servicos de devolucao (12 compra + 16 venda,
+incluindo 7 novos de integracao) e 62 no bloco vizinho
+(conferencia, baixa, fluxo, pedido, desconto), zero falhas, JDK 21, fora do
+build Maven completo. Pendente: ajuste contabil automatico (requer plano de
+contas por empresa), emissao fiscal automatica da devolucao e transmissao
+externa do Reinf.
