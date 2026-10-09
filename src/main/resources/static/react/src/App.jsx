@@ -66,6 +66,7 @@ import SupplyChainControlTower from './components/enterprise/SupplyChainControlT
 import CorporateGovernance from './components/enterprise/CorporateGovernance';
 import RiskTransportEnterprise from './components/enterprise/RiskTransportEnterprise';
 import { TmsPlanejamento } from './components/enterprise/TmsPlanejamento';
+import { IntercompanyEliminacoes } from './components/enterprise/IntercompanyEliminacoes';
 import IntegrationEnterprise from './components/enterprise/IntegrationEnterprise';
 
 import { Nfse } from './components/fiscal/Nfse';
@@ -84,6 +85,7 @@ import { CteMdfe } from './components/fiscal/CteMdfe';
 import { Obrigacoes } from './components/fiscal/Obrigacoes';
 import { Reinf } from './components/fiscal/Reinf';
 import { Difal } from './components/fiscal/Difal';
+import { IcmsSt } from './components/fiscal/IcmsSt';
 import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
@@ -181,6 +183,7 @@ function App() {
                     <Route path="governanca-corporativa" element={<CorporateGovernance />} />
                     <Route path="riscos-tms-enterprise" element={<RiskTransportEnterprise />} />
                     <Route path="enterprise/tms-planejamento" element={<TmsPlanejamento />} />
+                    <Route path="enterprise/intercompany-eliminacoes" element={<IntercompanyEliminacoes />} />
                     <Route path="integracoes-enterprise" element={<IntegrationEnterprise />} />
                     <Route path="doacoes" element={<Sobre />} />
                     <Route path="workflow" element={<Workflow />} />
@@ -281,6 +284,7 @@ function App() {
                     <Route path="fiscal/obrigacoes" element={<Obrigacoes />} />
                     <Route path="fiscal/reinf" element={<Reinf />} />
                     <Route path="fiscal/difal" element={<Difal />} />
+                    <Route path="fiscal/icms-st" element={<IcmsSt />} />
                     <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />
