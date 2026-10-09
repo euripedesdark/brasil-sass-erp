@@ -12,9 +12,10 @@ import java.util.*;
 @Service @RequiredArgsConstructor
 public class EncargosService {
     private final FolhaPagamentoRepository folhas;
-    @Transactional(readOnly = true) public Map<String, Object> calcular(Long empresaId, Long folhaId, BigDecimal aliqInss, BigDecimal aliqFgts, BigDecimal aliqRat) {
-        FolhaPagamento f = folhas.findById(folhaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folha inexistente"));
-        if (f.getEmpresaId() == null || f.getEmpresaId().equals(empresaId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Folha de outra empresa");
+    @Transactional(readOnly = true)
+    public Map<String, Object> calcular(Long empresaId, Long folhaId, BigDecimal aliqInss, BigDecimal aliqFgts, BigDecimal aliqRat) {
+        FolhaPagamento f = folhas.findByIdAndEmpresaId(folhaId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folha inexistente"));
         BigDecimal base = BigDecimal.ZERO;
         if (f.getItens() != null) for (var it : f.getItens())
             if ("PROVENTO".equals(it.getTipo())) base = base.add(it.getValor() == null ? BigDecimal.ZERO : it.getValor());

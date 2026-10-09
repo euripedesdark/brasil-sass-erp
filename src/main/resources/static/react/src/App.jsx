@@ -89,6 +89,7 @@ import { Ponto } from './components/rh/Ponto';
 import { Rescisao } from './components/rh/Rescisao';
 import { Ferias } from './components/rh/Ferias';
 import { Esocial } from './components/rh/Esocial';
+import { Encargos } from './components/rh/Encargos';
 import { FuncionarioFoto } from './components/rh/FuncionarioFoto';
 
 import { Vendas } from './components/vendas/Vendas';
@@ -162,10 +163,6 @@ function App() {
                     path="/"
                     element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}
                 >
-                    {/* "/" e "/inicio" caem no Dashboard. Antes estes dois rotas
-                        eram `element={null}`, entao apos autenticar o usuario via
-                        "/" via "/" ficava so com o fundo e o menu lateral, sem
-                        nenhum conteudo — a tela em branco. */}
                     <Route index element={<Dashboard />} />
                     <Route path="inicio" element={<Dashboard />} />
                     <Route path="dashboard" element={<Dashboard />} />
@@ -189,7 +186,6 @@ function App() {
                     <Route path="portais" element={<Portais />} />
                     <Route path="admin/usuarios" element={<Usuarios />} />
                     <Route path="admin/configuracoes" element={<Configuracoes />} />
-                    {/* Gerenciador SQL: a tela valida o perfil, a API exige SUPERUSER */}
                     <Route path="admin/sql" element={<SqlConsole />} />
                     <Route path="admin/armazenamento" element={<ArmazenamentoImagens />} />
                     <Route path="admin/paridade-erp" element={<RelatorioParidadeERP />} />
@@ -267,7 +263,6 @@ function App() {
                     <Route path="fiscal/issqn" element={<Issqn />} />
                     <Route path="fiscal/entradas" element={<EntradaNota />} />
                     <Route path="fiscal/apuracoes" element={<Apuracoes />} />
-                    {/* Certificado A1 usado na emissao de nota */}
                     <Route path="fiscal/certificados" element={<CertificadoDigital />} />
                     <Route path="fiscal/impostos" element={<Impostos />} />
                     <Route path="fiscal/sefaz" element={<SefazConsulta />} />
@@ -284,6 +279,7 @@ function App() {
                     <Route path="rh/rescisao" element={<Rescisao />} />
                     <Route path="rh/ferias" element={<Ferias />} />
                     <Route path="rh/esocial" element={<Esocial />} />
+                    <Route path="rh/encargos" element={<Encargos />} />
                     <Route path="rh/fotos" element={<FuncionarioFoto />} />
 
                     <Route path="producao" element={<Producao />} />
