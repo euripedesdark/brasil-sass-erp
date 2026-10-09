@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
@@ -24,6 +25,7 @@ import './CertificadoDigital.css';
  */
 export const CertificadoDigital = () => {
     const { t } = useTranslation();
+    const nav = useNavigate();
     const toast = useRef(null);
     const [caminho, setCaminho] = useState('');
     const [senha, setSenha] = useState('');
@@ -90,6 +92,14 @@ export const CertificadoDigital = () => {
         <div className="certificado-digital">
             <Toast />
 
+            <Message
+                className="mb-3 w-full"
+                severity="info"
+                text="Preferência: cadastre o certificado no cadastro da empresa (matriz/filial) em Configurar empresa — junto com a API key Stripe."
+            />
+            <div className="mb-3">
+                <Button label="Ir para cadastro da empresa" icon="pi pi-building" outlined onClick={() => nav('/configurar-empresa')} />
+            </div>
             <div className="certificado-digital__header">
                 <div>
                     <h2>Certificado Digital</h2>
