@@ -347,12 +347,12 @@ Branch codex/conferencia-aprovacao-excepcional. Sem migration, sem tela nova, se
 
 - Antes, uma conferencia DIVERGENTE travava o pagamento sem saida legitima:
   ou reconferia ate aprovar, ou o titulo ficava parado.
-- Agora  libera: so de DIVERGENTE para APROVADA, com
+- Agora aprovarExcepcional libera: so de DIVERGENTE para APROVADA, com
   motivo obrigatorio (10 a 500 caracteres), trava pessimista da conferencia
   e bloqueio se reavaliacao posterior superou a linha. O motivo, o aprovador
   e a data vao para a divergencia preservada e para o documento_fluxo
   (relacao APROVACAO_EXCEPCIONAL), sem apagar o historico.
-- Endpoint POST com autoridade nova , no mesmo
+- Endpoint POST com autoridade nova compras:conferencia:aprovar, no mesmo
   padrao das aprovacoes existentes. Baixa, vigentes e telas nao mudam:
   o vocabulario de status continua o mesmo.
 
