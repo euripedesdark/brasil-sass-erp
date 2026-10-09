@@ -133,10 +133,22 @@ public final class CalculoDesconto {
         if (percentualDesconto.signum() < 0 || valorDesconto.signum() < 0) {
             throw new BusinessException("Desconto do pedido nao pode ser negativo");
         }
+        if (percentualDesconto.compareTo(BigDecimal.valueOf(100)) > 0) {
+            throw new BusinessException("Percentual de desconto nao pode exceder 100");
+        }
+        if (valorFrete.signum() < 0) {
+            throw new BusinessException("Frete nao pode ser negativo");
+        }
 
         BigDecimal bruto = BigDecimal.ZERO;
         BigDecimal descontoItens = BigDecimal.ZERO;
         for (Item item : itens == null ? List.<Item>of() : itens) {
+            if (item == null || item.quantidade().signum() <= 0 || item.valorUnitario().signum() < 0) {
+                throw new BusinessException("Item deve possuir quantidade positiva e valor unitario nao negativo");
+            }
+            if (item.valorDesconto().signum() < 0 || item.valorDesconto().compareTo(item.bruto()) > 0) {
+                throw new BusinessException("Desconto do item deve estar entre zero e o valor bruto do item");
+            }
             bruto = bruto.add(item.bruto());
             descontoItens = descontoItens.add(item.valorDesconto());
         }

@@ -278,12 +278,14 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private java.math.BigDecimal[] somarCredito(Long empresaId, Long clienteId) {
-        var cli = clienteRepository.findById(clienteId).orElse(null);
+        var cli = clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cliente nao encontrado"));
         java.math.BigDecimal limite = java.math.BigDecimal.ZERO;
         java.math.BigDecimal emAberto = java.math.BigDecimal.ZERO;
         if (cli != null && cli.getPessoa() != null && cli.getPessoa().getId() != null) {
             limite = cli.getLimiteCredito() == null ? java.math.BigDecimal.ZERO : cli.getLimiteCredito();
             for (var x : tituloRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, cli.getPessoa().getId())) {
+                if (!"R".equals(x.getTipo())) continue;
                 if ("ABERTO".equals(x.getStatus()) == false && "PARCIAL".equals(x.getStatus()) == false) continue;
                 emAberto = emAberto.add(x.getValorSaldo() == null ? java.math.BigDecimal.ZERO : x.getValorSaldo());
             }
@@ -359,7 +361,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         if (depositoPadrao == null) throw new BusinessException("Nenhum deposito ativo para baixa de estoque");
         SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(empresaId, depositoPadrao, produtoId)
                 .orElseThrow(() -> new BusinessException("Sem saldo do produto " + produtoId));
-        if (saldo.getQuantidade().compareTo(quantidade) < 0) {
+        BigDecimal reservadoOutros = reservaEstoqueRepository.sumAtivasDeOutrosPedidos(empresaId, depositoPadrao, produtoId, pedidoId);
+        reservadoOutros = reservadoOutros == null ? BigDecimal.ZERO : reservadoOutros;
+        if (saldo.getQuantidade().subtract(reservadoOutros).compareTo(quantidade) < 0) {
             throw new BusinessException("Saldo insuficiente do produto " + produtoId);
         }
         saldo.setQuantidade(saldo.getQuantidade().subtract(quantidade));

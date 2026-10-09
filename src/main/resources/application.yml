@@ -95,7 +95,7 @@ spring:
     locations: classpath:db/migration
     schemas: brasil_saas
     default-schema: brasil_saas
-    baseline-on-migrate: true
+    baseline-on-migrate: false
     validate-on-migrate: true
 
   jackson:

@@ -45,4 +45,17 @@ class ContratoFornecimentoServiceTest {
         i.setQuantidadeLiberada(new BigDecimal("30"));
         assertEquals(0, new BigDecimal("70").compareTo(i.saldo()));
     }
+
+    @Test
+    void contratoLegadoSemFimPermaneceLiberavel() {
+        LocalDate hoje = LocalDate.of(2026, 10, 9);
+        assertDoesNotThrow(() -> ContratoFornecimentoService.validarLiberavel(
+                contrato(ContratoFornecimento.ATIVO, hoje.minusDays(1), null), hoje));
+    }
+
+    @Test
+    void contratoSemInicioRecusadoComErroDeNegocio() {
+        assertThrows(BusinessException.class, () -> ContratoFornecimentoService.validarLiberavel(
+                contrato(ContratoFornecimento.ATIVO, null, null), LocalDate.of(2026, 10, 9)));
+    }
 }
