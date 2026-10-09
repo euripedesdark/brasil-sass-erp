@@ -11,6 +11,7 @@ import br.com.brasil_saas.cadastro.repository.FornecedorRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
 import br.com.brasil_saas.compras.service.PedidoCompraService;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import br.com.brasil_saas.estoque.model.MovimentacaoEstoque;
 import br.com.brasil_saas.estoque.model.SaldoEstoque;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
@@ -43,6 +44,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
     private final TituloRepository tituloRepository;
     private final br.com.brasil_saas.financeiro.service.TituloService tituloService;
+    private final DocumentoFluxoService documentoFluxoService;
 
     @Override
     @Transactional
@@ -135,6 +137,14 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         tituloService.gerarParcelas(pedido.getEmpresaId(), titulo.getId(), pedido.getCondicaoPagamentoId());
         pedido.setStatus("RECEBIDO");
         pedidoRepository.save(pedido);
+        documentoFluxoService.ligar(empresaId, null,
+                "PEDIDO_COMPRA", pedido.getId(), pedido.getNumero(),
+                "RECEBIMENTO", pedido.getId(), pedido.getNumero(),
+                "GERA");
+        documentoFluxoService.ligar(empresaId, null,
+                "PEDIDO_COMPRA", pedido.getId(), pedido.getNumero(),
+                "TITULO", titulo.getId(), titulo.getNumeroDocumento(),
+                "FATURA");
     }
 
     @Override
