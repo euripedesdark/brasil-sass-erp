@@ -12,6 +12,7 @@ import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import java.math.BigDecimal; import java.time.LocalDateTime; import java.util.List;
 @Service @RequiredArgsConstructor
 public class OrdemServicoServiceImpl implements OrdemServicoService {
@@ -20,6 +21,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
     private final OsApontamentoRepository apontRepo;
     private final ComissaoRepository comissaoRepository;
     private final FuncionarioRepository funcionarioRepository;
+    private final DocumentoFluxoService documentoFluxo;
 
     @Override @Transactional
     public OsResp abrir(Long empresaId, Long usuarioId, AberturaReq r) {
@@ -93,7 +95,9 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
                         com.setPercentual(func.getPercentualComissao() != null ? func.getPercentualComissao() : BigDecimal.ZERO);
                         com.setValorComissao(valorTrabalho);
                         com.setStatus("PENDENTE");
-                        comissaoRepository.save(com);
+                        Comissao salva = comissaoRepository.save(com);
+                        documentoFluxo.ligar(empresaId, usuarioId, "ORDEM_SERVICO", osId, os.getNumero(),
+                                "COMISSAO", salva.getId(), null, "COMISSIONA");
                     }
                 }
             });

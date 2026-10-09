@@ -1,9 +1,12 @@
 package br.com.brasil_saas.financeiro.service;
 
-import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import br.com.brasil_saas.cadastro.model.Produto;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.vendas.model.ItemPedidoVenda;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,103 +17,159 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * CO-PA lite (Controlling – Profitability Analysis):
- * receita de pedidos FATURADOS agrupada por cliente e por período (mês).
- * Custo estimado = 70% da receita quando não há CMV detalhado (placeholder
- * até integração completa de custo médio do estoque).
+ * CO-PA (Controlling – Profitability Analysis): receita de pedidos FATURADOS por cliente e por mês.
+ * O custo vem, por item, do custo médio ponderado das compras recebidas; na falta dele, do preço de custo do
+ * cadastro; só então do percentual estimado. A resposta informa a cobertura de custo real.
  */
 @Service
 @RequiredArgsConstructor
 public class CopaService {
 
+    private static final BigDecimal CEM = new BigDecimal("100");
+
     private final PedidoVendaRepository pedidoVendaRepository;
-    private final TituloRepository tituloRepository;
+    private final ProdutoRepository produtoRepository;
+    private final JdbcTemplate jdbc;
+
+    /** Acumulador de receita e custo, separando o que veio de fonte real. */
+    private static final class Acum {
+        BigDecimal receita = BigDecimal.ZERO, custo = BigDecimal.ZERO, receitaReal = BigDecimal.ZERO;
+        BigDecimal cmvReal = BigDecimal.ZERO, cmvEstimado = BigDecimal.ZERO;
+        int pedidos;
+    }
 
     @Transactional(readOnly = true)
     public Map<String, Object> porCliente(Long empresaId, LocalDate de, LocalDate ate) {
-        List<PedidoVenda> pedidos = pedidoVendaRepository
-                .findByEmpresaIdOrderByDataEmissaoDesc(empresaId)
-                .stream()
-                .filter(p -> "FATURADO".equals(p.getStatus()))
-                .filter(p -> p.getDataEmissao() != null)
+        List<PedidoVenda> pedidos = faturados(empresaId).stream()
                 .filter(p -> (de == null || !p.getDataEmissao().isBefore(de)))
                 .filter(p -> (ate == null || !p.getDataEmissao().isAfter(ate)))
-                .toList();
+                .filter(p -> p.getClienteId() != null).toList();
+        Custos custos = carregarCustos(empresaId, pedidos);
 
-        Map<Long, List<PedidoVenda>> porCli = pedidos.stream()
-                .filter(p -> p.getClienteId() != null)
-                .collect(Collectors.groupingBy(PedidoVenda::getClienteId));
-
-        List<Map<String, Object>> linhas = new ArrayList<>();
-        BigDecimal totalReceita = BigDecimal.ZERO;
-        BigDecimal totalCusto = BigDecimal.ZERO;
-
-        for (Map.Entry<Long, List<PedidoVenda>> e : porCli.entrySet()) {
-            BigDecimal receita = e.getValue().stream()
-                    .map(p -> p.getValorTotal() == null ? BigDecimal.ZERO : p.getValorTotal())
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            // custo estimado 70% até CMV real
-            BigDecimal custo = receita.multiply(new BigDecimal("0.70")).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal margem = receita.subtract(custo);
-            BigDecimal pct = receita.signum() == 0 ? BigDecimal.ZERO
-                    : margem.multiply(new BigDecimal("100")).divide(receita, 2, RoundingMode.HALF_UP);
-
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("clienteId", e.getKey());
-            row.put("qtdePedidos", e.getValue().size());
-            row.put("receita", receita);
-            row.put("custoEstimado", custo);
-            row.put("margem", margem);
-            row.put("margemPct", pct);
-            linhas.add(row);
-            totalReceita = totalReceita.add(receita);
-            totalCusto = totalCusto.add(custo);
+        Map<Long, Acum> porCli = new LinkedHashMap<>();
+        Acum total = new Acum();
+        for (PedidoVenda p : pedidos) {
+            acumular(porCli.computeIfAbsent(p.getClienteId(), k -> new Acum()), p, custos);
+            acumular(total, p, custos);
         }
-
-        linhas.sort((a, b) -> ((BigDecimal) b.get("margem")).compareTo((BigDecimal) a.get("margem")));
+        List<Map<String, Object>> linhas = new ArrayList<>();
+        porCli.forEach((cli, a) -> {
+            Map<String, Object> row = linha(a);
+            row.put("clienteId", cli);
+            row.put("qtdePedidos", a.pedidos);
+            linhas.add(0, row);
+        });
+        linhas.sort((x, y) -> ((BigDecimal) y.get("margem")).compareTo((BigDecimal) x.get("margem")));
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("de", de);
         out.put("ate", ate);
-        out.put("totalReceita", totalReceita);
-        out.put("totalCustoEstimado", totalCusto);
-        out.put("totalMargem", totalReceita.subtract(totalCusto));
+        out.put("totalReceita", total.receita);
+        out.put("totalCustoEstimado", total.custo);
+        out.put("totalCmvReal", total.cmvReal);
+        out.put("totalCmvEstimado", total.cmvEstimado);
+        out.put("totalMargem", total.receita.subtract(total.custo));
+        out.put("coberturaCmvPct", CmvCalculadora.cobertura(total.receitaReal, total.receita));
         out.put("clientes", linhas);
-        out.put("aviso", "Custo estimado em 70% da receita até integração CMV/estoque. Paridade CO-PA SAP em evolução.");
+        out.put("aviso", aviso(total));
         return out;
     }
 
     @Transactional(readOnly = true)
     public Map<String, Object> porPeriodo(Long empresaId, int ano) {
-        List<PedidoVenda> pedidos = pedidoVendaRepository
-                .findByEmpresaIdOrderByDataEmissaoDesc(empresaId)
-                .stream()
-                .filter(p -> "FATURADO".equals(p.getStatus()))
-                .filter(p -> p.getDataEmissao() != null && p.getDataEmissao().getYear() == ano)
-                .toList();
+        List<PedidoVenda> pedidos = faturados(empresaId).stream()
+                .filter(p -> p.getDataEmissao().getYear() == ano).toList();
+        Custos custos = carregarCustos(empresaId, pedidos);
 
-        Map<String, BigDecimal> receitaMes = new TreeMap<>();
+        Map<String, Acum> porMes = new TreeMap<>();
+        Acum total = new Acum();
         for (PedidoVenda p : pedidos) {
             String mes = String.format("%04d-%02d", p.getDataEmissao().getYear(), p.getDataEmissao().getMonthValue());
-            BigDecimal v = p.getValorTotal() == null ? BigDecimal.ZERO : p.getValorTotal();
-            receitaMes.merge(mes, v, BigDecimal::add);
+            acumular(porMes.computeIfAbsent(mes, k -> new Acum()), p, custos);
+            acumular(total, p, custos);
         }
-
         List<Map<String, Object>> meses = new ArrayList<>();
-        for (Map.Entry<String, BigDecimal> e : receitaMes.entrySet()) {
-            BigDecimal rec = e.getValue();
-            BigDecimal custo = rec.multiply(new BigDecimal("0.70")).setScale(2, RoundingMode.HALF_UP);
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("periodo", e.getKey());
-            m.put("receita", rec);
-            m.put("custoEstimado", custo);
-            m.put("margem", rec.subtract(custo));
+        porMes.forEach((mes, a) -> {
+            Map<String, Object> m = linha(a);
+            m.put("periodo", mes);
             meses.add(m);
-        }
-
+        });
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("ano", ano);
+        out.put("coberturaCmvPct", CmvCalculadora.cobertura(total.receitaReal, total.receita));
         out.put("meses", meses);
+        out.put("aviso", aviso(total));
         return out;
     }
+
+    private List<PedidoVenda> faturados(Long empresaId) {
+        return pedidoVendaRepository.findByEmpresaIdOrderByDataEmissaoDesc(empresaId).stream()
+                .filter(p -> "FATURADO".equals(p.getStatus()) && p.getDataEmissao() != null).toList();
+    }
+
+    private record Custos(Map<Long, BigDecimal> medioCompras, Map<Long, BigDecimal> cadastro) {}
+
+    private Custos carregarCustos(Long empresaId, List<PedidoVenda> pedidos) {
+        Set<Long> ids = pedidos.stream().flatMap(p -> p.getItens().stream())
+                .map(ItemPedidoVenda::getProdutoId).filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<Long, BigDecimal> medio = new HashMap<>();
+        Map<Long, BigDecimal> cadastro = new HashMap<>();
+        if (ids.isEmpty()) return new Custos(medio, cadastro);
+        jdbc.query("select i.produto_id, sum(i.quantidade_recebida * i.valor_unitario) / nullif(sum(i.quantidade_recebida), 0) as medio " +
+                        "from brasil_saas.bc_com_pedido_item i join brasil_saas.bc_com_pedido p on p.id = i.pedido_id " +
+                        "where i.empresa_id = ? and i.produto_id is not null and i.quantidade_recebida > 0 " +
+                        "and p.status <> 'CANCELADO' and p.deleted_at is null and i.deleted_at is null group by i.produto_id",
+                rs -> {
+                    BigDecimal v = rs.getBigDecimal("medio");
+                    if (v != null && ids.contains(rs.getLong("produto_id"))) medio.put(rs.getLong("produto_id"), v);
+                }, empresaId);
+        for (Produto pr : produtoRepository.findAllById(ids)) cadastro.put(pr.getId(), pr.getPrecoCusto());
+        return new Custos(medio, cadastro);
+    }
+
+    private void acumular(Acum a, PedidoVenda p, Custos c) {
+        a.pedidos++;
+        if (p.getItens().isEmpty()) {
+            BigDecimal rec = nz(p.getValorTotal());
+            var custo = CmvCalculadora.custoLinha(null, rec, null, null);
+            somar(a, rec, custo);
+            return;
+        }
+        for (ItemPedidoVenda i : p.getItens()) {
+            BigDecimal rec = nz(i.getValorTotal());
+            var custo = CmvCalculadora.custoLinha(i.getQuantidade(), rec,
+                    i.getProdutoId() == null ? null : c.medioCompras().get(i.getProdutoId()),
+                    i.getProdutoId() == null ? null : c.cadastro().get(i.getProdutoId()));
+            somar(a, rec, custo);
+        }
+    }
+
+    private void somar(Acum a, BigDecimal receita, CmvCalculadora.Custo custo) {
+        a.receita = a.receita.add(receita);
+        a.custo = a.custo.add(custo.valor());
+        if (custo.real()) { a.cmvReal = a.cmvReal.add(custo.valor()); a.receitaReal = a.receitaReal.add(receita); }
+        else a.cmvEstimado = a.cmvEstimado.add(custo.valor());
+    }
+
+    private Map<String, Object> linha(Acum a) {
+        BigDecimal margem = a.receita.subtract(a.custo);
+        BigDecimal pct = a.receita.signum() == 0 ? BigDecimal.ZERO
+                : margem.multiply(CEM).divide(a.receita, 2, RoundingMode.HALF_UP);
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("receita", a.receita);
+        row.put("custoEstimado", a.custo);
+        row.put("cmvReal", a.cmvReal);
+        row.put("cmvEstimado", a.cmvEstimado);
+        row.put("margem", margem);
+        row.put("margemPct", pct);
+        row.put("coberturaCmvPct", CmvCalculadora.cobertura(a.receitaReal, a.receita));
+        return row;
+    }
+
+    private String aviso(Acum t) {
+        return t.cmvEstimado.signum() == 0 ? "Custo 100% de fonte real (média das compras recebidas ou custo de cadastro)."
+                : "Parte da receita usa custo estimado (70%) por falta de custo de compra/cadastro; veja coberturaCmvPct.";
+    }
+
+    private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
 }
