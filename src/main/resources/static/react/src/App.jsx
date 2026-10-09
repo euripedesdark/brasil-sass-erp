@@ -103,6 +103,7 @@ import { DevCompra } from './components/compras/DevCompra';
 import SupplyChainCompras from './components/compras/SupplyChainCompras';
 import RecebimentosCompra from './components/compras/RecebimentosCompra';
 import ConferenciaFaturasCompra from './components/compras/ConferenciaFaturasCompra';
+import { ContratosFornecimento } from './components/compras/ContratosFornecimento';
 import { Estoque } from './components/estoque/Estoque';
 import { MovimentacoesEstoque } from './components/estoque/MovimentacoesEstoque';
 import Depositos from './components/estoque/Depositos';
@@ -216,6 +217,7 @@ function App() {
                     <Route path="compras/supply-chain" element={<SupplyChainCompras />} />
                     <Route path="compras/recebimentos" element={<RecebimentosCompra />} />
                     <Route path="compras/conferencia-faturas" element={<ConferenciaFaturasCompra />} />
+                    <Route path="compras/contratos" element={<ContratosFornecimento />} />
                     <Route path="compras/devolucoes" element={<DevCompra />} />
                     <Route path="estoque/*" element={<Estoque />} />
                     <Route path="estoque/movimentacoes" element={<MovimentacoesEstoque />} />
