@@ -30,6 +30,7 @@ class WmsServiceImplTest {
     @Mock ExpedicaoEstoqueItemRepository expedicaoItens;
     @Mock ReservaEstoqueRepository reservas;
     @Mock ProdutoRepository produtos;
+    @Mock br.com.brasil_saas.core.service.DocumentoFluxoService documentoFluxo;
     @InjectMocks WmsServiceImpl service;
 
     private WmsOndaItem itemSeparado(String separado) {
