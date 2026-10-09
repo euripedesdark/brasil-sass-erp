@@ -485,7 +485,11 @@
     "deleteError": "Unable to delete customer",
     "created": "Customer created successfully",
     "updated": "Customer updated successfully",
-    "deleted": "Customer deleted successfully"
+    "deleted": "Customer deleted successfully",
+    "editTitle": "Edit customer: {{name}}",
+    "newTitle": "New customer",
+    "logoHelp": "Logo linked to the customer record.",
+    "savedSuccess": "Customer saved successfully!"
   },
   "supplier": {
     "title": "Suppliers",
@@ -498,7 +502,11 @@
     "deleteError": "Unable to delete supplier",
     "created": "Supplier created successfully",
     "updated": "Supplier updated successfully",
-    "deleted": "Supplier deleted successfully"
+    "deleted": "Supplier deleted successfully",
+    "editTitle": "Edit supplier: {{name}}",
+    "newTitle": "New supplier",
+    "logoHelp": "Logo linked to the supplier record.",
+    "savedSuccess": "Supplier saved successfully!"
   },
   "bankAccount": {
     "title": "Bank Accounts",
@@ -1271,6 +1279,30 @@
       "states": "All states",
       "search": "Search gap...",
       "status": "Status"
+    },
+    "partnerForm": {
+      "legalName": "Name / Legal name",
+      "taxId": "Tax ID (CPF/CNPJ)",
+      "creditLimit": "Credit limit",
+      "website": "Website",
+      "visualIdentity": "Visual identity",
+      "logo": "Logo",
+      "identification": "Identification",
+      "identificationHelp": "Primary registration details.",
+      "personType": "Person type",
+      "legalNamePlaceholder": "Name or legal name",
+      "rgStateRegistration": "RG / State registration",
+      "rgStateRegistrationPlaceholder": "RG or state registration",
+      "contact": "Contact",
+      "contactHelp": "Channels used for service and communication.",
+      "creditLimitCurrency": "Credit limit (BRL)",
+      "address": "Address",
+      "addressHelp": "Primary address for this record.",
+      "addressPlaceholder": "Street, number, unit, neighborhood, city/state",
+      "summary": "Summary",
+      "summaryHelp": "Review the main details before saving.",
+      "additionalInfoHelp": "Additional operational information.",
+      "additionalInfoPlaceholder": "Additional notes"
     }
   },
   "enterpriseOps": {
