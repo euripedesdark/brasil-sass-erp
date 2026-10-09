@@ -8,6 +8,8 @@ import java.util.Optional;
 
 @Repository
 public interface DepositoRepository extends JpaRepository<Deposito, Long> {
+    Optional<Deposito> findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(Long empresaId, String tipo);
+    Optional<Deposito> findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(Long empresaId);
     List<Deposito> findByEmpresaIdAndAtivoTrueOrderByNomeAsc(Long empresaId);
     Optional<Deposito> findByEmpresaIdAndCodigoAndAtivoTrue(Long empresaId, String codigo);
     Optional<Deposito> findByIdAndEmpresaIdAndAtivoTrue(Long id, Long empresaId);

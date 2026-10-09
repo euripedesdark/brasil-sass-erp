@@ -49,6 +49,8 @@ _backup-conversas-opencode/
 # Excecao: migrations Flyway precisam ser versionadas (sem isto, "*.sql" as engole e o
 # codigo que depende da coluna vai para a main sem a migration).
 !src/main/resources/db/migration/*.sql
+# Fixture sintética H2 requerida pelo perfil de teste.
+!src/test/resources/h2-tabelas-legadas.sql
 dump/
 dados_cadastro_erp.sql
 mongo_brasil-saas.zip

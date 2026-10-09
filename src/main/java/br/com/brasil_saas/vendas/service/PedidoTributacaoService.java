@@ -63,8 +63,8 @@ public class PedidoTributacaoService {
                 itens.add(row);
             }
         }
-        Map<String, Object> out = tributacao.simularItens(empresaId, ufOrigem, ufDestino,
-                consumidorFinal, contribuinte, itens);
+        Map<String, Object> out = new LinkedHashMap<>(tributacao.simularItens(empresaId, ufOrigem, ufDestino,
+                consumidorFinal, contribuinte, itens));
         out.put("ufOrigem", ufOrigem);
         out.put("ufDestino", ufDestino);
         return out;

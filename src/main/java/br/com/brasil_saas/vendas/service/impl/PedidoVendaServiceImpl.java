@@ -326,7 +326,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void reservarEstoqueDoPedido(PedidoVenda pedido) {
-        Long depositoPadrao = depositoRepository.findByEmpresaIdAndPadraoTrueAndAtivoTrue(pedido.getEmpresaId())
+        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(pedido.getEmpresaId(), "PADRAO")
                 .map(d -> d.getId())
                 .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(pedido.getEmpresaId()).map(d -> d.getId()).orElse(null));
         if (depositoPadrao == null) return;
@@ -353,7 +353,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long pedidoId) {
-        Long depositoPadrao = depositoRepository.findByEmpresaIdAndPadraoTrueAndAtivoTrue(empresaId)
+        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueOrderByIdAsc(empresaId, "PADRAO")
                 .map(d -> d.getId())
                 .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(empresaId).map(d -> d.getId()).orElse(null));
         if (depositoPadrao == null) throw new BusinessException("Nenhum deposito ativo para baixa de estoque");
@@ -369,8 +369,8 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         mov.setDepositoId(depositoPadrao);
         mov.setProdutoId(produtoId);
         mov.setTipo("SAIDA");
-        mov.setDocumentoTipo("PEDIDO_VENDA");
-        mov.setDocumentoId(pedidoId);
+        mov.setOrigem("PEDIDO_VENDA");
+        mov.setOrigemId(pedidoId);
         mov.setQuantidade(quantidade.negate());
         mov.setSaldoApos(saldo.getQuantidade());
         mov.setObservacao("Baixa por venda");

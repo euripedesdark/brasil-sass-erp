@@ -21,10 +21,10 @@ public class IcmsStService {
         if (baseOperacao == null || baseOperacao.signum() < 0) {
             throw new IllegalArgumentException("Base da operação inválida");
         }
-        BigDecimal inter = nz(aliqInter);
-        BigDecimal interna = nz(aliqInterna);
-        BigDecimal m = nz(mva);
-        BigDecimal red = nz(reducaoBasePct);
+        BigDecimal inter = percentual(aliqInter, "Alíquota interestadual", true);
+        BigDecimal interna = percentual(aliqInterna, "Alíquota interna", true);
+        BigDecimal m = percentual(mva, "MVA", false);
+        BigDecimal red = percentual(reducaoBasePct == null ? BigDecimal.ZERO : reducaoBasePct, "Redução de base", true);
 
         BigDecimal baseOp = baseOperacao;
         if (red.signum() > 0) {
@@ -52,7 +52,10 @@ public class IcmsStService {
         return out;
     }
 
-    private static BigDecimal nz(BigDecimal v) {
-        return v == null ? BigDecimal.ZERO : v;
+    private static BigDecimal percentual(BigDecimal v, String campo, boolean limitado) {
+        if (v == null || v.signum() < 0 || (limitado && v.compareTo(BigDecimal.valueOf(100)) > 0)) {
+            throw new IllegalArgumentException(campo + " inválida");
+        }
+        return v;
     }
 }
