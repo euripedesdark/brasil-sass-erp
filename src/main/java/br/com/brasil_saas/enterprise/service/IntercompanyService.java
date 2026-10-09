@@ -45,10 +45,18 @@ public class IntercompanyService {
 
     /** Total reconciliado com a parceira no período: base para as eliminações da consolidação. */
     @Transactional(readOnly = true)
-    public BigDecimal eliminacoes(Long empresaId, java.time.LocalDate competencia) {
-        BigDecimal v = jdbc.queryForObject("select coalesce(sum(valor),0) from brasil_saas.bc_fin_intercompany " +
-                "where empresa_id=? and reconciliado=true and deleted_at is null and competencia=?",
-                BigDecimal.class, empresaId, java.sql.Date.valueOf(competencia));
-        return v == null ? BigDecimal.ZERO : v;
+    /** Lista lançamentos reconciliados da competência + total (para consolidação). */
+    public Map<String, Object> eliminacoes(Long empresaId, java.time.LocalDate competencia) {
+        java.sql.Date comp = java.sql.Date.valueOf(competencia);
+        List<Map<String, Object>> linhas = jdbc.queryForList(
+                "select id, numero, empresa_parceira_id, valor, moeda, status, reconciliado, diferenca, competencia " +
+                "from brasil_saas.bc_fin_intercompany " +
+                "where empresa_id=? and reconciliado=true and deleted_at is null and competencia=? " +
+                "order by numero", empresaId, comp);
+        BigDecimal total = linhas.stream()
+                .map(m -> (BigDecimal) m.get("valor"))
+                .filter(v -> v != null)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return Map.of("linhas", linhas, "total", total, "competencia", competencia.toString());
     }
 }

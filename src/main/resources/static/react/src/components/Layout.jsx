@@ -207,6 +207,7 @@ export const Layout = () => {
                     item('Apuracao', 'pi pi-calculator', '/fiscal/apuracoes'),
                     item('EFD-Reinf', 'pi pi-book', '/fiscal/reinf'),
                     item('ICMS DIFAL', 'pi pi-percentage', '/fiscal/difal'),
+                    item('ICMS-ST (MVA)', 'pi pi-percentage', '/fiscal/icms-st'),
                     item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz'),
                     item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
                     item('menu.obrigacoes', 'pi pi-calendar-check', '/fiscal/obrigacoes'),
@@ -371,6 +372,11 @@ export const Layout = () => {
             label: 'TMS Planejamento',
             icon: 'pi pi-truck',
             command: () => handleNavigation('/enterprise/tms-planejamento')
+        });
+        items.push({
+            label: 'Eliminações intercompany',
+            icon: 'pi pi-sync',
+            command: () => handleNavigation('/enterprise/intercompany-eliminacoes')
         });
         items.push({
             label: 'Governança Corporativa',
