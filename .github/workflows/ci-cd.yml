@@ -93,9 +93,6 @@ jobs:
 
       - name: Unit tests
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/brasil-saas?currentSchema=brasil_saas
-          SPRING_DATASOURCE_USERNAME: brasil-saas
-          SPRING_DATASOURCE_PASSWORD: test123
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/brasil-saas
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379

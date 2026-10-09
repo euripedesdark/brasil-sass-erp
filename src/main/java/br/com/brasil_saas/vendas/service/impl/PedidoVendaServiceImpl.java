@@ -179,7 +179,8 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                 reservaEstoqueRepository
                         .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(pedido.getEmpresaId(), pedido.getId())
                         .stream()
-                        .filter(reserva -> item.getProdutoId().equals(reserva.getProdutoId()) && "RESERVADA".equals(reserva.getStatus()))
+                        .filter(reserva -> item.getProdutoId().equals(reserva.getProdutoId())
+                                && ("RESERVADA".equals(reserva.getStatus()) || "SEPARACAO".equals(reserva.getStatus())))
                         .findFirst()
                         .ifPresent(reserva -> {
                             reserva.setStatus("CONSUMIDA");
@@ -250,9 +251,10 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         return m;
     }
 
+    @Override
+    @Transactional
     public void cancelar(Long id, Long empresaId) {
-        PedidoVenda pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pedido de venda nao encontrado"));
+        PedidoVenda pedido = pedidoBloqueado(id, empresaId);
         if ("FATURADO".equals(pedido.getStatus())) {
             throw new BusinessException("Pedidos FATURADOS nao podem ser cancelados diretamente");
         }

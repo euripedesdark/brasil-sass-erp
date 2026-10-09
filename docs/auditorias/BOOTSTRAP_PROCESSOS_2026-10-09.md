@@ -18,7 +18,7 @@ V185 acrescenta 15 colunas efetivamente ausentes em contratos, notificações, c
 
 - Crédito usa cliente da empresa solicitante, sem consultar cadastro de outra empresa.
 - Exposição de crédito considera somente títulos a receber ABERTOS/PARCIAIS; contas a pagar e títulos liquidados não consomem limite.
-- Faturamento bloqueia o saldo em transação e desconta as reservas ativas de outros pedidos antes da baixa. O parâmetro de autorização excepcional de crédito não ignora reservas de estoque.
+- Faturamento bloqueia o saldo em transação e desconta as reservas ativas de outros pedidos antes da baixa. O parâmetro de autorização excepcional de crédito não ignora reservas de estoque. Reservas em SEPARACAO também são consumidas no faturamento; cancelamento usa bloqueio do pedido e uma única transação para liberar reservas e atualizar o status.
 - Descontos são validados por item: um desconto negativo ou superior ao bruto não pode ser compensado por outro item.
 - Frete negativo, quantidade não positiva e percentual acima de 100 são recusados. Desconto integral continua permitido.
 - Contratos legados sem data final mantêm vigência aberta; ausência da data inicial retorna erro de negócio.
@@ -38,7 +38,7 @@ mvn test -Dtest=BootstrapPostgresTest
 
 No adaptador PGlite Socket, a URL usa `prepareThreshold=0` e o teste desativa o lock transacional do Flyway para contornar limitações do adaptador. A configuração de produção de locks não foi alterada. Flyway 10.17 informa que seu suporte testado vai até PostgreSQL 16; compatibilidade com PostgreSQL 18 foi exercitada aqui, mas a atualização da dependência deve ser avaliada separadamente.
 
-Validação Java: suíte completa com 261 testes aprovada; após a última correção de crédito, os 24 testes afetados foram repetidos. Os relatórios consolidados cobrem 262 testes únicos, sem falhas, erros ou testes ignorados. O teste PostgreSQL foi repetido após acrescentar gravação/leitura de contratos. `git diff --check` aprovado. O frontend não foi alterado nesta etapa. O job de migrações do GitHub confirmou B184/V185 em PostgreSQL 18.6 nativo. A checagem antiga de tabelas procurava no esquema padrão e foi corrigida para validar nomes exatos em `brasil_saas`; o job agora executa também `BootstrapPostgresTest`.
+Validação Java: suíte completa com 261 testes aprovada; após a última correção de crédito, os 24 testes afetados foram repetidos. Os relatórios consolidados cobrem 265 testes únicos, sem falhas, erros ou testes ignorados. O teste PostgreSQL foi repetido após acrescentar gravação/leitura de contratos. Depois foram aprovados os seis testes de vendas, incluindo faturamento com baixa, consumo de reservas e criação do título, além de cancelamento com liberação de reservas. `git diff --check` aprovado. O frontend não foi alterado nesta etapa. O job de migrações do GitHub confirmou B184/V185 em PostgreSQL 18.6 nativo. A checagem antiga de tabelas procurava no esquema padrão e foi corrigida para validar nomes exatos em `brasil_saas`; o job agora executa também `BootstrapPostgresTest`, aprovado em PostgreSQL 18.6 nativo. Dois jobs de testes unitários deixavam a URL PostgreSQL sobrescrever o perfil H2 e foram corrigidos; PostgreSQL continua sendo verificado pelo job próprio de migrações/contratos.
 
 ## Meta funcional e próximas evidências
 
