@@ -58,6 +58,9 @@ public class PedidoCompra extends TenantEntity {
     @Column(name = "titulo_id")
     private Long tituloId;
 
+    @Column(name = "contrato_id")
+    private Long contratoId;
+
     @Column(name = "observacao", columnDefinition = "TEXT")
     private String observacao;
 
