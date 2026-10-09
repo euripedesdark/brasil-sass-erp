@@ -63,9 +63,9 @@ class ApuracaoServiceTest {
 
         Nfe saida = nfe("S", "1000.00", "16.50", "0");
         Nfe entrada = nfe("E", "500.00", "8.25", "0");
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 eq(10L), eq("S"), any(), any())).thenReturn(List.of(saida));
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 eq(10L), eq("E"), any(), any())).thenReturn(List.of(entrada));
 
         Apuracao a = svc.calcular(10L, 1L, "03/2026");
@@ -85,9 +85,9 @@ class ApuracaoServiceTest {
         when(apuracoes.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Nfe saida = nfe("S", "1000.00", "0", "0"); // sem PIS destacado
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 eq(10L), eq("S"), any(), any())).thenReturn(List.of(saida));
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 eq(10L), eq("E"), any(), any())).thenReturn(List.of());
 
         Apuracao a = svc.calcular(10L, 1L, "03/2026");
@@ -108,9 +108,9 @@ class ApuracaoServiceTest {
 
         Nfe saida = nfeIcms("S", "2000.00", "360.00");
         Nfe entrada = nfeIcms("E", "800.00", "144.00");
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 eq(10L), eq("S"), any(), any())).thenReturn(List.of(saida));
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 eq(10L), eq("E"), any(), any())).thenReturn(List.of(entrada));
 
         Apuracao a = svc.calcular(10L, 2L, "03/2026");
@@ -128,7 +128,7 @@ class ApuracaoServiceTest {
         existente.setStatus("ENCERRADA");
         when(apuracoes.findByEmpresaIdAndImpostoIdAndCompetencia(10L, 1L, "03/2026"))
                 .thenReturn(Optional.of(existente));
-        when(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        when(nfes.findNoPeriodoPorTipo(
                 anyLong(), anyString(), any(), any())).thenReturn(List.of());
 
         assertThrows(BusinessException.class, () -> svc.calcular(10L, 1L, "03/2026"));
@@ -138,6 +138,14 @@ class ApuracaoServiceTest {
     void competenciaInvalida() {
         when(impostos.findById(1L)).thenReturn(Optional.of(pis));
         assertThrows(BusinessException.class, () -> svc.calcular(10L, 1L, "2026-03"));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"3/2026", "03/2026/extra", "03/26", "00/2026", "13/2026"})
+    void rejeitaCompetenciaNaoCanonica(String competencia) {
+        when(impostos.findById(1L)).thenReturn(Optional.of(pis));
+        assertThrows(BusinessException.class, () -> svc.calcular(10L, 1L, competencia));
+        verifyNoInteractions(nfes, nfses, apuracoes);
     }
 
     private Nfe nfe(String tipo, String produtos, String pis, String cofins) {

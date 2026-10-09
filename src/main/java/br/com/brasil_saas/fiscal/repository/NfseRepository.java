@@ -2,9 +2,13 @@ package br.com.brasil_saas.fiscal.repository;
 
 import br.com.brasil_saas.fiscal.model.Nfse;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface NfseRepository extends JpaRepository<Nfse, Long> {
+    @Query("select n from Nfse n where n.empresaId = :empresaId and n.dataEmissao >= :de and n.dataEmissao < :ate and n.deletedAt is null")
+    java.util.List<Nfse> findNoPeriodo(@Param("empresaId") Long empresaId, @Param("de") java.time.LocalDateTime de, @Param("ate") java.time.LocalDateTime ate);
     Optional<Nfse> findByEmpresaIdAndCodigoVerificacao(Long empresaId, String codigoVerificacao);
 
     java.util.List<Nfse> findAllByEmpresaIdAndDeletedAtIsNullOrderByDataEmissaoDesc(Long empresaId);

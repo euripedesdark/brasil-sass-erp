@@ -37,6 +37,8 @@ estorno em periodo fechado e reabertura. Todos os dados sinteticos ficam na
 transacao de teste com rollback. Nenhuma migration historica foi alterada.
 
 Esses cenarios possuem criterios objetivos de encerramento. Eles nao substituem
-a validacao das integracoes externas Reinf, certificados ou a conciliacao
+a validacao das integracoes externas Reinf ou a conciliacao
 financeira/fiscal de devolucoes registrada no inventario. Nenhum desses fluxos
 externos e declarado concluido por contagem de classes ou por testes com mocks.
+
+Atualizacao: Samba/CA e certificados funcionam localmente, conforme confirmacao do proprietario em 09/10/2026; nao constituem pendencia desta auditoria.

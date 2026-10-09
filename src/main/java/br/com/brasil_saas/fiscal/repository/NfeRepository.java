@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface NfeRepository extends JpaRepository<Nfe, Long> {
+    @Query("select n from Nfe n where n.empresaId = :empresaId and n.tipoOperacao = :tipo and n.dataEmissao >= :de and n.dataEmissao < :ate and n.deletedAt is null")
+    java.util.List<Nfe> findNoPeriodoPorTipo(@Param("empresaId") Long empresaId, @Param("tipo") String tipo, @Param("de") java.time.LocalDateTime de, @Param("ate") java.time.LocalDateTime ate);
     Optional<Nfe> findByEmpresaIdAndChaveAcesso(Long empresaId, String chaveAcesso);
     Page<Nfe> findByEmpresaIdAndStatusOrderByDataEmissaoDesc(Long empresaId, String status, Pageable pageable);
     Page<Nfe> findByEmpresaIdOrderByDataEmissaoDesc(Long empresaId, Pageable pageable);

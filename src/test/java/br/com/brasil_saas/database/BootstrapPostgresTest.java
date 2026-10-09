@@ -98,6 +98,7 @@ class BootstrapPostgresTest {
                         assertTrue(vendaLida.getRenovacaoAuto());
                         assertEquals(new BigDecimal("100.00"), vendaLida.getValor());
                         VendasReservasPostgresScenario.validar(session);
+                        FiscalCompetenciasPostgresScenario.validar(session);
                     } finally {
                         transaction.rollback();
                     }
