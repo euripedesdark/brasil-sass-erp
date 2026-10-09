@@ -23,6 +23,8 @@ const items=[
  ['menu.taxes','fiscal.taxesDesc','pi pi-percentage','/fiscal/impostos'],
  ['menu.digitalCertificate','fiscal.certificateDesc','pi pi-key','/fiscal/certificados'],
  ['menu.sped','fiscal.spedDesc','pi pi-file-export','/fiscal/sped'],
+ ['EFD-Reinf','Eventos R-2010/R-2020/R-2099 a partir das NFS-e','pi pi-book','/fiscal/reinf'],
+ ['Apurações','Apuração ICMS/IPI/PIS/COFINS/ISS','pi pi-calculator','/fiscal/apuracoes'],
  ['menu.sefaz','fiscal.sefazDesc','pi pi-cloud','/fiscal/sefaz']
 ];
 export default function FiscalHub(){
