@@ -11,8 +11,4 @@ public interface DepositoRepository extends JpaRepository<Deposito, Long> {
     List<Deposito> findByEmpresaIdAndAtivoTrueOrderByNomeAsc(Long empresaId);
     Optional<Deposito> findByEmpresaIdAndCodigoAndAtivoTrue(Long empresaId, String codigo);
     Optional<Deposito> findByIdAndEmpresaIdAndAtivoTrue(Long id, Long empresaId);
-    // Deposito padrao da empresa: a coluna se chama tipo e o proprio
-    // modelo ja inicializa tipo = "PADRAO".
-    Optional<Deposito> findFirstByEmpresaIdAndTipoAndAtivoTrue(Long empresaId, String tipo);
-    Optional<Deposito> findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(Long empresaId);
 }
