@@ -20,6 +20,29 @@ export const TributacaoSimulador = () => {
     const [busy, setBusy] = useState(false);
     const money = (v) => (v == null ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
 
+    const simularLote = async () => {
+        setBusy(true);
+        try {
+            const r = await apiFetch('/api/fiscal/tributacao/simular-itens', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ufOrigem: ufO, ufDestino: ufD, consumidorFinal: cf, contribuinte: contrib,
+                    itens: [
+                        { ref: '1', base, ncm, cfop },
+                        { ref: '2', base: Number(base || 0) * 0.5, ncm, cfop },
+                    ],
+                }),
+            });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            setRes(await r.json());
+        } catch (e) {
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 });
+        } finally {
+            setBusy(false);
+        }
+    };
+
     const simular = async () => {
         setBusy(true);
         try {
@@ -57,8 +80,23 @@ export const TributacaoSimulador = () => {
                         <span className="flex align-items-center gap-2"><Checkbox checked={contrib} onChange={(e) => setContrib(e.checked)} /><label>Contribuinte</label></span>
                     </div>
                 </div>
-                <Button label="Simular" icon="pi pi-calculator" className="mt-3" onClick={simular} loading={busy} />
+                <div className="flex gap-2 mt-3">
+                  <Button label="Simular linha" icon="pi pi-calculator" onClick={simular} loading={busy} />
+                  <Button label="Simular lote (2 itens)" icon="pi pi-list" outlined onClick={simularLote} loading={busy} />
+                </div>
             </Card>
+            {res && res.totalImpostos != null && (
+                <Card title="Totais do lote" className="mb-3">
+                    <div className="grid">
+                        <div className="col-6 md:col-2"><b>ICMS</b><div>{money(res.totalIcms)}</div></div>
+                        <div className="col-6 md:col-2"><b>PIS</b><div>{money(res.totalPis)}</div></div>
+                        <div className="col-6 md:col-2"><b>COFINS</b><div>{money(res.totalCofins)}</div></div>
+                        <div className="col-6 md:col-2"><b>DIFAL</b><div>{money(res.totalDifal)}</div></div>
+                        <div className="col-6 md:col-2"><b>ST</b><div>{money(res.totalIcmsSt)}</div></div>
+                        <div className="col-6 md:col-2"><b>Total</b><div>{money(res.totalImpostos)}</div></div>
+                    </div>
+                </Card>
+            )}
             {res && (
                 <Card title={res.regraEncontrada ? ('Regra: ' + (res.regraNome || res.regraId)) : 'Sem regra'}>
                     {!res.regraEncontrada && <p>{res.mensagem}</p>}

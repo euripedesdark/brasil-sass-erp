@@ -203,11 +203,14 @@ springdoc:
 
 
 stripe:
+  # URLs de retorno do Checkout (SPA BrowserRouter). Em produção use o domínio público.
   success-url: ${STRIPE_SUCCESS_URL:http://localhost:8080/financeiro/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}}
   cancel-url: ${STRIPE_CANCEL_URL:http://localhost:8080/financeiro/stripe/cancelado}
   currency: ${STRIPE_CURRENCY:brl}
   automatic-tax: ${STRIPE_AUTOMATIC_TAX:false}
   invoice-days-until-due: ${STRIPE_INVOICE_DAYS_UNTIL_DUE:30}
+  # Template do webhook: POST /api/financeiro/stripe/webhook/{empresaId}
+  webhook-path: /api/financeiro/stripe/webhook/{empresaId}
 
 app:
   security:

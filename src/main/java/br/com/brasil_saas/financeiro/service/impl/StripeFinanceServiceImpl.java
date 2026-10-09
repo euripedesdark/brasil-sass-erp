@@ -493,6 +493,10 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
             m.put("motivo", ex.getMessage());
         }
         m.put("pagamentos", paymentRepository.findByEmpresaIdAndDeletedAtIsNullOrderByIdDesc(empresaId).size());
+        m.put("webhookPath", "/api/financeiro/stripe/webhook/" + empresaId);
+        m.put("webhookHint", "Cadastre esta URL no Dashboard Stripe (endpoint de eventos checkout.session.completed, invoice.paid)");
+        m.put("successUrl", successUrl);
+        m.put("cancelUrl", cancelUrl);
         return m;
     }
 

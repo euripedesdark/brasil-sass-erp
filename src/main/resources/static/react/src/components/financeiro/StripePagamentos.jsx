@@ -73,6 +73,13 @@ export const StripePagamentos = () => {
                         <span>Registros: {status.pagamentos ?? rows.length}</span>
                         {status.motivo && <span className="text-color-secondary">{status.motivo}</span>}
                     </div>
+                    {status.webhookPath && (
+                        <div className="mt-3 text-sm">
+                            <b>Webhook (Dashboard Stripe):</b>
+                            <div><code>{typeof window !== 'undefined' ? window.location.origin : ''}{status.webhookPath}</code></div>
+                            <div className="text-color-secondary">{status.webhookHint}</div>
+                        </div>
+                    )}
                 </Card>
             )}
             <DataTable value={rows} loading={loading} paginator rows={15} dataKey="id" emptyMessage="Nenhum pagamento Stripe. Use o botão de cartão nos títulos a receber.">

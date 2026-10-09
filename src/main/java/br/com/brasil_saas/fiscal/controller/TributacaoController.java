@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,10 +23,20 @@ public class TributacaoController {
                          String ufOrigem, String ufDestino,
                          Boolean consumidorFinal, Boolean contribuinte) {}
 
+    public record SimLoteReq(String ufOrigem, String ufDestino, Boolean consumidorFinal, Boolean contribuinte,
+                             List<Map<String, Object>> itens) {}
+
     @PostMapping("/simular")
     @PreAuthorize("isAuthenticated()")
     public Map<String, Object> simular(@RequestBody SimReq r, @AuthenticationPrincipal AuthenticatedUser u) {
         return service.simular(u.getEmpresaId(), r.base(), r.ncm(), r.cfop(),
                 r.ufOrigem(), r.ufDestino(), r.consumidorFinal(), r.contribuinte());
+    }
+
+    @PostMapping("/simular-itens")
+    @PreAuthorize("isAuthenticated()")
+    public Map<String, Object> simularItens(@RequestBody SimLoteReq r, @AuthenticationPrincipal AuthenticatedUser u) {
+        return service.simularItens(u.getEmpresaId(), r.ufOrigem(), r.ufDestino(),
+                r.consumidorFinal(), r.contribuinte(), r.itens());
     }
 }
