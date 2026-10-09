@@ -1,5 +1,6 @@
 package br.com.brasil_saas.producao.service.impl;
 
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import br.com.brasil_saas.producao.model.*;
 import br.com.brasil_saas.producao.repository.*;
 import br.com.brasil_saas.producao.service.ProducaoService;
@@ -34,6 +35,7 @@ public class ProducaoServiceImpl implements ProducaoService {
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
     private final CustoProducaoService custoService;
     private final ProdutoRepository produtoRepository;
+    private final DocumentoFluxoService documentoFluxo;
 
     @Override
     @Transactional
@@ -131,7 +133,12 @@ public class ProducaoServiceImpl implements ProducaoService {
 
         p.setStatus("FINALIZADO");
         p.setDataFim(LocalDateTime.now());
-        return producaoRepository.save(p);
+        Producao salva = producaoRepository.save(p);
+        if (entrada != null && entrada.signum() > 0) {
+            documentoFluxo.ligar(empresaId, null, "ORDEM_PRODUCAO", salva.getId(), salva.getNumero(),
+                    "ESTOQUE_PRODUTO", salva.getProdutoFinalId(), null, "PRODUZ");
+        }
+        return salva;
     }
 
     private void atualizarCustoMedio(Long empresaId, Long produtoId, BigDecimal entrada, BigDecimal custoUnitarioOp) {

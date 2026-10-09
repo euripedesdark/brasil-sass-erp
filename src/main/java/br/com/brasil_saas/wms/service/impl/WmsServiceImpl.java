@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import java.time.LocalDateTime;
 import java.util.*;
 @Service @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class WmsServiceImpl implements WmsService {
     private final ExpedicaoEstoqueItemRepository expedicaoItens;
     private final ReservaEstoqueRepository reservas;
     private final ProdutoRepository produtos;
+    private final DocumentoFluxoService documentoFluxo;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -250,6 +252,8 @@ public class WmsServiceImpl implements WmsService {
         e.setCodigoRastreio(codigoRastreio);
         e.setDataExpedicao(LocalDateTime.now());
         expedicoes.save(e);
+        documentoFluxo.ligar(empresaId, null, "PEDIDO_VENDA", e.getPedidoVendaId(), null,
+                "EXPEDICAO", expedicaoId, codigoRastreio, "EXPEDE");
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("expedicaoId", expedicaoId);
         m.put("status", "EXPEDIDA");
