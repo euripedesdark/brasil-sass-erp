@@ -38,6 +38,8 @@ import { LancamentoContabil } from './components/financeiro/LancamentoContabil';
 import { PlanoContas } from './components/financeiro/PlanoContas';
 import { TipoPagamento } from './components/financeiro/TipoPagamento';
 import { Titulo } from './components/financeiro/Titulo';
+import { StripePagamentos } from './components/financeiro/StripePagamentos';
+import { StripeResultado } from './components/financeiro/StripeResultado';
 import { Renegociacao } from './components/financeiro/Renegociacao';
 import { Orcamento } from './components/financeiro/Orcamento';
 import { Emprestimos } from './components/financeiro/Emprestimos';
@@ -88,6 +90,7 @@ import { Difal } from './components/fiscal/Difal';
 import { IcmsSt } from './components/fiscal/IcmsSt';
 import { RegrasTributarias } from './components/fiscal/RegrasTributarias';
 import { TributacaoSimulador } from './components/fiscal/TributacaoSimulador';
+import { FiscalPainel } from './components/fiscal/FiscalPainel';
 import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
@@ -245,7 +248,10 @@ function App() {
 
                     <Route path="financeiro" element={<FinanceiroHub />} />
                     <Route path="financeiro/lancamentos" element={<Titulo />} />
-                    <Route path="financeiro/titulos" element={<Titulo />} />
+                    <Route path="financeiro/titulos" element={<Titulo />
+                    <Route path="financeiro/stripe" element={<StripePagamentos />} />
+                    <Route path="financeiro/stripe/sucesso" element={<StripeResultado />} />
+                    <Route path="financeiro/stripe/cancelado" element={<StripeResultado />} />
                     <Route path="financeiro/renegociacao" element={<Renegociacao />} />
                     <Route path="financeiro/orcamento" element={<Orcamento />} />
                     <Route path="financeiro/emprestimos" element={<Emprestimos />} />
@@ -289,6 +295,7 @@ function App() {
                     <Route path="fiscal/icms-st" element={<IcmsSt />} />
                     <Route path="fiscal/regras-tributarias" element={<RegrasTributarias />} />
                     <Route path="fiscal/simulador" element={<TributacaoSimulador />} />
+                    <Route path="fiscal/painel" element={<FiscalPainel />} />
                     <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />

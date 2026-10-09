@@ -10,6 +10,7 @@ import { apiFetch } from '../../services/ApiConfig';
 import BuscaFiscal from './BuscaFiscal';
 
 const items=[
+ ['Painel fiscal','Apuração + REINF + docs do período','pi pi-chart-bar','/fiscal/painel'],
  // NFS-e em primeiro: e o unico modulo fiscal que EMITE documento contra a
  // prefeitura, e a tela tinha o codigo pronto sem estar neste menu nem no
  // router. A rota agora existe em App.jsx.
