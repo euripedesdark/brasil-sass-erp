@@ -91,6 +91,7 @@ import { IcmsSt } from './components/fiscal/IcmsSt';
 import { RegrasTributarias } from './components/fiscal/RegrasTributarias';
 import { TributacaoSimulador } from './components/fiscal/TributacaoSimulador';
 import { FiscalPainel } from './components/fiscal/FiscalPainel';
+import { FiscalProntidao } from './components/fiscal/FiscalProntidao';
 import { BuscaFiscal } from './components/fiscal/BuscaFiscal';
 import FiscalHub from './components/fiscal/FiscalHub';
 
@@ -296,6 +297,7 @@ function App() {
                     <Route path="fiscal/regras-tributarias" element={<RegrasTributarias />} />
                     <Route path="fiscal/simulador" element={<TributacaoSimulador />} />
                     <Route path="fiscal/painel" element={<FiscalPainel />} />
+                    <Route path="fiscal/prontidao" element={<FiscalProntidao />} />
                     <Route path="fiscal/busca" element={<BuscaFiscal />} />
 
                     <Route path="rh" element={<RH />} />
