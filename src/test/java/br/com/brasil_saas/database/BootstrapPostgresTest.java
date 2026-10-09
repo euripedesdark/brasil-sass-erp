@@ -43,6 +43,12 @@ class BootstrapPostgresTest {
                 .applySetting("hibernate.connection.username", user)
                 .applySetting("hibernate.connection.password", password)
                 .applySetting("hibernate.default_schema", "brasil_saas")
+                // Spring Data abre EntityManagers adicionais para validar suas queries.
+                // Todos pertencem exclusivamente a empresa sintetica deste teste.
+                .applySetting("hibernate.tenant_identifier_resolver", new org.hibernate.context.spi.CurrentTenantIdentifierResolver<Long>() {
+                    @Override public Long resolveCurrentTenantIdentifier() { return 900001L; }
+                    @Override public boolean validateExistingCurrentSessions() { return true; }
+                })
                 .applySetting("hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy")
                 .applySetting("hibernate.hbm2ddl.auto", "validate").build();
         try {
@@ -91,6 +97,7 @@ class BootstrapPostgresTest {
                         assertEquals("Contrato sintetico", vendaLida.getTitulo());
                         assertTrue(vendaLida.getRenovacaoAuto());
                         assertEquals(new BigDecimal("100.00"), vendaLida.getValor());
+                        VendasReservasPostgresScenario.validar(session);
                     } finally {
                         transaction.rollback();
                     }
