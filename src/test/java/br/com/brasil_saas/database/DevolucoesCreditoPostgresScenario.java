@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /** Devolucoes nas duas direcoes e exposicao de credito reais, com rollback. */
 final class DevolucoesCreditoPostgresScenario {
     static void validar(Session session, Long pedidoVendaId) {
+        validarUpgradeLegado(session);
         long empresa=900001L;
         var factory=new JpaRepositoryFactory(session);
         var depositos=factory.getRepository(DepositoRepository.class);
@@ -31,6 +32,7 @@ final class DevolucoesCreditoPostgresScenario {
         var devVenda=factory.getRepository(VenDevolucaoRepository.class);
         var venda=new DevolucaoService(devVenda,factory.getRepository(VenDevolucaoItemRepository.class),pedidosVenda,saldos,movimentos,depositos);
         var retorno=venda.solicitar(empresa,pedidoVendaId,"Teste sintetico",Map.of(empresa,BigDecimal.ONE));
+        assertEquals(empresa,retorno.getClienteId()); assertNotNull(retorno.getNumero());
         venda.decidir(empresa,null,retorno.getId(),true);venda.receber(empresa,retorno.getId());session.flush();
         igual("9",saldos.findForUpdate(empresa,empresa,empresa).orElseThrow().getQuantidade());
         assertThrows(ResponseStatusException.class,()->venda.receber(empresa,retorno.getId()));
@@ -72,6 +74,33 @@ final class DevolucoesCreditoPostgresScenario {
         igual("100",(BigDecimal)analise.get("emAberto"));igual("900",(BigDecimal)analise.get("disponivel"));
         assertEquals("OK",analise.get("situacao"));
         assertTrue(clientes.findForUpdate(empresa,900002L).isEmpty());
+    }
+    private static void validarUpgradeLegado(Session session) {
+        session.doWork(connection -> {
+            try (var sql=connection.createStatement()) {
+                sql.execute("create schema upgrade_devolucao_test");
+                sql.execute("create table upgrade_devolucao_test.bc_ven_pedido(id bigint,empresa_id bigint,cliente_id bigint)");
+                sql.execute("create table upgrade_devolucao_test.bc_ven_devolucao(id bigint,pedido_id bigint,empresa_id bigint)");
+                sql.execute("insert into upgrade_devolucao_test.bc_ven_pedido values(1,900001,900001),(2,900002,900002)");
+                sql.execute("insert into upgrade_devolucao_test.bc_ven_devolucao values(101,1,900001),(102,2,900001),(103,null,900001)");
+                String migration;
+                try {
+                    migration=java.nio.file.Files.readString(java.nio.file.Path.of("src/main/resources/db/migration/V186__devolucao_venda_identificacao.sql"))
+                            .replace("brasil_saas.","upgrade_devolucao_test.");
+                } catch (java.io.IOException e) {throw new java.sql.SQLException(e);}
+                sql.execute(migration);
+                try (var rows=sql.executeQuery("select id,cliente_id,numero from upgrade_devolucao_test.bc_ven_devolucao order by id")) {
+                    assertTrue(rows.next());assertEquals(900001L,rows.getLong("cliente_id"));assertEquals("DV-LEG-101",rows.getString("numero"));
+                    assertTrue(rows.next());assertNull(rows.getObject("cliente_id"));
+                    assertTrue(rows.next());assertNull(rows.getObject("cliente_id"));
+                }
+                sql.execute("update upgrade_devolucao_test.bc_ven_devolucao set numero='EXISTENTE' where id=101");
+                sql.execute(migration);
+                try (var rows=sql.executeQuery("select numero from upgrade_devolucao_test.bc_ven_devolucao where id=101")) {
+                    assertTrue(rows.next());assertEquals("EXISTENTE",rows.getString(1));
+                }
+            }
+        });
     }
     private static void igual(String valor,BigDecimal atual){assertEquals(0,new BigDecimal(valor).compareTo(atual));}
 }

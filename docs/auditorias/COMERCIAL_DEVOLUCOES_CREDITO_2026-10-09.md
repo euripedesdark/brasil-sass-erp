@@ -13,6 +13,8 @@ Base: main apos PR #117. Entrega agrupada de defeitos comprovados em compras, ve
 7. Analise financeira de credito conta somente titulos R ABERTO/PARCIAL. Contas a pagar nao reduzem credito nem tornam o cliente inadimplente. Orcamentos e pedidos excluidos nao comprometem limite.
 8. Faturamento normal bloqueia o cliente antes da leitura de recebiveis; alterar limite usa a mesma trava. Isso serializa faturamentos do mesmo cliente e alteracao do limite, mantendo a opcao existente de faturamento forcado.
 
+9. O teste nativo reproduziu falha de INSERT no schema real: `cliente_id` e `numero` obrigatorios em B184 nao estavam mapeados nem preenchidos. A devolucao agora guarda o cliente do pedido e numero DV unico gerado. V186 adiciona essas colunas somente quando ausentes e preenche registros antigos com pedido/empresa correspondentes, sem editar V139 ou B184 e sem inventar cliente para registros orfaos.
+
 ## Evidencia
 
 A suite focada de devolucoes e credito passou com 26 casos. Novos testes exercitam os servicos reais, substituindo o teste de credito anterior que repetia uma regra local sem chamar o servico. Ha regressao para excesso agregado, quantidade invalida, sinal/deposito/saldo do movimento, reservas, repeticao da devolucao, cancelamento e filtragem financeira.

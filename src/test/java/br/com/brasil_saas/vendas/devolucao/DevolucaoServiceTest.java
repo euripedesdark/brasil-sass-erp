@@ -40,7 +40,7 @@ class DevolucaoServiceTest {
 
     void pedidoFaturadoComDezUnidades() {
         var pedido = new PedidoVenda();
-        pedido.setId(1L); pedido.setEmpresaId(2L); pedido.setStatus("FATURADO");
+        pedido.setId(1L); pedido.setEmpresaId(2L); pedido.setClienteId(7L); pedido.setStatus("FATURADO");
         var item = new ItemPedidoVenda();
         item.setProdutoId(6L); item.setQuantidade(new BigDecimal("10"));
         pedido.setItens(new java.util.ArrayList<>(List.of(item)));
@@ -72,6 +72,7 @@ class DevolucaoServiceTest {
         when(devolucoes.save(any())).thenAnswer(i -> { VenDevolucao d = i.getArgument(0); d.setId(51L); return d; });
         var d = service.solicitar(2L, 1L, "Defeito", Map.of(6L, new BigDecimal("3")));
         assertEquals("SOLICITADA", d.getStatus());
+        assertEquals(7L, d.getClienteId()); assertTrue(d.getNumero().startsWith("DV-")); assertTrue(d.getNumero().length() <= 30);
         verify(itens).save(any());
     }
 
