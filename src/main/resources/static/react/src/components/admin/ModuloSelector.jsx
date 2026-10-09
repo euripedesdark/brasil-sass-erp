@@ -6,6 +6,7 @@ import { Toast } from 'primereact/toast';
 import { Checkbox } from 'primereact/checkbox';
 import { Tag } from 'primereact/tag';
 import { apiFetch } from '../../services/ApiConfig';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Seletor de modulos por usuario.
@@ -18,6 +19,7 @@ import { apiFetch } from '../../services/ApiConfig';
  * O conjunto enviado SUBSTITUI o anterior: o que a tela mostra e o que fica.
  */
 export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
+    const { t } = useTranslation();
     const toast = useRef(null);
     const [modulos, setModulos] = useState([]);
     const [selecionados, setSelecionados] = useState({});
@@ -91,10 +93,10 @@ export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
             const total = moduloIds.length;
             toast.current?.show({
                 severity: 'success',
-                summary: 'Módulos atualizados',
+                summary: t('legacyUi.moduleSelector.updated'),
                 detail: total === 0
-                    ? `${usuario.username} ficou sem acesso a nenhum módulo.`
-                    : `${usuario.username} tem acesso a ${total} módulo(s).`,
+                    ? t('legacyUi.moduleSelector.noAccess', { username: usuario.username })
+                    : t('legacyUi.moduleSelector.accessCount', { username: usuario.username, count: total }),
                 life: 3500
             });
             onSalvo?.();
@@ -114,15 +116,15 @@ export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
             modal
             draggable={false}
             style={{ width: 'min(680px, 94vw)' }}
-            header={`Módulos de ${usuario?.username || ''}`}
+            header={t('legacyUi.moduleSelector.header', { username: usuario?.username || '' })}
             footer={
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', alignItems: 'center' }}>
                     <span className="text-muted" style={{ fontSize: '0.82rem' }}>
-                        {marcados} de {modulos.length} selecionado(s)
+                        {t('legacyUi.moduleSelector.selected', { selected: marcados, total: modulos.length })}
                     </span>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Button label="Cancelar" severity="secondary" text onClick={onHide} />
-                        <Button label="Salvar" icon="pi pi-check" loading={salvando} onClick={salvar} />
+                        <Button label={t('common.cancel')} severity="secondary" text onClick={onHide} />
+                        <Button label={t('common.save')} icon="pi pi-check" loading={salvando} onClick={salvar} />
                     </div>
                 </div>
             }
@@ -132,17 +134,17 @@ export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
             {erro && <Message severity="error" text={erro} className="mb-3" onLifeEnd={() => setErro('')} />}
 
             {carregando ? (
-                <Message severity="info" text="Carregando módulos..." />
+                <Message severity="info" text={t('legacyUi.moduleSelector.loading')} />
             ) : (
                 <>
                     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.9rem' }}>
                         <Button
-                            label="Marcar todos"
+                            label={t('legacyUi.moduleSelector.markAll')}
                             size="small" text icon="pi pi-check-square"
                             onClick={() => marcarTodos(true)}
                         />
                         <Button
-                            label="Desmarcar todos"
+                            label={t('legacyUi.moduleSelector.unmarkAll')}
                             size="small" text icon="pi pi-stop"
                             severity="secondary"
                             onClick={() => marcarTodos(false)}
@@ -165,7 +167,7 @@ export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
                                         <i className={m.icone || 'pi pi-box'} />
                                         <span>{m.nome}</span>
                                         {m.exigeSuperuser && (
-                                            <Tag severity="danger" value="restrito" />
+                                            <Tag severity="danger" value={t('legacyUi.moduleSelector.restricted')} />
                                         )}
                                     </label>
                                 </div>
@@ -179,13 +181,13 @@ export const ModuloSelector = ({ visible, usuario, onHide, onSalvo }) => {
                                             checked={!!somenteLeitura[m.id]}
                                             onChange={() => alternarLeitura(m.id)}
                                         />
-                                        <span>Somente leitura</span>
+                                        <span>{t('legacyUi.moduleSelector.readOnly')}</span>
                                     </label>
                                 )}
 
                                 {m.exigeSuperuser && (
                                     <small className="modulo-selector__aviso">
-                                        Módulo com documentos sensíveis: exige SUPERUSER.
+                                        {t('legacyUi.moduleSelector.sensitiveWarning')}
                                     </small>
                                 )}
                             </div>
