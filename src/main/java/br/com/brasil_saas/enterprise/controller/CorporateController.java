@@ -14,6 +14,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CorporateController {
  private final JdbcTemplate jdbc;
+ private final br.com.brasil_saas.enterprise.service.IntercompanyService intercompanyService;
  private static final Map<String,String> TABLES=Map.of(
   "intercompany","bc_fin_intercompany","consolidacoes","bc_fin_consolidacao",
   "riscos","bc_gov_risco","controles","bc_gov_controle");
@@ -35,9 +36,11 @@ public class CorporateController {
  }
  @PostMapping("/intercompany/{id}/reconciliar") @PreAuthorize("hasAuthority('corporativo:escrita')")
  public Map<String,Object> reconciliar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
-  int n=jdbc.update("update brasil_saas.bc_fin_intercompany set reconciliado=true,status='RECONCILIADO',updated_at=now(),updated_by=? where empresa_id=? and id=?",u.getId(),u.getEmpresaId(),id);
-  if(n==0)throw new NoSuchElementException("Lançamento intercompany não encontrado");
-  return jdbc.queryForMap("select * from brasil_saas.bc_fin_intercompany where empresa_id=? and id=?",u.getEmpresaId(),id);
+  return intercompanyService.reconciliar(u.getEmpresaId(),u.getId(),id);
+ }
+ @GetMapping("/intercompany/eliminacoes") @PreAuthorize("hasAuthority('corporativo:leitura')")
+ public Map<String,Object> eliminacoes(@AuthenticationPrincipal AuthenticatedUser u,@RequestParam java.time.LocalDate competencia){
+  return Map.of("competencia",competencia,"eliminacoes",intercompanyService.eliminacoes(u.getEmpresaId(),competencia));
  }
  private String table(String r){String t=TABLES.get(r);if(t==null)throw new IllegalArgumentException("Recurso corporativo inválido");return t;}
  private Map<String,Object> sanitize(Map<String,Object>s){Map<String,Object>d=new LinkedHashMap<>();s.forEach((k,v)->{if(k!=null&&k.matches("[a-z][a-z0-9_]*")&&!Set.of("id","uuid","empresa_id","created_by","updated_by","deleted_at").contains(k))d.put(k,v);});return d;}
