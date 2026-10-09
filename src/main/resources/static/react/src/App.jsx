@@ -269,7 +269,7 @@ function App() {
                     <Route path="financeiro/credito" element={<Credito />} />
                     <Route path="financeiro/fluxo-caixa" element={<FluxoCaixa />} />
                     <Route path="financeiro/cobranca" element={<Cobranca />} />
-                    <Route path="financeiro/copa" element={<Copa />} />} />
+                    <Route path="financeiro/copa" element={<Copa />} />
                     <Route path="financeiro/aprovacoes-titulos" element={<AprovacoesTitulos />} />
                     <Route path="financeiro/comissoes" element={<Comissoes />} />
                     <Route path="financeiro/regras-comissao" element={<RegrasComissao />} />

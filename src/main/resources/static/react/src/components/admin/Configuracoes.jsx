@@ -85,7 +85,7 @@ export const Configuracoes = () => {
             <Messages ref={messages} />
             <Card title={t('legacyUi.settings.title')}>
                 <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
-                    <TabPanel header={t('legacyUi.settings.generalTab)}>
+                    <TabPanel header={t('legacyUi.settings.generalTab')}>
                         <div className="p-field p-grid">
                             <label className="p-col-12 p-md-2">{t('legacyUi.settings.systemName')}</label>
                             <div className="p-col-12 p-md-10">
@@ -98,7 +98,7 @@ export const Configuracoes = () => {
                         </div>
                     </TabPanel>
 
-                    <TabPanel header={t('legacyUi.settings.imagesTab)}>
+                    <TabPanel header={t('legacyUi.settings.imagesTab')}>
                         <div className="p-field p-grid">
                             <label className="p-col-12 p-md-2">{t('legacyUi.settings.loginImage')}</label>
                             <div className="p-col-12 p-md-10">

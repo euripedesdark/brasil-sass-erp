@@ -72,7 +72,8 @@
     "title": "Titre",
     "location": "Lieu",
     "username": "Nom d’utilisateur",
-    "password": "Mot de passe"
+    "password": "Mot de passe",
+    "success": "Succès"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -1376,6 +1377,44 @@
       "roleHelp": "Sélectionnez le nouveau rôle selon la hiérarchie autorisée.",
       "permissionUpdated": "Autorisation mise à jour avec succès !",
       "newRole": "Nouveau rôle"
+    },
+    "moduleSelector": {
+      "updated": "Modules mis à jour",
+      "noAccess": "{{username}} n’a plus accès à aucun module.",
+      "accessCount": "{{username}} a accès à {{count}} module(s).",
+      "header": "Modules de {{username}}",
+      "selected": "{{selected}} sur {{total}} sélectionné(s)",
+      "markAll": "Tout sélectionner",
+      "unmarkAll": "Tout désélectionner",
+      "loading": "Chargement des modules...",
+      "restricted": "Restreint",
+      "readOnly": "Lecture seule",
+      "sensitiveWarning": "Ce module contient des documents sensibles et nécessite SUPERUSER.",
+      "unmarkHelp": "Tout désélectionner supprime l’accès de l’utilisateur à tous les modules du système."
+    },
+    "stripePayments": {
+      "title": "Stripe — paiements",
+      "subtitle": "Checkout et factures liés aux comptes clients à recevoir",
+      "credentials": "Clé API / certificat de l’entreprise",
+      "refresh": "Actualiser",
+      "enabled": "Stripe activé",
+      "disabled": "Stripe désactivé",
+      "key": "Clé : {{key}}",
+      "records": "Enregistrements : {{count}}",
+      "webhook": "Webhook (tableau de bord Stripe) :",
+      "emptyPayments": "Aucun paiement Stripe. Utilisez le bouton de paiement par carte sur les créances.",
+      "titleId": "Créance",
+      "amount": "Montant",
+      "status": "Statut",
+      "session": "Session",
+      "invoice": "Facture",
+      "url": "URL",
+      "open": "Ouvrir",
+      "webhookEvents": "Événements webhook reçus",
+      "noEvents": "Aucun événement pour le moment",
+      "eventId": "ID de l’événement",
+      "type": "Type",
+      "error": "Erreur"
     }
   },
   "enterpriseOps": {

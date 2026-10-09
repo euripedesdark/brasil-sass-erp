@@ -72,7 +72,8 @@
     "title": "Title",
     "location": "Location",
     "username": "Username",
-    "password": "Password"
+    "password": "Password",
+    "success": "Success"
   },
   "login": {
     "title": "BrasilCloudERP",
@@ -1376,6 +1377,44 @@
       "roleHelp": "Select the new role according to the permitted hierarchy.",
       "permissionUpdated": "Permission updated successfully!",
       "newRole": "New role"
+    },
+    "moduleSelector": {
+      "updated": "Modules updated",
+      "noAccess": "{{username}} no longer has access to any modules.",
+      "accessCount": "{{username}} has access to {{count}} module(s).",
+      "header": "Modules for {{username}}",
+      "selected": "{{selected}} of {{total}} selected",
+      "markAll": "Select all",
+      "unmarkAll": "Clear all",
+      "loading": "Loading modules...",
+      "restricted": "Restricted",
+      "readOnly": "Read-only",
+      "sensitiveWarning": "This module contains sensitive documents and requires SUPERUSER.",
+      "unmarkHelp": "Clearing all modules removes the user's access to every module in the system."
+    },
+    "stripePayments": {
+      "title": "Stripe — payments",
+      "subtitle": "Checkout and invoices linked to accounts receivable",
+      "credentials": "Company API key / certificate",
+      "refresh": "Refresh",
+      "enabled": "Stripe enabled",
+      "disabled": "Stripe disabled",
+      "key": "Key: {{key}}",
+      "records": "Records: {{count}}",
+      "webhook": "Webhook (Stripe Dashboard):",
+      "emptyPayments": "No Stripe payments. Use the card button on an accounts receivable item.",
+      "titleId": "Receivable",
+      "amount": "Amount",
+      "status": "Status",
+      "session": "Session",
+      "invoice": "Invoice",
+      "url": "URL",
+      "open": "Open",
+      "webhookEvents": "Webhook events received",
+      "noEvents": "No events yet",
+      "eventId": "Event ID",
+      "type": "Type",
+      "error": "Error"
     }
   },
   "enterpriseOps": {
