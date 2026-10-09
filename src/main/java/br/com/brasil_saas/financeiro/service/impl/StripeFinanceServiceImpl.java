@@ -500,4 +500,10 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
         return m;
     }
 
+    @Override
+    public List<StripeWebhookEvent> listarWebhooks(Long empresaId) {
+        return webhookRepository.findByEmpresaIdOrderByIdDesc(empresaId);
+    }
+
 }
+
