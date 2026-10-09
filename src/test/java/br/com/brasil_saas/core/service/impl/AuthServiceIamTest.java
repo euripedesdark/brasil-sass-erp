@@ -48,7 +48,9 @@ class AuthServiceIamTest {
         var r = service.login(request(provider));
         assertEquals("POSTGRES", r.getAuthSource());
         assertTrue(r.getAuthorities().contains("ROLE_SUPERUSER"));
-        verifyNoInteractions(encoder, perfis);
+        verifyNoInteractions(encoder);
+        verify(perfis).findAll();
+        verify(perfis, never()).save(any());
     }
     @Test void rotaDatabaseNaoSegueProviderInformadoPeloCliente() {
         aceito("POSTGRES", List.of());
@@ -69,7 +71,12 @@ class AuthServiceIamTest {
         var r = service.login(request("AD"));
         assertEquals("AD", r.getAuthSource());
         assertEquals(!"Domain Users".equals(grupo), r.getAuthorities().contains("ROLE_SUPERUSER"));
-        verifyNoInteractions(perfis);
+        if ("Domain Users".equals(grupo)) {
+            verifyNoInteractions(perfis);
+        } else {
+            verify(perfis).findAll();
+            verify(perfis, never()).save(any());
+        }
     }
     @Test void refreshRejeitaTokenDeAcesso() {
         when(jwt.validate("access")).thenReturn(true);
