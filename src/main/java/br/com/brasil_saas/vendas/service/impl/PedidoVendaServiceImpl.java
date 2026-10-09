@@ -25,6 +25,7 @@ import br.com.brasil_saas.vendas.repository.RegraComissaoRepository;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import br.com.brasil_saas.vendas.service.CalculoDesconto;
 import br.com.brasil_saas.vendas.service.PedidoVendaService;
+import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +54,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     private final RegraComissaoRepository regraComissaoRepository;
     private final FuncionarioRepository funcionarioRepository;
     private final br.com.brasil_saas.financeiro.service.TituloService tituloService;
+    private final DocumentoFluxoService documentoFluxoService;
 
     @Override
     @Transactional
@@ -75,9 +77,6 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         pedido.setObservacao(request.observacao());
 
         List<ItemPedidoVenda> itens = new ArrayList<>();
-        // A conta mora em CalculoDesconto. Aqui so' se monta a lista e se
-        // guarda o resultado — a formula nao e' reescrita aqui, e' o que
-        // mantem os tres pontos de chamada dando o mesmo resultado.
         List<CalculoDesconto.Item> paraCalculo = new ArrayList<>();
 
         if (request.itens() != null) {
@@ -96,37 +95,24 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                 item.setUnidade(itemReq.unidade());
                 item.setValorUnitario(itemReq.valorUnitario());
                 item.setValorDesconto(itemReq.valorDesconto() != null ? itemReq.valorDesconto() : BigDecimal.ZERO);
-
-                // liquido() ja traz o desconto do item deduzido UMA vez.
-                item.setValorTotal(itemReq.quantidade().multiply(itemReq.valorUnitario())
-                        .subtract(item.getValorDesconto()));
+                item.setValorTotal(itemReq.quantidade().multiply(itemReq.valorUnitario()).subtract(item.getValorDesconto()));
                 item.setCriadoEstoque(false);
-
                 itens.add(item);
-                paraCalculo.add(new CalculoDesconto.Item(itemReq.quantidade(), itemReq.valorUnitario(),
-                        item.getValorDesconto()));
+                paraCalculo.add(new CalculoDesconto.Item(itemReq.quantidade(), itemReq.valorUnitario(), item.getValorDesconto()));
             }
         }
 
-        CalculoDesconto calculo = CalculoDesconto.de(paraCalculo,
-                request.percentualDesconto(), request.valorDesconto(), request.valorFrete());
-
+        CalculoDesconto calculo = CalculoDesconto.de(paraCalculo, request.percentualDesconto(), request.valorDesconto(), request.valorFrete());
         pedido.setItens(itens);
         pedido.setValorProdutos(calculo.getValorProdutos());
         pedido.setValorServicos(calculo.getValorServicos());
-        // valorDesconto no pedido e' o TOTAL do desconto (itens + pedido), e
-        // nao so o do pedido. A coluna e' uma so, e o PDV precisa que a soma
-        // feche: antes ela guardava so o do pedido e o item ja vinha
-        // descontado, entao o total do banco nao batia com o total da tela.
         pedido.setValorDesconto(calculo.getValorDescontoTotal());
         pedido.setPercentualDesconto(calculo.getPercentualDesconto());
         pedido.setValorFrete(calculo.getValorFrete());
         pedido.setValorTotal(calculo.getValorTotal());
-
         if (pedido.getNumero() == null || pedido.getNumero().isBlank()) {
             pedido.setNumero("PV-" + System.currentTimeMillis());
         }
-
         PedidoVenda salvo = pedidoRepository.save(pedido);
         return PedidoVendaResponse.from(salvo);
     }
@@ -151,7 +137,6 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     @Transactional
     public void confirmar(Long id, Long empresaId) {
         PedidoVenda pedido = pedidoBloqueado(id, empresaId);
-
         if (!"ORCAMENTO".equalsIgnoreCase(pedido.getTipo())) {
             throw new BusinessException("Somente orcamentos podem ser confirmados");
         }
@@ -161,11 +146,14 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         if (pedido.getItens() == null || pedido.getItens().isEmpty()) {
             throw new BusinessException("O orcamento precisa possuir ao menos um item");
         }
-
+        String numAntes = pedido.getNumero();
         pedido.setTipo("PEDIDO");
         pedido.setStatus("ABERTO");
         pedidoRepository.save(pedido);
-
+        documentoFluxoService.ligar(empresaId, null,
+                "ORCAMENTO", pedido.getId(), numAntes,
+                "PEDIDO_VENDA", pedido.getId(), pedido.getNumero(),
+                "CONVERTE");
         reservarEstoqueDoPedido(pedido);
     }
 
@@ -174,11 +162,11 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     public void faturar(Long id, Long empresaId) {
         faturar(id, empresaId, false);
     }
+
     @Override
     @Transactional
     public void faturar(Long id, Long empresaId, boolean forcar) {
         PedidoVenda pedido = pedidoBloqueado(id, empresaId);
-
         if (!"ABERTO".equals(pedido.getStatus()) || !"PEDIDO".equalsIgnoreCase(pedido.getTipo())) {
             throw new BusinessException("Somente pedidos ABERTOS podem ser faturados");
         }
@@ -188,15 +176,10 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
             if (item.getProdutoId() != null && !Boolean.TRUE.equals(item.getCriadoEstoque())) {
                 baixarEstoque(pedido.getEmpresaId(), item.getProdutoId(), item.getQuantidade(), pedido.getId());
                 item.setCriadoEstoque(true);
-
-                // A reserva vira consumida no mesmo evento transacional da baixa física.
-                // Isso impede que a expedição tente consumir a mesma quantidade novamente.
                 reservaEstoqueRepository
-                        .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(
-                                pedido.getEmpresaId(), pedido.getId())
+                        .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(pedido.getEmpresaId(), pedido.getId())
                         .stream()
-                        .filter(reserva -> item.getProdutoId().equals(reserva.getProdutoId())
-                                && "RESERVADA".equals(reserva.getStatus()))
+                        .filter(reserva -> item.getProdutoId().equals(reserva.getProdutoId()) && "RESERVADA".equals(reserva.getStatus()))
                         .findFirst()
                         .ifPresent(reserva -> {
                             reserva.setStatus("CONSUMIDA");
@@ -210,18 +193,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         titulo.setTipo("R");
         titulo.setNumeroDocumento(pedido.getNumero());
         titulo.setDescricao("Venda - Pedido " + pedido.getNumero());
-        // pessoaId, e NAO pedido.getClienteId(). Sao ids de tabelas diferentes:
-        // pedido.cliente_id referencia bc_cad_cliente, e titulo.pessoa_id
-        // referencia bc_cad_pessoa (medido: "viola restricao de chave
-        // estrangeira bc_fin_titulo_pessoa_id_fkey / Chave (pessoa_id)=(9340)
-        // nao esta presente na tabela bc_cad_pessoa"). Toda venda faturada
-        // estourava 409 DATA_INTEGRITY e o estoque NAO baixava, porque a
-        // transacao inteira rollback. O cliente guarda o pessoa_id.
         Long pessoaId = clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(pedido.getClienteId(), pedido.getEmpresaId())
                 .map(c -> c.getPessoa() == null ? null : c.getPessoa().getId())
-                .orElseThrow(() -> new BusinessException(
-                        "Cliente " + pedido.getClienteId() + " do pedido "
-                                + pedido.getNumero() + " nao tem pessoa vinculada"));
+                .orElseThrow(() -> new BusinessException("Cliente " + pedido.getClienteId() + " do pedido " + pedido.getNumero() + " nao tem pessoa vinculada"));
         titulo.setPessoaId(pessoaId);
         titulo.setValorOriginal(pedido.getValorTotal());
         titulo.setValorSaldo(pedido.getValorTotal());
@@ -231,16 +205,21 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
 
         Titulo tituloSalvo = tituloRepository.save(titulo);
         pedido.setTituloId(tituloSalvo.getId());
+        documentoFluxoService.ligar(empresaId, null,
+                "PEDIDO_VENDA", pedido.getId(), pedido.getNumero(),
+                "TITULO", tituloSalvo.getId(), tituloSalvo.getNumeroDocumento(),
+                "FATURA");
+        documentoFluxoService.ligar(empresaId, null,
+                "PEDIDO_VENDA", pedido.getId(), pedido.getNumero(),
+                "FATURA_VENDA", pedido.getId(), pedido.getNumero(),
+                "FATURA");
         tituloService.gerarParcelas(pedido.getEmpresaId(), tituloSalvo.getId(), pedido.getCondicaoPagamentoId());
 
         if (pedido.getVendedorId() != null) {
             funcionarioRepository.findById(pedido.getVendedorId()).ifPresent(func -> {
                 if ("VENDEDOR".equals(func.getTipoColaborador())) {
-                    BigDecimal percentual = calcularPercentualComissao(
-                            pedido.getEmpresaId(), func.getId(), pedido.getValorTotal());
-                    BigDecimal valorComissao =
-                            pedido.getValorTotal().multiply(percentual).divide(new BigDecimal("100"));
-
+                    BigDecimal percentual = calcularPercentualComissao(pedido.getEmpresaId(), func.getId(), pedido.getValorTotal());
+                    BigDecimal valorComissao = pedido.getValorTotal().multiply(percentual).divide(new BigDecimal("100"));
                     Comissao comissao = new Comissao();
                     comissao.setEmpresaId(pedido.getEmpresaId());
                     comissao.setFuncionarioId(func.getId());
@@ -270,14 +249,13 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         m.put("osNumero", os.numero());
         return m;
     }
+
     public void cancelar(Long id, Long empresaId) {
         PedidoVenda pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de venda nao encontrado"));
-
         if ("FATURADO".equals(pedido.getStatus())) {
             throw new BusinessException("Pedidos FATURADOS nao podem ser cancelados diretamente");
         }
-
         reservaEstoqueRepository
                 .findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(empresaId, pedido.getId())
                 .stream()
@@ -286,17 +264,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                     r.setStatus("LIBERADA");
                     reservaEstoqueRepository.save(r);
                 });
-
         pedido.setStatus("CANCELADO");
         pedidoRepository.save(pedido);
     }
-
-    /**
-     * Carrega o pedido com trava ( pessimista ) ja filtrando pela empresa.
-     *
-     * Filtrar depois de buscar seria tarde: o `orElseThrow` do findById puro
-     * devolvia o pedido de outra empresa e so depois seDiscoveria o erro.
-     */
 
     @Override
     @Transactional(readOnly = true)
@@ -306,6 +276,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         m.put("limite", v[0]); m.put("emAberto", v[1]); m.put("disponivel", v[0].subtract(v[1]));
         return m;
     }
+
     private java.math.BigDecimal[] somarCredito(Long empresaId, Long clienteId) {
         var cli = clienteRepository.findById(clienteId).orElse(null);
         java.math.BigDecimal limite = java.math.BigDecimal.ZERO;
@@ -319,12 +290,14 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         }
         return new java.math.BigDecimal[]{limite, emAberto};
     }
-    private void validarCredito(br.com.brasil_saas.vendas.model.PedidoVenda pedido) {
+
+    private void validarCredito(PedidoVenda pedido) {
         if (pedido.getClienteId() == null) return;
         java.math.BigDecimal[] v = somarCredito(pedido.getEmpresaId(), pedido.getClienteId());
         java.math.BigDecimal pedidoValor = pedido.getValorTotal() == null ? java.math.BigDecimal.ZERO : pedido.getValorTotal();
         if (v[1].add(pedidoValor).compareTo(v[0]) > 0) throw new BusinessException("Limite de credito estourado: disponivel " + v[0].subtract(v[1]));
     }
+
     private PedidoVenda pedidoBloqueado(Long id, Long empresaId) {
         return pedidoRepository.findByIdForUpdateAndEmpresaId(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de venda nao encontrado"));
@@ -334,104 +307,70 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         LocalDate hoje = LocalDate.now();
         LocalDateTime inicioMes = hoje.withDayOfMonth(1).atStartOfDay();
         LocalDateTime fimMes = hoje.plusMonths(1).withDayOfMonth(1).atStartOfDay();
-
-        BigDecimal acumulado = comissaoRepository.sumVendasPeriodo(
-                empresaId, vendedorId, inicioMes, fimMes);
+        BigDecimal acumulado = comissaoRepository.sumVendasPeriodo(empresaId, vendedorId, inicioMes, fimMes);
         acumulado = acumulado == null ? BigDecimal.ZERO : acumulado;
         BigDecimal acumuladoComVenda = acumulado.add(valorVenda);
-
-        List<RegraComissao> regras = regraComissaoRepository
-                .findByEmpresaIdAndVendedorIdAndAtivoTrueOrderByFaixaValorMinAsc(empresaId, vendedorId);
-
+        List<RegraComissao> regras = regraComissaoRepository.findByEmpresaIdAndVendedorIdAndAtivoTrueOrderByFaixaValorMinAsc(empresaId, vendedorId);
         if (regras.isEmpty()) {
-            regras = regraComissaoRepository
-                    .findByEmpresaIdAndAtivoTrueOrderByFaixaValorMinAsc(empresaId);
+            regras = regraComissaoRepository.findByEmpresaIdAndAtivoTrueOrderByFaixaValorMinAsc(empresaId);
         }
-
         return regras.stream()
-                .filter(r -> (r.getVigenciaInicio() == null || !hoje.isBefore(r.getVigenciaInicio()))
-                        && (r.getVigenciaFim() == null || !hoje.isAfter(r.getVigenciaFim())))
-                .filter(r -> r.getFaixaValorMin() == null
-                        || acumuladoComVenda.compareTo(r.getFaixaValorMin()) >= 0)
-                .filter(r -> r.getFaixaValorMax() == null
-                        || acumuladoComVenda.compareTo(r.getFaixaValorMax()) <= 0)
-                .filter(r -> r.getMetaValor() == null
-                        || acumuladoComVenda.compareTo(r.getMetaValor()) >= 0)
+                .filter(r -> (r.getVigenciaInicio() == null || !hoje.isBefore(r.getVigenciaInicio())) && (r.getVigenciaFim() == null || !hoje.isAfter(r.getVigenciaFim())))
+                .filter(r -> r.getFaixaValorMin() == null || acumuladoComVenda.compareTo(r.getFaixaValorMin()) >= 0)
+                .filter(r -> r.getFaixaValorMax() == null || acumuladoComVenda.compareTo(r.getFaixaValorMax()) <= 0)
+                .filter(r -> r.getMetaValor() == null || acumuladoComVenda.compareTo(r.getMetaValor()) >= 0)
                 .map(RegraComissao::getPercentual)
                 .filter(java.util.Objects::nonNull)
                 .findFirst()
-                .orElse(BigDecimal.ZERO);
+                .orElseGet(() -> funcionarioRepository.findById(vendedorId).map(f -> f.getPercentualComissao() == null ? BigDecimal.ZERO : f.getPercentualComissao()).orElse(BigDecimal.ZERO));
     }
 
     private void reservarEstoqueDoPedido(PedidoVenda pedido) {
-        Long depositoId = depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(pedido.getEmpresaId(), "PADRAO")
-                .orElseThrow(() -> new BusinessException("Deposito PADRAO nao encontrado para a empresa " + pedido.getEmpresaId()))
-                .getId();
-
+        Long depositoPadrao = depositoRepository.findByEmpresaIdAndPadraoTrueAndAtivoTrue(pedido.getEmpresaId())
+                .map(d -> d.getId())
+                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(pedido.getEmpresaId()).map(d -> d.getId()).orElse(null));
+        if (depositoPadrao == null) return;
         for (ItemPedidoVenda item : pedido.getItens()) {
             if (item.getProdutoId() == null) continue;
-
-            SaldoEstoque saldo = saldoEstoqueRepository
-                    .findForUpdate(pedido.getEmpresaId(), depositoId, item.getProdutoId())
-                    .orElseThrow(() -> new BusinessException("Nao existe saldo para o produto " + item.getProdutoId()));
-
-            BigDecimal reservado = reservaEstoqueRepository
-                    .sumAtivas(pedido.getEmpresaId(), depositoId, item.getProdutoId());
-            BigDecimal disponivel = saldo.getQuantidade().subtract(reservado == null ? BigDecimal.ZERO : reservado);
-
-            ReservaEstoque reserva = reservaEstoqueRepository
-                    .findByEmpresaIdAndPedidoVendaIdAndDepositoIdAndProdutoIdAndDeletedAtIsNull(
-                            pedido.getEmpresaId(), pedido.getId(), depositoId, item.getProdutoId())
-                    .orElseGet(ReservaEstoque::new);
-            BigDecimal jaReservado = reserva.getId() == null ? BigDecimal.ZERO : reserva.getQuantidade();
-            BigDecimal necessario = item.getQuantidade().subtract(jaReservado);
-
-            if (necessario.signum() > 0 && disponivel.compareTo(necessario) < 0) {
-                throw new BusinessException("Estoque disponivel insuficiente para reservar o produto "
-                        + item.getProdutoId() + ". Disponivel: " + disponivel + ", solicitado: " + necessario);
+            SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(pedido.getEmpresaId(), depositoPadrao, item.getProdutoId()).orElse(null);
+            if (saldo == null) continue;
+            BigDecimal reservado = reservaEstoqueRepository.sumAtivas(pedido.getEmpresaId(), depositoPadrao, item.getProdutoId());
+            reservado = reservado == null ? BigDecimal.ZERO : reservado;
+            BigDecimal disponivel = saldo.getQuantidade().subtract(reservado);
+            if (disponivel.compareTo(item.getQuantidade()) < 0) {
+                throw new BusinessException("Estoque insuficiente para reservar produto " + item.getProdutoId() + " (disponivel " + disponivel + ")");
             }
-
+            ReservaEstoque reserva = new ReservaEstoque();
             reserva.setEmpresaId(pedido.getEmpresaId());
-            reserva.setDepositoId(depositoId);
+            reserva.setDepositoId(depositoPadrao);
             reserva.setProdutoId(item.getProdutoId());
-            reserva.setPedidoVendaId(pedido.getId());
             reserva.setQuantidade(item.getQuantidade());
+            reserva.setPedidoVendaId(pedido.getId());
             reserva.setStatus("RESERVADA");
-            if (reserva.getDataReserva() == null) reserva.setDataReserva(java.time.LocalDateTime.now());
+            reserva.setDataReserva(LocalDateTime.now());
             reservaEstoqueRepository.save(reserva);
         }
     }
 
-    private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long origemId) {
-        SaldoEstoque saldo = saldoEstoqueRepository.findByEmpresaIdAndProdutoIdForUpdate(empresaId, produtoId)
-                .orElseGet(() -> {
-                    SaldoEstoque novo = new SaldoEstoque();
-                    novo.setEmpresaId(empresaId);
-                    novo.setDepositoId(depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO")
-                            .orElseThrow(() -> new BusinessException("Deposito PADRAO nao encontrado para a empresa " + empresaId))
-                            .getId());
-                    novo.setProdutoId(produtoId);
-                    novo.setQuantidade(BigDecimal.ZERO);
-                    return novo;
-                });
-
-        BigDecimal saldoAtual = saldo.getQuantidade() != null ? saldo.getQuantidade() : BigDecimal.ZERO;
-        if (saldoAtual.compareTo(quantidade) < 0) {
-            throw new BusinessException(
-                    "Estoque insuficiente para o produto " + produtoId
-                            + ". Disponivel: " + saldoAtual
-                            + ", solicitado: " + quantidade);
+    private void baixarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long pedidoId) {
+        Long depositoPadrao = depositoRepository.findByEmpresaIdAndPadraoTrueAndAtivoTrue(empresaId)
+                .map(d -> d.getId())
+                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueOrderByIdAsc(empresaId).map(d -> d.getId()).orElse(null));
+        if (depositoPadrao == null) throw new BusinessException("Nenhum deposito ativo para baixa de estoque");
+        SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(empresaId, depositoPadrao, produtoId)
+                .orElseThrow(() -> new BusinessException("Sem saldo do produto " + produtoId));
+        if (saldo.getQuantidade().compareTo(quantidade) < 0) {
+            throw new BusinessException("Saldo insuficiente do produto " + produtoId);
         }
-
-        saldo.setQuantidade(saldoAtual.subtract(quantidade));
+        saldo.setQuantidade(saldo.getQuantidade().subtract(quantidade));
         saldoEstoqueRepository.save(saldo);
-
         MovimentacaoEstoque mov = new MovimentacaoEstoque();
         mov.setEmpresaId(empresaId);
+        mov.setDepositoId(depositoPadrao);
         mov.setProdutoId(produtoId);
         mov.setTipo("SAIDA");
-        mov.setOrigem("VENDA");
-        mov.setOrigemId(origemId);
+        mov.setDocumentoTipo("PEDIDO_VENDA");
+        mov.setDocumentoId(pedidoId);
         mov.setQuantidade(quantidade.negate());
         mov.setSaldoApos(saldo.getQuantidade());
         mov.setObservacao("Baixa por venda");
