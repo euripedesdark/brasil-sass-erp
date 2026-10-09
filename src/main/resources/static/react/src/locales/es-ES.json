@@ -1631,5 +1631,17 @@
     "saveError": "No se pudo guardar el contrato.",
     "actionError": "No se pudo actualizar el contrato.",
     "currency": "BRL"
+  },
+  "cashFlow": {
+    "title": "Flujo de caja proyectado",
+    "subtitle": "Entradas y salidas semanales según los documentos financieros",
+    "days": "{{count}} días",
+    "inflows": "Entradas",
+    "outflows": "Salidas",
+    "net": "Saldo neto",
+    "accumulated": "Acumulado",
+    "empty": "No hay documentos financieros en este período.",
+    "week": "Semana",
+    "loadError": "No se pudo proyectar el flujo de caja."
   }
 }
