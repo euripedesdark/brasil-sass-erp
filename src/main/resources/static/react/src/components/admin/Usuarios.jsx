@@ -11,6 +11,7 @@ import { Message } from 'primereact/message';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { SuperAdminService } from '../../services/SuperAdminService';
 import { ModuloSelector } from './ModuloSelector';
+import { useTranslation } from 'react-i18next';
 import './ModuloSelector.css';
 
 const FORMULARIO_VAZIO = {
@@ -23,6 +24,7 @@ const FORMULARIO_VAZIO = {
 };
 
 export const Usuarios = () => {
+    const { t } = useTranslation();
     const [usuarios, setUsuarios] = useState([]);
     const [perfis, setPerfis] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -51,7 +53,7 @@ export const Usuarios = () => {
         try {
             setUsuarios(await SuperAdminService.listarUsuarios());
         } catch (err) {
-            setError(err.message || 'Erro ao carregar usuários');
+            setError(err.message || t('legacyUi.users.loadError'));
         } finally {
             setLoading(false);
         }
@@ -108,12 +110,12 @@ export const Usuarios = () => {
         setFormErro('');
 
         if (!form.username.trim()) {
-            setFormErro('O nome de usuário é obrigatório');
+            setFormErro(t('legacyUi.users.usernameRequired'));
             setLoading(false);
             return;
         }
         if (!editando && form.senha.length < 6) {
-            setFormErro('A senha precisa de pelo menos 6 caracteres');
+            setFormErro(t('legacyUi.users.passwordMin') );
             setLoading(false);
             return;
         }
@@ -137,11 +139,11 @@ export const Usuarios = () => {
                 });
             }
             setFormVisible(false);
-            setSuccess(editando ? 'Usuário salvo' : 'Usuário criado');
+            setSuccess(editando ? t('legacyUi.users.userSaved') : t('legacyUi.users.userCreated'));
             setTimeout(() => setSuccess(''), 3000);
             await fetchUsuarios();
         } catch (err) {
-            setFormErro(err.message || 'Erro ao salvar usuário');
+            setFormErro(err.message || t('legacyUi.users.saveError'));
         } finally {
             setLoading(false);
         }
@@ -149,19 +151,19 @@ export const Usuarios = () => {
 
     const confirmarRemocao = (user) => {
         confirmDialog({
-            message: `Desativar o usuário "${user.nome || user.username}"? Ele deixa de conseguir entrar, mas o histórico dele (notas, vendas, auditoria) é preservado.`,
-            header: 'Remover usuário',
+            message: t('legacyUi.users.deactivateConfirm', { name: user.nome || user.username }),
+            header: t('legacyUi.users.deactivateTitle'),
             icon: 'pi pi-exclamation-triangle',
-            acceptLabel: 'Sim, desativar',
-            rejectLabel: 'Cancelar',
+            acceptLabel: t('legacyUi.users.confirmDeactivate'),
+            rejectLabel: t('common.cancel'),
             accept: async () => {
                 try {
                     await SuperAdminService.removerUsuario(user.id);
-                    setSuccess('Usuário desativado');
+                    setSuccess(t('legacyUi.users.userDeactivated'));
                     setTimeout(() => setSuccess(''), 3000);
                     await fetchUsuarios();
                 } catch (err) {
-                    setError(err.message || 'Erro ao remover usuário');
+                    setError(err.message || t('legacyUi.users.deactivateError'));
                 }
             },
         });
@@ -192,7 +194,7 @@ export const Usuarios = () => {
                 fetchUsuarios();
             }, 1500);
         } catch (err) {
-            setError(err.message || 'Erro ao atualizar permissão');
+            setError(err.message || t('legacyUi.users.permissionError'));
         } finally {
             setLoading(false);
         }
@@ -206,7 +208,7 @@ export const Usuarios = () => {
     const perfilTemplate = (rowData) => {
         const nomes = (rowData.perfis || []).map((p) => p.nome);
         if (nomes.length === 0) {
-            return <span className="text-muted">sem perfil</span>;
+            return <span className="text-muted">{t('legacyUi.users.noRole')}</span>;
         }
         return nomes.join(', ');
     };
@@ -216,19 +218,19 @@ export const Usuarios = () => {
             <Button
                 icon="pi pi-pencil"
                 className="p-button-text p-button-sm"
-                tooltip="Editar usuário"
+                tooltip={t('legacyUi.users.editUser')}
                 onClick={() => abrirEdicao(rowData)}
             />
             <Button
                 icon="pi pi-trash"
                 className="p-button-text p-button-sm p-button-danger"
-                tooltip="Desativar usuário"
+                tooltip={t('legacyUi.users.deactivateUser')}
                 onClick={() => confirmarRemocao(rowData)}
             />
             <Button
                 icon="pi pi-shield"
                 className="p-button-text p-button-sm"
-                tooltip="Perfis"
+                tooltip={t('legacyUi.users.roles')}
                 onClick={() => openEditDialog(rowData)}
             />
         </div>
@@ -239,7 +241,7 @@ export const Usuarios = () => {
             <Button
                 icon="pi pi-shield"
                 className="p-button-text p-button-sm"
-                tooltip="Alterar perfis"
+                tooltip={t('legacyUi.users.changeRoles')}
                 onClick={() => openEditDialog(rowData)}
             />
         );
@@ -250,7 +252,7 @@ export const Usuarios = () => {
         <Button
             icon="pi pi-th-large"
             className="p-button-text p-button-sm"
-            tooltip="Definir módulos acessíveis"
+            tooltip={t('legacyUi.users.setModules')}
             onClick={() => { setModuloUser(rowData); setModuloVisible(true); }}
         />
     );
@@ -258,12 +260,12 @@ export const Usuarios = () => {
     return (
         <div className="usuarios-admin-container">
             <ConfirmDialog />
-            <Card title="Gestão de Hierarquia e Usuários">
+            <Card title={t('legacyUi.users.title')}>
                 <div className="mb-3 flex justify-content-between align-items-center">
-                    <p className="text-muted m-0">Gerencie os níveis de acesso e perfis de todos os usuários do sistema.</p>
+                    <p className="text-muted m-0">{t('legacyUi.users.subtitle')}</p>
                     <Button
                         icon="pi pi-plus"
-                        label="Novo Usuário"
+                        label={t('legacyUi.users.newUser')}
                         className="p-button-success"
                         onClick={abrirNovo}
                     />
@@ -284,16 +286,16 @@ export const Usuarios = () => {
                     tableStyle={{ minWidth: '60rem' }}
                 >
                     <Column field="id" header="ID" sortable style={{ width: '5%' }}></Column>
-                    <Column field="nome" header="Nome" sortable style={{ width: '18%' }}></Column>
-                    <Column field="username" header="Usuário" sortable style={{ width: '14%' }}></Column>
-                    <Column field="email" header="Email" sortable style={{ width: '18%' }}></Column>
-                    <Column header="Perfil" body={perfilTemplate} style={{ width: '13%' }}></Column>
-                    <Column header="Ativo" sortable field="ativo" style={{ width: '7%' }}
+                    <Column field="nome" header={t('common.name')} sortable style={{ width: '18%' }}></Column>
+                    <Column field="username" header={t('common.username')} sortable style={{ width: '14%' }}></Column>
+                    <Column field="email" header={t('common.email')} sortable style={{ width: '18%' }}></Column>
+                    <Column header={t('legacyUi.users.role')} body={perfilTemplate} style={{ width: '13%' }}></Column>
+                    <Column header={t('common.active')} sortable field="ativo" style={{ width: '7%' }}
                         body={(r) => (r.ativo === false
-                            ? <span className="text-muted">não</span>
-                            : <span>sim</span>)} />
-                    <Column header="Módulos" body={modulosTemplate} style={{ width: '8%' }}></Column>
-                    <Column header="Ações" body={acoesTemplate} style={{ width: '17%' }}></Column>
+                            ? <span className="text-muted">{t('common.no')}</span>
+                            : <span>{t('common.yes')}</span>)} />
+                    <Column header={t('legacyUi.users.modules')} body={modulosTemplate} style={{ width: '8%' }}></Column>
+                    <Column header={t('common.actions')} body={acoesTemplate} style={{ width: '17%' }}></Column>
                 </DataTable>
 
                 <ModuloSelector
@@ -304,7 +306,7 @@ export const Usuarios = () => {
                 />
 
                 <Dialog
-                    header={editando ? 'Editar usuário' : 'Novo usuário'}
+                    header={editando ? t('legacyUi.users.editUser') : t('legacyUi.users.newUser')}
                     visible={formVisible}
                     style={{ width: '440px' }}
                     onHide={() => setFormVisible(false)}
@@ -315,7 +317,7 @@ export const Usuarios = () => {
                         )}
 
                         <div className="field mb-3">
-                            <label htmlFor="username">Nome de usuário</label>
+                            <label htmlFor="username">{t('common.username')}</label>
                             <InputText
                                 id="username"
                                 value={form.username}
@@ -326,7 +328,7 @@ export const Usuarios = () => {
                         </div>
 
                         <div className="field mb-3">
-                            <label htmlFor="nome">Nome</label>
+                            <label htmlFor="nome">{t('common.name')}</label>
                             <InputText
                                 id="nome"
                                 value={form.nome}
@@ -335,7 +337,7 @@ export const Usuarios = () => {
                         </div>
 
                         <div className="field mb-3">
-                            <label htmlFor="email">Email</label>
+                            <label htmlFor="email">{t('common.email')}</label>
                             <InputText
                                 id="email"
                                 value={form.email}
@@ -345,7 +347,7 @@ export const Usuarios = () => {
 
                         {!editando && (
                             <div className="field mb-3">
-                                <label htmlFor="senha">Senha</label>
+                                <label htmlFor="senha">{t('common.password')}</label>
                                 <Password
                                     id="senha"
                                     value={form.senha}
@@ -354,18 +356,18 @@ export const Usuarios = () => {
                                     toggleMask={true}
                                     autoComplete="new-password"
                                 />
-                                <small className="text-muted">Mínimo de 6 caracteres.</small>
+                                <small className="text-muted">{t('legacyUi.users.passwordHint')}</small>
                             </div>
                         )}
 
                         <div className="field mb-3">
-                            <label htmlFor="perfil">Perfil</label>
+                            <label htmlFor="perfil">{t('legacyUi.users.role')}</label>
                             <Dropdown
                                 id="perfil"
                                 value={form.perfil}
                                 options={perfis}
                                 onChange={mudarCampo('perfil')}
-                                placeholder="Selecione o perfil"
+                                placeholder={t('legacyUi.users.selectRole')}
                                 disabled={loading}
                             />
                         </div>
@@ -377,18 +379,18 @@ export const Usuarios = () => {
                                 checked={form.ativo}
                                 onChange={(e) => setForm((f) => ({ ...f, ativo: e.target.checked }))}
                             />
-                            <label htmlFor="ativo">Usuário ativo</label>
+                            <label htmlFor="ativo">{t('legacyUi.users.activeUser')}</label>
                         </div>
 
                         <div className="flex justify-end gap-2">
                             <Button
-                                label="Cancelar"
+                                label={t('common.cancel')}
                                 className="p-button-text"
                                 onClick={() => setFormVisible(false)}
                                 disabled={loading}
                             />
                             <Button
-                                label={editando ? 'Salvar' : 'Criar usuário'}
+                                label={editando ? t('common.save') : t('legacyUi.users.createUser')}
                                 icon="pi pi-check"
                                 onClick={salvarUsuario}
                                 loading={loading}
@@ -398,22 +400,22 @@ export const Usuarios = () => {
                 </Dialog>
 
                 <Dialog
-                    header="Alterar Nível de Acesso"
+                    header={t('legacyUi.users.changeAccessLevel')}
                     visible={dialogVisible}
                     style={{ width: '400px' }}
                     onHide={() => setDialogVisible(false)}
                 >
                     <div className="p-fluid">
                         <div className="field mb-4">
-                            <label className="font-bold block mb-2">Usuário: {selectedUser?.nome}</label>
-                            <p className="text-sm text-muted">Selecione o novo perfil de acordo com a hierarquia permitida.</p>
+                            <label className="font-bold block mb-2">{t('common.user')}: {selectedUser?.nome}</label>
+                            <p className="text-sm text-muted">{t('legacyUi.users.roleHelp')}</p>
                         </div>
 
                         {error && <Message severity="error" text={error} className="w-full mb-3" />}
-                        {success === true && <Message severity="success" text="Permissão atualizada com sucesso!" className="w-full mb-3" />}
+                        {success === true && <Message severity="success" text={t('legacyUi.users.permissionUpdated')} className="w-full mb-3" />}
 
                         <div className="field">
-                            <label htmlFor="perfil">Novo Perfil</label>
+                            <label htmlFor="perfil">{t('legacyUi.users.newRole')}</label>
                             <Dropdown
                                 id="perfil"
                                 value={perfis.find((p) => p === selectedUser?.perfis?.[0]?.nome) || null}
