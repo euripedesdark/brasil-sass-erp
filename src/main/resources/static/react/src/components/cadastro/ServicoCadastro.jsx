@@ -188,7 +188,7 @@ export const ServicoCadastro = () => {
                 const response = await ServicoCadastroService.criar(servicoParaSalvar);
                 toast.current?.show({
                     severity: 'success',
-                    summary: 'Sucesso',
+                    summary: t('common.success'),
                     detail: t('serviceScreen.created'),
                     life: 3000
                 });
@@ -203,7 +203,7 @@ export const ServicoCadastro = () => {
             setError(err.message || t('serviceScreen.saveError'));
             toast.current?.show({
                 severity: 'error',
-                summary: 'Erro',
+                summary: t('serviceScreen.error'),
                 detail: err.message || t('serviceScreen.saveError'),
                 life: 3000
             });
@@ -217,7 +217,7 @@ export const ServicoCadastro = () => {
             await ServicoCadastroService.excluir(id);
             toast.current?.show({
                 severity: 'success',
-                summary: 'Sucesso',
+                summary: t('common.success'),
                 detail: t('serviceScreen.deleted'),
                 life: 3000
             });
@@ -225,7 +225,7 @@ export const ServicoCadastro = () => {
         } catch (err) {
             toast.current?.show({
                 severity: 'error',
-                summary: 'Erro',
+                summary: t('serviceScreen.error'),
                 detail: err.message || t('serviceScreen.deleteError'),
                 life: 3000
             });
@@ -479,8 +479,8 @@ export const ServicoCadastro = () => {
                                 value={novoServico.aliquotaIss}
                                 onChange={(e) => setNovoServico({...novoServico, aliquotaIss: e.value || 0})}
                                 mode="percent"
-                                locale="pt-BR"
-                                placeholder="0,00"
+                                locale={i18n.language}
+                                placeholder={i18n.language === 'en-US' ? '0.00' : '0,00'}
                             />
                         </div>
 
