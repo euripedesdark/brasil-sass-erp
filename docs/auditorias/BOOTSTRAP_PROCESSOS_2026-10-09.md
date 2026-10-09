@@ -38,7 +38,7 @@ mvn test -Dtest=BootstrapPostgresTest
 
 No adaptador PGlite Socket, a URL usa `prepareThreshold=0` e o teste desativa o lock transacional do Flyway para contornar limitações do adaptador. A configuração de produção de locks não foi alterada. Flyway 10.17 informa que seu suporte testado vai até PostgreSQL 16; compatibilidade com PostgreSQL 18 foi exercitada aqui, mas a atualização da dependência deve ser avaliada separadamente.
 
-Validação Java: suíte completa com 261 testes aprovada; após a última correção de crédito, os 24 testes afetados foram repetidos. Os relatórios consolidados cobrem 262 testes únicos, sem falhas, erros ou testes ignorados. O teste PostgreSQL foi repetido após acrescentar gravação/leitura de contratos. `git diff --check` aprovado. O frontend não foi alterado nesta etapa.
+Validação Java: suíte completa com 261 testes aprovada; após a última correção de crédito, os 24 testes afetados foram repetidos. Os relatórios consolidados cobrem 262 testes únicos, sem falhas, erros ou testes ignorados. O teste PostgreSQL foi repetido após acrescentar gravação/leitura de contratos. `git diff --check` aprovado. O frontend não foi alterado nesta etapa. O job de migrações do GitHub confirmou B184/V185 em PostgreSQL 18.6 nativo. A checagem antiga de tabelas procurava no esquema padrão e foi corrigida para validar nomes exatos em `brasil_saas`; o job agora executa também `BootstrapPostgresTest`.
 
 ## Meta funcional e próximas evidências
 

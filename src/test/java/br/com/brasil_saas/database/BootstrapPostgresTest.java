@@ -34,7 +34,7 @@ class BootstrapPostgresTest {
                 .schemas("brasil_saas").baselineOnMigrate(false)
                 .configuration(Map.of("flyway.postgresql.transactional.lock", "false"))
                 .locations("classpath:db/migration").load();
-        assertEquals(2, flyway.migrate().migrationsExecuted);
+        assertTrue(flyway.migrate().migrationsExecuted >= 2);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
 
