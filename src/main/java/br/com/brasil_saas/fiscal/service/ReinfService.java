@@ -7,6 +7,9 @@ import br.com.brasil_saas.fiscal.repository.ReinfRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,8 @@ public class ReinfService {
     private final ReinfRepository reinfRepo;
     private final NfseRepository nfses;
 
+    private static final ObjectMapper JSON = new ObjectMapper();
+
     private static final DateTimeFormatter ISO_DIA = DateTimeFormatter.ISO_LOCAL_DATE;
 
     @Transactional(readOnly = true)
@@ -61,15 +66,19 @@ public class ReinfService {
     @Transactional
     public List<Reinf> gerarPeriodo(Long empresaId, String competencia) {
         LocalDate ini = validarCompetencia(competencia);
+        reinfRepo.bloquearEmpresa(empresaId).orElseThrow(() -> new ResourceNotFoundException("Empresa nao encontrada"));
+        if (reinfRepo.findByEmpresaIdAndCompetencia(empresaId, competencia).stream()
+                .anyMatch(e -> Reinf.FECHADO.equals(e.getStatus()) || Reinf.TRANSMITIDO.equals(e.getStatus())))
+            throw new BusinessException("Competencia ja fechada ou transmitida");
         LocalDateTime de = ini.atStartOfDay();
         LocalDateTime ate = ini.plusMonths(1).atStartOfDay();
 
-        List<Nfse> todas = nfses.findByEmpresaIdAndDataEmissaoBetweenAndDeletedAtIsNull(empresaId, de, ate);
+        List<Nfse> todas = nfses.findNoPeriodo(empresaId, de, ate);
         List<Nfse> prestados = new ArrayList<>();
         List<Nfse> tomados = new ArrayList<>();
         for (Nfse n : todas) {
-            if (cancelada(n.getStatus())) continue;
-            String tipo = n.getTipoOperacao() == null ? "S" : n.getTipoOperacao().trim().toUpperCase();
+            if (!emitida(n.getStatus())) continue;
+            String tipo = n.getTipoOperacao() == null ? "S" : n.getTipoOperacao().trim().toUpperCase(Locale.ROOT);
             if ("E".equals(tipo)) tomados.add(n);
             else prestados.add(n);
         }
@@ -86,17 +95,19 @@ public class ReinfService {
     @Transactional
     public Reinf fechar(Long empresaId, String competencia) {
         validarCompetencia(competencia);
+        reinfRepo.bloquearEmpresa(empresaId).orElseThrow(() -> new ResourceNotFoundException("Empresa nao encontrada"));
         List<Reinf> eventos = reinfRepo.findByEmpresaIdAndCompetencia(empresaId, competencia);
+        for (Reinf evento : eventos) {
+            if ("R-2099".equals(evento.getEvento()) && Reinf.TRANSMITIDO.equals(evento.getStatus()))
+                throw new BusinessException("Competencia ja transmitida");
+            if ("R-2099".equals(evento.getEvento()) && Reinf.FECHADO.equals(evento.getStatus())) return evento;
+        }
         boolean temPeriodico = eventos.stream()
                 .anyMatch(e -> ("R-2010".equals(e.getEvento()) || "R-2020".equals(e.getEvento()))
                         && (Reinf.GERADO.equals(e.getStatus()) || Reinf.FECHADO.equals(e.getStatus()) || Reinf.TRANSMITIDO.equals(e.getStatus())));
         if (!temPeriodico) {
             throw new BusinessException("Gere R-2010/R-2020 antes de fechar a competencia");
         }
-        if (eventos.stream().anyMatch(e -> "R-2099".equals(e.getEvento()) && Reinf.TRANSMITIDO.equals(e.getStatus()))) {
-            throw new BusinessException("Competencia ja transmitida");
-        }
-
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("evento", "R-2099");
         payload.put("competencia", competencia);
@@ -131,8 +142,7 @@ public class ReinfService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> detalhe(Long empresaId, Long id) {
-        Reinf r = reinfRepo.findById(id)
-                .filter(x -> empresaId.equals(x.getEmpresaId()))
+        Reinf r = reinfRepo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("reinf", String.valueOf(id)));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("id", r.getId());
@@ -241,6 +251,8 @@ public class ReinfService {
     // ── helpers ───────────────────────────────────────────────────────
 
     private LocalDate validarCompetencia(String competencia) {
+        if (competencia == null || !competencia.matches("(0[1-9]|1[0-2])/[0-9]{4}"))
+            throw new BusinessException("Competencia invalida, use MM/AAAA");
         try {
             String[] p = competencia.split("/");
             return LocalDate.of(Integer.parseInt(p[1]), Integer.parseInt(p[0]), 1);
@@ -255,8 +267,8 @@ public class ReinfService {
         return p[1] + "-" + p[0];
     }
 
-    private boolean cancelada(String status) {
-        return status != null && status.trim().toUpperCase().startsWith("CANCEL");
+    private boolean emitida(String status) {
+        return status != null && List.of("EMITIDA", "AUTORIZADA").contains(status.trim().toUpperCase(Locale.ROOT));
     }
 
     private int nz(Integer v) { return v == null ? 0 : v; }
@@ -267,52 +279,11 @@ public class ReinfService {
         return nz(v).setScale(2, RoundingMode.HALF_UP);
     }
 
-    /** Serialização mínima sem dependência de Jackson no classpath de teste unitário simples. */
     private String toJson(Map<String, Object> map) {
-        StringBuilder sb = new StringBuilder();
-        sb.append('{');
-        boolean first = true;
-        for (Map.Entry<String, Object> e : map.entrySet()) {
-            if (!first) sb.append(',');
-            first = false;
-            sb.append('"').append(esc(e.getKey())).append('"').append(':');
-            appendValue(sb, e.getValue());
+        try {
+            return JSON.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException("Falha ao serializar evento Reinf");
         }
-        sb.append('}');
-        return sb.toString();
-    }
-
-    @SuppressWarnings("unchecked")
-    private void appendValue(StringBuilder sb, Object v) {
-        if (v == null) {
-            sb.append("null");
-        } else if (v instanceof String s) {
-            sb.append('"').append(esc(s)).append('"');
-        } else if (v instanceof Number || v instanceof Boolean) {
-            sb.append(v);
-        } else if (v instanceof Map<?, ?> m) {
-            sb.append('{');
-            boolean first = true;
-            for (Map.Entry<?, ?> e : m.entrySet()) {
-                if (!first) sb.append(',');
-                first = false;
-                sb.append('"').append(esc(String.valueOf(e.getKey()))).append('"').append(':');
-                appendValue(sb, e.getValue());
-            }
-            sb.append('}');
-        } else if (v instanceof List<?> list) {
-            sb.append('[');
-            for (int i = 0; i < list.size(); i++) {
-                if (i > 0) sb.append(',');
-                appendValue(sb, list.get(i));
-            }
-            sb.append(']');
-        } else {
-            sb.append('"').append(esc(String.valueOf(v))).append('"');
-        }
-    }
-
-    private String esc(String s) {
-        return s.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
