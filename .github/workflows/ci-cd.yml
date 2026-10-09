@@ -180,6 +180,50 @@ jobs:
       DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
       DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
     needs: [backend-build, frontend-build]
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: brasil-saas
+          POSTGRES_PASSWORD: test123
+          POSTGRES_DB: erp_runtime_smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U brasil-saas -d erp_runtime_smoke"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      rabbitmq:
+        image: rabbitmq:3-management
+        env:
+          RABBITMQ_DEFAULT_USER: brasil-saas
+          RABBITMQ_DEFAULT_PASS: test123
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
 
     steps:
       - name: Checkout
@@ -206,6 +250,18 @@ jobs:
           tags: brasil-saas-erp:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Start ERP image and verify infrastructure
+        run: bash scripts/ci/runtime-smoke.sh
+
+      - name: Upload runtime smoke reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-smoke-reports
+          path: runtime-smoke-reports/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Login Docker Hub
         if: github.ref == 'refs/heads/main' && env.DOCKER_HUB_USERNAME != '' && env.DOCKER_HUB_TOKEN != ''
