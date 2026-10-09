@@ -1101,7 +1101,17 @@
       "passwordLength": "La nueva contraseña debe tener al menos 8 caracteres",
       "loadError": "Error al cargar el perfil",
       "saveError": "Error al guardar",
-      "passwordError": "Error al cambiar la contraseña"
+      "passwordError": "Error al cambiar la contraseña",
+      "profileTitle": "Mi perfil",
+      "fullName": "Nombre completo",
+      "username": "Nombre de usuario",
+      "roles": "Perfiles",
+      "noRoles": "No hay perfiles asignados",
+      "changePasswordTitle": "Cambiar contraseña",
+      "currentPassword": "Contraseña actual",
+      "newPasswordHelp": "Nueva contraseña (mínimo 8 caracteres)",
+      "confirmNewPassword": "Confirmar nueva contraseña",
+      "changePasswordButton": "Cambiar contraseña"
     },
     "cargo": {
       "title": "Cargos",
