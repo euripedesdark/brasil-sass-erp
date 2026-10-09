@@ -55,6 +55,10 @@ export const Boletos = () => {
     const [carregando, setCarregando] = useState(true);
     const [emitindo, setEmitindo] = useState(false);
     const [dialogo, setDialogo] = useState(false);
+    const [enviandoRetorno, setEnviandoRetorno] = useState(false);
+    const [bancoRetorno, setBancoRetorno] = useState('');
+    const [tipoCnab, setTipoCnab] = useState('cnab240');
+    const fileRetornoRef = useRef(null);
 
     const [form, setForm] = useState({
         tituloId: null, bank: '001', formato: 'pdf',
@@ -124,7 +128,50 @@ export const Boletos = () => {
 
     useEffect(() => { carregar(); }, [carregar]);
 
-    const semCamposObrigatorios = useMemo(
+    
+    const processarArquivoRetorno = async () => {
+        const file = fileRetornoRef.current?.files?.[0];
+        if (!file) {
+            toast.current?.show({ severity: 'warn', summary: 'Retorno', detail: 'Selecione o arquivo .RET do banco', life: 3500 });
+            return;
+        }
+        if (!bancoRetorno) {
+            toast.current?.show({ severity: 'warn', summary: 'Retorno', detail: 'Informe o código do banco (COMPE)', life: 3500 });
+            return;
+        }
+        setEnviandoRetorno(true);
+        try {
+            const fd = new FormData();
+            fd.append('arquivo', file);
+            fd.append('bank', bancoRetorno);
+            fd.append('tipo', tipoCnab);
+            const r = await apiFetch(`${BASE}/retornos?bank=${encodeURIComponent(bancoRetorno)}&tipo=${encodeURIComponent(tipoCnab)}`, {
+                method: 'POST',
+                body: fd,
+            });
+            // multipart: don't set Content-Type — browser sets boundary
+            const j = await r.json().catch(() => null);
+            if (!r.ok) {
+                const msg = j?.message || j?.error || j?.errors?.[0]?.message || 'Falha ao processar retorno';
+                throw new Error(msg);
+            }
+            const data = j?.data ?? j;
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Retorno processado',
+                detail: `Registros: ${data?.registros ?? '—'} · Baixados: ${data?.baixados ?? '—'} · Divergentes: ${data?.divergentes ?? '—'}`,
+                life: 5000,
+            });
+            if (fileRetornoRef.current) fileRetornoRef.current.value = '';
+            carregar();
+        } catch (e) {
+            toast.current?.show({ severity: 'error', summary: 'Retorno', detail: e.message || String(e), life: 5000 });
+        } finally {
+            setEnviandoRetorno(false);
+        }
+    };
+
+const semCamposObrigatorios = useMemo(
         () => !form.pagador?.trim() || !form.vencimento || !(Number(form.valor) > 0),
         [form]);
 
@@ -362,6 +409,22 @@ export const Boletos = () => {
                 </TabPanel>
 
                 <TabPanel header={`Retornos (${retornos.length})`} leftIcon="pi pi-download">
+                    <div className="flex flex-wrap gap-2 align-items-end mb-3 p-3 surface-100 border-round">
+                        <div>
+                            <label className="bc-label">Banco (COMPE)</label>
+                            <InputText value={bancoRetorno} onChange={(e) => setBancoRetorno(e.target.value)} placeholder="ex: 001, 237, 341" style={{ width: '8rem' }} />
+                        </div>
+                        <div>
+                            <label className="bc-label">Layout</label>
+                            <Dropdown value={tipoCnab} options={[{ label: 'CNAB 240', value: 'cnab240' }, { label: 'CNAB 400', value: 'cnab400' }]} onChange={(e) => setTipoCnab(e.value)} />
+                        </div>
+                        <div>
+                            <label className="bc-label">Arquivo .RET</label>
+                            <input type="file" ref={fileRetornoRef} accept=".ret,.RET,.txt,.TXT" />
+                        </div>
+                        <Button label="Processar retorno" icon="pi pi-upload" loading={enviandoRetorno} onClick={processarArquivoRetorno} />
+                    </div>
+                    <Message severity="info" className="w-full mb-3" text="Upload do arquivo de retorno do banco. O backend concilia nosso número, baixa títulos e registra divergências." />
                     <DataTable
                         value={retornos}
                         loading={carregando}
@@ -371,9 +434,11 @@ export const Boletos = () => {
                         responsiveLayout="scroll"
                     >
                         <Column field="id" header="#" style={{ width: '4rem' }} />
-                        <Column field="nossoNumero" header="Nosso número" />
                         <Column field="status" header="Situação" />
-                        <Column field="dataRetorno" header="Processado em" body={(r) => dataBr(r.dataRetorno)} />
+                        <Column field="qtdeRegistros" header="Registros" />
+                        <Column field="qtdeBaixados" header="Baixados" />
+                        <Column field="qtdeDivergentes" header="Divergentes" />
+                        <Column field="dataRetorno" header="Processado em" body={(r) => dataBr(r.dataRetorno || r.createdAt)} />
                     </DataTable>
                 </TabPanel>
             </TabView>
