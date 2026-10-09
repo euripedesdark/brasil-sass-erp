@@ -7,8 +7,16 @@ permissions:
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/ci-code-quality.yml'
   pull_request:
     branches: [ main, develop ]
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - '.github/workflows/ci-code-quality.yml'
   schedule:
     - cron: '0 2 * * 1'  # Every Monday at 2 AM
   workflow_dispatch:
