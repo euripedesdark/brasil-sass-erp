@@ -17,7 +17,8 @@ const cards = [
   ['menu.accountingEntries','finance.accountingEntriesDesc','pi pi-book','/financeiro/contabil'],
   ['menu.costCenters','finance.costCentersDesc','pi pi-tags','/financeiro/centro-custos'],
   ['menu.paymentTerms','finance.paymentTermsDesc','pi pi-calendar','/financeiro/condicoes-pagamento'],
-  ['menu.paymentTypes','finance.paymentTypesDesc','pi pi-credit-card','/financeiro/tipos-pagamento']
+  ['menu.paymentTypes','finance.paymentTypesDesc','pi pi-credit-card','/financeiro/tipos-pagamento'],
+  ['Stripe','Checkout e invoices dos títulos','pi pi-credit-card','/financeiro/stripe']
 ];
 
 export default function FinanceiroHub() {

@@ -37,7 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -466,4 +469,31 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
             return null;
         }
     }
+
+    @Override
+    public List<StripePayment> listarPagamentos(Long empresaId) {
+        return paymentRepository.findByEmpresaIdAndDeletedAtIsNullOrderByIdDesc(empresaId);
+    }
+
+    @Override
+    public List<StripePayment> listarPorTitulo(Long empresaId, Long tituloId) {
+        return paymentRepository.findByEmpresaIdAndTituloIdAndDeletedAtIsNullOrderByIdDesc(empresaId, tituloId);
+    }
+
+    @Override
+    public Map<String, Object> statusConfig(Long empresaId) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        try {
+            String key = empresaStripeService.secretKey(empresaId);
+            m.put("habilitado", true);
+            m.put("chaveMascarada", key != null && key.length() > 8
+                    ? key.substring(0, 4) + "••••" + key.substring(key.length() - 4) : "••••");
+        } catch (Exception ex) {
+            m.put("habilitado", false);
+            m.put("motivo", ex.getMessage());
+        }
+        m.put("pagamentos", paymentRepository.findByEmpresaIdAndDeletedAtIsNullOrderByIdDesc(empresaId).size());
+        return m;
+    }
+
 }
