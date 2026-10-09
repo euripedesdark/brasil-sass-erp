@@ -834,7 +834,7 @@
       "customerNamePlaceholder": "Escriba el nombre del cliente",
       "search": "Buscar",
       "newOrder": "Nueva orden de servicio",
-      "pageReport": "Mostrando {first} a {last} de {totalRecords} órdenes",
+      "pageReport": "Mostrando {{first}} a {{last}} de {{totalRecords}} órdenes",
       "emptyOrders": "No se encontraron órdenes de servicio",
       "number": "N.º de orden",
       "filterCustomer": "Buscar cliente",
