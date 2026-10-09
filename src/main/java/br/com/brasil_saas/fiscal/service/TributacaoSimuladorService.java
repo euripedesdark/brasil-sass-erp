@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -83,4 +84,54 @@ public class TributacaoSimuladorService {
     private static BigDecimal pct(BigDecimal base, BigDecimal aliq) {
         return base.multiply(aliq).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
+
+    public Map<String, Object> simularItens(Long empresaId, String ufOrigem, String ufDestino,
+                                           Boolean consumidorFinal, Boolean contribuinte,
+                                           List<Map<String, Object>> itens) {
+        List<Map<String, Object>> linhas = new java.util.ArrayList<>();
+        BigDecimal totIcms = BigDecimal.ZERO;
+        BigDecimal totPis = BigDecimal.ZERO;
+        BigDecimal totCofins = BigDecimal.ZERO;
+        BigDecimal totDifal = BigDecimal.ZERO;
+        BigDecimal totSt = BigDecimal.ZERO;
+        if (itens != null) {
+            for (Map<String, Object> it : itens) {
+                BigDecimal base = toBd(it.get("base"));
+                String ncm = str(it.get("ncm"));
+                String cfop = str(it.get("cfop"));
+                Map<String, Object> linha = simular(empresaId, base, ncm, cfop, ufOrigem, ufDestino, consumidorFinal, contribuinte);
+                linha.put("itemRef", it.get("ref"));
+                linhas.add(linha);
+                totIcms = totIcms.add(toBd(linha.get("icms")));
+                totPis = totPis.add(toBd(linha.get("pis")));
+                totCofins = totCofins.add(toBd(linha.get("cofins")));
+                if (linha.get("difal") instanceof Map<?, ?> d) {
+                    totDifal = totDifal.add(toBd(d.get("difal")));
+                }
+                if (linha.get("icmsSt") instanceof Map<?, ?> s) {
+                    totSt = totSt.add(toBd(s.get("icmsSt")));
+                }
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("linhas", linhas);
+        out.put("totalIcms", totIcms);
+        out.put("totalPis", totPis);
+        out.put("totalCofins", totCofins);
+        out.put("totalDifal", totDifal);
+        out.put("totalIcmsSt", totSt);
+        out.put("totalImpostos", totIcms.add(totPis).add(totCofins).add(totDifal).add(totSt));
+        return out;
+    }
+
+    private static BigDecimal toBd(Object o) {
+        if (o == null) return BigDecimal.ZERO;
+        if (o instanceof BigDecimal b) return b;
+        try { return new BigDecimal(String.valueOf(o)); } catch (Exception e) { return BigDecimal.ZERO; }
+    }
+
+    private static String str(Object o) {
+        return o == null ? null : String.valueOf(o);
+    }
+
 }
