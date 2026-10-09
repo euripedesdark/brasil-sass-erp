@@ -834,7 +834,7 @@
       "customerNamePlaceholder": "Enter the customer name",
       "search": "Search",
       "newOrder": "New service order",
-      "pageReport": "Showing {first} to {last} of {totalRecords} service orders",
+      "pageReport": "Showing {{first}} to {{last}} of {{totalRecords}} service orders",
       "emptyOrders": "No service orders found",
       "number": "Service order #",
       "filterCustomer": "Search customers",
