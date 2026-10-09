@@ -1389,7 +1389,8 @@
       "loading": "Loading modules...",
       "restricted": "Restricted",
       "readOnly": "Read-only",
-      "sensitiveWarning": "This module contains sensitive documents and requires SUPERUSER."
+      "sensitiveWarning": "This module contains sensitive documents and requires SUPERUSER.",
+      "unmarkHelp": "Clearing all modules removes the user's access to every module in the system."
     },
     "stripePayments": {
       "title": "Stripe — payments",
