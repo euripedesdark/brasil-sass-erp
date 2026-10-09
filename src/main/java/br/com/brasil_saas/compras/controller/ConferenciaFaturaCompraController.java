@@ -34,7 +34,17 @@ public class ConferenciaFaturaCompraController {
         return service.listarItens(user.getEmpresaId(), id);
     }
 
+    @PostMapping("/{id}/aprovacao-excepcional")
+    @PreAuthorize("hasAuthority('compras:conferencia:aprovar')")
+    public ConferenciaFaturaCompra aprovarExcepcional(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @PathVariable Long id,
+            @Valid @RequestBody ConferenciaFaturaCompraService.AprovacaoExcepcionalRequest request) {
+        return service.aprovarExcepcional(user.getEmpresaId(), user.getId(), id, request.motivo());
+    }
+
     @PostMapping
+
     @PreAuthorize("hasAuthority('compras:pedido:escrita')")
     public ConferenciaFaturaCompra conferir(
             @AuthenticationPrincipal AuthenticatedUser user,

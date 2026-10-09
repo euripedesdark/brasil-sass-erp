@@ -40,6 +40,7 @@ class DevolucaoServiceTest {
     @Mock br.com.brasil_saas.financeiro.repository.BaixaRepository baixaRepository;
     @Mock br.com.brasil_saas.financeiro.service.TituloService tituloService;
     @Mock br.com.brasil_saas.core.service.DocumentoFluxoService documentoFluxoService;
+    @Mock br.com.brasil_saas.contabilidade.service.ContabilidadeService contabilidadeService;
     @InjectMocks DevolucaoService service;
 
     void pedidoFaturadoComDezUnidades() {
@@ -218,6 +219,7 @@ class DevolucaoServiceTest {
         var titulo = tituloAbertoCom100();
         when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(titulo));
         when(baixaRepository.findByTituloIdAndDeletedAtIsNull(9L)).thenReturn(List.of());
+        when(contabilidadeService.espelharAjusteDevolucao(eq(2L), eq(9L), eq(9L), argThat(p -> p != null && p.compareTo(new BigDecimal("0.4")) == 0), any())).thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(), "SEM_LANCAMENTO_ORIGINAL"));
         assertEquals("RECEBIDA", service.receber(2L, 70L).getStatus());
         var captor = ArgumentCaptor.forClass(br.com.brasil_saas.financeiro.dto.FinanceiroDtos.BaixaRequest.class);
         verify(tituloService).baixar(eq(2L), eq(9L), captor.capture());
@@ -239,6 +241,7 @@ class DevolucaoServiceTest {
         titulo.setStatus("BAIXADO"); titulo.setValorSaldo(BigDecimal.ZERO);
         when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(titulo));
         when(tituloRepository.findByEmpresaIdAndNumeroDocumentoAndDeletedAtIsNull(eq(2L), any())).thenReturn(List.of());
+        when(contabilidadeService.espelharAjusteDevolucao(any(), any(), any(), any(), any())).thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(), "SEM_LANCAMENTO_ORIGINAL"));
         when(tituloRepository.save(any())).thenAnswer(i -> i.getArgument(0));
         assertEquals("RECEBIDA", service.receber(2L, 70L).getStatus());
         verify(tituloService, never()).baixar(any(), any(), any());
@@ -270,6 +273,7 @@ class DevolucaoServiceTest {
         var titulo = tituloAbertoCom100();
         titulo.setStatus("PARCIAL"); titulo.setValorSaldo(new BigDecimal("60.00"));
         when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(titulo));
+        when(contabilidadeService.espelharAjusteDevolucao(any(), any(), any(), any(), any())).thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(), "SEM_LANCAMENTO_ORIGINAL"));
         var existente = new br.com.brasil_saas.financeiro.model.Baixa();
         existente.setObservacao("DEVOLUCAO_VENDA#70 DV-TESTE-70");
         when(baixaRepository.findByTituloIdAndDeletedAtIsNull(9L)).thenReturn(List.of(existente));
@@ -278,5 +282,21 @@ class DevolucaoServiceTest {
         verify(documentoFluxoService).ligar(eq(2L), eq(null),
                 eq("DEVOLUCAO_VENDA"), eq(70L), any(),
                 eq("TITULO"), eq(9L), any(), eq("AJUSTE_DEVOLUCAO"));
+    }
+    @Test
+    void receberRegistraAjusteContabilAplicado() {
+        when(devolucoes.findByIdForUpdate(70L, 2L)).thenReturn(Optional.of(devolucaoAprovada4un()));
+        estoqueParaReceber4un();
+        when(pedidos.findByIdForUpdateAndEmpresaId(1L, 2L)).thenReturn(Optional.of(pedidoFaturadoComTitulo(9L)));
+        when(tituloRepository.findForUpdate(9L, 2L)).thenReturn(Optional.of(tituloAbertoCom100()));
+        when(baixaRepository.findByTituloIdAndDeletedAtIsNull(9L)).thenReturn(List.of());
+        var lancado = new br.com.brasil_saas.contabilidade.model.CtbLancamento();
+        lancado.setId(55L); lancado.setPeriodo("2026-10");
+        when(contabilidadeService.espelharAjusteDevolucao(eq(2L), eq(9L), eq(9L), argThat(p -> p != null && p.compareTo(new BigDecimal("0.4")) == 0), any()))
+                .thenReturn(new br.com.brasil_saas.contabilidade.service.ContabilidadeService.EspelhoContabil(List.of(lancado), "APLICADO"));
+        assertEquals("RECEBIDA", service.receber(2L, 70L).getStatus());
+        verify(documentoFluxoService).ligar(eq(2L), eq(null),
+                eq("DEVOLUCAO_VENDA"), eq(70L), any(),
+                eq("TITULO"), eq(9L), any(), eq("AJUSTE_CONTABIL"));
     }
 }

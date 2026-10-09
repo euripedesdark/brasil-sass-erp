@@ -340,3 +340,65 @@ Arquivos da entrega:
 Validacao: 2 casos novos (preco dentro da tolerancia aprova e grava o
 campo na linha; preco acima diverge com o tipo preservado). Suite
 completa: 375 testes, zero falhas, zero erros, JDK 21.
+
+## Entrega — aprovacao excepcional de divergencias com trilha
+
+Branch codex/conferencia-aprovacao-excepcional. Sem migration, sem tela nova, sem status novo.
+
+- Antes, uma conferencia DIVERGENTE travava o pagamento sem saida legitima:
+  ou reconferia ate aprovar, ou o titulo ficava parado.
+- Agora aprovarExcepcional libera: so de DIVERGENTE para APROVADA, com
+  motivo obrigatorio (10 a 500 caracteres), trava pessimista da conferencia
+  e bloqueio se reavaliacao posterior superou a linha. O motivo, o aprovador
+  e a data vao para a divergencia preservada e para o documento_fluxo
+  (relacao APROVACAO_EXCEPCIONAL), sem apagar o historico.
+- Endpoint POST com autoridade nova compras:conferencia:aprovar, no mesmo
+  padrao das aprovacoes existentes. Baixa, vigentes e telas nao mudam:
+  o vocabulario de status continua o mesmo.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/compras/service/ConferenciaFaturaCompraService.java
+    src/main/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImpl.java
+    src/main/java/br/com/brasil_saas/compras/repository/ConferenciaFaturaCompraRepository.java
+    src/main/java/br/com/brasil_saas/compras/controller/ConferenciaFaturaCompraController.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/ConferenciaAprovacaoExcepcionalTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 5 casos novos (aprova com motivo e audita, motivo curto ou
+ausente, nao divergente, superada por reavaliacao, mesma trava do titulo).
+Suite completa: 380 testes, zero falhas, zero erros, JDK 21.
+
+## Entrega — ajuste contabil automatico da devolucao por espelho
+
+Branch codex/conferencia-aprovacao-excepcional (mesmo bloco). Sem migration, sem tela nova.
+
+- Antes, a devolucao ajustava o financeiro mas nada na contabilidade: o
+  titulo baixado ou restituido ficava sem lancamento correspondente.
+- Agora espelharAjusteDevolucao inverte proporcionalmente as partidas dos
+  lancamentos LANCADOS do titulo de origem para o titulo destino, reusando
+  as contas do lancamento original: nenhum plano de contas inventado.
+  Arredondamento em 2 casas com correcao do residuo na maior partida, para
+  o lancamento sair sempre balanceado.
+- Periodo fechado ou origem nunca contabilizada viram pendencia explicita
+  na trilha (AJUSTE_CONTABIL_PENDENTE), sem travar o recebimento fisico
+  nem o financeiro. Proporcao fora de (0,1] e rejeitada.
+- Venda e compra chamam o espelho na baixa de ajuste e na restituicao ou
+  credito, registrando AJUSTE_CONTABIL por lancamento gerado.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/contabilidade/service/ContabilidadeService.java
+    src/main/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeServiceImpl.java
+    src/main/java/br/com/brasil_saas/vendas/devolucao/DevolucaoService.java
+    src/main/java/br/com/brasil_saas/compras/service/DevCompraService.java
+    src/test/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeEspelhoDevolucaoTest.java
+    src/test/java/br/com/brasil_saas/vendas/devolucao/DevolucaoServiceTest.java
+    src/test/java/br/com/brasil_saas/compras/service/DevCompraServiceTest.java
+    src/test/java/br/com/brasil_saas/database/DevolucoesCreditoPostgresScenario.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 4 casos novos do espelho (proporcional, sem original, periodo
+fechado, proporcao invalida) e 2 de ponta a ponta (venda aplica, compra
+registra pendencia de periodo). Suite completa: 386 testes, zero falhas,
+zero erros, JDK 21.
