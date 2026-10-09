@@ -5,6 +5,10 @@ import br.com.swconsultoria.efd.icms.registros.blocoC.BlocoC;
 import br.com.swconsultoria.efd.icms.registros.blocoC.RegistroC001;
 import br.com.swconsultoria.efd.icms.registros.blocoC.RegistroC100;
 import br.com.swconsultoria.efd.icms.registros.blocoC.RegistroC170;
+import br.com.swconsultoria.efd.icms.registros.blocoE.BlocoE;
+import br.com.swconsultoria.efd.icms.registros.blocoE.RegistroE001;
+import br.com.swconsultoria.efd.icms.registros.blocoE.RegistroE100;
+import br.com.swconsultoria.efd.icms.registros.blocoE.RegistroE110;
 import br.com.brasil_saas.cadastro.model.Pessoa;
 import br.com.brasil_saas.cadastro.repository.PessoaRepository;
 import br.com.brasil_saas.fiscal.sped.SpedEfdController.PedidoEfd;
@@ -73,6 +77,56 @@ public class EfdPeriodoService {
         }
         BlocoC bc = new BlocoC();
         documento.setBlocoC(bc);
+
+        // Bloco E — apuração do ICMS do período (E001 + E100 + E110).
+        // Débito = ICMS das saídas; crédito = ICMS das entradas. Sem saldo anterior
+        // (empresa sem histórico de EFD) e sem ajustes/deduções especiais.
+        BigDecimal debIcms = BigDecimal.ZERO;
+        BigDecimal credIcms = BigDecimal.ZERO;
+        for (Nfe n : notas) {
+            if (cancelada(n.getStatus())) continue;
+            BigDecimal v = n.getValorIcms() == null ? BigDecimal.ZERO : n.getValorIcms();
+            if ("S".equalsIgnoreCase(n.getTipoOperacao())) debIcms = debIcms.add(v);
+            else if ("E".equalsIgnoreCase(n.getTipoOperacao())) credIcms = credIcms.add(v);
+        }
+        BlocoE be = new BlocoE();
+        RegistroE001 e001 = new RegistroE001();
+        e001.setInd_mov(debIcms.signum() == 0 && credIcms.signum() == 0 ? "1" : "0");
+        be.setRegistroE001(e001);
+        if (e001.getInd_mov().equals("0")) {
+            LocalDate fim = ini.plusMonths(1).minusDays(1);
+            RegistroE100 e100 = new RegistroE100();
+            e100.setDt_ini(ini.format(DIA));
+            e100.setDt_fin(fim.format(DIA));
+            RegistroE110 e110 = new RegistroE110();
+            String zero = "0,00";
+            e110.setVl_tot_debitos(moedaOuZero(debIcms));
+            e110.setVl_aj_debitos(zero);
+            e110.setVl_tot_aj_debitos(zero);
+            e110.setVl_estornos_cred(zero);
+            e110.setVl_tot_creditos(moedaOuZero(credIcms));
+            e110.setVl_aj_creditos(zero);
+            e110.setVl_tot_aj_creditos(zero);
+            e110.setVl_estornos_deb(zero);
+            e110.setVl_sld_credor_ant(zero);
+            BigDecimal sld = debIcms.subtract(credIcms);
+            if (sld.signum() > 0) {
+                e110.setVl_sld_apurado(moedaOuZero(sld));
+                e110.setVl_tot_ded(zero);
+                e110.setVl_icms_recolher(moedaOuZero(sld));
+                e110.setVl_sld_credor_transportar(zero);
+            } else {
+                e110.setVl_sld_apurado(zero);
+                e110.setVl_tot_ded(zero);
+                e110.setVl_icms_recolher(zero);
+                e110.setVl_sld_credor_transportar(moedaOuZero(sld.abs()));
+            }
+            e110.setDeb_esp(zero);
+            e100.setRegistroE110(e110);
+            be.getRegistroE100().add(e100);
+        }
+        documento.setBlocoE(be);
+
         RegistroC001 c001 = new RegistroC001();
         c001.setInd_mov("0");
         bc.setRegistroC001(c001);
@@ -126,6 +180,9 @@ public class EfdPeriodoService {
         saida.put("documentos", docs);
         saida.put("ignoradas", ignoradas);
         saida.put("totalLinhas", linhas.size());
+        saida.put("icmsDebito", debIcms.setScale(2, RoundingMode.HALF_UP));
+        saida.put("icmsCredito", credIcms.setScale(2, RoundingMode.HALF_UP));
+        saida.put("icmsRecolher", debIcms.subtract(credIcms).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP));
         saida.put("conteudo", conteudo);
         SpedFiscal reg = historico.findByEmpresaIdAndCompetencia(empresaId, pedido.competencia()).orElse(null);
         if (reg == null) { reg = new SpedFiscal(); reg.setEmpresaId(empresaId); reg.setCompetencia(pedido.competencia()); }
