@@ -61,6 +61,7 @@ import { Portais } from "./components/portais/Portais";
 import { PortalPublico } from "./components/portais/PortalPublico";
 import { Boletos } from './components/financeiro/Boletos';
 import ConfigurarEmpresa from './components/core/ConfigurarEmpresa';
+import { EmpresasCredenciais } from './components/core/EmpresasCredenciais';
 import Sobre from './components/core/Sobre';
 import EnterpriseOperations from './components/enterprise/EnterpriseOperations';
 import SupplyChainEnterprise from './components/enterprise/SupplyChainEnterprise';
@@ -182,6 +183,7 @@ function App() {
                     <Route path="dashboard" element={<Dashboard />} />
 
                     <Route path="configurar-empresa" element={<ConfigurarEmpresa />} />
+                    <Route path="empresas-credenciais" element={<EmpresasCredenciais />} />
                     <Route path="sobre" element={<Sobre />} />
                     <Route path="gestao-empresarial" element={<EnterpriseOperations />} />
                     <Route path="supply-chain-enterprise" element={<SupplyChainEnterprise />} />
