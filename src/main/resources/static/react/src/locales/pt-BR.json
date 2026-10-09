@@ -1389,7 +1389,8 @@
       "loading": "Carregando módulos...",
       "restricted": "Restrito",
       "readOnly": "Somente leitura",
-      "sensitiveWarning": "Módulo com documentos sensíveis: exige SUPERUSER."
+      "sensitiveWarning": "Módulo com documentos sensíveis: exige SUPERUSER.",
+      "unmarkHelp": "Desmarcar todos deixa a pessoa sem acesso a nenhum módulo do sistema."
     },
     "stripePayments": {
       "title": "Stripe — pagamentos",
