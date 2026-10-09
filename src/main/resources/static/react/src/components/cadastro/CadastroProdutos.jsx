@@ -122,7 +122,7 @@ export const CadastroProdutos = () => {
         } catch (err) {
             console.error('Erro ao carregar produtos', err);
             toast.current?.show({
-                severity: 'error', summary: 'Erro',
+                severity: 'error', summary: t('common.error'),
                 detail: t('errors.load'), life: 3000
             });
         } finally {
