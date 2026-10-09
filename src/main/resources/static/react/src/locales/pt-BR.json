@@ -1606,5 +1606,30 @@
     "nbs": "NBS",
     "saved": "Serviço salvo com sucesso!",
     "value": "Valor"
+  },
+  "salesContracts": {
+    "title": "Contratos comerciais de venda",
+    "new": "Novo contrato",
+    "draft": "Rascunhos",
+    "active": "Ativos",
+    "closed": "Encerrados",
+    "empty": "Nenhum contrato encontrado",
+    "number": "Nº",
+    "contractTitle": "Título",
+    "client": "Cliente",
+    "value": "Valor",
+    "status": "Status",
+    "actions": "Ações",
+    "activate": "Ativar",
+    "close": "Encerrar",
+    "dialogTitle": "Contrato comercial",
+    "titleLabel": "Título",
+    "clientId": "ID do cliente",
+    "save": "Salvar",
+    "required": "Título e ID do cliente são obrigatórios.",
+    "loadError": "Não foi possível carregar os contratos.",
+    "saveError": "Não foi possível salvar o contrato.",
+    "actionError": "Não foi possível atualizar o contrato.",
+    "currency": "BRL"
   }
 }
