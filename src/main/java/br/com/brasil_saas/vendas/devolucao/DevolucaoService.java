@@ -54,6 +54,9 @@ public class DevolucaoService {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida, acima do saldo ou com mais de 3 casas decimais");
         }
         VenDevolucao d = new VenDevolucao(); d.setEmpresaId(empresaId); d.setPedidoId(pedidoId);
+        if (p.getClienteId() == null) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido sem cliente");
+        d.setClienteId(p.getClienteId());
+        d.setNumero("DV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 24));
         d.setMotivo(motivo); d.setStatus("SOLICITADA"); d = devolucoes.save(d);
         for (var e : itensQtd.entrySet()) {
             VenDevolucaoItem i = new VenDevolucaoItem(); i.setEmpresaId(empresaId); i.setDevolucaoId(d.getId());
