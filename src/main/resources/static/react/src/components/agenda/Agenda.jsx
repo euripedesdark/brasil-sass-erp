@@ -10,11 +10,13 @@ import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { useTranslation } from 'react-i18next';
 
 const BASE = '/api/agenda';
 const TIPOS = ['REUNIAO', 'LIGACAO', 'VISITA', 'TAREFA', 'OUTRO'];
 
 export const Agenda = () => {
+    const { t, i18n } = useTranslation();
     const toast = useRef(null);
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -34,11 +36,11 @@ export const Agenda = () => {
             const list = await apiFetch(BASE + path).then(js);
             setRows(Array.isArray(list) ? list : []);
         } catch (e) {
-            toast.current?.show({ severity: 'error', summary: 'Erro', detail: e.message, life: 4000 });
+            toast.current?.show({ severity: 'error', summary: t('common.error'), detail: e.message, life: 4000 });
         } finally {
             setLoading(false);
         }
-    }, [filtro]);
+    }, [filtro, t]);
 
     useEffect(() => { carregar(); }, [carregar]);
 
@@ -67,39 +69,39 @@ export const Agenda = () => {
             <Toast ref={toast} />
             <div className="flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div>
-                    <h2 className="m-0">Agenda</h2>
-                    <span className="text-color-secondary">Reuniões, visitas e tarefas operacionais</span>
+                    <h2 className="m-0">{t('legacyUi.agenda.title')}</h2>
+                    <span className="text-color-secondary">{t('legacyUi.agenda.subtitle')}</span>
                 </div>
                 <div className="flex gap-2">
                     <Dropdown value={filtro} options={[
-                        { label: 'Hoje', value: 'hoje' },
-                        { label: 'Semana', value: 'semana' },
-                        { label: 'Todos', value: 'todos' },
+                        { label: t('legacyUi.agenda.today'), value: 'hoje' },
+                        { label: t('legacyUi.agenda.week'), value: 'semana' },
+                        { label: t('common.all'), value: 'todos' },
                     ]} onChange={(e) => setFiltro(e.value)} />
-                    <Button label="Novo evento" icon="pi pi-plus" onClick={() => setDlg(true)} />
+                    <Button label={t('legacyUi.agenda.newEvent')} icon="pi pi-plus" onClick={() => setDlg(true)} />
                 </div>
             </div>
-            <DataTable value={rows} loading={loading} paginator rows={12} dataKey="id" emptyMessage="Sem eventos">
-                <Column field="titulo" header="Título" />
-                <Column field="tipo" header="Tipo" />
-                <Column field="inicio" header="Início" body={(r) => r.inicio ? new Date(r.inicio).toLocaleString('pt-BR') : '—'} />
-                <Column field="localEvento" header="Local" />
-                <Column field="responsavel" header="Responsável" />
-                <Column field="status" header="Status" body={(r) => <Tag value={r.status} />} />
+            <DataTable value={rows} loading={loading} paginator rows={12} dataKey="id" emptyMessage={t('legacyUi.agenda.noEvents')}>
+                <Column field="titulo" header={t('common.title')} />
+                <Column field="tipo" header={t('common.type')} />
+                <Column field="inicio" header={t('legacyUi.agenda.start')} body={(r) => r.inicio ? new Date(r.inicio).toLocaleString(i18n.language) : '—'} />
+                <Column field="localEvento" header={t('common.location')} />
+                <Column field="responsavel" header={t('legacyUi.agenda.responsible')} />
+                <Column field="status" header={t('common.status')} body={(r) => <Tag value={r.status} />} />
                 <Column body={(r) => r.status === 'AGENDADO' ? (
-                    <Button label="Concluir" size="small" text icon="pi pi-check" onClick={() => concluir(r.id)} />
+                     <Button label={t('legacyUi.agenda.complete')} size="small" text icon="pi pi-check" onClick={() => concluir(r.id)} />
                 ) : null} />
             </DataTable>
-            <Dialog header="Novo evento" visible={dlg} onHide={() => setDlg(false)} style={{ width: 'min(96vw, 520px)' }}>
+            <Dialog header={t('legacyUi.agenda.newEvent')} visible={dlg} onHide={() => setDlg(false)} style={{ width: 'min(96vw, 520px)' }}>
                 <div className="grid p-fluid">
-                    <div className="col-12"><label>Título *</label><InputText value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} /></div>
-                    <div className="col-6"><label>Tipo</label><Dropdown value={form.tipo} options={TIPOS.map((t) => ({ label: t, value: t }))} onChange={(e) => setForm({ ...form, tipo: e.value })} /></div>
-                    <div className="col-6"><label>Início</label><Calendar value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.value })} showTime hourFormat="24" /></div>
-                    <div className="col-6"><label>Local</label><InputText value={form.localEvento} onChange={(e) => setForm({ ...form, localEvento: e.target.value })} /></div>
-                    <div className="col-6"><label>Responsável</label><InputText value={form.responsavel} onChange={(e) => setForm({ ...form, responsavel: e.target.value })} /></div>
-                    <div className="col-12"><label>Descrição</label><InputTextarea rows={2} value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
+                    <div className="col-12"><label>{t('common.title')} *</label><InputText value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} /></div>
+                    <div className="col-6"><label>{t('common.type')}</label><Dropdown value={form.tipo} options={TIPOS.map((tipo) => ({ label: t(`legacyUi.agenda.types.${tipo}`), value: tipo }))} onChange={(e) => setForm({ ...form, tipo: e.value })} /></div>
+                    <div className="col-6"><label>{t('legacyUi.agenda.start')}</label><Calendar value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.value })} showTime hourFormat="24" /></div>
+                    <div className="col-6"><label>{t('common.location')}</label><InputText value={form.localEvento} onChange={(e) => setForm({ ...form, localEvento: e.target.value })} /></div>
+                    <div className="col-6"><label>{t('legacyUi.agenda.responsible')}</label><InputText value={form.responsavel} onChange={(e) => setForm({ ...form, responsavel: e.target.value })} /></div>
+                    <div className="col-12"><label>{t('common.description')}</label><InputTextarea rows={2} value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} /></div>
                 </div>
-                <Button label="Salvar" icon="pi pi-check" className="mt-3" onClick={salvar} />
+                 <Button label={t('common.save')} icon="pi pi-check" className="mt-3" onClick={salvar} />
             </Dialog>
         </div>
     );
