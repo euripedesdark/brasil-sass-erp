@@ -91,8 +91,6 @@ jobs:
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/brasil-saas
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379
-          # V17 imports the optional legacy SYSFLUXO schema; clean CI has no public.fempresa.
-          SPRING_FLYWAY_IGNORE_MIGRATION_PATTERNS: "17:ignored"
         run: mvn test -B
 
       - name: Report executed tests
@@ -259,7 +257,7 @@ jobs:
           set -euo pipefail
 
           PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
-          mvn -B -ntp flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas -Dflyway.ignoreMigrationPatterns=17:ignored
+          mvn -B -ntp flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
           mvn -B -ntp flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
           mvn -B -ntp flyway:info -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
           latest=$(PGPASSWORD="$FLYWAY_PASSWORD" psql -h localhost -U "$FLYWAY_USER" -d brasil-saas -Atc "select max(version::numeric)::text from brasil_saas.flyway_schema_history where success")

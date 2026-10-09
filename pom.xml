@@ -460,9 +460,6 @@
                         <arg>-parameters</arg>
                         <arg>-Xlint:unchecked</arg>
                     </compilerArgs>
-                    <excludes>
-                        <exclude>com/sysfluxo/**</exclude>
-                    </excludes>
                 </configuration>
             </plugin>
 

@@ -60,7 +60,7 @@ Smoke test de 67 rotas: **62 respondem 200**, 5 com 400 (parâmetro obrigatório
 
 ## Fases concluídas (histórico)
 
-[x] Fase 0 — Preparação (dump SYSFLUXO, dados oficiais NCM/IBGE/ISSQN)
+[x] Fase 0 — Preparação (dump legado, dados oficiais NCM/IBGE/ISSQN)
 [x] Fase 1 — pom.xml + Java 21 (Boot 3.3.5)
 [x] Fase 2 — Estrutura de pastas
 [x] Fase 3 — application.yml + perfis (dev/hom/prod) + logback + mTLS

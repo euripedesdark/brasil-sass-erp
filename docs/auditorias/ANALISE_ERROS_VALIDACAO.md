@@ -209,7 +209,6 @@ GET    /api/financeiro/relatorios/dre
 | **V5** | **Financeiro completo** | **439** | ✅ |
 | V15 | Seed perfis/permissões | ~80 | ✅ |
 | V16 | Seed tabelas oficiais | ~120 | ✅ |
-| V17 | Migração Sysfluxo | ~300 | ✅ |
 | V18-V29 | Permissões e ajustes | ~50 cada | ✅ |
 
 **Total**: 29 migrations executáveis  

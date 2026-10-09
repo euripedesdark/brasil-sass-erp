@@ -134,7 +134,6 @@ jobs:
           SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/brasil-saas
           SPRING_DATA_REDIS_HOST: localhost
           SPRING_DATA_REDIS_PORT: 6379
-          SPRING_FLYWAY_IGNORE_MIGRATION_PATTERNS: "17:ignored"
         run: mvn test
 
       - name: Generate test report

@@ -54,7 +54,7 @@ Com underscore nao se paga aspas em lugar nenhum. O mesmo vale para o
 - **`SRVCLOUD CONSULTORIA LTDA`** — e a razao social, o titular do registro no
   INPI. Trocar a razao social trocaria o applicant. So o nome fantasia mudou.
 - **35 arquivos de `certs/`** — incluindo `sa.pk8`, `ca.key` e
-  `client-sysfluxo.key`. Decisao do dono do repo: repo privado, so ele acessa.
+  `client.key`. Decisao do dono do repo: repo privado, so ele acessa.
 - **Namespace de property `brasil-saas.*`** nos yml — e lido por `@Value` em
   ~30 lugares. Nao e o schema.
 - **Chaves de `localStorage` do frontend** (`brasil-saas_token`) — o nome da

@@ -476,7 +476,6 @@ src
 │       │   ├── migration
 │       │   │   ├── V15__seed_perfis_permissoes.sql
 │       │   │   ├── V16__seed_tabelas_oficiais.sql
-│       │   │   ├── V17__migracao_sysfluxo.sql
 │       │   │   ├── V18__seed_permissoes_cadastro.sql
 │       │   │   ├── V19__seed_permissoes_fiscais.sql
 │       │   │   ├── V1__init_schema.sql
@@ -539,7 +538,6 @@ src
 │       │   └── application.properties
 │       ├── static
 │       │   ├── css
-│       │   │   └── sysfluxo.css
 │       │   ├── images
 │       │   │   ├── 120.bmp
 │       │   │   ├── 55.bmp
@@ -847,8 +845,6 @@ src
 │       │   │   └── XMLFile.bmp
 │       │   ├── js
 │       │   │   ├── login.js
-│       │   │   ├── sysfluxo.js
-│       │   │   └── sysfluxo.txt
 │       │   ├── react
 │       │   │   ├── index.html
 │       │   │   ├── node_modules
