@@ -95,7 +95,7 @@ export const Agenda = () => {
             <Dialog header={t('legacyUi.agenda.newEvent')} visible={dlg} onHide={() => setDlg(false)} style={{ width: 'min(96vw, 520px)' }}>
                 <div className="grid p-fluid">
                     <div className="col-12"><label>{t('common.title')} *</label><InputText value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} /></div>
-                    <div className="col-6"><label>{t('common.type')}</label><Dropdown value={form.tipo} options={TIPOS.map((t) => ({ label: t, value: t }))} onChange={(e) => setForm({ ...form, tipo: e.value })} /></div>
+                    <div className="col-6"><label>{t('common.type')}</label><Dropdown value={form.tipo} options={TIPOS.map((tipo) => ({ label: t(`legacyUi.agenda.types.${tipo}`), value: tipo }))} onChange={(e) => setForm({ ...form, tipo: e.value })} /></div>
                     <div className="col-6"><label>{t('legacyUi.agenda.start')}</label><Calendar value={form.inicio} onChange={(e) => setForm({ ...form, inicio: e.value })} showTime hourFormat="24" /></div>
                     <div className="col-6"><label>{t('common.location')}</label><InputText value={form.localEvento} onChange={(e) => setForm({ ...form, localEvento: e.target.value })} /></div>
                     <div className="col-6"><label>{t('legacyUi.agenda.responsible')}</label><InputText value={form.responsavel} onChange={(e) => setForm({ ...form, responsavel: e.target.value })} /></div>
