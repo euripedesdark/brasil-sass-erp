@@ -1304,6 +1304,22 @@
       "summaryHelp": "Review the main details before saving.",
       "additionalInfoHelp": "Additional operational information.",
       "additionalInfoPlaceholder": "Additional notes"
+    },
+    "settings": {
+      "title": "System settings",
+      "generalTab": "General",
+      "systemName": "System name",
+      "imagesTab": "Images",
+      "loginImage": "Login image",
+      "backgroundImage": "Background image",
+      "selectImage": "Select image",
+      "currentLoginImage": "Current login image",
+      "currentBackgroundImage": "Current background image",
+      "saveButton": "Save settings",
+      "saved": "Settings saved successfully!",
+      "imageUpdated": "{{type}} image updated successfully!",
+      "uploadFailed": "Upload failed: {{error}}",
+      "connectionError": "Connection error: {{error}}"
     }
   },
   "enterpriseOps": {
