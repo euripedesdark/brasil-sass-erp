@@ -43,30 +43,25 @@ public class DevolucaoService {
                 pedidoId, empresaId, List.of("SOLICITADA", "APROVADA", "RECEBIDA")))
             for (VenDevolucaoItem x : itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(anterior.getId(), empresaId))
                 jaDevolvido.merge(x.getProdutoId(), x.getQuantidade() == null ? BigDecimal.ZERO : x.getQuantidade(), BigDecimal::add);
-        VenDevolucao d = new VenDevolucao();
-        d.setEmpresaId(empresaId);
-        d.setPedidoId(pedidoId);
-        d.setMotivo(motivo);
-        d.setStatus("SOLICITADA");
-        d = devolucoes.save(d);
         Map<Long, BigDecimal> vendidas = new LinkedHashMap<>();
-        if (p.getItens() != null) for (var it : p.getItens()) if (it.getProdutoId() != null) vendidas.merge(it.getProdutoId(), it.getQuantidade() == null ? BigDecimal.ZERO : it.getQuantidade(), BigDecimal::add);
-        boolean tem = false;
+        if (p.getItens() != null) for (var it : p.getItens()) if (it.getDeletedAt() == null && it.getProdutoId() != null)
+            vendidas.merge(it.getProdutoId(), it.getQuantidade() == null ? BigDecimal.ZERO : it.getQuantidade(), BigDecimal::add);
         for (var e : itensQtd.entrySet()) {
-            BigDecimal vendida = vendidas.getOrDefault(e.getKey(), BigDecimal.ZERO)
+            BigDecimal saldo = vendidas.getOrDefault(e.getKey(), BigDecimal.ZERO)
                     .subtract(jaDevolvido.getOrDefault(e.getKey(), BigDecimal.ZERO));
-            BigDecimal qtd = e.getValue() == null ? BigDecimal.ZERO : e.getValue();
-            if (qtd.signum() <= 0 || qtd.compareTo(vendida) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida ou acima do saldo devolvivel para o produto " + e.getKey());
-            VenDevolucaoItem i = new VenDevolucaoItem();
-            i.setEmpresaId(empresaId);
-            i.setDevolucaoId(d.getId());
-            i.setProdutoId(e.getKey());
-            i.setQuantidade(qtd);
-            i.setQtdRecebida(BigDecimal.ZERO);
-            itens.save(i);
-            tem = true;
+            if (e.getKey() == null || e.getValue() == null || e.getValue().signum() <= 0
+                    || e.getValue().stripTrailingZeros().scale() > 3 || e.getValue().compareTo(saldo) > 0)
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida, acima do saldo ou com mais de 3 casas decimais");
         }
-        if (tem == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Informe ao menos um item");
+        VenDevolucao d = new VenDevolucao(); d.setEmpresaId(empresaId); d.setPedidoId(pedidoId);
+        if (p.getClienteId() == null) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido sem cliente");
+        d.setClienteId(p.getClienteId());
+        d.setNumero("DV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 24));
+        d.setMotivo(motivo); d.setStatus("SOLICITADA"); d = devolucoes.save(d);
+        for (var e : itensQtd.entrySet()) {
+            VenDevolucaoItem i = new VenDevolucaoItem(); i.setEmpresaId(empresaId); i.setDevolucaoId(d.getId());
+            i.setProdutoId(e.getKey()); i.setQuantidade(e.getValue()); i.setQtdRecebida(BigDecimal.ZERO); itens.save(i);
+        }
         return d;
     }
     @Transactional public VenDevolucao decidir(Long empresaId, Long userId, Long id, boolean aprovar) {
@@ -83,7 +78,18 @@ public class DevolucaoService {
         Long depId = depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId, "PADRAO")
                 .or(() -> depositos.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Nenhum deposito ativo para receber devolucao")).getId();
-        for (VenDevolucaoItem i : itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) {
+        depositos.findAtivoForUpdate(depId, empresaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Deposito indisponivel"));
+        var linhas = new ArrayList<>(itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId));
+        if (linhas.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Devolucao sem itens");
+        for (var i : linhas) {
+            if (i.getProdutoId() == null || i.getQuantidade() == null || i.getQuantidade().signum() <= 0
+                    || i.getQuantidade().stripTrailingZeros().scale() > 3
+                    || (i.getQtdRecebida() != null && i.getQtdRecebida().signum() != 0))
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Item de devolucao inconsistente");
+        }
+        linhas.sort(Comparator.comparing(VenDevolucaoItem::getProdutoId));
+        for (VenDevolucaoItem i : linhas) {
             SaldoEstoque s = saldos.findForUpdate(empresaId, depId, i.getProdutoId()).orElseGet(() -> {
                 SaldoEstoque n = new SaldoEstoque();
                 n.setEmpresaId(empresaId);

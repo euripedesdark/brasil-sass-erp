@@ -314,4 +314,16 @@ class PedidoVendaServiceImplTest {
         verify(reservas).save(reserva);
         verify(pedidos).save(pedido);
     }
+    @Test void faturamentoBloqueiaClienteAntesDeConferirCredito() {
+        prepararFaturamento("1");
+        var c=new Cliente();var pessoa=new Pessoa();pessoa.setId(8L);c.setPessoa(pessoa);c.setLimiteCredito(BigDecimal.TEN);
+        when(clientes.findForUpdate(7L,2L)).thenReturn(Optional.of(c));
+        when(clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(7L,2L)).thenReturn(Optional.of(c));
+        assertThrows(BusinessException.class,()->service.faturar(10L,2L,false));
+        var ordem=inOrder(clientes,titulos);ordem.verify(clientes).findForUpdate(7L,2L);
+        ordem.verify(clientes).findByIdAndEmpresaIdAndDeletedAtIsNull(7L,2L);
+        ordem.verify(titulos).findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(2L,8L);
+        verifyNoInteractions(saldos,movimentos,reservas);verify(titulos,never()).save(any());
+    }
+
 }

@@ -8,6 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface DepositoRepository extends JpaRepository<Deposito, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select d from Deposito d where d.id = :id and d.empresaId = :empresaId and d.ativo = true and d.deletedAt is null")
+    Optional<Deposito> findAtivoForUpdate(@org.springframework.data.repository.query.Param("id") Long id,
+                                      @org.springframework.data.repository.query.Param("empresaId") Long empresaId);
     Optional<Deposito> findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(Long empresaId, String tipo);
     Optional<Deposito> findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(Long empresaId);
     List<Deposito> findByEmpresaIdAndAtivoTrueOrderByNomeAsc(Long empresaId);

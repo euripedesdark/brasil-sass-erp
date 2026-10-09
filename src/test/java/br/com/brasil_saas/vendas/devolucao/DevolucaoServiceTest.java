@@ -40,7 +40,7 @@ class DevolucaoServiceTest {
 
     void pedidoFaturadoComDezUnidades() {
         var pedido = new PedidoVenda();
-        pedido.setId(1L); pedido.setEmpresaId(2L); pedido.setStatus("FATURADO");
+        pedido.setId(1L); pedido.setEmpresaId(2L); pedido.setClienteId(7L); pedido.setStatus("FATURADO");
         var item = new ItemPedidoVenda();
         item.setProdutoId(6L); item.setQuantidade(new BigDecimal("10"));
         pedido.setItens(new java.util.ArrayList<>(List.of(item)));
@@ -72,6 +72,7 @@ class DevolucaoServiceTest {
         when(devolucoes.save(any())).thenAnswer(i -> { VenDevolucao d = i.getArgument(0); d.setId(51L); return d; });
         var d = service.solicitar(2L, 1L, "Defeito", Map.of(6L, new BigDecimal("3")));
         assertEquals("SOLICITADA", d.getStatus());
+        assertEquals(7L, d.getClienteId()); assertTrue(d.getNumero().startsWith("DV-")); assertTrue(d.getNumero().length() <= 30);
         verify(itens).save(any());
     }
 
@@ -111,6 +112,7 @@ class DevolucaoServiceTest {
         when(devolucoes.findByIdForUpdate(70L, 2L)).thenReturn(Optional.of(devolucao));
         when(depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L, "PADRAO"))
                 .thenReturn(Optional.of(deposito));
+        when(depositos.findAtivoForUpdate(3L, 2L)).thenReturn(Optional.of(deposito));
         when(itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(70L, 2L)).thenReturn(List.of(item));
         when(saldos.findForUpdate(2L, 3L, 6L)).thenReturn(saldoExistente ? Optional.of(saldo) : Optional.empty());
         when(devolucoes.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -153,4 +155,11 @@ class DevolucaoServiceTest {
         assertThrows(ResponseStatusException.class, () -> service.decidir(2L, 5L, 70L, false));
         verify(devolucoes, times(1)).save(any());
     }
+    @ParameterizedTest @ValueSource(strings={"0", "-1", "0.0001", "11"})
+    void quantidadeInvalidaNaoGravaSolicitacao(String quantidade) {
+        pedidoFaturadoComDezUnidades();
+        assertThrows(ResponseStatusException.class,()->service.solicitar(2L,1L,"Defeito",Map.of(6L,new BigDecimal(quantidade))));
+        verify(devolucoes,never()).save(any()); verify(itens,never()).save(any());
+    }
+
 }

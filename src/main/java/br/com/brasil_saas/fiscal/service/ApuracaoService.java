@@ -192,9 +192,9 @@ public class ApuracaoService {
 
     private Resultado apurarIcmsIpi(Long empresaId, LocalDateTime de, LocalDateTime ate,
                                     Function<Nfe, BigDecimal> extrator) {
-        List<Nfe> saidas = ativas(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        List<Nfe> saidas = ativas(nfes.findNoPeriodoPorTipo(
                 empresaId, "S", de, ate));
-        List<Nfe> entradas = ativas(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        List<Nfe> entradas = ativas(nfes.findNoPeriodoPorTipo(
                 empresaId, "E", de, ate));
         BigDecimal base = saidas.stream().map(n -> nz(n.getValorProdutos())).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal devido = saidas.stream().map(n -> nz(extrator.apply(n))).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -208,9 +208,9 @@ public class ApuracaoService {
      */
     private Resultado apurarPisCofins(Long empresaId, LocalDateTime de, LocalDateTime ate,
                                       Imposto imp, Function<Nfe, BigDecimal> extrator) {
-        List<Nfe> saidas = ativas(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        List<Nfe> saidas = ativas(nfes.findNoPeriodoPorTipo(
                 empresaId, "S", de, ate));
-        List<Nfe> entradas = ativas(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        List<Nfe> entradas = ativas(nfes.findNoPeriodoPorTipo(
                 empresaId, "E", de, ate));
 
         BigDecimal base = BigDecimal.ZERO;
@@ -239,7 +239,7 @@ public class ApuracaoService {
     private Resultado apurarIss(Long empresaId, LocalDateTime de, LocalDateTime ate) {
         BigDecimal base = BigDecimal.ZERO;
         BigDecimal devido = BigDecimal.ZERO;
-        for (Nfse n : nfses.findByEmpresaIdAndDataEmissaoBetweenAndDeletedAtIsNull(empresaId, de, ate)) {
+        for (Nfse n : nfses.findNoPeriodo(empresaId, de, ate)) {
             if (cancelada(n.getStatus())) continue;
             base = base.add(nz(n.getBaseCalculo()));
             devido = devido.add(nz(n.getValorIss()));
@@ -249,7 +249,7 @@ public class ApuracaoService {
 
     private Resultado apurarGenerico(Long empresaId, LocalDateTime de, LocalDateTime ate, Imposto imp) {
         BigDecimal aliq = aliquotaObrigatoria(imp);
-        List<Nfe> saidas = ativas(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(
+        List<Nfe> saidas = ativas(nfes.findNoPeriodoPorTipo(
                 empresaId, "S", de, ate));
         BigDecimal base = saidas.stream().map(n -> nz(n.getValorProdutos())).reduce(BigDecimal.ZERO, BigDecimal::add);
         return new Resultado(base, pct(base, aliq), BigDecimal.ZERO);
@@ -263,6 +263,8 @@ public class ApuracaoService {
     }
 
     private LocalDate inicioCompetencia(String competencia) {
+        if (competencia == null || !competencia.matches("(0[1-9]|1[0-2])/[0-9]{4}"))
+            throw new BusinessException("Competencia invalida, use MM/AAAA");
         try {
             String[] p = competencia.split("/");
             return LocalDate.of(Integer.parseInt(p[1]), Integer.parseInt(p[0]), 1);

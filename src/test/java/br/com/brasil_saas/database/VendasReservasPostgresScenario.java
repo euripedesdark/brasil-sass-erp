@@ -96,6 +96,7 @@ final class VendasReservasPostgresScenario {
                 .stream().filter(m -> "SAIDA".equals(m.getTipo())).toList();
         assertEquals(2, saidas.size()); igual("-4", saidas.stream().map(m -> m.getQuantidade()).reduce(BigDecimal.ZERO, BigDecimal::add));
         FinanceiroContabilidadePostgresScenario.validar(session, titulo.getId());
+        DevolucoesCreditoPostgresScenario.validar(session, pedido.getId());
     }
 
     private static ReservaEstoque reserva(Long empresa, Long deposito, Long pedido, String status, String quantidade) {
