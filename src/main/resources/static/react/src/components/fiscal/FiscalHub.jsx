@@ -24,6 +24,7 @@ const items=[
  ['menu.digitalCertificate','fiscal.certificateDesc','pi pi-key','/fiscal/certificados'],
  ['menu.sped','fiscal.spedDesc','pi pi-file-export','/fiscal/sped'],
  ['EFD-Reinf','Eventos R-2010/R-2020/R-2099 a partir das NFS-e','pi pi-book','/fiscal/reinf'],
+ ['ICMS DIFAL','Calculadora EC 87/2015 + FCP','pi pi-percentage','/fiscal/difal'],
  ['Apurações','Apuração ICMS/IPI/PIS/COFINS/ISS','pi pi-calculator','/fiscal/apuracoes'],
  ['menu.sefaz','fiscal.sefazDesc','pi pi-cloud','/fiscal/sefaz']
 ];

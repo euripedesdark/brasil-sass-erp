@@ -138,6 +138,7 @@ export const Layout = () => {
                     item('menu.supplyChain', 'pi pi-sitemap', '/compras/supply-chain'),
                     item('menu.receipts', 'pi pi-download', '/compras/recebimentos'),
                     item('menu.threeWayMatch', 'pi pi-check-square', '/compras/conferencia-faturas'),
+                    item('Contratos de fornecimento', 'pi pi-file', '/compras/contratos'),
                     item('Devolucoes de compra', 'pi pi-undo', '/compras/devolucoes')
                 ]
             },
@@ -204,6 +205,8 @@ export const Layout = () => {
                     item('menu.taxEntries', 'pi pi-download', '/fiscal/entradas'),
                     item('menu.taxes', 'pi pi-percentage', '/fiscal/impostos'),
                     item('Apuracao', 'pi pi-calculator', '/fiscal/apuracoes'),
+                    item('EFD-Reinf', 'pi pi-book', '/fiscal/reinf'),
+                    item('ICMS DIFAL', 'pi pi-percentage', '/fiscal/difal'),
                     item('menu.sefaz', 'pi pi-cloud', '/fiscal/sefaz'),
                     item('menu.cteMdfe', 'pi pi-truck', '/fiscal/cte-mdfe'),
                     item('menu.obrigacoes', 'pi pi-calendar-check', '/fiscal/obrigacoes'),
@@ -323,6 +326,7 @@ export const Layout = () => {
                 item('admin.usersPermissions', 'pi pi-user-edit', '/admin/usuarios'),
                 item('admin.systemImages', 'pi pi-image', '/admin/configuracoes'),
                 item('nav.documents', 'pi pi-folder-open', '/documentos'),
+                item('Fluxo de documentos', 'pi pi-share-alt', '/documento-fluxo'),
                 item('nav.profile', 'pi pi-user', '/perfil')
             ];
 
@@ -362,6 +366,11 @@ export const Layout = () => {
             label: 'GRC / TMS Enterprise',
             icon: 'pi pi-shield',
             command: () => handleNavigation('/riscos-tms-enterprise')
+        });
+        items.push({
+            label: 'TMS Planejamento',
+            icon: 'pi pi-truck',
+            command: () => handleNavigation('/enterprise/tms-planejamento')
         });
         items.push({
             label: 'Governança Corporativa',

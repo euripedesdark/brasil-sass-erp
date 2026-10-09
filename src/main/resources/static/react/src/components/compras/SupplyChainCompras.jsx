@@ -1,5 +1,13 @@
+
+const QuickLinksCompras = () => (
+  <div className="flex flex-wrap gap-2 mb-3">
+    <a className="p-button p-component p-button-outlined p-button-sm" href="#/compras/contratos">Contratos de fornecimento</a>
+    <a className="p-button p-component p-button-outlined p-button-sm" href="#/compras">Pedidos</a>
+    <a className="p-button p-component p-button-outlined p-button-sm" href="#/compras/conferencia-faturas">3-way match</a>
+  </div>
+);
 import { useTranslation } from 'react-i18next';
-import React,{useEffect,useState} from 'react';
+import React, { useNavigate } from 'react'; //,{useEffect,useState} from 'react';
 import {Card} from 'primereact/card';import {DataTable} from 'primereact/datatable';import {Column} from 'primereact/column';import {Button} from 'primereact/button';import {InputNumber} from 'primereact/inputnumber';import {InputText} from 'primereact/inputtext';import {Calendar} from 'primereact/calendar';import {Message} from 'primereact/message';import ComprasSupplyChainService from '../../services/ComprasSupplyChainService';import {useAuth} from '../../contexts/AuthContext';
 
 export default function SupplyChainCompras(){
@@ -12,7 +20,7 @@ const rejeitar=async(id)=>{try{setError('');await ComprasSupplyChainService.reje
  const cotar=async(s)=>{try{const fs=String(fornecedores).split(',').map(x=>Number(x.trim())).filter(Boolean);const ps=String(precos).split(',').map(x=>Number(x.trim()));if(!fs.length||!s.itens?.length)throw Error();const itens=s.itens.map((i,n)=>({produtoId:i.produtoId,quantidade:i.quantidade,valorUnitario:ps[n]||0}));const r=await ComprasSupplyChainService.criarCotacao(s.id,{numero:null,dataLimite:null,observacao:'Cotação criada pelo mapa de compras',fornecedores:fs.map(f=>({fornecedorId:f,prazoEntrega:7,condicaoPagamentoId:null,frete:0,desconto:0,itens}))});setCotacaoId(r.data?.data?.id??r.data?.id)}catch(e){setError('Informe fornecedores como IDs separados por vírgula e preços dos itens na mesma ordem.')}};
  const abrirMapa=async()=>{if(!cotacaoId)return;const r=await ComprasSupplyChainService.mapa(cotacaoId);setMapa(r.data?.data??r.data??[])};
  const gerar=async(id)=>{try{setError('');await ComprasSupplyChainService.gerarPedido(id);await load();}catch(e){setError(e.response?.data?.message||'Não foi possível gerar o pedido')}};
- return <div className="grid">
+ return <div className="grid"><div className="col-12"><QuickLinksCompras /></div>
   <div className="col-12"><Card title="Solicitação → Cotação → Pedido"><p className="text-color-secondary">Fluxo de suprimentos operacional: solicitação interna, aprovação, cotação multi-fornecedor, mapa comparativo e geração do pedido.</p>{error&&<Message severity="error" text={error} className="w-full mb-3"/>}</Card></div>
   <div className="col-12 md:col-5"><Card title="Nova solicitação"><div className="grid p-fluid">
    <div className="col-6"><label>Número</label><InputText value={form.numero} onChange={e=>setForm({...form,numero:e.target.value})}/></div>
