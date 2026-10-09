@@ -127,12 +127,34 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public WmsOnda concluir(Long empresaId, Long id) {
         WmsOnda o = exigirOnda(empresaId, id);
-        boolean ok = itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).stream().allMatch(i -> "SEPARADO".equals(i.getStatus()));
+        if ("CONCLUIDA".equals(o.getStatus())) return o;
+        var itensOnda = itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
+        boolean ok = itensOnda.stream().allMatch(i -> "SEPARADO".equals(i.getStatus()));
         if (!ok) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Ha itens nao separados");
+        for (WmsOndaItem i : itensOnda) {
+            consumirReservaDaOnda(empresaId, i);
+        }
         o.setStatus("CONCLUIDA");
         o.setConcluidaEm(LocalDateTime.now());
         return ondas.save(o);
     }
+
+    /**
+     * Consome a reserva de origem do item separado. Sem isso, a reserva
+     * da onda concluida continuava RESERVADA e podia ser separada de novo
+     * em outra onda. A expedicao aceita CONSUMIDA, entao o fluxo logistico
+     * segue intacto; outros status nao sao tocados.
+     */
+    private void consumirReservaDaOnda(Long empresaId, WmsOndaItem i) {
+        if (!"RESERVA".equals(i.getOrigemTipo()) || i.getOrigemId() == null) return;
+        reservas.findById(i.getOrigemId()).filter(r -> empresaId.equals(r.getEmpresaId())).ifPresent(r -> {
+            if ("RESERVADA".equals(r.getStatus()) || "SEPARACAO".equals(r.getStatus())) {
+                r.setStatus("CONSUMIDA");
+            }
+            reservas.save(r);
+        });
+    }
+
     @Override public Map<String, Object> putaway(Long empresaId, Long depositoId, Long produtoId) {
         List<EnderecoEstoque> livres = enderecos.findByEmpresaIdAndDepositoIdAndAtivoTrueOrderByCodigoAsc(empresaId, depositoId);
         Map<String, Object> m = new LinkedHashMap<>();

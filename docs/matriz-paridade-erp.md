@@ -402,3 +402,27 @@ Validacao: 4 casos novos do espelho (proporcional, sem original, periodo
 fechado, proporcao invalida) e 2 de ponta a ponta (venda aplica, compra
 registra pendencia de periodo). Suite completa: 386 testes, zero falhas,
 zero erros, JDK 21.
+
+## Entrega — onda concluida consome reservas (WMS)
+
+Branch codex/wms-processo-ponta-a-ponta. Sem migration, sem tela nova.
+
+- Antes, concluir a onda so carimbava status: as reservas de origem
+  continuavam RESERVADA e podiam ser separadas de novo em outra onda,
+  contando o mesmo estoque duas vezes.
+- Agora concluir consome (CONSUMIDA) as reservas RESERVADA/SEPARACAO
+  ligadas aos itens da onda, com a mesma trava do fluxo. Idempotente:
+  segunda chamada devolve CONCLUIDA sem retocar nada. Outros status de
+  reserva nao sao tocados.
+- A expedicao aceita CONSUMIDA (abrir, separar e finalizar intactos),
+  entao o fluxo logistico segue igual; onda sem item separado continua
+  recusada.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/wms/service/impl/WmsServiceImpl.java
+    src/test/java/br/com/brasil_saas/wms/service/impl/WmsServiceImplTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 4 casos novos (consome, idempotente, preserva consumida,
+exige separados). Suite completa: 390 testes, zero falhas, zero erros.
