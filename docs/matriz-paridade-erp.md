@@ -319,3 +319,24 @@ parcialmente conferido, NF autorizada sem conferencia, cobertura total
 libera, sem contexto libera) e 11 preservados do bloco financeiro.
 Suite completa: 373 testes, zero falhas, zero erros, JDK 21, incluindo
 contexto Spring real; package valido.
+
+## Entrega — tolerancia de preco por item
+
+Branch codex/devolucao-integracao-financeira (mesmo bloco). Sem migration, sem tela nova.
+
+- O campo de tolerancia por item (V173) existia na entidade mas nunca era
+  preenchido nem usado: toda diferenca de preco caia em PRECO_DIVERGENTE.
+- Agora cada linha recebe a tolerancia informada e a divergencia de preco
+  dentro do limite e absolvida (quantidade continua exata: so preco usa
+  tolerancia). Com tolerancia zero, o comportamento e identico ao anterior.
+- Sem efeito sobre rateio, consumo acumulado, pagamento ou reavaliacao.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/compras/service/impl/ConferenciaFaturaCompraServiceImpl.java
+    src/test/java/br/com/brasil_saas/compras/service/impl/RecebimentoParcialConferenciaTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 2 casos novos (preco dentro da tolerancia aprova e grava o
+campo na linha; preco acima diverge com o tipo preservado). Suite
+completa: 375 testes, zero falhas, zero erros, JDK 21.

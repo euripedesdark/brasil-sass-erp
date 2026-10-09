@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentCaptor;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -159,7 +160,34 @@ class RecebimentoParcialConferenciaTest {
     }
 
     @Test
+    void precoDentroDaToleranciaPorItemAprova() {
+        faturado.setValorUnitario(new BigDecimal("10.05"));
+        faturado.setValorTotal(new BigDecimal("40.20"));
+        var c = conferir("40.20", "0.50");
+        assertEquals("APROVADA", c.getStatus());
+        var captor = ArgumentCaptor.forClass(java.util.List.class);
+        verify(itens).saveAll(captor.capture());
+        var linhas = (java.util.List<ConferenciaFaturaCompraItem>) captor.getValue();
+        assertEquals(1, linhas.size());
+        assertTrue(linhas.get(0).getConforme());
+        assertEquals(new BigDecimal("0.50"), linhas.get(0).getTolerancia());
+    }
+
+    @Test
+    void precoAcimaDaToleranciaPorItemDiverge() {
+        faturado.setValorUnitario(new BigDecimal("11"));
+        faturado.setValorTotal(new BigDecimal("44"));
+        var c = conferir("44", "0.50");
+        assertEquals("DIVERGENTE", c.getStatus());
+        var captor = ArgumentCaptor.forClass(java.util.List.class);
+        verify(itens).saveAll(captor.capture());
+        var linhas = (java.util.List<ConferenciaFaturaCompraItem>) captor.getValue();
+        assertTrue(linhas.stream().anyMatch(x -> "PRECO_DIVERGENTE".equals(x.getTipoDivergencia())));
+    }
+
+    @Test
     void reconferenciaDoMesmoParSemConflitoContinuaAprovada() {
+
         when(conferencias.findConsumosConflitantes(2L, 4L, 5L)).thenReturn(List.of());
         assertEquals("APROVADA", conferir("40", "0").getStatus());
     }

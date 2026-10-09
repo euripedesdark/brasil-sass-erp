@@ -173,6 +173,21 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
                 recebimentoItemRepository.findByEmpresaIdAndRecebimentoIdAndDeletedAtIsNullOrderByIdAsc(
                         empresaId, recebimento.getId()),
                 nfeItemRepository.findByNfeIdOrderByNumeroItem(nfe.getId()));
+        // Tolerancia de preco por item: preenche o campo da linha (V173) e
+        // absolve divergencia de preco dentro do limite. Quantidade continua
+        // exata: so o preco usa tolerancia.
+        for (var linha : itens) {
+            linha.setTolerancia(tolerancia);
+            if (PRECO_DIVERGENTE.equals(linha.getTipoDivergencia())
+                    && linha.getValorUnitarioFaturado() != null
+                    && linha.getValorUnitarioPedido() != null
+                    && linha.getValorUnitarioFaturado().subtract(linha.getValorUnitarioPedido()).abs().compareTo(limite) <= 0) {
+                linha.setConforme(true);
+                linha.setStatus("APROVADA");
+                linha.setTipoDivergencia(OK);
+                linha.setDivergencia(null);
+            }
+        }
 
         // Consumo acumulado por produto: o faturado nesta NF nao pode passar
         // do recebido menos o ja faturado por NFs anteriores.
