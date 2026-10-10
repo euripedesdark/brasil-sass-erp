@@ -15,6 +15,7 @@ import { Message } from 'primereact/message';
 import { ScrollPanel } from 'primereact/scrollpanel';
 import IaService from '../../services/IaService';
 import { useAuth } from '../../contexts/AuthContext';
+import './IA.css';
 
 export const IA = () => {
   const { t } = useTranslation();

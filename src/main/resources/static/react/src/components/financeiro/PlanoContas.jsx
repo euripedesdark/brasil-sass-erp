@@ -14,6 +14,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import './PlanoContas.css';
 
 export const PlanoContas = () => {
     const { t } = useTranslation();

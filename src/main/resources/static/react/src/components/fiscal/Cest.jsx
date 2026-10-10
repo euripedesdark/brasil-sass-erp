@@ -7,6 +7,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { CestService } from '../../services/CestService';
+import './Cest.css';
 
 export const Cest = () => {
     const { t } = useTranslation();

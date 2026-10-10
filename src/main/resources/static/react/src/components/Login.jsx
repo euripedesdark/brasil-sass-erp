@@ -116,7 +116,7 @@ export const Login = () => {
             <div className="login-overlay">
                 <div className="login-box login-card">
                     <div className="login-header">
-                        <div className="login-logo">BC</div>
+                        <div className="login-logo">BS</div>
                         <h2>{t('app.name')}</h2>
                         <p>{t('login.subtitle')}</p>
                     </div>

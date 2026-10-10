@@ -9,6 +9,7 @@ import { Button } from 'primereact/button';
 import { Tag } from 'primereact/tag';
 import { EntradaNotaService } from '../../services/EntradaNotaService';
 import { ImportarNotaXml } from './ImportarNotaXml';
+import './EntradaNota.css';
 
 export const EntradaNota = () => {
     const { t } = useTranslation();

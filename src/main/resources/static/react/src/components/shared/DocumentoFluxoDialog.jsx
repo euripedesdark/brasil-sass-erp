@@ -31,7 +31,7 @@ export const DocumentoFluxoDialog = ({ visible, onHide, tipo, id }) => {
             style={{ width: 'min(720px, 96vw)' }}
         >
             <p className="bc-muted mb-3">
-                Rastreia a cadeia de documentos gerados a partir deste (estilo SAP Document Flow).
+                Rastreia a cadeia de documentos gerados a partir deste.
             </p>
             <DataTable value={ligacoes} loading={loading} emptyMessage="Nenhuma ligação registrada" size="small">
                 <Column header="De" body={(r) => (

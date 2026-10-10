@@ -15,6 +15,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import './LancamentoContabil.css';
 
 export const LancamentoContabil = () => {
     const { t } = useTranslation();

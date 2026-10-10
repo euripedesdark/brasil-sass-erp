@@ -16,6 +16,7 @@ import { Calendar } from 'primereact/calendar';
 import { Message } from 'primereact/message';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import './BI.css';
 
 export const BI = () => {
   const { t } = useTranslation();

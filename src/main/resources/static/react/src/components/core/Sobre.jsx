@@ -37,7 +37,7 @@ export default function Sobre() {
     return (
         <div className="sobre-page">
             <header className="sobre-hero">
-                <div className="sobre-logo">BC</div>
+                <div className="sobre-logo">BS</div>
                 <div>
                     <h1>{t('about.title', { defaultValue: 'Sobre o Projeto' })}</h1>
                     <p>{t('about.subtitle')}</p>

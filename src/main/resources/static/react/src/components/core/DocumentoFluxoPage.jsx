@@ -44,7 +44,7 @@ export const DocumentoFluxoPage = () => {
         <div className="p-4">
             <Toast ref={toast} />
             <h2 className="m-0">Fluxo de documentos</h2>
-            <p className="text-color-secondary">Rastreia origem → destino (paridade SAP document flow).</p>
+            <p className="text-color-secondary">Rastreia a origem e o destino dos documentos encadeados.</p>
             <div className="flex flex-wrap gap-2 align-items-end mb-3">
                 <div>
                     <label className="block mb-1">Tipo</label>

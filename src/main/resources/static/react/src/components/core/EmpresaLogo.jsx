@@ -6,6 +6,7 @@ import { Toast } from 'primereact/toast';
 import { Tag } from 'primereact/tag';
 import { useAuth } from '../../contexts/AuthContext';
 import { EmpresaLogoService } from '../../services/EmpresaLogoService';
+import './EmpresaLogo.css';
 
 export const EmpresaLogo = () => {
     const { user } = useAuth();

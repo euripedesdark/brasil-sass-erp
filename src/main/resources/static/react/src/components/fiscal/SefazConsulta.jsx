@@ -7,6 +7,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { SefazConsultaService } from '../../services/SefazConsultaService';
+import './SefazConsulta.css';
 
 export const SefazConsulta = () => {
     const { t } = useTranslation();

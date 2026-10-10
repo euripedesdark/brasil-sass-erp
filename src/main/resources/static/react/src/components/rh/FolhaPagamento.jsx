@@ -13,6 +13,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import { useAuth } from '../../contexts/AuthContext';
 import { FolhaPagamentoService } from '../../services/FolhaPagamentoService';
+import './FolhaPagamento.css';
 
 export const FolhaPagamento = () => {
     const { user } = useAuth();

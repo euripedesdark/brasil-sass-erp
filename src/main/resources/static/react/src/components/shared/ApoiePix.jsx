@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Button } from 'primereact/button';
 import { useTranslation } from 'react-i18next';
+import './ApoiePix.css';
 
 /**
  * A chave PIX do projeto, em um lugar so.

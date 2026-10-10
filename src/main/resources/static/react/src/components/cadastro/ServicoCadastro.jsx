@@ -15,6 +15,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import { useAuth } from '../../contexts/AuthContext';
 import { ServicoCadastroService } from '../../services/ServicoCadastroService';
+import './ServicoCadastro.css';
 
 // A API pode devolver a lista nua ou embrulhada em { data: { content } }.
 // O util de listar ja normaliza, mas o backend mudou de forma antes e o cadastro

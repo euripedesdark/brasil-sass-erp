@@ -21,6 +21,7 @@ import ClienteService from '../../services/ClienteService';
 import ProdutoService from '../../services/ProdutoService';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import './Vendas.css';
 
 /** Status reais do backend: ABERTO | FATURADO | CANCELADO */
 const STATUS_LABEL = {

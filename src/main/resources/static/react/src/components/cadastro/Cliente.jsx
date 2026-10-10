@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { ClienteService } from '../../services/ClienteService';
 import { desembrulharLista } from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
+import './Cliente.css';
 
 export const Cliente = () => {
     const { user } = useAuth();

@@ -12,6 +12,7 @@ import { Message } from 'primereact/message';
 import { useAuth } from '../../contexts/AuthContext';
 import { MarcaService } from '../../services/MarcaService';
 import { useTranslation } from 'react-i18next';
+import './Marca.css';
 
 export const Marca = () => {
     const { user } = useAuth();

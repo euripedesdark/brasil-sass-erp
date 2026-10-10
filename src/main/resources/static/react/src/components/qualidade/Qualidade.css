@@ -36,6 +36,7 @@
 
 .qualidade-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
     background-color: rgba(15,34,60,.44);
+    color: #eaf3ff;
 }
 
 .qualidade-enterprise-container label {
