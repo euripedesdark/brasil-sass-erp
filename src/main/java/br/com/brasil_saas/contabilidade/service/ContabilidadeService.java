@@ -16,6 +16,13 @@ public interface ContabilidadeService {
     List<Map<String, Object>> balancete(Long empresaId, LocalDate de, LocalDate ate);
     Map<String, Object> balanco(Long empresaId, int exercicio);
     CtbLancamento gerarDeTitulo(Long empresaId, Long userId, Long tituloId, Long contaDebitoId, Long contaCreditoId);
+    /**
+     * Apura o resultado do exercicio: zera as contas de resultado
+     * (codigo 3*) contra lucros acumulados, em 31/12. Exige jan-nov
+     * fechados e dezembro aberto; recusa se ja apurado.
+     */
+    CtbLancamento apurarResultado(Long empresaId, Long userId, int exercicio, Long contaLucrosId);
+
     List<CtbFechamento> fechamentos(Long empresaId);
     CtbFechamento fechar(Long empresaId, Long userId, String periodo);
     void reabrir(Long empresaId, String periodo);

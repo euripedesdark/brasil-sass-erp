@@ -340,3 +340,29 @@ Arquivos da entrega:
 Validacao: 2 casos novos (preco dentro da tolerancia aprova e grava o
 campo na linha; preco acima diverge com o tipo preservado). Suite
 completa: 375 testes, zero falhas, zero erros, JDK 21.
+
+## Entrega — apuracao do resultado do exercicio
+
+Branch codex/financeiro-ciclo-titulos. Sem migration, sem tela nova: painel na aba Fechamentos.
+
+- Antes, nao existia encerramento: receitas e despesas nunca eram zeradas
+  contra lucros acumulados.
+- Agora apurarResultado zera as contas de resultado (codigo 3, mesmo
+  criterio da DRE) contra a conta informada, em 31/12, com origem
+  ENCERRAMENTO. Exige jan-nov fechados e dezembro aberto (recebe o
+  lancamento), recusa exercicio futuro, conta de resultado como destino,
+  rascunho no ano, ausencia de movimento e reaplicacao.
+- Tela: exercicio, conta de lucros e botao Apurar com confirmacao; erros
+  voltam em toast sem gravar nada.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/contabilidade/service/ContabilidadeService.java
+    src/main/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeServiceImpl.java
+    src/main/java/br/com/brasil_saas/contabilidade/controller/ContabilidadeController.java
+    src/test/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeApuracaoTest.java
+    src/main/resources/static/react/src/components/contabil/Contabilidade.jsx
+    docs/matriz-paridade-erp.md
+
+Validacao: 7 casos novos (lucro, prejuizo, sem jan-nov, dezembro fechado,
+ja apurado, futuro e conta invalida, sem movimento). Suite: 382 testes.

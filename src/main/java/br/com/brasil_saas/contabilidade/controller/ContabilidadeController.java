@@ -18,6 +18,7 @@ import java.util.Map;
 public class ContabilidadeController {
     private final ContabilidadeService svc;
     public record GerarTituloReq(Long contaDebitoId, Long contaCreditoId) {}
+    public record ApurarReq(int exercicio, Long contaLucrosAcumuladosId) {}
     public record EstornoReq(String motivo) {}
     @GetMapping("/lancamentos") @PreAuthorize("hasAuthority('contabilidade:leitura')")
     public List<CtbLancamento> lancamentos(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam(required = false) String periodo, @RequestParam(required = false) String status) {
@@ -52,6 +53,11 @@ public class ContabilidadeController {
     public ResponseEntity<CtbLancamento> gerarDeTitulo(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long tituloId, @RequestBody GerarTituloReq r) {
         return ResponseEntity.status(HttpStatus.CREATED).body(svc.gerarDeTitulo(u.getEmpresaId(), u.getId(), tituloId, r.contaDebitoId(), r.contaCreditoId()));
     }
+    @PostMapping("/encerramento/apurar") @PreAuthorize("hasAuthority('contabilidade:escrita')")
+    public ResponseEntity<CtbLancamento> apurar(@AuthenticationPrincipal AuthenticatedUser u, @Valid @RequestBody ApurarReq r) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(svc.apurarResultado(u.getEmpresaId(), u.getId(), r.exercicio(), r.contaLucrosAcumuladosId()));
+    }
+
     @GetMapping("/razao") @PreAuthorize("hasAuthority('contabilidade:leitura')")
     public List<Map<String, Object>> razao(@AuthenticationPrincipal AuthenticatedUser u, @RequestParam Long contaId, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate) {
         return svc.razao(u.getEmpresaId(), contaId, de, ate);

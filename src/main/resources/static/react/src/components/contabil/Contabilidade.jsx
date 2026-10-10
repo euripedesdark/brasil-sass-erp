@@ -32,6 +32,9 @@ export const Contabilidade = () => {
     const [ate, setAte] = useState(null);
     const [exercicio, setExercicio] = useState(new Date().getFullYear());
     const [periodoFech, setPeriodoFech] = useState('');
+    const [apurExercicio, setApurExercicio] = useState(new Date().getFullYear() - 1);
+    const [apurConta, setApurConta] = useState(null);
+    const [apurando, setApurando] = useState(false);
     const [dlgTitulo, setDlgTitulo] = useState(false);
     const [tit, setTit] = useState({ tituloId: null, contaDebitoId: null, contaCreditoId: null });
 
@@ -89,7 +92,17 @@ export const Contabilidade = () => {
     };
         const buscarBalanco = async () => { const r = await apiFetch(BASE + '/balanco?exercicio=' + exercicio); setBalanco(await r.json().catch(() => null)); };
     const msgErro = async (r, padrao) => { const j = await r.json().catch(() => null); return j?.message || j?.errors?.[0]?.message || padrao; };
-    const fechar = async () => {
+        const apurar = async () => {
+        if (!apurExercicio || !apurConta) { toast.current?.show({ severity: 'warn', summary: 'Campos obrigatorios', detail: 'Informe o exercicio e a conta de lucros acumulados', life: 3500 }); return; }
+        if (!window.confirm('Apurar o resultado de ' + apurExercicio + '? Zera as contas de resultado contra lucros acumulados.')) return;
+        setApurando(true);
+        const r = await apiFetch(BASE + '/encerramento/apurar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ exercicio: apurExercicio, contaLucrosAcumuladosId: apurConta }) });
+        setApurando(false);
+        if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Nao foi possivel apurar'), life: 5000 }); return; }
+        toast.current?.show({ severity: 'success', summary: 'Resultado apurado', detail: 'Exercicio ' + apurExercicio, life: 3000 });
+        carregar();
+    };
+const fechar = async () => {
         if (!periodoFech) return;
         const r = await apiFetch(BASE + '/fechamentos/' + periodoFech + '/fechar', { method: 'POST' });
         if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: await msgErro(r, 'Não foi possível fechar o período'), life: 4000 }); return; }
@@ -194,8 +207,17 @@ export const Contabilidade = () => {
                         <Column field='fechadoEm' header='Fechado em' />
                         <Column header='' body={(r) => r.status === 'FECHADO' && (<Button label='Reabrir' icon='pi pi-lock-open' size='small' severity='warning' outlined onClick={() => reabrir(r.periodo)} />)} style={{ width: '9rem' }} />
                     </DataTable>
+                    <div className='flex gap-2 mb-3 mt-4 flex-wrap align-items-end'>
+                        <span><label className='bc-label'>Apuracao do resultado</label>
+                        <div className='flex gap-2'>
+                        <InputNumber value={apurExercicio} onValueChange={(e) => setApurExercicio(e.value)} useGrouping={false} />
+                        <Dropdown value={apurConta} options={contas} optionLabel='descricao' optionValue='id' placeholder='Lucros acumulados' style={{ minWidth: '16rem' }} />
+                        <Button label='Apurar resultado' icon='pi pi-check-circle' onClick={apurar} loading={apurando} />
+                        </div></span>
+                    </div>
                 </TabPanel>
                 <TabPanel header='DRE'>
+
                     <div className='flex gap-2 mb-3 flex-wrap'><InputNumber value={exercicio} onValueChange={(e) => setExercicio(e.value)} useGrouping={false} /><Button label='Calcular DRE' icon='pi pi-calculator' onClick={buscarDre} /></div>
                     <DataTable value={dre} paginator rows={12} emptyMessage='Calcule por exercício.' responsiveLayout='scroll'>
                         <Column field='mes' header='Mês' style={{ width: '5rem' }} />
