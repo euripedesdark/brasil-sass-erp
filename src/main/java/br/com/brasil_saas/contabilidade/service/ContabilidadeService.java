@@ -17,6 +17,12 @@ public interface ContabilidadeService {
     Map<String, Object> balanco(Long empresaId, int exercicio);
     CtbLancamento gerarDeTitulo(Long empresaId, Long userId, Long tituloId, Long contaDebitoId, Long contaCreditoId);
     /**
+     * Apura o resultado do exercicio: zera as contas de resultado
+     * (codigo 3*) contra lucros acumulados, em 31/12. Exige jan-nov
+     * fechados e dezembro aberto; recusa se ja apurado.
+     */
+    CtbLancamento apurarResultado(Long empresaId, Long userId, int exercicio, Long contaLucrosId);
+    /**
      * Espelha proporcionalmente os lancamentos LANCADOS de um titulo,
      * invertendo as partidas, para ajuste de devolucao. Reusa as contas
      * do lancamento original: nao inventa plano de contas.

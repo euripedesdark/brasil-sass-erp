@@ -582,3 +582,26 @@ body .p-dialog .p-fluid > .grid > [class~="col-12"] > .p-inputtextarea {
     grid-column: span 12;
   }
 }
+
+/* Salvaguarda de contraste sobre fundos azuis/primarios/escuros.
+   Regra: texto claro sobre fundo azul/escuro, texto escuro sobre fundo
+   claro. Sem isso, qualquer override de hunt futuro que pinte um fundo
+   sem ajustar a letra deixa texto ilegivel. Nao redesenha nada: apenas
+   garante o par minimo onde o tema e customizado. */
+body .p-button:not(.p-button-text):not(.p-button-outlined),
+body .p-button:not(.p-button-text):not(.p-button-outlined) .p-button-label,
+body .p-button:not(.p-button-text):not(.p-button-outlined) .p-button-icon {
+  color: #ffffff !important;
+}
+body .p-paginator .p-paginator-page.p-highlight {
+  color: #ffffff !important;
+}
+body .enterprise-sidebar .p-menuitem-text,
+body .enterprise-sidebar .p-menuitem-icon,
+body .enterprise-sidebar .p-submenu-icon {
+  color: #eaf3ff !important;
+}
+body .p-dialog .p-dialog-header,
+body .p-dialog .p-dialog-header .p-dialog-title {
+  color: #0f172a !important;
+}
