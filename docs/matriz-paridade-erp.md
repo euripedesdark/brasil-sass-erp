@@ -426,3 +426,27 @@ Arquivos da entrega:
 
 Validacao: 4 casos novos (consome, idempotente, preserva consumida,
 exige separados). Suite completa: 390 testes, zero falhas, zero erros.
+
+## Entrega — reserva multi-deposito na confirmacao (vendas)
+
+Branch codex/vendas-processo-ponta-a-ponta. Sem migration, sem tela nova.
+
+- Antes, a confirmacao reservava so no deposito PADRAO e pulava em
+  silencio sem saldo: empresa sem estoque no PADRAO nunca reservava e o
+  faturamento falhava depois, longe da causa.
+- Agora aloca por item em PADRAO primeiro e nos demais depositos ativos
+  em ordem, uma reserva por fracao, com a mesma trava pessimista do
+  saldo. Sem deposito, mantem o retorno silencioso; com depositos e sem
+  saldo total, falha rapido com o disponivel somado na mensagem.
+- O faturamento ja consumia multi-deposito; a confirmacao alcancou a
+  mesma regra, sem mudar baixa, parcelas ou titulos.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/vendas/service/impl/PedidoVendaServiceImpl.java
+    src/main/java/br/com/brasil_saas/estoque/repository/DepositoRepository.java
+    src/test/java/br/com/brasil_saas/vendas/service/impl/PedidoVendaServiceImplTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 3 casos novos (divide entre depositos, prioriza PADRAO sem
+dividir, sem estoque falha). Suite completa: 393 testes, zero falhas.

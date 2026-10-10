@@ -326,4 +326,66 @@ class PedidoVendaServiceImplTest {
         verifyNoInteractions(saldos,movimentos,reservas);verify(titulos,never()).save(any());
     }
 
+    private PedidoVenda orcamentoComItem(Long produto, String qtd) {
+        PedidoVenda pedido = new PedidoVenda();
+        pedido.setId(10L); pedido.setEmpresaId(2L);
+        pedido.setTipo("ORCAMENTO"); pedido.setStatus("ABERTO");
+        ItemPedidoVenda item = new ItemPedidoVenda();
+        item.setProdutoId(produto); item.setQuantidade(new BigDecimal(qtd));
+        pedido.setItens(List.of(item));
+        when(pedidos.findByIdForUpdateAndEmpresaId(10L, 2L)).thenReturn(Optional.of(pedido));
+        return pedido;
+    }
+
+    private Deposito deposito(Long id, String tipo) {
+        Deposito d = new Deposito();
+        d.setId(id); d.setTipo(tipo); d.setAtivo(true);
+        return d;
+    }
+
+    private void saldoDe(Long depositoId, Long produto, String qtd) {
+        SaldoEstoque s = new SaldoEstoque();
+        s.setQuantidade(new BigDecimal(qtd));
+        when(saldos.findForUpdate(2L, depositoId, produto)).thenReturn(Optional.of(s));
+        when(reservas.sumAtivas(2L, depositoId, produto)).thenReturn(BigDecimal.ZERO);
+    }
+
+    @Test
+    void confirmarDivideReservaEntreDepositos() {
+        orcamentoComItem(7L, "10");
+        when(depositos.findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L))
+                .thenReturn(new java.util.ArrayList<>(List.of(deposito(3L, "PADRAO"), deposito(5L, "DEPOSITO"))));
+        saldoDe(3L, 7L, "6"); saldoDe(5L, 7L, "10");
+        service.confirmar(10L, 2L);
+        var captor = ArgumentCaptor.forClass(ReservaEstoque.class);
+        verify(reservas, times(2)).save(captor.capture());
+        var porDeposito = new java.util.HashMap<Long, BigDecimal>();
+        for (var r : captor.getAllValues()) porDeposito.put(r.getDepositoId(), r.getQuantidade());
+        assertEquals(new BigDecimal("6"), porDeposito.get(3L));
+        assertEquals(new BigDecimal("4"), porDeposito.get(5L));
+    }
+
+    @Test
+    void confirmarPriorizaPadraoSemDividir() {
+        orcamentoComItem(7L, "4");
+        when(depositos.findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L))
+                .thenReturn(new java.util.ArrayList<>(List.of(deposito(3L, "PADRAO"), deposito(5L, "DEPOSITO"))));
+        saldoDe(3L, 7L, "10");
+        service.confirmar(10L, 2L);
+        var captor = ArgumentCaptor.forClass(ReservaEstoque.class);
+        verify(reservas, times(1)).save(captor.capture());
+        assertEquals(3L, captor.getValue().getDepositoId());
+        assertEquals(new BigDecimal("4"), captor.getValue().getQuantidade());
+        verify(saldos, never()).findForUpdate(eq(2L), eq(5L), any());
+    }
+
+    @Test
+    void confirmarSemEstoqueEmNenhumDepositoFalha() {
+        orcamentoComItem(7L, "10");
+        when(depositos.findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(2L))
+                .thenReturn(new java.util.ArrayList<>(List.of(deposito(3L, "PADRAO"), deposito(5L, "DEPOSITO"))));
+        saldoDe(3L, 7L, "6"); saldoDe(5L, 7L, "0");
+        var erro = assertThrows(BusinessException.class, () -> service.confirmar(10L, 2L));
+        assertTrue(erro.getMessage().contains("Estoque insuficiente"));
+    }
 }

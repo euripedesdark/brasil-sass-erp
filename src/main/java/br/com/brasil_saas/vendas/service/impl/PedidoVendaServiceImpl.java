@@ -327,29 +327,42 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     }
 
     private void reservarEstoqueDoPedido(PedidoVenda pedido) {
-        Long depositoPadrao = depositoRepository.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId(), "PADRAO")
-                .map(d -> d.getId())
-                .orElseGet(() -> depositoRepository.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId()).map(d -> d.getId()).orElse(null));
-        if (depositoPadrao == null) return;
+        var depositos = depositoRepository.findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(pedido.getEmpresaId());
+        if (depositos.isEmpty()) return;
+        depositos.sort((a, b) -> {
+            boolean pa = "PADRAO".equals(a.getTipo());
+            boolean pb = "PADRAO".equals(b.getTipo());
+            if (pa != pb) return pa ? -1 : 1;
+            return a.getId().compareTo(b.getId());
+        });
         for (ItemPedidoVenda item : pedido.getItens()) {
             if (item.getProdutoId() == null) continue;
-            SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(pedido.getEmpresaId(), depositoPadrao, item.getProdutoId()).orElse(null);
-            if (saldo == null) continue;
-            BigDecimal reservado = reservaEstoqueRepository.sumAtivas(pedido.getEmpresaId(), depositoPadrao, item.getProdutoId());
-            reservado = reservado == null ? BigDecimal.ZERO : reservado;
-            BigDecimal disponivel = saldo.getQuantidade().subtract(reservado);
-            if (disponivel.compareTo(item.getQuantidade()) < 0) {
-                throw new BusinessException("Estoque insuficiente para reservar produto " + item.getProdutoId() + " (disponivel " + disponivel + ")");
+            BigDecimal restante = item.getQuantidade() == null ? BigDecimal.ZERO : item.getQuantidade();
+            BigDecimal totalDisponivel = BigDecimal.ZERO;
+            for (var deposito : depositos) {
+                if (restante.signum() <= 0) break;
+                SaldoEstoque saldo = saldoEstoqueRepository.findForUpdate(pedido.getEmpresaId(), deposito.getId(), item.getProdutoId()).orElse(null);
+                if (saldo == null || saldo.getQuantidade() == null) continue;
+                BigDecimal reservado = reservaEstoqueRepository.sumAtivas(pedido.getEmpresaId(), deposito.getId(), item.getProdutoId());
+                reservado = reservado == null ? BigDecimal.ZERO : reservado;
+                BigDecimal disponivel = saldo.getQuantidade().subtract(reservado);
+                totalDisponivel = totalDisponivel.add(disponivel.signum() > 0 ? disponivel : BigDecimal.ZERO);
+                if (disponivel.signum() <= 0) continue;
+                BigDecimal alocar = restante.min(disponivel);
+                ReservaEstoque reserva = new ReservaEstoque();
+                reserva.setEmpresaId(pedido.getEmpresaId());
+                reserva.setDepositoId(deposito.getId());
+                reserva.setProdutoId(item.getProdutoId());
+                reserva.setQuantidade(alocar);
+                reserva.setPedidoVendaId(pedido.getId());
+                reserva.setStatus("RESERVADA");
+                reserva.setDataReserva(LocalDateTime.now());
+                reservaEstoqueRepository.save(reserva);
+                restante = restante.subtract(alocar);
             }
-            ReservaEstoque reserva = new ReservaEstoque();
-            reserva.setEmpresaId(pedido.getEmpresaId());
-            reserva.setDepositoId(depositoPadrao);
-            reserva.setProdutoId(item.getProdutoId());
-            reserva.setQuantidade(item.getQuantidade());
-            reserva.setPedidoVendaId(pedido.getId());
-            reserva.setStatus("RESERVADA");
-            reserva.setDataReserva(LocalDateTime.now());
-            reservaEstoqueRepository.save(reserva);
+            if (restante.signum() > 0) {
+                throw new BusinessException("Estoque insuficiente para reservar produto " + item.getProdutoId() + " (disponivel " + totalDisponivel + ")");
+            }
         }
     }
 
