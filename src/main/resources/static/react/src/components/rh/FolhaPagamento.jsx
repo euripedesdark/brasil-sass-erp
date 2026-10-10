@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -135,7 +136,7 @@ export const FolhaPagamento = () => {
     };
 
     const valorTemplate = (rowData) => {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(rowData.valorTotal || 0);
+        return new Intl.NumberFormat(localeAtivo(), { style: 'currency', currency: 'BRL' }).format(rowData.valorTotal || 0);
     };
 
     const abrirDialog = (folha = null) => {
@@ -386,7 +387,7 @@ export const FolhaPagamento = () => {
                         </div>
                         <div className="flex-1 min-w-max">
                             <span className="font-bold">Valor: </span>
-                            <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(novaFolha.valorTotal || 0)}</span>
+                            <span>{new Intl.NumberFormat(localeAtivo(), { style: 'currency', currency: 'BRL' }).format(novaFolha.valorTotal || 0)}</span>
                         </div>
                     </div>
                 </div>
@@ -397,7 +398,7 @@ export const FolhaPagamento = () => {
                     <div className='bc-form-col-4'><label className='bc-label'>FGTS %</label><InputNumber value={aliq.fgts} onValueChange={(e) => { const a = { ...aliq, fgts: e.value }; setAliq(a); if (encFolha) recalcEncargos(encFolha.id, a); }} suffix=' %' minFractionDigits={2} /></div>
                     <div className='bc-form-col-4'><label className='bc-label'>RAT %</label><InputNumber value={aliq.rat} onValueChange={(e) => { const a = { ...aliq, rat: e.value }; setAliq(a); if (encFolha) recalcEncargos(encFolha.id, a); }} suffix=' %' minFractionDigits={2} /></div>
                 </div>
-                {enc && (<div className='mt-3'><p>Base: <strong>{Number(enc.base ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>INSS: <strong>{Number(enc.inssPatronal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>FGTS: <strong>{Number(enc.fgts ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>RAT: <strong>{Number(enc.rat ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p><p>Total: <strong>{Number(enc.total ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p></div>)}
+                {enc && (<div className='mt-3'><p>Base: <strong>{Number(enc.base ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })}</strong></p><p>INSS: <strong>{Number(enc.inssPatronal ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })}</strong></p><p>FGTS: <strong>{Number(enc.fgts ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })}</strong></p><p>RAT: <strong>{Number(enc.rat ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })}</strong></p><p>Total: <strong>{Number(enc.total ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })}</strong></p></div>)}
                 <div className='flex justify-end mt-3'><Button label='Fechar' text onClick={() => setDlgEnc(false)} /></div>
             </Dialog>
         </div>

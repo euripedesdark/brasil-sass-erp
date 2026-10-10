@@ -1,6 +1,7 @@
 import {apiFetch} from '../../services/ApiConfig';
+import { localeAtivo } from '../shared/LocaleData.js';
 
-export const brl = v => Number(v || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+export const brl = v => Number(v || 0).toLocaleString(localeAtivo(), {style: 'currency', currency: 'BRL'});
 
 /** Chama a API e devolve o JSON; em erro lanca Error com a mensagem do backend. */
 export async function api(url, method = 'GET', body) {

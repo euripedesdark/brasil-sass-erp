@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Column } from 'primereact/column';
@@ -7,7 +8,7 @@ import { InputText } from 'primereact/inputtext';
 import { Message } from 'primereact/message';
 import { Toast } from 'primereact/toast';
 
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const PortalPublico = () => {
     const toast = useRef(null);

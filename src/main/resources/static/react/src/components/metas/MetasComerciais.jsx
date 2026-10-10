@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -10,7 +11,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 
 const BASE = '/api/vendas/metas';
-const money = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (v) => Number(v || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const MetasComerciais = () => {
     const toast = useRef(null);

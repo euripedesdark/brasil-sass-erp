@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../services/ApiConfig';
 import { Column } from 'primereact/column';
@@ -39,7 +40,7 @@ export const IndicadoresAtivos = () => {
                 <Column header={t('ativos.hMttr')} body={(r) => num(r.mttrDias)} style={{ width: '7rem' }} />
                 <Column field='proximaPreventiva' header={t('ativos.hProxPrev')} body={(r) => r.proximaPreventiva || '-'} style={{ width: '9rem' }} />
                 <Column field='diasSemFalha' header={t('ativos.hSemFalha')} style={{ width: '7rem' }} />
-                <Column field='custo' header={t('ativos.hCusto')} body={(r) => Number(r.custo ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} style={{ width: '9rem' }} />
+                <Column field='custo' header={t('ativos.hCusto')} body={(r) => Number(r.custo ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })} style={{ width: '9rem' }} />
             </DataTable>
         </div>
     );
