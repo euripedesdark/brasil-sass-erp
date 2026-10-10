@@ -91,14 +91,12 @@ jobs:
         run: |
           set -euo pipefail
           BASE=/opt/brasil-saas-erp/staging
-          RELEASE="$BASE/releases/$GITHUB_SHA"
-          sudo install -d -o euripedes -g euripedes -m 0750 "$RELEASE"
+          sudo install -d -o euripedes -g euripedes -m 0750 "$BASE"
           sudo install -o euripedes -g euripedes -m 0640 \
-            target/brasil-saas-erp-1.0.0-SNAPSHOT.jar "$RELEASE/brasil-saas-erp.jar"
-          printf '%s\n' "$GITHUB_SHA" | sudo tee "$RELEASE/commit.txt" >/dev/null
-          sudo chown euripedes:euripedes "$RELEASE/commit.txt"
-          sudo ln -sfn "$RELEASE" "$BASE/current.new"
-          sudo mv -Tf "$BASE/current.new" "$BASE/current"
+            target/brasil-saas-erp-1.0.0-SNAPSHOT.jar \
+            "$BASE/brasil-saas-erp-1.0.0-SNAPSHOT.jar"
+          printf '%s\n' "$GITHUB_SHA" | sudo tee "$BASE/commit.txt" >/dev/null
+          sudo chown euripedes:euripedes "$BASE/commit.txt"
           sudo tee /etc/systemd/system/brasil-saas-erp-staging.service >/dev/null <<'UNIT'
           [Unit]
           Description=Brasil SaaS ERP - Staging
@@ -109,9 +107,9 @@ jobs:
           Type=simple
           User=euripedes
           Group=euripedes
-          WorkingDirectory=/opt/brasil-saas-erp/staging/current
+          WorkingDirectory=/opt/brasil-saas-erp/staging
           EnvironmentFile=/etc/brasil-saas/staging.env
-          ExecStart=/usr/lib/jvm/jdk-21.0.12.1-oracle-x64/bin/java -Xms256m -Xmx1536m -jar /opt/brasil-saas-erp/staging/current/brasil-saas-erp.jar
+          ExecStart=/usr/lib/jvm/jdk-21.0.12.1-oracle-x64/bin/java -Xms256m -Xmx1536m -jar /opt/brasil-saas-erp/staging/brasil-saas-erp-1.0.0-SNAPSHOT.jar
           Restart=on-failure
           RestartSec=5
           SuccessExitStatus=143
