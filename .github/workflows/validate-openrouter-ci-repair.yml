@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/scripts/openrouter_ci_repair.py'
       - '.github/workflows/openrouter-ci-auto-repair.yml'
+      - '.github/workflows/validate-openrouter-ci-repair.yml'
 
 permissions:
   contents: read
@@ -25,7 +26,7 @@ jobs:
           from pathlib import Path
           script = Path(".github/scripts/openrouter_ci_repair.py").read_text()
           workflow = Path(".github/workflows/openrouter-ci-auto-repair.yml").read_text()
-          for marker in ("git apply", "blocked_exact", "PR de fork", "openrouter/free"):
+          for marker in ('cmd(["git","apply"', "blocked_exact", "PR de fork", "openrouter/free"):
               if marker not in script:
                   raise SystemExit(f"Missing script safety marker: {marker}")
           for marker in ("workflow_run:", "AGENT_GITHUB_TOKEN", "OPENROUTER_API_KEY", "pull-requests: write"):

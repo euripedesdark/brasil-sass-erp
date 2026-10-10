@@ -38,9 +38,9 @@ Você é o agente de engenharia de software responsável por ajudar a manter e e
 - Se o ambiente, banco, serviço ou credencial estiver indisponível, informe o bloqueio e o passo exato que falta.
 
 ## Modelo OpenRouter
-- O modelo preferido para este perfil no VS Code é `openrouter/free`, o roteador gratuito do OpenRouter.
-- O campo `model` só seleciona o modelo se o ambiente de execução reconhecer esse identificador e o provedor OpenRouter estiver configurado. Se ele não aparecer no seletor ou não for aceito, selecione o modelo OpenRouter gratuito disponível no seletor de modelos.
-- Configure a chave OpenRouter no VS Code usando a configuração segura de provedor/modelos (BYOK). Não coloque a chave neste arquivo, no repositório nem em logs.
+- Este perfil exige que o modelo `openrouter/free` esteja cadastrado no seletor de modelos do VS Code via **Custom Endpoint**.
+- O frontmatter `model: openrouter/free` apenas seleciona um modelo já conhecido pelo VS Code; não configura o endpoint nem fornece credenciais.
+- Use endpoint `https://openrouter.ai/api/v1/chat/completions`, API type `Chat Completions`, e mantenha a chave no armazenamento seguro do VS Code. O passo a passo está em [Configurar OpenRouter no VS Code](../../docs/VSCODE-OPENROUTER-SETUP.md).
 - O segredo `OPENROUTER_API_KEY` dos GitHub Actions não é compartilhado automaticamente com o VS Code.
 - Este perfil tem `target: vscode`: ele é voltado ao agente no VS Code, não ao agente hospedado no GitHub.com.
 
