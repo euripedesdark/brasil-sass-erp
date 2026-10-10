@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Preparar diff e script da base
+      - name: Preparar diff e script confiável
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
@@ -33,7 +33,11 @@ jobs:
           set -euo pipefail
           git fetch --no-tags origin "+refs/pull/${PR_NUMBER}/head:refs/remotes/pull/review-head"
           git diff --no-ext-diff --unified=20 "${BASE_SHA}...refs/remotes/pull/review-head" -- > "${TEMP_DIR}/pr.diff"
-          git show "${BASE_SHA}:.github/scripts/openrouter_review.py" > "${TEMP_DIR}/openrouter_review.py"
+          if git cat-file -e "${BASE_SHA}:.github/scripts/openrouter_review.py" 2>/dev/null; then
+            git show "${BASE_SHA}:.github/scripts/openrouter_review.py" > "${TEMP_DIR}/openrouter_review.py"
+          else
+            printf '%s\n' 'from pathlib import Path' 'import os' 'Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("## Agente OpenRouter\n\nO workflow foi introduzido nesta PR. A análise por IA ficará ativa nas próximas PRs após o merge inicial.\n", encoding="utf-8")' > "${TEMP_DIR}/openrouter_review.py"
+          fi
           echo "Diff preparado: $(wc -c < "${TEMP_DIR}/pr.diff") bytes."
 
       - name: Revisar diff com OpenRouter
@@ -41,7 +45,6 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           DIFF_PATH: ${{ runner.temp }}/pr.diff
-          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
