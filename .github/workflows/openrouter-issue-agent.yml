@@ -7,7 +7,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  issues: read
+  issues: write
 
 concurrency:
   group: brasilcloud-agent-${{ github.event.issue.number }}
@@ -29,6 +29,7 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
           persist-credentials: true
+          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -38,15 +39,20 @@ jobs:
       - name: Verify required secret
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
         run: |
           if [ -z "$OPENROUTER_API_KEY" ]; then
             echo "::error::Configure OPENROUTER_API_KEY in repository Actions secrets."
             exit 1
           fi
+          if [ -z "$AGENT_GITHUB_TOKEN" ]; then
+            echo "::error::Configure AGENT_GITHUB_TOKEN (fine-grained PAT with Contents, Issues and Pull requests read/write) so agent-created PRs trigger normal CI workflows."
+            exit 1
+          fi
 
       - name: Generate a proposed patch and open a PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
