@@ -450,3 +450,31 @@ Arquivos da entrega:
 
 Validacao: 3 casos novos (divide entre depositos, prioriza PADRAO sem
 dividir, sem estoque falha). Suite completa: 393 testes, zero falhas.
+
+## Entrega — ciclo de vida de engenharia (PLM)
+
+Branch codex/plm-ciclo-mudanca. Migration V189 so de permissoes; telas reutilizadas.
+
+- Antes, as tabelas existiam sem codigo nem tela: nenhum ciclo executavel.
+- Agora mudanca ABERTA com efeitos, envio com etapa, decisao com trilha,
+  implementacao idempotente aplicando efeitos em ordem (VIGORAR_REVISAO
+  vigora de fato; erro marca ERRO com detalhe e aborta), e revisao com
+  vigencia exclusiva por produto. Tela com abas, permissoes plm:* com
+  concessao (V189) e SpEL corrigido.
+- Termos genericos em portugues; nenhum nome proprietario copiado.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/plm/model (4 entidades)
+    src/main/java/br/com/brasil_saas/plm/repository (4 repositorios)
+    src/main/java/br/com/brasil_saas/plm/service + impl (ciclo completo)
+    src/main/java/br/com/brasil_saas/plm/controller/PlmController.java
+    src/main/resources/db/migration/V189__plm_permissoes.sql
+    src/main/resources/static/react/src/components/plm/Plm.jsx
+    src/main/resources/static/react/src/services/PlmService.js
+    src/test/java/br/com/brasil_saas/plm/service/impl/PlmServiceImplTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 8 casos unitarios, ciclo real na tela e via API
+(ABERTA com efeito, EM_APROVACAO, APROVADA, IMPLEMENTADA com efeito
+APLICADA), probes removidos sem rastro. Suite: 401 testes.

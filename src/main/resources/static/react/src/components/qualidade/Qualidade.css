@@ -1,0 +1,43 @@
+/* Tema do modulo de Qualidade: mesmo padrao escuro dos demais modulos. */
+
+.qualidade-enterprise-container .p-card {
+    background: rgba(15,34,60,.44);
+    border: 1px solid rgba(120,180,255,.22);
+    color: #eaf3ff;
+}
+
+.qualidade-enterprise-container .p-card .p-card-title,
+.qualidade-enterprise-container .p-card .p-card-subtitle {
+    color: #eaf3ff;
+}
+
+.qualidade-enterprise-container .p-tabview .p-tabview-panels {
+    background: transparent;
+    color: #eaf3ff;
+}
+
+.qualidade-enterprise-container .p-tabview .p-tabview-nav {
+    background: transparent;
+}
+
+.qualidade-enterprise-container .p-tabview .p-tabview-nav-link {
+    background: transparent;
+    color: #eaf3ff;
+}
+
+.qualidade-enterprise-container .p-datatable .p-datatable-thead > tr > th {
+    background-color: rgba(15,34,60,.44);
+    color: #eaf3ff;
+}
+
+.qualidade-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
+    color: #eaf3ff;
+}
+
+.qualidade-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
+    background-color: rgba(15,34,60,.44);
+}
+
+.qualidade-enterprise-container label {
+    color: #eaf3ff;
+}

@@ -427,7 +427,8 @@ export const Layout = () => {
             label: 'Supply Chain / Engenharia',
             items: [
                 item('Supply Chain / Engenharia', 'pi pi-sitemap', '/supply-chain-enterprise'),
-                item('Supply Chain Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower')
+                item('Supply Chain Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower'),
+                item('Ciclo de vida (PLM)', 'pi pi-cog', '/plm/mudancas')
             ],
             icon: 'pi pi-sitemap'
         });
