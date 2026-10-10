@@ -181,7 +181,7 @@ const formatarValor = (chave, valor) => {
     if (Number.isNaN(numerico)) return String(valor ?? '-');
     // Contagens de pedidos/notas sao inteiros, nao valores em reais
     if (/quantidade/i.test(chave)) return numerico.toLocaleString(localeAtivo());
-    return numerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return numerico.toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 };
 
 export default Relatorios;

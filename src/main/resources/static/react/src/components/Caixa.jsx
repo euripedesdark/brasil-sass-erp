@@ -13,7 +13,7 @@ import { Tag } from 'primereact/tag';
 import { CaixaService } from '../services/CaixaService';
 import { localeAtivo } from './shared/LocaleData.js';
 
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export default function Caixa() {
     const { t } = useTranslation();

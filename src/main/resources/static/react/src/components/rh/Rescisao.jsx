@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -12,7 +13,7 @@ import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { formatoData } from '../shared/LocaleData.js';
 
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 const BASE = '/api/rh/rescisao';
 
 const MOTIVOS = [

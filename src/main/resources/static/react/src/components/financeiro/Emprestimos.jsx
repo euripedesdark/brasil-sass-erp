@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -12,7 +13,7 @@ import { Toast } from 'primereact/toast';
 import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/financeiro/emprestimos';
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const Emprestimos = () => {
     const toast = useRef(null);

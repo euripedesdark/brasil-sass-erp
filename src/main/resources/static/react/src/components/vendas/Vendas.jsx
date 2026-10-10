@@ -295,7 +295,7 @@ export const Vendas = () => {
     };
 
     const statusBody = (row) => { const s = STATUS_LABEL[row.status] || { label: row.status, severity: 'secondary' }; return <Tag value={s.label} severity={s.severity} />; };
-    const moeda = (v) => (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const moeda = (v) => (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 
     const acoes = (row) => (
@@ -354,7 +354,7 @@ export const Vendas = () => {
                             field="id" itemTemplate={(c) => clienteLabel(c)} selectedItemTemplate={(c) => clienteLabel(c)}
                             onChange={(e) => { const c = e.value; setForm({ ...form, clienteId: c?.id || null }); if (c?.id) buscarCredito(c.id); }}
                             disabled={somenteLeitura} dropdown forceSelection placeholder="Buscar cliente" />
-                        {creditoCli && <small className="text-color-secondary">Limite {Number(creditoCli.limite ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} · disponivel {Number(creditoCli.disponivel ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</small>}
+                        {creditoCli && <small className="text-color-secondary">Limite {Number(creditoCli.limite ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })} · disponivel {Number(creditoCli.disponivel ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })}</small>}
                     </div>
                     <div className="col-12 md:col-3">
                         <label>Tipo</label>
