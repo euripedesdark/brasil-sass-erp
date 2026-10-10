@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
+import { useTranslation } from 'react-i18next';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { Card } from 'primereact/card';
@@ -19,10 +20,14 @@ const BASE = '/api/projetos';
 const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const Projetos = () => {
+    const { t } = useTranslation();
     const toast = useRef(null);
     const [projs, setProjs] = useState([]);
     const [sel, setSel] = useState(null);
     const [etapas, setEtapas] = useState([]);
+    const [dependencias, setDependencias] = useState([]);
+    const [depNova, setDepNova] = useState({ antecessoraId: null, sucessoraId: null, defasagemDias: 0 });
+    const [dlgDep, setDlgDep] = useState(false);
     const [dlgAv, setDlgAv] = useState(false);
     const [avEtapa, setAvEtapa] = useState(null);
     const [avPct, setAvPct] = useState(0);
@@ -51,15 +56,16 @@ export const Projetos = () => {
     useEffect(() => { carregar(); }, [carregar]);
     const ver = async (p) => {
         setSel(p);
-        const [e, m, r, mu, fa, rs] = await Promise.all([
+        const [e, m, r, mu, fa, rs, dp] = await Promise.all([
             apiFetch(BASE + '/' + p.id + '/etapas').then(js),
             apiFetch(BASE + '/' + p.id + '/movimentos').then(js),
             apiFetch(BASE + '/' + p.id + '/riscos').then(js),
             apiFetch(BASE + '/' + p.id + '/mudancas').then(js),
             apiFetch(BASE + '/' + p.id + '/faturamentos').then(js),
             apiFetch(BASE + '/' + p.id + '/resumo').then((r) => r.json().catch(() => null)),
+            apiFetch(BASE + '/' + p.id + '/dependencias').then(js),
         ]);
-        setEtapas(e); setMovs(m); setRiscos(r); setMuds(mu); setFats(fa); setResumo(rs);
+        setEtapas(e); setMovs(m); setRiscos(r); setMuds(mu); setFats(fa); setResumo(rs); setDependencias(dp);
     };
     const salvar = async () => {
         if (!f.codigo?.trim() || !f.nome?.trim()) { toast.current?.show({ severity: 'warn', summary: 'Atenção', detail: 'Código e nome obrigatórios', life: 3000 }); return; }
@@ -98,6 +104,24 @@ export const Projetos = () => {
     const confirmarFat = async () => {
         const r = await apiFetch(BASE + '/' + sel.id + '/faturamentos/' + fatId + '/faturar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ servicoId: selServ, clienteId: selCli ? Number(selCli) : null }) });
         if (!r.ok) { toast.current?.show({ severity: 'error', summary: 'Erro', detail: 'Falha ao faturar (verifique serviço/cliente)', life: 4500 }); return; } toast.current?.show({ severity: 'success', summary: 'Faturado', detail: 'Título gerado', life: 3000 }); setDlgFat(false); ver(sel); };
+
+    const salvarDep = async () => {
+        if (!sel || !depNova.antecessoraId || !depNova.sucessoraId) return;
+        const r = await apiFetch(BASE + '/' + sel.id + '/dependencias', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(depNova)
+        });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: t('common.error'), detail: j?.message || t('erpExtensions.dependencies.failure'), life: 4500 });
+            return;
+        }
+        setDlgDep(false); setDepNova({ antecessoraId: null, sucessoraId: null, defasagemDias: 0 }); ver(sel);
+    };
+    const removerDep = async (dep) => {
+        const r = await apiFetch(BASE + '/' + sel.id + '/dependencias/' + dep.id, { method: 'DELETE' });
+        if (r.ok) ver(sel);
+        else toast.current?.show({ severity: 'error', summary: t('common.error'), detail: t('erpExtensions.dependencies.failure'), life: 4000 });
+    };
     return (
         <div className='p-4'>
             <Toast ref={toast} />
@@ -162,7 +186,17 @@ export const Projetos = () => {
                                 <Column header='' body={(r) => (r.status === 'PREVISTO' ? (<Button label='Faturar' size='small' onClick={() => abrirFat(r.id)} />) : null)} style={{ width: '7rem' }} />
                             </DataTable>
                         </TabPanel>
-                    </TabView>)}
+        
+                        <TabPanel header={t('erpExtensions.dependencies.title')}>
+                            <div className='flex justify-content-end mb-2'><Button label={t('erpExtensions.dependencies.add')} icon='pi pi-plus' onClick={() => setDlgDep(true)} /></div>
+                            <DataTable value={dependencias} paginator rows={8} dataKey='id' emptyMessage={t('erpExtensions.dependencies.empty')} responsiveLayout='scroll'>
+                                <Column header={t('erpExtensions.dependencies.pre')} body={d => etapas.find(e => e.id === d.antecessoraId)?.nome || d.antecessoraId} />
+                                <Column header={t('erpExtensions.dependencies.post')} body={d => etapas.find(e => e.id === d.sucessoraId)?.nome || d.sucessoraId} />
+                                <Column field='defasagemDias' header={t('erpExtensions.dependencies.lag')} />
+                                <Column header={t('common.actions')} body={d => <Button icon='pi pi-trash' severity='danger' text tooltip={t('erpExtensions.dependencies.remove')} onClick={() => removerDep(d)} />} />
+                            </DataTable>
+                        </TabPanel>
+            </TabView>)}
                 </div>
             </div>
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Novo projeto' modal style={{ width: 'min(96vw, 560px)' }}>
@@ -208,6 +242,18 @@ export const Projetos = () => {
                     <Button label='Cancelar' text severity='secondary' onClick={() => setDlgAv(false)} />
                     <Button label='Atualizar' icon='pi pi-check' onClick={avancarEtapa} />
                 </div>
+            </Dialog>
+
+            <Dialog visible={dlgDep} onHide={() => setDlgDep(false)} header={t('erpExtensions.dependencies.add')} modal style={{ width: 'min(96vw, 480px)' }}>
+                <div className='grid p-fluid'>
+                    <div className='bc-form-col-12'><label className='bc-label'>{t('erpExtensions.dependencies.pre')}</label>
+                        <Dropdown filter placeholder={t('erpExtensions.dependencies.select')} value={depNova.antecessoraId} options={etapas.map(e => ({ label: e.codigoWbs + ' - ' + e.nome, value: e.id }))} onChange={e => setDepNova({ ...depNova, antecessoraId: e.value })} /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>{t('erpExtensions.dependencies.post')}</label>
+                        <Dropdown filter placeholder={t('erpExtensions.dependencies.select')} value={depNova.sucessoraId} options={etapas.filter(e => e.id !== depNova.antecessoraId).map(e => ({ label: e.codigoWbs + ' - ' + e.nome, value: e.id }))} onChange={e => setDepNova({ ...depNova, sucessoraId: e.value })} /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>{t('erpExtensions.dependencies.lag')}</label>
+                        <InputNumber value={depNova.defasagemDias} min={0} max={3650} onValueChange={e => setDepNova({ ...depNova, defasagemDias: e.value })} /></div>
+                </div>
+                <div className='flex justify-content-end mt-3'><Button disabled={!depNova.antecessoraId || !depNova.sucessoraId} label={t('erpExtensions.dependencies.add')} onClick={salvarDep} /></div>
             </Dialog>
         </div>
     );

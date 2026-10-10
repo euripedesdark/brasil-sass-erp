@@ -30,6 +30,14 @@ class BootstrapPostgresTest {
             rows.next();
             assertEquals(0, rows.getInt(1), "O teste exige banco vazio e nao altera bancos existentes");
         }
+        // O banco descartavel de CI nao tem a role operacional que a migration V187 usa.
+        // Prepara apenas este cluster de teste sem alterar o checksum nem o historico SQL.
+        try (var connection = DriverManager.getConnection(url, user, password);
+             var statement = connection.createStatement()) {
+            try (var roles = statement.executeQuery("SELECT 1 FROM pg_roles WHERE rolname = 'sa'")) {
+                if (!roles.next()) statement.executeUpdate("CREATE ROLE sa NOLOGIN");
+            }
+        }
         Flyway flyway = Flyway.configure().dataSource(url, user, password)
                 .schemas("brasil_saas").baselineOnMigrate(false)
                 .configuration(Map.of("flyway.postgresql.transactional.lock", "false"))
@@ -37,6 +45,17 @@ class BootstrapPostgresTest {
         assertTrue(flyway.migrate().migrationsExecuted >= 2);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
+        // V187 transfere ownership ao usuario sa, que nao e o login do teste.
+        // Em um banco descartavel, restituimos permissoes ao login desta suite
+        // para que a verificacao Hibernate (com INSERT + rollback) seja executavel.
+        try (var connection = DriverManager.getConnection(url, user, password);
+             var statement = connection.createStatement()) {
+            String testLogin = "\"" + user.replace("\"", "\"\"") + "\"";
+            statement.execute("GRANT USAGE, CREATE ON SCHEMA brasil_saas TO " + testLogin);
+            statement.execute("GRANT USAGE, CREATE ON SCHEMA brasil_saas TO sa");
+            statement.execute("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA brasil_saas TO " + testLogin);
+            statement.execute("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA brasil_saas TO " + testLogin);
+        }
 
         var registry = new StandardServiceRegistryBuilder()
                 .applySetting("hibernate.connection.url", url)
@@ -64,6 +83,11 @@ class BootstrapPostgresTest {
                     var transaction = session.beginTransaction();
                     try {
                         session.doWork(connection -> {
+                            try (var verify = connection.createStatement();
+                                 var roles = verify.executeQuery("SELECT current_user, has_schema_privilege(current_user, 'brasil_saas', 'USAGE')")) {
+                                assertTrue(roles.next());
+                                assertTrue(roles.getBoolean(2), "Login de sessao sem USAGE no schema: " + roles.getString(1));
+                            }
                             try (var statement = connection.createStatement()) {
                                 statement.executeUpdate("insert into brasil_saas.bc_core_empresa(id,razao_social,cnpj) values(900001,'Empresa sintetica de teste','00000000000000')");
                                 statement.executeUpdate("insert into brasil_saas.bc_cad_pessoa(id,empresa_id,tipo,nome) values(900001,900001,'JURIDICA','Pessoa sintetica de teste')");
