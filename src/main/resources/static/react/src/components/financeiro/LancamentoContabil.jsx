@@ -45,7 +45,7 @@ export const LancamentoContabil = () => {
         centroCustoId: null,
         centroCustoDescricao: '',
         historico: '',
-        pontidas: []
+        partidas: []
     });
 
     const [novaPartida, setNovaPartida] = useState({

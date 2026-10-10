@@ -5,6 +5,7 @@ import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
 import br.com.brasil_saas.core.service.DocumentoFluxoService;
+import br.com.brasil_saas.contabilidade.service.ContabilidadeService;
 import br.com.brasil_saas.financeiro.dto.FinanceiroDtos.BaixaRequest;
 import br.com.brasil_saas.financeiro.model.Titulo;
 import br.com.brasil_saas.financeiro.repository.BaixaRepository;
@@ -34,6 +35,7 @@ public class DevolucaoService {
     private final BaixaRepository baixaRepository;
     private final TituloService tituloService;
     private final DocumentoFluxoService documentoFluxoService;
+    private final ContabilidadeService contabilidadeService;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -190,6 +192,7 @@ public class DevolucaoService {
                     "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
                     "TITULO", titulo.getId(), titulo.getNumeroDocumento(),
                     "AJUSTE_DEVOLUCAO");
+            ajustarContabil(empresaId, d, titulo, titulo.getId(), valorBaixa);
             BigDecimal restante = valorDevolvido.subtract(valorBaixa);
             if (restante.signum() > 0) {
                 criarTituloRestituicao(empresaId, d, pedido, titulo, restante, marcador);
@@ -229,6 +232,42 @@ public class DevolucaoService {
                 "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
                 "TITULO", salvo.getId(), salvo.getNumeroDocumento(),
                 "RESTITUICAO_DEVOLUCAO");
+        ajustarContabil(empresaId, d, origem, salvo.getId(), valor);
+    }
+
+    /**
+     * Ajuste contabil do valor devolvido: espelha proporcionalmente os
+     * lancamentos do titulo de origem para o titulo destino. Periodo
+     * fechado ou origem nunca contabilizada viram pendencia explicita
+     * na trilha, sem travar o recebimento fisico nem o financeiro.
+     */
+    private void ajustarContabil(Long empresaId, VenDevolucao d,
+            Titulo origem, Long tituloDestinoId, BigDecimal valorAjuste) {
+        BigDecimal original = origem.getValorOriginal();
+        if (original == null || original.signum() <= 0 || valorAjuste == null || valorAjuste.signum() <= 0) {
+            documentoFluxoService.ligar(empresaId, null,
+                    "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                    "TITULO", tituloDestinoId, "SEM_VALOR_ORIGINAL",
+                    "AJUSTE_CONTABIL_PENDENTE");
+            return;
+        }
+        BigDecimal proporcao = valorAjuste.divide(original, 10, RoundingMode.HALF_UP);
+        if (proporcao.compareTo(BigDecimal.ONE) > 0) proporcao = BigDecimal.ONE;
+        var espelho = contabilidadeService.espelharAjusteDevolucao(empresaId, origem.getId(), tituloDestinoId,
+                proporcao, "Ajuste devolucao " + (d.getNumero() == null ? ("#" + d.getId()) : d.getNumero()));
+        if ("APLICADO".equals(espelho.situacao())) {
+            for (var lancado : espelho.lancamentos()) {
+                documentoFluxoService.ligar(empresaId, null,
+                        "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                        "TITULO", tituloDestinoId, lancado.getId() + ":" + lancado.getPeriodo(),
+                        "AJUSTE_CONTABIL");
+            }
+        } else {
+            documentoFluxoService.ligar(empresaId, null,
+                    "DEVOLUCAO_VENDA", d.getId(), d.getNumero(),
+                    "TITULO", tituloDestinoId, espelho.situacao(),
+                    "AJUSTE_CONTABIL_PENDENTE");
+        }
     }
 
     /**

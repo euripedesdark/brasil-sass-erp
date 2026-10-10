@@ -7,7 +7,7 @@ const QuickLinksCompras = () => (
   </div>
 );
 import { useTranslation } from 'react-i18next';
-import React, { useNavigate } from 'react'; //,{useEffect,useState} from 'react';
+import React, { useNavigate, useEffect, useState } from 'react';
 import {Card} from 'primereact/card';import {DataTable} from 'primereact/datatable';import {Column} from 'primereact/column';import {Button} from 'primereact/button';import {InputNumber} from 'primereact/inputnumber';import {InputText} from 'primereact/inputtext';import {Calendar} from 'primereact/calendar';import {Message} from 'primereact/message';import ComprasSupplyChainService from '../../services/ComprasSupplyChainService';import {useAuth} from '../../contexts/AuthContext';
 
 export default function SupplyChainCompras(){

@@ -196,6 +196,7 @@ function App() {
                     <Route path="gestao-empresarial" element={<EnterpriseOperations />} />
                     <Route path="supply-chain-enterprise" element={<SupplyChainEnterprise />} />
                     <Route path="supply-chain/control-tower" element={<SupplyChainControlTower />} />
+                    <Route path="bi/control-tower" element={<Navigate to="/supply-chain/control-tower" replace />} />
                     <Route path="governanca-corporativa" element={<CorporateGovernance />} />
                     <Route path="riscos-tms-enterprise" element={<RiskTransportEnterprise />} />
                     <Route path="enterprise/tms-planejamento" element={<TmsPlanejamento />} />

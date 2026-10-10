@@ -343,4 +343,66 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return lancar(empresaId, l.getId());
     }
 
+
+    @Override @Transactional
+    public ContabilidadeService.EspelhoContabil espelharAjusteDevolucao(Long empresaId, Long tituloOrigemId, Long tituloDestinoId, BigDecimal proporcao, String historico) {
+        if (proporcao == null || proporcao.signum() <= 0 || proporcao.compareTo(BigDecimal.ONE) > 0) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Proporcao do ajuste invalida");
+        }
+        var originais = lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
+                empresaId, "TITULO", tituloOrigemId, List.of("LANCADO"));
+        if (originais.isEmpty()) {
+            return new ContabilidadeService.EspelhoContabil(List.of(), "SEM_LANCAMENTO_ORIGINAL");
+        }
+        String periodo = periodoDe(LocalDate.now());
+        boolean fechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
+                .anyMatch(f -> periodo.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
+        if (fechado) {
+            return new ContabilidadeService.EspelhoContabil(List.of(), "PERIODO_FECHADO");
+        }
+        var gerados = new java.util.ArrayList<CtbLancamento>();
+        for (var original : originais) {
+            var origem = partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(original.getId(), empresaId);
+            CtbLancamento l = new CtbLancamento();
+            l.setEmpresaId(empresaId);
+            l.setData(LocalDate.now());
+            l.setPeriodo(periodo);
+            l.setHistorico(historico == null || historico.isBlank() ? "Ajuste devolucao titulo #" + tituloDestinoId : historico);
+            l.setOrigemTipo("TITULO");
+            l.setOrigemId(tituloDestinoId);
+            l.setStatus("RASCUNHO");
+            l = lancamentos.save(l);
+            BigDecimal debito = BigDecimal.ZERO;
+            BigDecimal credito = BigDecimal.ZERO;
+            BigDecimal maiorValor = BigDecimal.ZERO;
+            CtbPartida maior = null;
+            boolean maiorDebito = true;
+            for (var o : origem) {
+                BigDecimal d = o.getCredito() == null ? BigDecimal.ZERO : o.getCredito().multiply(proporcao).setScale(2, java.math.RoundingMode.HALF_UP);
+                BigDecimal c = o.getDebito() == null ? BigDecimal.ZERO : o.getDebito().multiply(proporcao).setScale(2, java.math.RoundingMode.HALF_UP);
+                if (d.signum() <= 0 && c.signum() <= 0) continue;
+                CtbPartida r = new CtbPartida();
+                r.setEmpresaId(empresaId);
+                r.setLancamentoId(l.getId());
+                r.setContaId(o.getContaId());
+                r.setCentroCustoId(o.getCentroCustoId());
+                r.setDebito(d);
+                r.setCredito(c);
+                r.setHistorico(o.getHistorico());
+                partidas.save(r);
+                debito = debito.add(d);
+                credito = credito.add(c);
+                BigDecimal candidato = d.compareTo(c) >= 0 ? d : c;
+                if (maior == null || candidato.compareTo(maiorValor) > 0) { maior = r; maiorValor = candidato; maiorDebito = d.compareTo(c) >= 0; }
+            }
+            BigDecimal diferenca = debito.subtract(credito);
+            if (diferenca.signum() != 0 && maior != null) {
+                if (maiorDebito) maior.setDebito(maior.getDebito().subtract(diferenca));
+                else maior.setCredito(maior.getCredito().add(diferenca));
+                partidas.save(maior);
+            }
+            gerados.add(lancar(empresaId, l.getId()));
+        }
+        return new ContabilidadeService.EspelhoContabil(gerados, "APLICADO");
+    }
 }

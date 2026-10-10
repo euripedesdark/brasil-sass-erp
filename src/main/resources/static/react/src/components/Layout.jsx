@@ -159,6 +159,22 @@ export const Layout = () => {
                 ]
             },
             {
+                label: t('nav.production'),
+                modulo: 'producao',
+                icon: 'pi pi-cog',
+                items: [
+                    item('menu.productionOrders', 'pi pi-cog', '/producao'),
+                    item('menu.productionWaybills', 'pi pi-file', '/producao/romaneios'),
+                    item('menu.bom', 'pi pi-sitemap', '/producao/estrutura'),
+                    item('Roteiros e centros de trabalho', 'pi pi-list', '/producao/roteiros'),
+                    item('MRP', 'pi pi-cog', '/producao/mrp'),
+                    item('MPS', 'pi pi-calendar-plus', '/producao/mps'),
+                    item('OEE', 'pi pi-gauge', '/producao/oee'),
+                    item('Capacidade', 'pi pi-calendar', '/producao/capacidade'),
+                    item('menu.productionReports', 'pi pi-clock', '/producao/apontamentos')
+                ]
+            },
+            {
                 label: t('nav.finance'),
                 modulo: 'financeiro',
                 icon: 'pi pi-wallet',
@@ -219,29 +235,28 @@ export const Layout = () => {
                 ]
             },
             {
-                label: t('nav.analytics'),
-                modulo: 'bi',
-                icon: 'pi pi-chart-bar',
+                label: t('nav.services'),
+                modulo: 'servicos',
+                icon: 'pi pi-wrench',
                 items: [
-                    item('BI Control Tower', 'pi pi-chart-line', '/bi/control-tower'),
-                    item('menu.kpis', 'pi pi-chart-bar', '/bi/kpis'),
-                    item('menu.reports', 'pi pi-file', '/bi/relatorios')
+                    item('menu.serviceCatalogFull', 'pi pi-list', '/servicos'),
+                    item('menu.serviceCatalog', 'pi pi-list', '/cadastro/servicos'),
+                    item('menu.serviceOrders', 'pi pi-file-edit', '/ordens-servico')
                 ]
             },
             {
-                label: t('nav.production'),
-                modulo: 'producao',
-                icon: 'pi pi-cog',
+                label: t('nav.hr'),
+                modulo: 'rh',
+                icon: 'pi pi-users',
                 items: [
-                    item('menu.productionOrders', 'pi pi-cog', '/producao'),
-                    item('menu.productionWaybills', 'pi pi-file', '/producao/romaneios'),
-                    item('menu.bom', 'pi pi-sitemap', '/producao/estrutura'),
-                    item('Roteiros e centros de trabalho', 'pi pi-list', '/producao/roteiros'),
-                    item('MRP', 'pi pi-cog', '/producao/mrp'),
-                    item('MPS', 'pi pi-calendar-plus', '/producao/mps'),
-                    item('OEE', 'pi pi-gauge', '/producao/oee'),
-                    item('Capacidade', 'pi pi-calendar', '/producao/capacidade'),
-                    item('menu.productionReports', 'pi pi-clock', '/producao/apontamentos')
+                    item('menu.employees', 'pi pi-user', '/rh'),
+                    item('menu.positions', 'pi pi-briefcase', '/rh/cargos'),
+                    item('menu.payroll', 'pi pi-money-bill', '/rh/folha'),
+                    item('menu.employeePhotos', 'pi pi-image', '/rh/fotos'),
+                    item('menu.ponto', 'pi pi-clock', '/rh/ponto'),
+                    item('menu.rescisao', 'pi pi-sign-out', '/rh/rescisao'),
+                    item('Ferias', 'pi pi-calendar', '/rh/ferias'),
+                    item('menu.esocial', 'pi pi-building', '/rh/esocial'),
                 ]
             },
             {
@@ -265,28 +280,13 @@ export const Layout = () => {
                 ]
             },
             {
-                label: t('nav.services'),
-                modulo: 'servicos',
-                icon: 'pi pi-wrench',
+                label: t('nav.analytics'),
+                modulo: 'bi',
+                icon: 'pi pi-chart-bar',
                 items: [
-                    item('menu.serviceCatalogFull', 'pi pi-list', '/servicos'),
-                    item('menu.serviceCatalog', 'pi pi-list', '/cadastro/servicos'),
-                    item('menu.serviceOrders', 'pi pi-file-edit', '/ordens-servico')
-                ]
-            },
-            {
-                label: t('nav.hr'),
-                modulo: 'rh',
-                icon: 'pi pi-users',
-                items: [
-                    item('menu.employees', 'pi pi-user', '/rh'),
-                    item('menu.positions', 'pi pi-briefcase', '/rh/cargos'),
-                    item('menu.payroll', 'pi pi-money-bill', '/rh/folha'),
-                    item('menu.employeePhotos', 'pi pi-image', '/rh/fotos'),
-                    item('menu.ponto', 'pi pi-clock', '/rh/ponto'),
-                    item('menu.rescisao', 'pi pi-sign-out', '/rh/rescisao'),
-                    item('Ferias', 'pi pi-calendar', '/rh/ferias'),
-                    item('menu.esocial', 'pi pi-building', '/rh/esocial'),
+                    item('BI Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower'),
+                    item('menu.kpis', 'pi pi-chart-bar', '/bi/kpis'),
+                    item('menu.reports', 'pi pi-file', '/bi/relatorios')
                 ]
             },
             {
@@ -357,105 +357,6 @@ export const Layout = () => {
         }
 
         items.push({
-            label: t('nav.aboutProject'),
-            icon: 'pi pi-info-circle',
-            command: () => handleNavigation('/sobre')
-        });
-        items.push({
-            label: t('nav.donations', { defaultValue: 'Doacoes' }),
-            icon: 'pi pi-heart-fill',
-            command: () => handleNavigation('/doacoes')
-        });
-        items.push({ label: 'Integrações Enterprise', icon: 'pi pi-share-alt', command: () => handleNavigation('/integracoes-enterprise') });
-        items.push({
-            label: 'GRC / TMS Enterprise',
-            icon: 'pi pi-shield',
-            command: () => handleNavigation('/riscos-tms-enterprise')
-        });
-        items.push({
-            label: 'TMS Planejamento',
-            icon: 'pi pi-truck',
-            command: () => handleNavigation('/enterprise/tms-planejamento')
-        });
-        items.push({
-            label: 'Eliminações intercompany',
-            icon: 'pi pi-sync',
-            command: () => handleNavigation('/enterprise/intercompany-eliminacoes')
-        });
-        items.push({
-            label: 'Governança Corporativa',
-            icon: 'pi pi-shield',
-            command: () => handleNavigation('/governanca-corporativa')
-        });
-        items.push({
-            label: 'Supply Chain / Engenharia',
-            items: [
-                item('Supply Chain / Engenharia', 'pi pi-sitemap', '/supply-chain-enterprise'),
-                item('Supply Chain Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower')
-            ],
-            icon: 'pi pi-sitemap'
-        });
-        items.push({
-            label: 'Gestão Empresarial',
-            icon: 'pi pi-building',
-            command: () => handleNavigation('/gestao-empresarial')
-        });
-        items.push({
-            label: 'Operações (painel)',
-            icon: 'pi pi-th-large',
-            command: () => handleNavigation('/operacoes')
-        });
-        items.push({
-            label: 'Helpdesk',
-            icon: 'pi pi-ticket',
-            command: () => handleNavigation('/helpdesk')
-        });
-        items.push({
-            label: 'Agenda',
-            icon: 'pi pi-calendar',
-            command: () => handleNavigation('/agenda')
-        });
-        items.push({
-            label: 'Metas comerciais',
-            icon: 'pi pi-chart-bar',
-            command: () => handleNavigation('/vendas/metas')
-        });
-        items.push({
-            label: 'Contratos de venda',
-            icon: 'pi pi-file',
-            command: () => handleNavigation('/vendas/contratos')
-        });
-        items.push({
-            label: 'Notificações',
-            icon: 'pi pi-bell',
-            command: () => handleNavigation('/notificacoes')
-        });
-        items.push({
-            label: 'Conhecimento',
-            icon: 'pi pi-book',
-            command: () => handleNavigation('/conhecimento')
-        });
-        items.push({
-            label: 'Go-live',
-            icon: 'pi pi-flag',
-            command: () => handleNavigation('/golive')
-        });
-        items.push({
-            label: 'Empresas (Stripe/Cert)',
-            icon: 'pi pi-key',
-            command: () => handleNavigation('/empresas-credenciais')
-        });
-        items.push({
-            label: 'Configurar empresa',
-            icon: 'pi pi-cog',
-            command: () => handleNavigation('/configurar-empresa')
-        });
-        items.push({
-            label: t('nav.workflow', { defaultValue: 'Workflow' }),
-            icon: 'pi pi-sitemap',
-            command: () => handleNavigation('/workflow')
-        });
-        items.push({
             label: t('nav.contabilidade', { defaultValue: 'Contabilidade' }),
             icon: 'pi pi-book',
             command: () => handleNavigation('/contabilidade')
@@ -469,6 +370,11 @@ export const Layout = () => {
             label: t('nav.wms', { defaultValue: 'WMS' }),
             icon: 'pi pi-box',
             command: () => handleNavigation('/wms')
+        });
+        items.push({
+            label: t('nav.workflow', { defaultValue: 'Workflow' }),
+            icon: 'pi pi-sitemap',
+            command: () => handleNavigation('/workflow')
         });
         items.push({
             label: t('nav.projetos', { defaultValue: 'Projetos' }),
@@ -486,6 +392,100 @@ export const Layout = () => {
             command: () => handleNavigation('/portais')
         });
 
+        items.push({
+            label: 'Metas comerciais',
+            icon: 'pi pi-chart-bar',
+            command: () => handleNavigation('/vendas/metas')
+        });
+        items.push({
+            label: 'Contratos de venda',
+            icon: 'pi pi-file',
+            command: () => handleNavigation('/vendas/contratos')
+        });
+        items.push({
+            label: 'Helpdesk',
+            icon: 'pi pi-ticket',
+            command: () => handleNavigation('/helpdesk')
+        });
+        items.push({
+            label: 'Agenda',
+            icon: 'pi pi-calendar',
+            command: () => handleNavigation('/agenda')
+        });
+        items.push({
+            label: 'Notificações',
+            icon: 'pi pi-bell',
+            command: () => handleNavigation('/notificacoes')
+        });
+        items.push({
+            label: 'Conhecimento',
+            icon: 'pi pi-book',
+            command: () => handleNavigation('/conhecimento')
+        });
+        items.push({ label: 'Integrações Enterprise', icon: 'pi pi-share-alt', command: () => handleNavigation('/integracoes-enterprise') });
+        items.push({
+            label: 'Supply Chain / Engenharia',
+            items: [
+                item('Supply Chain / Engenharia', 'pi pi-sitemap', '/supply-chain-enterprise'),
+                item('Supply Chain Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower')
+            ],
+            icon: 'pi pi-sitemap'
+        });
+        items.push({
+            label: 'TMS Planejamento',
+            icon: 'pi pi-truck',
+            command: () => handleNavigation('/enterprise/tms-planejamento')
+        });
+        items.push({
+            label: 'GRC / TMS Enterprise',
+            icon: 'pi pi-shield',
+            command: () => handleNavigation('/riscos-tms-enterprise')
+        });
+        items.push({
+            label: 'Eliminações intercompany',
+            icon: 'pi pi-sync',
+            command: () => handleNavigation('/enterprise/intercompany-eliminacoes')
+        });
+        items.push({
+            label: 'Governança Corporativa',
+            icon: 'pi pi-shield',
+            command: () => handleNavigation('/governanca-corporativa')
+        });
+        items.push({
+            label: 'Gestão Empresarial',
+            icon: 'pi pi-building',
+            command: () => handleNavigation('/gestao-empresarial')
+        });
+        items.push({
+            label: 'Operações (painel)',
+            icon: 'pi pi-th-large',
+            command: () => handleNavigation('/operacoes')
+        });
+        items.push({
+            label: 'Empresas (Stripe/Cert)',
+            icon: 'pi pi-key',
+            command: () => handleNavigation('/empresas-credenciais')
+        });
+        items.push({
+            label: 'Configurar empresa',
+            icon: 'pi pi-cog',
+            command: () => handleNavigation('/configurar-empresa')
+        });
+        items.push({
+            label: 'Go-live',
+            icon: 'pi pi-flag',
+            command: () => handleNavigation('/golive')
+        });
+        items.push({
+            label: t('nav.aboutProject'),
+            icon: 'pi pi-info-circle',
+            command: () => handleNavigation('/sobre')
+        });
+        items.push({
+            label: t('nav.donations', { defaultValue: 'Doacoes' }),
+            icon: 'pi pi-heart-fill',
+            command: () => handleNavigation('/doacoes')
+        });
         return items;
     }, [handleNavigation, t, user?.isAdmin, user?.isDiretoria, isSuperuser, temModulo]);
 

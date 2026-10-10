@@ -45,8 +45,9 @@ final class DevolucoesCreditoPostgresScenario {
                 factory.getRepository(CondicaoPagamentoRepository.class),factory.getRepository(ContaBancariaRepository.class),
                 factory.getRepository(ExtratoRepository.class),factory.getRepository(ConferenciaFaturaCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.PedidoCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository.class),factory.getRepository(br.com.brasil_saas.fiscal.repository.NfeRepository.class));
         var fluxoVenda=new DocumentoFluxoService(factory.getRepository(DocumentoFluxoRepository.class));
+        var contabeis=new br.com.brasil_saas.contabilidade.service.impl.ContabilidadeServiceImpl(factory.getRepository(br.com.brasil_saas.contabilidade.repository.CtbLancamentoRepository.class),factory.getRepository(br.com.brasil_saas.contabilidade.repository.CtbPartidaRepository.class),factory.getRepository(br.com.brasil_saas.contabilidade.repository.CtbFechamentoRepository.class),factory.getRepository(br.com.brasil_saas.financeiro.repository.PlanoContasRepository.class),titulosVenda);
         var venda=new DevolucaoService(devVenda,factory.getRepository(VenDevolucaoItemRepository.class),pedidosVenda,saldos,movimentos,depositos,
-                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda);
+                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda,contabeis);
         var retorno=venda.solicitar(empresa,pedidoVendaId,"Teste sintetico",Map.of(empresa,BigDecimal.ONE));
         assertEquals(empresa,retorno.getClienteId()); assertNotNull(retorno.getNumero());
         venda.decidir(empresa,null,retorno.getId(),true);venda.receber(empresa,retorno.getId());session.flush();
@@ -64,7 +65,7 @@ final class DevolucoesCreditoPostgresScenario {
         var devCompra=factory.getRepository(DevCompraRepository.class);
         var compra=new DevCompraService(devCompra,factory.getRepository(DevCompraItemRepository.class),pedidosCompra,saldos,movimentos,
                 depositos,factory.getRepository(ReservaEstoqueRepository.class),
-                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda);
+                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda,contabeis);
         var devolucao=compra.solicitar(empresa,pc.getId(),"Teste sintetico",List.of(
                 Map.of("produtoId",empresa,"quantidade","1"),Map.of("produtoId",empresa,"quantidade","1")));
         compra.devolver(empresa,devolucao.getId());session.flush();

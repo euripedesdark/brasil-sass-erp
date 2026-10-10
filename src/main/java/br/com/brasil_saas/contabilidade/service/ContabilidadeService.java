@@ -22,6 +22,16 @@ public interface ContabilidadeService {
      * fechados e dezembro aberto; recusa se ja apurado.
      */
     CtbLancamento apurarResultado(Long empresaId, Long userId, int exercicio, Long contaLucrosId);
+    /**
+     * Espelha proporcionalmente os lancamentos LANCADOS de um titulo,
+     * invertendo as partidas, para ajuste de devolucao. Reusa as contas
+     * do lancamento original: nao inventa plano de contas.
+     */
+    EspelhoContabil espelharAjusteDevolucao(Long empresaId, Long tituloOrigemId, Long tituloDestinoId, BigDecimal proporcao, String historico);
+
+    /** Resultado do espelho: APLICADO, SEM_LANCAMENTO_ORIGINAL ou PERIODO_FECHADO. */
+    record EspelhoContabil(java.util.List<CtbLancamento> lancamentos, String situacao) {
+    }
 
     List<CtbFechamento> fechamentos(Long empresaId);
     CtbFechamento fechar(Long empresaId, Long userId, String periodo);

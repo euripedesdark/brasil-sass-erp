@@ -15,6 +15,7 @@ public interface DepositoRepository extends JpaRepository<Deposito, Long> {
     Optional<Deposito> findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(Long empresaId, String tipo);
     Optional<Deposito> findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(Long empresaId);
     List<Deposito> findByEmpresaIdAndAtivoTrueOrderByNomeAsc(Long empresaId);
+    List<Deposito> findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(Long empresaId);
     Optional<Deposito> findByEmpresaIdAndCodigoAndAtivoTrue(Long empresaId, String codigo);
     Optional<Deposito> findByIdAndEmpresaIdAndAtivoTrue(Long id, Long empresaId);
 }
