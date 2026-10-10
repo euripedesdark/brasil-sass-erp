@@ -1016,7 +1016,8 @@
       "productQty": "Indiquez le produit et la quantité",
       "success": "Stock transféré avec succès",
       "wmsSuccess": "Stock déplacé entre adresses",
-      "operationError": "Opération non effectuée"
+      "operationError": "Opération non effectuée",
+      "title": "Transferts de stock"
     },
     "inventarios": {
       "title": "Inventaire et comptage cyclique",
@@ -1759,5 +1760,22 @@
     "entidadeId": "ID entité",
     "atencao": "Attention",
     "informeEntidade": "Saisissez l'ID d'entité de l'effet."
+  },
+  "integrationOps": {
+    "title": "Intégrations",
+    "endpoints": "Endpoints",
+    "newEndpoint": "Nouvel endpoint",
+    "code": "Code",
+    "name": "Nom",
+    "type": "Type",
+    "active": "Actif",
+    "deliveries": "Livraisons",
+    "event": "Événement",
+    "status": "Statut",
+    "attempts": "Tentatives",
+    "error": "Erreur",
+    "action": "Action",
+    "secret": "Secret",
+    "events": "Événements"
   }
 }

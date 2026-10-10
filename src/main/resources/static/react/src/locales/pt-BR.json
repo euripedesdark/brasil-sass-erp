@@ -1016,7 +1016,8 @@
       "productQty": "Informe produto e quantidade",
       "success": "Estoque transferido com sucesso",
       "wmsSuccess": "Estoque movimentado entre endereços",
-      "operationError": "Operação não realizada"
+      "operationError": "Operação não realizada",
+      "title": "Transferências de Estoque"
     },
     "inventarios": {
       "title": "Inventário e Contagem Cíclica",
@@ -1759,5 +1760,22 @@
     "entidadeId": "Entidade ID",
     "atencao": "Atencao",
     "informeEntidade": "Informe o ID da entidade do efeito."
+  },
+  "integrationOps": {
+    "title": "Integrações",
+    "endpoints": "Endpoints",
+    "newEndpoint": "Novo endpoint",
+    "code": "Código",
+    "name": "Nome",
+    "type": "Tipo",
+    "active": "Ativo",
+    "deliveries": "Entregas",
+    "event": "Evento",
+    "status": "Status",
+    "attempts": "Tentativas",
+    "error": "Erro",
+    "action": "Ação",
+    "secret": "Segredo",
+    "events": "Eventos"
   }
 }

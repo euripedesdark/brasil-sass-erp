@@ -663,3 +663,19 @@ body .p-dialog .p-dialog-header .p-dialog-header-icons {
 .page-content .p-chip { background: rgba(37,65,96,.7) !important; color: #eaf3ff !important; }
 .page-content .p-progressbar { background: rgba(148,190,235,.25) !important; }
 
+/* Labels soltas herdam cinza-escuro do tema claro: letra clara sobre fundo escuro. */
+.page-content label { color: #eaf3ff !important; }
+
+/* Municipios: superficies claras proprias -> painel escuro do tema. */
+.municipios-container .busca-container { background: rgba(13,30,55,.78) !important; border: 1px solid rgba(148,190,235,.22) !important; }
+.municipios-container .card-header { border-bottom-color: rgba(148,190,235,.22) !important; }
+.municipios-container .card-header h1 { color: #ffffff !important; }
+
+/* Sobre: cards claros proprios -> painel escuro do tema. */
+.page-content .sobre-card { background: rgba(13,30,55,.78) !important; border: 1px solid rgba(148,190,235,.22) !important; }
+.page-content .sobre-card h2, .page-content .sobre-card h3 { color: #ffffff !important; }
+.page-content .sobre-card p, .page-content .sobre-card li { color: #eaf3ff !important; }
+/* Botao secundario com contorno sobre fundo escuro: letra clara. */
+.page-content .p-button-outlined.p-button-secondary { color: #eaf3ff !important; border-color: rgba(148,190,235,.55) !important; }
+.page-content .p-button-outlined.p-button-secondary .p-button-label { color: #eaf3ff !important; }
+

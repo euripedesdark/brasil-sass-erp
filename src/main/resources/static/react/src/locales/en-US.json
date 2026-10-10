@@ -1016,7 +1016,8 @@
       "productQty": "Enter product and quantity",
       "success": "Inventory transferred successfully",
       "wmsSuccess": "Inventory moved between addresses",
-      "operationError": "Operation not completed"
+      "operationError": "Operation not completed",
+      "title": "Stock Transfers"
     },
     "inventarios": {
       "title": "Inventory and Cycle Counting",
@@ -1759,5 +1760,22 @@
     "entidadeId": "Entity ID",
     "atencao": "Warning",
     "informeEntidade": "Enter the effect entity ID."
+  },
+  "integrationOps": {
+    "title": "Integrations",
+    "endpoints": "Endpoints",
+    "newEndpoint": "New endpoint",
+    "code": "Code",
+    "name": "Name",
+    "type": "Type",
+    "active": "Active",
+    "deliveries": "Deliveries",
+    "event": "Event",
+    "status": "Status",
+    "attempts": "Attempts",
+    "error": "Error",
+    "action": "Action",
+    "secret": "Secret",
+    "events": "Events"
   }
 }
