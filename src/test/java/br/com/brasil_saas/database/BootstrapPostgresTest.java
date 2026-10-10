@@ -52,6 +52,7 @@ class BootstrapPostgresTest {
              var statement = connection.createStatement()) {
             String testLogin = "\"" + user.replace("\"", "\"\"") + "\"";
             statement.execute("GRANT USAGE, CREATE ON SCHEMA brasil_saas TO " + testLogin);
+            statement.execute("GRANT USAGE, CREATE ON SCHEMA brasil_saas TO sa");
             statement.execute("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA brasil_saas TO " + testLogin);
             statement.execute("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA brasil_saas TO " + testLogin);
         }
@@ -82,6 +83,11 @@ class BootstrapPostgresTest {
                     var transaction = session.beginTransaction();
                     try {
                         session.doWork(connection -> {
+                            try (var verify = connection.createStatement();
+                                 var roles = verify.executeQuery("SELECT current_user, has_schema_privilege(current_user, 'brasil_saas', 'USAGE')")) {
+                                assertTrue(roles.next());
+                                assertTrue(roles.getBoolean(2), "Login de sessao sem USAGE no schema: " + roles.getString(1));
+                            }
                             try (var statement = connection.createStatement()) {
                                 statement.executeUpdate("insert into brasil_saas.bc_core_empresa(id,razao_social,cnpj) values(900001,'Empresa sintetica de teste','00000000000000')");
                                 statement.executeUpdate("insert into brasil_saas.bc_cad_pessoa(id,empresa_id,tipo,nome) values(900001,900001,'JURIDICA','Pessoa sintetica de teste')");
