@@ -528,3 +528,37 @@ Arquivos da entrega:
 
 Validacao: 3 casos novos e pagina de apuracao no navegador com toast de
 erro real. Suite completa: 403 testes, zero falhas, zero erros, JDK 21.
+
+## Entrega — ordem concluída baixa peças no estoque (ativos/manutenção)
+
+Branch codex/plm-ciclo-mudanca. Sem migration.
+
+- Antes, concluir a ordem só recalculava custo e atualizava plano/nota:
+  as peças da ordem nunca saíam do estoque e nada impedia concluir sem saldo.
+- Agora `ManutencaoService.concluir` baixa cada material com produto no
+  estoque (depósito PADRAO, trava pessimista de saldo, movimento SAIDA com
+  origem MANUTENCAO e saldo após). Sem saldo, a conclusão é recusada com
+  BusinessException e nada é persistido. Material sem produto (serviço
+  avulso) é ignorado. Idempotente por construção: reconcluir é bloqueado.
+- Depreciação mensal já contabilizava (movimento + lançamento); MTBF/MTTR,
+  preventivas por tempo/contador e ciclo nota→ordem→conclusão preservados.
+- Telas Ativos/Manutenção/Indicadores em 4 idiomas (namespace `ativos`,
+  ~240 chaves); calendários pelo locale ativo; subtítulos proprietários
+  (FI-AA, PM) renomeados para termos genéricos. Códigos de status do
+  domínio continuam crus, como no restante do sistema.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/ativos/service/ManutencaoService.java
+    src/test/java/br/com/brasil_saas/ativos/service/ManutencaoServiceTest.java
+    src/main/resources/static/react/src/components/ativos/Ativos.jsx
+    src/main/resources/static/react/src/components/ativos/ManutencaoAtivos.jsx
+    src/main/resources/static/react/src/components/ativos/IndicadoresAtivos.jsx
+    src/main/resources/static/react/src/components/shared/LocaleData.js (uso)
+    docs/matriz-paridade-erp.md
+
+Validacao: 3 casos novos (baixa com saldo, recusa sem saldo, ignora
+material sem produto). Suite completa: 414 testes, zero falhas. Telas
+/ativos e /ativos/manutencao validadas no navegador (tema, tradução,
+vazio legível), screenshots conferidos.
+

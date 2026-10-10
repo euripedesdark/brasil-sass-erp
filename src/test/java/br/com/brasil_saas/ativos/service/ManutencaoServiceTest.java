@@ -2,6 +2,12 @@ package br.com.brasil_saas.ativos.service;
 
 import br.com.brasil_saas.ativos.model.*;
 import br.com.brasil_saas.ativos.repository.*;
+import br.com.brasil_saas.estoque.model.MovimentacaoEstoque;
+import br.com.brasil_saas.estoque.model.SaldoEstoque;
+import br.com.brasil_saas.estoque.repository.DepositoRepository;
+import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
+import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
+import org.mockito.ArgumentCaptor;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +31,9 @@ class ManutencaoServiceTest {
     private PlanoManutencaoRepository planos;
     private NotaManutencaoRepository notas;
     private MedicaoAtivoRepository medicoes;
+    private SaldoEstoqueRepository saldos;
+    private MovimentacaoEstoqueRepository movs;
+    private DepositoRepository depositos;
     private ManutencaoService svc;
     private AtivoImobilizado ativo;
 
@@ -37,9 +46,13 @@ class ManutencaoServiceTest {
         planos = mock(PlanoManutencaoRepository.class);
         notas = mock(NotaManutencaoRepository.class);
         medicoes = mock(MedicaoAtivoRepository.class);
+        saldos = mock(SaldoEstoqueRepository.class);
+        movs = mock(MovimentacaoEstoqueRepository.class);
+        depositos = mock(DepositoRepository.class);
         svc = new ManutencaoService(ativos, ordens, materiais, apontamentos, planos, notas, medicoes,
                 org.mockito.Mockito.mock(br.com.brasil_saas.cadastro.repository.ProdutoRepository.class),
-                org.mockito.Mockito.mock(br.com.brasil_saas.rh.repository.FuncionarioRepository.class));
+                org.mockito.Mockito.mock(br.com.brasil_saas.rh.repository.FuncionarioRepository.class),
+                saldos, movs, depositos);
         ativo = new AtivoImobilizado();
         ativo.setId(5L);
         ativo.setEmpresaId(EMPRESA);
@@ -140,6 +153,77 @@ class ManutencaoServiceTest {
         assertEquals("CONCLUIDA", m.getStatus());
         assertEquals(LocalDate.of(2026, 3, 31), p.getProximaData());
         assertEquals(0, new BigDecimal("1200").compareTo(p.getContadorUltimaExecucao()));
+    }
+
+    @Test
+    void concluirBaixaPecasNoEstoque() {
+        Manutencao m = ordem("EM_EXECUCAO");
+        ManutencaoMaterial mat = new ManutencaoMaterial();
+        mat.setEmpresaId(EMPRESA);
+        mat.setManutencaoId(9L);
+        mat.setProdutoId(77L);
+        mat.setDescricao("Rolamento 6204");
+        mat.setQuantidade(new BigDecimal("2"));
+        when(materiais.findAllByEmpresaIdAndManutencaoIdAndDeletedAtIsNullOrderById(EMPRESA, 9L))
+                .thenReturn(List.of(mat));
+        SaldoEstoque saldo = new SaldoEstoque();
+        saldo.setEmpresaId(EMPRESA);
+        saldo.setDepositoId(3L);
+        saldo.setProdutoId(77L);
+        saldo.setQuantidade(new BigDecimal("10"));
+        when(saldos.findByEmpresaIdAndProdutoIdForUpdate(EMPRESA, 77L)).thenReturn(Optional.of(saldo));
+
+        Manutencao out = svc.concluir(EMPRESA, 9L, new ManutencaoService.ConclusaoReq(LocalDate.now(), "desgaste", "troca", BigDecimal.ONE, BigDecimal.ZERO));
+
+        assertEquals("CONCLUIDA", out.getStatus());
+        assertEquals(0, new BigDecimal("8").compareTo(saldo.getQuantidade()));
+        ArgumentCaptor<MovimentacaoEstoque> cap = ArgumentCaptor.forClass(MovimentacaoEstoque.class);
+        verify(movs).save(cap.capture());
+        assertEquals("SAIDA", cap.getValue().getTipo());
+        assertEquals("MANUTENCAO", cap.getValue().getOrigem());
+        assertEquals(9L, cap.getValue().getOrigemId());
+        assertEquals(0, new BigDecimal("8").compareTo(cap.getValue().getSaldoApos()));
+    }
+
+    @Test
+    void concluirSemSaldoDePecaFalha() {
+        Manutencao m = ordem("EM_EXECUCAO");
+        ManutencaoMaterial mat = new ManutencaoMaterial();
+        mat.setEmpresaId(EMPRESA);
+        mat.setManutencaoId(9L);
+        mat.setProdutoId(77L);
+        mat.setDescricao("Rolamento 6204");
+        mat.setQuantidade(new BigDecimal("2"));
+        when(materiais.findAllByEmpresaIdAndManutencaoIdAndDeletedAtIsNullOrderById(EMPRESA, 9L))
+                .thenReturn(List.of(mat));
+        SaldoEstoque saldo = new SaldoEstoque();
+        saldo.setEmpresaId(EMPRESA);
+        saldo.setDepositoId(3L);
+        saldo.setProdutoId(77L);
+        saldo.setQuantidade(BigDecimal.ONE);
+        when(saldos.findByEmpresaIdAndProdutoIdForUpdate(EMPRESA, 77L)).thenReturn(Optional.of(saldo));
+
+        assertThrows(BusinessException.class, () -> svc.concluir(EMPRESA, 9L,
+                new ManutencaoService.ConclusaoReq(LocalDate.now(), "desgaste", "troca", null, null)));
+        verify(ordens, never()).save(any());
+        verify(movs, never()).save(any());
+    }
+
+    @Test
+    void concluirIgnoraMaterialSemProduto() {
+        ordem("EM_EXECUCAO");
+        ManutencaoMaterial mat = new ManutencaoMaterial();
+        mat.setEmpresaId(EMPRESA);
+        mat.setManutencaoId(9L);
+        mat.setDescricao("Servico avulso");
+        mat.setQuantidade(BigDecimal.ONE);
+        when(materiais.findAllByEmpresaIdAndManutencaoIdAndDeletedAtIsNullOrderById(EMPRESA, 9L))
+                .thenReturn(List.of(mat));
+
+        Manutencao out = svc.concluir(EMPRESA, 9L, new ManutencaoService.ConclusaoReq(LocalDate.now(), null, null, null, null));
+
+        assertEquals("CONCLUIDA", out.getStatus());
+        verifyNoInteractions(saldos, movs, depositos);
     }
 
     @Test
