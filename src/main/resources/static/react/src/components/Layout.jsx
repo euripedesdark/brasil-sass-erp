@@ -509,7 +509,7 @@ export const Layout = () => {
             <aside className={'enterprise-sidebar' + (collapsed ? ' collapsed' : '')}>
                 <div className="sidebar-header">
                     <div className="sidebar-brand">
-                        <div className="brand-logo">BC</div>
+                        <div className="brand-logo">BS</div>
                         {!collapsed && <span className="brand-name">Brasil SaaS ERP</span>}
                     </div>
 

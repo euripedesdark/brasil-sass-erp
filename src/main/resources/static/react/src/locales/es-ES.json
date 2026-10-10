@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "BrasilCloudERP",
+    "name": "Brasil SaaS ERP",
     "assistant": "Asistente Brasil SaaS",
     "managementTitle": "Sistema de Gestión Empresarial"
   },
@@ -76,7 +76,7 @@
     "success": "Éxito"
   },
   "login": {
-    "title": "BrasilCloudERP",
+    "title": "Brasil SaaS ERP",
     "subtitle": "Gestión empresarial integrada",
     "username": "Usuario",
     "password": "Contraseña",
@@ -1686,6 +1686,8 @@
     "acao": "Acción",
     "ordem": "Orden",
     "observacao": "Observación",
-    "entidadeId": "ID de entidad"
+    "entidadeId": "ID de entidad",
+    "atencao": "Atención",
+    "informeEntidade": "Informe el ID de entidad del efecto."
   }
 }
