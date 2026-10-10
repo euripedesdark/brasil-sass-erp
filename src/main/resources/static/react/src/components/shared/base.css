@@ -679,3 +679,9 @@ body .p-dialog .p-dialog-header .p-dialog-header-icons {
 .page-content .p-button-outlined.p-button-secondary { color: #eaf3ff !important; border-color: rgba(148,190,235,.55) !important; }
 .page-content .p-button-outlined.p-button-secondary .p-button-label { color: #eaf3ff !important; }
 
+/* Texto auxiliar cinza (bc-muted) sobre fundo escuro: clareia para leitura. */
+.page-content .bc-muted { color: #c3d6f2 !important; }
+.page-content .text-color-secondary { color: #c3d6f2 !important; }
+.page-content .sobre-licenca { color: #93c5fd !important; }
+.page-content .pix-chave { background: rgba(10,25,45,.85) !important; color: #eaf3ff !important; border: 1px solid rgba(148,190,235,.3) !important; }
+
