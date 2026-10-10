@@ -481,3 +481,23 @@ Arquivos da entrega:
 
 Validacao: 3 casos novos (divide entre depositos, prioriza PADRAO sem
 dividir, sem estoque falha). Suite completa: 393 testes, zero falhas.
+
+## Entrega — erros de negocio com status proprio (contabil e compras)
+
+Branch codex/financeiro-ciclo-titulos. Sem migration.
+
+- Antes, GlobalExceptionHandler nao conhecia ResponseStatusException:
+  toda regra de negocio de contabilidade e compras voltava 500 com
+  Erro interno do servidor, e a tela nao mostrava o motivo real.
+- Agora o status da excecao e preservado (422 continua 422) e 5xx vira
+  400. Verificado ao vivo: apurar sem jan-nov fechados responde 422 com
+  Periodo 2025-01 precisa estar fechado, sem gravar nada.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/shared/exception/GlobalExceptionHandler.java
+    src/test/java/br/com/brasil_saas/shared/exception/GlobalExceptionHandlerTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 3 casos novos e pagina de apuracao no navegador com toast de
+erro real. Suite completa: 403 testes, zero falhas, zero erros, JDK 21.
