@@ -20,6 +20,10 @@ import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.financeiro.model.Titulo;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import br.com.brasil_saas.qualidade.model.Inspecao;
+import br.com.brasil_saas.qualidade.model.PlanoInspecao;
+import br.com.brasil_saas.qualidade.repository.InspecaoRepository;
+import br.com.brasil_saas.qualidade.repository.PlanoInspecaoRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +53,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
     private final AlcadaAprovacaoRepository alcadaRepository;
     private final br.com.brasil_saas.financeiro.service.TituloService tituloService;
     private final DocumentoFluxoService documentoFluxoService;
+    private final PlanoInspecaoRepository planoInspecaoRepository;
+    private final InspecaoRepository inspecaoRepository;
 
     @Override
     @Transactional
@@ -136,7 +143,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
             }
         }
 
-        registrarRecebimento(pedido, recebidas);
+        RecebimentoCompra recebimento = registrarRecebimento(pedido, recebidas);
+        gerarInspecaoRecebimento(pedido.getEmpresaId(), recebimento);
         Titulo titulo = criarTituloCompra(pedido);
         pedido.setTituloId(titulo.getId());
         tituloService.gerarParcelas(pedido.getEmpresaId(), titulo.getId(), pedido.getCondicaoPagamentoId());
@@ -195,7 +203,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         }
 
         if (!recebeuAlgo) throw new BusinessException("Nenhuma quantidade nova foi recebida");
-        registrarRecebimento(pedido, recebidas);
+        RecebimentoCompra recebimentoParcial = registrarRecebimento(pedido, recebidas);
+        gerarInspecaoRecebimento(pedido.getEmpresaId(), recebimentoParcial);
 
         if (tudoRecebido) {
             pedido.setStatus("RECEBIDO");
@@ -286,8 +295,8 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         return tituloRepository.save(titulo);
     }
 
-    private void registrarRecebimento(PedidoCompra pedido, Map<Long, BigDecimal> recebidas) {
-        if (recebidas.isEmpty()) return;
+    private RecebimentoCompra registrarRecebimento(PedidoCompra pedido, Map<Long, BigDecimal> recebidas) {
+        if (recebidas.isEmpty()) return null;
 
         RecebimentoCompra recebimento = new RecebimentoCompra();
         recebimento.setEmpresaId(pedido.getEmpresaId());
@@ -316,6 +325,29 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         RecebimentoCompra salvo = recebimentoRepository.save(recebimento);
         for (RecebimentoCompraItem item : itens) item.setRecebimentoId(salvo.getId());
         recebimentoItemRepository.saveAll(itens);
+        return salvo;
+    }
+
+    /** Gera inspeção automática se existir plano ativo de tipo RECEBIMENTO (integração QM ↔ Compras). */
+    private void gerarInspecaoRecebimento(Long empresaId, RecebimentoCompra recebimento) {
+        if (recebimento == null) return;
+        List<PlanoInspecao> planos = planoInspecaoRepository.findAllByEmpresaIdAndDeletedAtIsNullOrderByCodigo(empresaId);
+        PlanoInspecao plano = planos.stream()
+                .filter(p -> Boolean.TRUE.equals(p.getAtivo()) && "RECEBIMENTO".equalsIgnoreCase(p.getTipo()))
+                .findFirst()
+                .orElse(null);
+        if (plano == null) return;
+
+        Inspecao insp = new Inspecao();
+        insp.setEmpresaId(empresaId);
+        insp.setPlanoId(plano.getId());
+        insp.setReferenciaTipo("RECEBIMENTO");
+        insp.setReferenciaId(recebimento.getId());
+        insp.setNumero("INSP-" + LocalDate.now() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase());
+        insp.setDataInspecao(LocalDate.now());
+        insp.setStatus("ABERTA");
+        insp.setObservacao("Gerada automaticamente no recebimento " + recebimento.getNumero());
+        inspecaoRepository.save(insp);
     }
 
     private void entrarEstoque(Long empresaId, Long produtoId, BigDecimal quantidade, Long origemId) {
