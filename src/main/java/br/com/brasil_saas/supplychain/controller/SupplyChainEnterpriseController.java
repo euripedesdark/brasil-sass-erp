@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import br.com.brasil_saas.supplychain.service.AtpTemporalCalculator;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -14,15 +15,28 @@ public class SupplyChainEnterpriseController {
  @GetMapping("/demanda") @PreAuthorize("hasAuthority('enterprise:leitura')") public List<Map<String,Object>> demanda(@AuthenticationPrincipal AuthenticatedUser u){return jdbc.queryForList("select * from brasil_saas.bc_sc_demanda where empresa_id=? order by periodo desc",u.getEmpresaId());}
  @PostMapping("/demanda") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> demanda(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object>b){jdbc.update("insert into brasil_saas.bc_sc_demanda(empresa_id,produto_id,local_id,periodo,tipo,quantidade,confianca,origem) values(?,?,?,?,?,?,?,?)",u.getEmpresaId(),b.get("produtoId"),b.get("localId"),b.get("periodo"),b.getOrDefault("tipo","PREVISAO"),b.getOrDefault("quantidade",0),b.get("confianca"),b.get("origem"));return Map.of("ok",true);}
  @PostMapping("/atp/calcular") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> atp(@AuthenticationPrincipal AuthenticatedUser u,@RequestParam Long produtoId,@RequestParam(required=false) Long localId,@RequestParam String data){
-   Long e=u.getEmpresaId(); Map<String,Object>x=jdbc.queryForMap("""
-select coalesce((select sum(quantidade) from brasil_saas.bc_est_saldo where empresa_id=? and produto_id=?),0) estoque,
-   coalesce((select sum(quantidade) from brasil_saas.bc_est_reserva where empresa_id=? and produto_id=? and status in ('ATIVA','RESERVADA')),0) reservas""",e,produtoId,e,produtoId);
-   Number est=(Number)x.get("estoque"),res=(Number)x.get("reservas"); double atp=est.doubleValue()-res.doubleValue();
+   Long e=u.getEmpresaId();
+   LocalDate dia; try{ dia=LocalDate.parse(data); }catch(RuntimeException ex){ throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Data invalida, use AAAA-MM-DD"); }
+   // localId = deposito. Sem localId, considera todos os depositos da empresa.
+   String fl=localId==null?"":" and deposito_id=?";
+   Object[] pe=localId==null?new Object[]{e,produtoId}:new Object[]{e,produtoId,localId};
+   java.math.BigDecimal est=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_saldo where empresa_id=? and produto_id=? and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
+   java.math.BigDecimal res=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_reserva where empresa_id=? and produto_id=? and status in ('ATIVA','RESERVADA') and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
+   // Entradas futuras: pedidos de compra em aberto com previsao de entrega (pedido nao tem deposito,
+   // entao so entram quando o calculo e da empresa toda).
+   List<AtpTemporalCalculator.Movimento> entradas=new ArrayList<>();
+   if(localId==null){
+    for(Map<String,Object> r:jdbc.queryForList("select p.data_previsao_entrega d, sum(i.quantidade-i.quantidade_recebida) q from brasil_saas.bc_com_pedido p join brasil_saas.bc_com_pedido_item i on i.pedido_id=p.id and i.deleted_at is null where p.empresa_id=? and i.produto_id=? and p.deleted_at is null and p.status in ('ABERTO','PARCIAL') and p.data_previsao_entrega is not null group by p.data_previsao_entrega having sum(i.quantidade-i.quantidade_recebida)>0",e,produtoId)){
+     entradas.add(new AtpTemporalCalculator.Movimento(((java.sql.Date)r.get("d")).toLocalDate(),(java.math.BigDecimal)r.get("q")));
+    }
+   }
+   java.math.BigDecimal disp=AtpTemporalCalculator.disponivelEm(dia,est,res,entradas,null);
+   java.math.BigDecimal atp=AtpTemporalCalculator.prometivel(dia,est,res,entradas,null);
    jdbc.update("""
 insert into brasil_saas.bc_sc_atp(empresa_id,produto_id,local_id,data,estoque_disponivel,reservas,quantidade_atp,quantidade_ctp)
    values(?,?,?,?,?,?,?,?) on conflict(empresa_id,produto_id,local_id,data) do update set estoque_disponivel=excluded.estoque_disponivel,reservas=excluded.reservas,quantidade_atp=excluded.quantidade_atp,quantidade_ctp=excluded.quantidade_ctp,calculado_em=now()""",
-   e,produtoId,localId,data,est,res,atp,atp);
-   return Map.of("ok",true,"produtoId",produtoId,"data",data,"estoque",est,"reservas",res,"atp",atp,"ctp",atp);
+   e,produtoId,localId,dia,est,res,atp,atp);
+   return Map.of("ok",true,"produtoId",produtoId,"data",data,"estoque",est,"reservas",res,"disponivelNaData",disp,"atp",atp,"ctp",atp);
  }
  @GetMapping("/atp") @PreAuthorize("hasAuthority('enterprise:leitura')") public List<Map<String,Object>> atps(@AuthenticationPrincipal AuthenticatedUser u,@RequestParam(required=false) Long produtoId){return produtoId==null?jdbc.queryForList("select * from brasil_saas.bc_sc_atp where empresa_id=? order by data desc",u.getEmpresaId()):jdbc.queryForList("select * from brasil_saas.bc_sc_atp where empresa_id=? and produto_id=? order by data desc",u.getEmpresaId(),produtoId);}
  @PostMapping("/planejamento") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> planejamento(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object>b){jdbc.update("insert into brasil_saas.bc_sc_planejamento(empresa_id,codigo,periodo_inicio,periodo_fim,tipo,parametros) values(?,?,?,?,?,?::jsonb) on conflict(empresa_id,codigo) do update set periodo_inicio=excluded.periodo_inicio,periodo_fim=excluded.periodo_fim,tipo=excluded.tipo,parametros=excluded.parametros",u.getEmpresaId(),b.get("codigo"),b.get("periodoInicio"),b.get("periodoFim"),b.get("tipo"),b.getOrDefault("parametros","{}"));return Map.of("ok",true);}
