@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -18,7 +19,7 @@ export const TributacaoSimulador = () => {
     const [contrib, setContrib] = useState(false);
     const [res, setRes] = useState(null);
     const [busy, setBusy] = useState(false);
-    const money = (v) => (v == null ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+    const money = (v) => (v == null ? '—' : Number(v).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' }));
 
     const simularLote = async () => {
         setBusy(true);

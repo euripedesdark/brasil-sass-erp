@@ -14,7 +14,7 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 const OP = '/api/financeiro/cobranca-op';
 const TIPOS_ACAO = ['LEMBRETE', 'AVISO', 'LIGACAO', 'EMAIL', 'WHATSAPP', 'NEGATIVACAO', 'OUTRO'];
 

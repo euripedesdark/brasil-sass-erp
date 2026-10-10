@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { InputNumber } from 'primereact/inputnumber';
@@ -18,7 +19,7 @@ const SEM_CLIENTE = { id: null, label: 'Consumidor não identificado' };
 
 /** Só para exibição. O total NUNCA sai daqui — vem do backend. */
 const brl = (v) =>
-  (Number(v) || ZERO).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  (Number(v) || ZERO).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 /**
  * PDV — Fase 2A.

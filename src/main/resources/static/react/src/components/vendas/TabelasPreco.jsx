@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { useTranslation } from 'react-i18next';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
@@ -29,7 +30,7 @@ export const TabelasPreco = () => {
     const [produtoBusca, setProdutoBusca] = useState(null);
     const [produtoSugestoes, setProdutoSugestoes] = useState([]);
     const [item, setItem] = useState({ produtoId: null, preco: 0, precoMinimo: null, percentualDescontoMaximo: 0 });
-    const moeda = useMemo(() => (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: form.moeda || 'BRL' }), [form.moeda]);
+    const moeda = useMemo(() => (v) => Number(v || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: form.moeda || 'BRL' }), [form.moeda]);
 
     const carregar = async () => {
         setLoading(true);

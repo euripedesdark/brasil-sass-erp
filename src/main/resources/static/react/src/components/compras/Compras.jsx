@@ -128,7 +128,7 @@ export const Compras = () => {
     const removerItem = index => setForm(prev => ({ ...prev, itens: prev.itens.filter((_, i) => i !== index).map((it, i) => ({ ...it, numeroItem: i + 1 })) }));
 
     const totalItens = () => form.itens.reduce((acc, it) => acc + ((Number(it.quantidade) || 0) * (Number(it.valorUnitario) || 0) - (Number(it.valorDesconto) || 0)), 0);
-    const moeda = v => (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const moeda = v => (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     const dataBr = d => d ? new Date(d).toLocaleDateString(localeAtivo()) : '';
 
     const salvar = async () => {
