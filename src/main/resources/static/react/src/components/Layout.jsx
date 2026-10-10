@@ -242,7 +242,6 @@ export const Layout = () => {
                 icon: 'pi pi-wrench',
                 items: [
                     item('menu.serviceCatalogFull', 'pi pi-list', '/servicos'),
-                    item('menu.serviceCatalog', 'pi pi-list', '/cadastro/servicos'),
                     item('menu.serviceOrders', 'pi pi-file-edit', '/ordens-servico')
                 ]
             },
