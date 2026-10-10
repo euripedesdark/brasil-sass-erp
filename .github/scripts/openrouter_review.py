@@ -40,7 +40,7 @@ was_truncated = len(diff) > MAX_DIFF_CHARS
 if was_truncated:
     diff = diff[:MAX_DIFF_CHARS] + "\n\n[DIFF TRUNCADO: excedeu o limite de tamanho da revisão]"
 
-model = os.environ.get("OPENROUTER_MODEL", "").strip() or "openai/gpt-4.1-mini"
+model = os.environ.get("OPENROUTER_MODEL", "").strip() or "openrouter/free"
 repo = os.environ.get("REPOSITORY", "repositório não informado")
 pr_number = os.environ.get("PR_NUMBER", "?")
 title = os.environ.get("PR_TITLE", "(sem título)")
