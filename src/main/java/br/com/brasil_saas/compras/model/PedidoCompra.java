@@ -64,6 +64,15 @@ public class PedidoCompra extends TenantEntity {
     @Column(name = "observacao", columnDefinition = "TEXT")
     private String observacao;
 
+    @Column(name = "status_aprovacao", length = 20, nullable = false)
+    private String statusAprovacao = "APROVADO";
+    @Column(name = "aprovado_por")
+    private Long aprovadoPor;
+    @Column(name = "aprovado_em")
+    private java.time.LocalDateTime aprovadoEm;
+    @Column(name = "motivo_rejeicao", columnDefinition = "TEXT")
+    private String motivoRejeicao;
+
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("numeroItem ASC")
     private List<ItemPedidoCompra> itens = new ArrayList<>();

@@ -45,7 +45,11 @@ final class VendasReservasPostgresScenario {
         var service = new PedidoVendaServiceImpl(pedidos, factory.getRepository(ClienteRepository.class), null,
                 saldos, factory.getRepository(DepositoRepository.class), lotes,
                 factory.getRepository(EnderecoEstoqueRepository.class), movimentos, reservas, titulos,
-                null, null, null, tituloService, new DocumentoFluxoService(documentos));
+                null, null, null, tituloService, new DocumentoFluxoService(documentos),
+                new br.com.brasil_saas.financeiro.service.impl.ComissaoServiceImpl(
+                        factory.getRepository(br.com.brasil_saas.financeiro.repository.ComissaoRepository.class),
+                        factory.getRepository(br.com.brasil_saas.vendas.repository.RegraComissaoRepository.class),
+                        factory.getRepository(br.com.brasil_saas.rh.repository.FuncionarioRepository.class)));
 
         var pedido = new PedidoVenda();
         pedido.setEmpresaId(empresa); pedido.setClienteId(empresa); pedido.setNumero("PV-SINTETICO");

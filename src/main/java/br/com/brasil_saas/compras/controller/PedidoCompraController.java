@@ -61,4 +61,17 @@ public class PedidoCompraController {
         service.cancelar(id, u.getEmpresaId());
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{id}/aprovar")
+    @PreAuthorize("hasAuthority('compras:pedido:aprovar')")
+    public ResponseEntity<PedidoCompraResponse> aprovar(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u) {
+        return ResponseEntity.ok(service.aprovar(id, u.getEmpresaId(), u.getId()));
+    }
+
+    @PostMapping("/{id}/rejeitar")
+    @PreAuthorize("hasAuthority('compras:pedido:aprovar')")
+    public ResponseEntity<PedidoCompraResponse> rejeitar(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser u,
+            @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(service.rejeitar(id, u.getEmpresaId(), u.getId(), body.get("motivo")));
+    }
 }

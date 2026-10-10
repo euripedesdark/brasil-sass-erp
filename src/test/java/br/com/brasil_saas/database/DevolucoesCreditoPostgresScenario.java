@@ -46,8 +46,12 @@ final class DevolucoesCreditoPostgresScenario {
                 factory.getRepository(ExtratoRepository.class),factory.getRepository(ConferenciaFaturaCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraItemRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.PedidoCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraRepository.class),factory.getRepository(br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository.class),factory.getRepository(br.com.brasil_saas.fiscal.repository.NfeRepository.class));
         var fluxoVenda=new DocumentoFluxoService(factory.getRepository(DocumentoFluxoRepository.class));
         var contabeis=new br.com.brasil_saas.contabilidade.service.impl.ContabilidadeServiceImpl(factory.getRepository(br.com.brasil_saas.contabilidade.repository.CtbLancamentoRepository.class),factory.getRepository(br.com.brasil_saas.contabilidade.repository.CtbPartidaRepository.class),factory.getRepository(br.com.brasil_saas.contabilidade.repository.CtbFechamentoRepository.class),factory.getRepository(br.com.brasil_saas.financeiro.repository.PlanoContasRepository.class),titulosVenda);
+        var comissoes=new br.com.brasil_saas.financeiro.service.impl.ComissaoServiceImpl(
+                factory.getRepository(br.com.brasil_saas.financeiro.repository.ComissaoRepository.class),
+                factory.getRepository(br.com.brasil_saas.vendas.repository.RegraComissaoRepository.class),
+                factory.getRepository(br.com.brasil_saas.rh.repository.FuncionarioRepository.class));
         var venda=new DevolucaoService(devVenda,factory.getRepository(VenDevolucaoItemRepository.class),pedidosVenda,saldos,movimentos,depositos,
-                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda,contabeis);
+                titulosVenda,baixasVenda,tituloSvcVenda,fluxoVenda,contabeis,comissoes);
         var retorno=venda.solicitar(empresa,pedidoVendaId,"Teste sintetico",Map.of(empresa,BigDecimal.ONE));
         assertEquals(empresa,retorno.getClienteId()); assertNotNull(retorno.getNumero());
         venda.decidir(empresa,null,retorno.getId(),true);venda.receber(empresa,retorno.getId());session.flush();

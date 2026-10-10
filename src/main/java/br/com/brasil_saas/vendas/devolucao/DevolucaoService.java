@@ -36,6 +36,7 @@ public class DevolucaoService {
     private final TituloService tituloService;
     private final DocumentoFluxoService documentoFluxoService;
     private final ContabilidadeService contabilidadeService;
+    private final br.com.brasil_saas.financeiro.service.ComissaoService comissaoService;
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
@@ -128,6 +129,7 @@ public class DevolucaoService {
             itens.save(i);
         }
         integrarFinanceiro(empresaId, d, linhas);
+        comissaoService.estornarPorPedido(empresaId, d.getPedidoId(), "Devolucao " + d.getNumero());
         d.setStatus("RECEBIDA");
         d.setRecebidaEm(LocalDateTime.now());
         return devolucoes.save(d);

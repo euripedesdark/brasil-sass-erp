@@ -101,6 +101,15 @@ public class PedidoVendaController {
         return ResponseEntity.ok(service.abrirPosVenda(id, empresaDoToken(user), user.getId(), r.motivo(), r.equipamento()));
     }
 
+    @PostMapping("/{id}/faturar-parcial")
+    @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
+    public ResponseEntity<PedidoVendaResponse> faturarParcial(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @RequestBody java.util.Map<Long, java.math.BigDecimal> quantidades) {
+        return ResponseEntity.ok(service.faturarParcial(id, empresaDoToken(user), quantidades));
+    }
+
     @PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAuthority('vendas:pedido:escrita')")
     public ResponseEntity<Void> cancelar(
