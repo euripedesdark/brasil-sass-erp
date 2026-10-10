@@ -257,7 +257,7 @@ export const ContaBancaria = () => {
                             onValueChange={(e) => setForm({ ...form, saldoInicial: e.value })}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                 </div>

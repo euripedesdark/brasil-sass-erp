@@ -378,7 +378,7 @@ export const Vendas = () => {
                                 }} dropdown forceSelection placeholder="Buscar produto" />
                         </div>
                         <div className="col-4 md:col-2"><label>Qtd</label><InputNumber value={itemAtual.quantidade} onValueChange={(e) => setItemAtual({ ...itemAtual, quantidade: e.value })} min={0.001} /></div>
-                        <div className="col-4 md:col-2"><label>Unit.</label><InputNumber value={itemAtual.valorUnitario} onValueChange={(e) => setItemAtual({ ...itemAtual, valorUnitario: e.value })} mode="currency" currency="BRL" locale="pt-BR" /></div>
+                        <div className="col-4 md:col-2"><label>Unit.</label><InputNumber value={itemAtual.valorUnitario} onValueChange={(e) => setItemAtual({ ...itemAtual, valorUnitario: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} /></div>
                         <div className="col-4 md:col-2"><Button label="Add" icon="pi pi-plus" onClick={adicionarItem} /></div>
                     </div>
                 )}

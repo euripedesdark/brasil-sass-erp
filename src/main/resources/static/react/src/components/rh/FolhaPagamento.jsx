@@ -370,7 +370,7 @@ export const FolhaPagamento = () => {
                                 onChange={(e) => setNovaFolha({...novaFolha, valorTotal: e.value})}
                                 mode="currency"
                                 currency="BRL"
-                                locale="pt-BR"
+                                locale={localeAtivo()}
                             />
                         </div>
                     </div>

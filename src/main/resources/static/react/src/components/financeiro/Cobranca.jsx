@@ -229,7 +229,7 @@ export const Cobranca = () => {
                 <div className="grid p-fluid">
                     <div className="col-12">
                         <label>Valor prometido *</label>
-                        <InputNumber value={fProm.valor} onValueChange={(e) => setFProm({ ...fProm, valor: e.value })} mode="currency" currency="BRL" locale="pt-BR" min={0.01} />
+                        <InputNumber value={fProm.valor} onValueChange={(e) => setFProm({ ...fProm, valor: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} min={0.01} />
                     </div>
                     <div className="col-12">
                         <label>Data prometida *</label>

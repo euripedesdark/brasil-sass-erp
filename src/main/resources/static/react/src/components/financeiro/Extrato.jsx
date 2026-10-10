@@ -321,7 +321,7 @@ export const Extrato = () => {
                             onValueChange={(e) => setForm({ ...form, valor: e.value })}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="col-6 field">

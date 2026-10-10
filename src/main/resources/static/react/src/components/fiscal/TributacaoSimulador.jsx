@@ -71,7 +71,7 @@ export const TributacaoSimulador = () => {
             <p className="text-color-secondary">Resolve regra (NCM/CFOP/UF) e calcula ICMS, PIS, COFINS, DIFAL e ST.</p>
             <Card className="mb-3">
                 <div className="grid">
-                    <div className="col-6 md:col-3"><label className="block mb-1">Base</label><InputNumber value={base} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale="pt-BR" className="w-full" /></div>
+                    <div className="col-6 md:col-3"><label className="block mb-1">Base</label><InputNumber value={base} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">NCM</label><InputText value={ncm} onChange={(e) => setNcm(e.target.value)} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">CFOP</label><InputText value={cfop} onChange={(e) => setCfop(e.target.value)} className="w-full" /></div>
                     <div className="col-3 md:col-1"><label className="block mb-1">UF ori</label><InputText value={ufO} onChange={(e) => setUfO(e.target.value)} className="w-full" maxLength={2} /></div>

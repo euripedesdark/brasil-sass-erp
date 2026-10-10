@@ -470,27 +470,27 @@ export const CadastroProdutos = () => {
 
                         <div className="col-12 md:col-3 field">
                             <label className="font-bold mb-2 block">{t('productScreen.costPrice')}</label>
-                            <InputNumber value={form.precoCusto} mode="currency" locale="pt-BR" currency="BRL"
+                            <InputNumber value={form.precoCusto} mode="currency" locale={localeAtivo()} currency="BRL"
                                 onValueChange={(e) => setForm({ ...form, precoCusto: e.value })} />
                         </div>
                         <div className="col-12 md:col-3 field">
                             <label className="font-bold mb-2 block">{t('productScreen.salePrice')}</label>
-                            <InputNumber value={form.precoVenda} mode="currency" locale="pt-BR" currency="BRL"
+                            <InputNumber value={form.precoVenda} mode="currency" locale={localeAtivo()} currency="BRL"
                                 onValueChange={(e) => setForm({ ...form, precoVenda: e.value })} />
                         </div>
                         <div className="col-12 md:col-2 field">
                             <label className="font-bold mb-2 block">{t('productScreen.minStock')}</label>
-                            <InputNumber value={form.estoqueMinimo} locale="pt-BR"
+                            <InputNumber value={form.estoqueMinimo} locale={localeAtivo()}
                                 onValueChange={(e) => setForm({ ...form, estoqueMinimo: e.value })} />
                         </div>
                         <div className="col-12 md:col-2 field">
                             <label className="font-bold mb-2 block">{t('productScreen.maxStock')}</label>
-                            <InputNumber value={form.estoqueMaximo} locale="pt-BR"
+                            <InputNumber value={form.estoqueMaximo} locale={localeAtivo()}
                                 onValueChange={(e) => setForm({ ...form, estoqueMaximo: e.value })} />
                         </div>
                         <div className="col-12 md:col-2 field">
                             <label className="font-bold mb-2 block">{t('productScreen.weight')}</label>
-                            <InputNumber value={form.peso} locale="pt-BR" maxFractionDigits={3}
+                            <InputNumber value={form.peso} locale={localeAtivo()} maxFractionDigits={3}
                                 onValueChange={(e) => setForm({ ...form, peso: e.value })} />
                         </div>
 
