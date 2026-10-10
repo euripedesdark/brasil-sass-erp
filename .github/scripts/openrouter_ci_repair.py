@@ -4,19 +4,30 @@ from pathlib import Path
 REPO=os.environ["GITHUB_REPOSITORY"]; RUN_ID=os.environ["GITHUB_RUN_ID"]
 KEY=os.environ["OPENROUTER_API_KEY"].strip(); MODEL=os.environ.get("OPENROUTER_MODEL","").strip() or "openrouter/free"
 EV=json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text()); RUN=EV.get("workflow_run",{}); PRS=RUN.get("pull_requests") or []
-if not KEY or RUN.get("conclusion")!="failure" or not PRS: raise SystemExit("Sem chave, falha confirmada ou PR associada.")
-PR=PRS[0]; N=int(PR["number"]); H=PR.get("head") or {}; B=PR.get("base") or {}
-if (H.get("repo") or {}).get("full_name")!=REPO: raise SystemExit("PR de fork; correção automática bloqueada.")
-HREF,HASH,BREF=H.get("ref"),H.get("sha"),B.get("ref")
-if not HREF or not HASH or not BREF or HREF==BREF: raise SystemExit("Metadados de PR inválidos.")
+if not KEY or RUN.get("conclusion")!="failure": raise SystemExit("Sem chave ou falha confirmada.")
+N=None
+if PRS:
+ PR=PRS[0]; N=int(PR["number"]); H=PR.get("head") or {}; B=PR.get("base") or {}
+ if (H.get("repo") or {}).get("full_name")!=REPO: raise SystemExit("PR de fork; correção automática bloqueada.")
+ HREF,HASH=H.get("ref"),H.get("sha"); TARGET=B.get("ref")
+ if not HREF or not HASH or not TARGET or HREF==TARGET: raise SystemExit("Metadados de PR inválidos.")
+ REPAIR_BASE=HREF
+else:
+ HREF=RUN.get("head_branch"); HASH=RUN.get("head_sha")
+ TARGET=(EV.get("repository") or {}).get("default_branch","main")
+ if not HREF or HREF!=TARGET or not HASH: raise SystemExit("Push de branch não padrão; reparo automático bloqueado.")
+ REPAIR_BASE=TARGET
+
 def cmd(args,check=True):
  r=subprocess.run(args,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
  if check and r.returncode: raise SystemExit(f"Falha no comando {args[0]}; detalhes omitidos.")
  return r.stdout
 def gh(*args): return cmd(["gh",*args])
-def comment(body): gh("api",f"repos/{REPO}/issues/{N}/comments","-f","body="+body)
-prefix=f"agent/ci-repair-pr-{N}-"
-opened=json.loads(gh("pr","list","--repo",REPO,"--state","open","--base",HREF,"--json","url,headRefName"))
+def comment(body):
+ if N: gh("api",f"repos/{REPO}/issues/{N}/comments","-f","body="+body)
+ else: gh("api",f"repos/{REPO}/commits/{HASH}/comments","-f","body="+body)
+prefix=f"agent/ci-repair-pr-{N}-" if N else "agent/ci-repair-main-"
+opened=json.loads(gh("pr","list","--repo",REPO,"--state","open","--base",REPAIR_BASE,"--json","url,headRefName"))
 existing=[p for p in opened if p.get("headRefName","").startswith(prefix)]
 if existing:
  comment(f"## Agente CI OpenRouter\nFalha [run {RUN_ID}](https://github.com/{REPO}/actions/runs/{RUN_ID}) detectada; já existe PR de correção: {existing[0]['url']}.")
@@ -65,8 +76,10 @@ cmd(["git","apply","--check",str(pf)]); cmd(["git","apply",str(pf)])
 if not cmd(["git","status","--porcelain"]).strip(): raise SystemExit("Patch não alterou arquivos.")
 cmd(["git","config","user.name","github-actions[bot]"]); cmd(["git","config","user.email","41898282+github-actions[bot]@users.noreply.github.com"])
 cmd(["git","add","--",*[p for pair in pairs for p in pair]]); cmd(["git","commit","-m",f"fix(ci): repair PR #{N}"]); cmd(["git","push","--set-upstream","origin",branch])
-body=f"""## Correção automática proposta a partir da CI\n\n{summary}\n\n- Falha: [workflow run {RUN_ID}](https://github.com/{REPO}/actions/runs/{RUN_ID})\n- PR de origem: #{N}\n- Modelo: `{model}`\n- Gerada por IA; requer revisão humana.\n- Sem merge ou deploy automático; a CI normal deve validar a alteração.\n\nRelated to #{N}"""
-created=cmd(["gh","pr","create","--repo",REPO,"--base",HREF,"--head",branch,"--title",title,"--body",body],check=False).strip()
+origin=f"- PR de origem: #{N}\\n" if N else "- Origem: falha em push para a branch principal\\n"
+related=f"\\nRelated to #{N}" if N else ""
+body=f"""## Correção automática proposta a partir da CI\n\n{summary}\n\n- Falha: [workflow run {RUN_ID}](https://github.com/{REPO}/actions/runs/{RUN_ID})\n{origin}- Modelo: `{model}`\n- Gerada por IA; requer revisão humana.\n- Sem merge ou deploy automático; a CI normal deve validar a alteração.{related}"""
+created=cmd(["gh","pr","create","--repo",REPO,"--base",REPAIR_BASE,"--head",branch,"--title",title,"--body",body],check=False).strip()
 if not created: raise SystemExit("Commit enviado, mas a PR de correção não foi aberta.")
 url=created.splitlines()[-1]; comment(f"## Correção automática de CI proposta\nA falha [run {RUN_ID}](https://github.com/{REPO}/actions/runs/{RUN_ID}) gerou esta PR: {url}\n\n{summary}\n\nA CI precisa validar a alteração; sem merge ou deploy automático.")
 print(url)
