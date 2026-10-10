@@ -55,39 +55,6 @@ const applyAttribute = (element, attribute, language) => {
   state.applied = next;
 };
 
-// WeakMaps mantem o ORIGINAL, permitindo trocar en -> fr -> es -> pt sem reload.
-// Textos substituidos pelo React sao reconhecidos como novo original.
-const originalTexts = new WeakMap();
-const originalAttributes = new WeakMap();
-const ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'aria-placeholder', 'alt'];
-const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'CODE', 'PRE', 'OPTION']);
-const skipNode = node => {
-  const el = node.parentElement;
-  return !el || SKIP.has(el.tagName) || el.closest('[contenteditable="true"],[data-i18n-skip="true"]');
-};
-function translateTextNode(node, language) {
-  if (skipNode(node) || !node.nodeValue?.trim()) return;
-  const remembered = originalTexts.get(node);
-  const original = remembered && node.nodeValue === remembered.last
-    ? remembered.original : node.nodeValue;
-  const next = translate(original, language);
-  if (next !== node.nodeValue) node.nodeValue = next;
-  originalTexts.set(node, { original, last: next });
-}
-function translateAttributes(el, language) {
-  if (el.closest('[contenteditable="true"],[data-i18n-skip="true"]')) return;
-  const remembered = originalAttributes.get(el) || {};
-  for (const name of ATTRIBUTES) {
-    const current = el.getAttribute(name);
-    if (current === null) continue;
-    const last = remembered[name];
-    const original = last && current === last.last ? last.original : current;
-    const next = translate(original, language);
-    if (next !== current) el.setAttribute(name, next);
-    remembered[name] = { original, last: next };
-  }
-  originalAttributes.set(el, remembered);
-}
 export const applyDomTranslations = () => {
   if (typeof document === 'undefined' || !document.body) return;
   const language = normalizeUiLanguage(i18n.resolvedLanguage || i18n.language);
