@@ -5,89 +5,103 @@ import enUS from '../../locales/en-US.json';
 import esES from '../../locales/es-ES.json';
 import frFR from '../../locales/fr-FR.json';
 
-const LOCALES = { 'pt-BR': ptBR, 'en-US': enUS, 'es-ES': esES, 'fr-FR': frFR };
-
-const flatten = (value, prefix = '', output = {}) => {
-  Object.entries(value || {}).forEach(([key, item]) => {
+// Compatibilidade para telas legadas ainda sem t(): usa as mesmas quatro
+// traducoes versionadas. Esta camada NAO chama APIs externas nem altera dados.
+const localeObjects = { 'pt-BR': ptBR, 'en-US': enUS, 'es-ES': esES, 'fr-FR': frFR };
+const flatten = (value, prefix = '', out = {}) => {
+  for (const [key, item] of Object.entries(value || {})) {
     const path = prefix ? prefix + '.' + key : key;
-    if (item && typeof item === 'object' && !Array.isArray(item)) flatten(item, path, output);
-    else if (typeof item === 'string' && item.trim()) output[path] = item;
-  });
-  return output;
+    if (item && typeof item === 'object' && !Array.isArray(item)) flatten(item, path, out);
+    else if (typeof item === 'string' && item.trim()) out[path] = item;
+  }
+  return out;
 };
-
-const dictionaries = Object.fromEntries(Object.entries(LOCALES).map(([language, locale]) => [language, flatten(locale)]));
-const normalizeLanguage = language => {
+const dictionaries = Object.fromEntries(
+  Object.entries(localeObjects).map(([lang, entries]) => [lang, flatten(entries)])
+);
+const languageCode = language => {
   if (dictionaries[language]) return language;
-  const base = language?.split('-')[0];
-  return Object.keys(dictionaries).find(code => code.split('-')[0] === base) || 'pt-BR';
+  return Object.keys(dictionaries).find(key => key.startsWith((language || '').split('-')[0] + '-')) || 'pt-BR';
 };
-
-const buildReverseDictionary = language => {
-  const target = dictionaries[normalizeLanguage(language)];
-  const source = dictionaries['pt-BR'];
-  const reverse = new Map();
-  Object.keys(source).forEach(key => {
-    const original = source[key];
-    const translated = target[key];
-    if (original && translated && original !== translated) reverse.set(original.trim(), translated);
-  });
-  return reverse;
-};
-
+const reverse = Object.fromEntries(Object.keys(dictionaries).map(lang => {
+  const entries = new Map();
+  for (const [key, original] of Object.entries(dictionaries['pt-BR'])) {
+    const translation = dictionaries[lang][key];
+    if (translation && original.trim() && translation !== original) entries.set(original.trim(), translation);
+  }
+  return [lang, entries];
+}));
 const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const translateTemplate = (text, reverse) => {
-  const exact = reverse.get(text.trim());
-  if (exact) return text.startsWith(' ') ? ' ' + exact : exact;
-  for (const [source, target] of reverse.entries()) {
+const translate = (original, language) => {
+  if (language === 'pt-BR' || !original?.trim()) return original;
+  const dictionary = reverse[language];
+  const trimmed = original.trim();
+  const direct = dictionary.get(trimmed);
+  const whitespace = original.match(/^(\s*)/)[0];
+  const suffix = original.match(/(\s*)$/)[0];
+  if (direct) return whitespace + direct + suffix;
+  for (const [source, translated] of dictionary) {
     if (!source.includes('{{')) continue;
     const parts = source.split(/(\{\{[^}]+\}\})/g).filter(Boolean);
-    let pattern = '^';
-    parts.forEach(part => {
-      pattern += /^\{\{[^}]+\}\}$/.test(part) ? '(.+?)' : escapeRegex(part);
-    });
-    const match = text.trim().match(new RegExp(pattern + '$'));
+    let placeholders = 0;
+    const regex = new RegExp('^' + parts.map(part => {
+      if (/^\{\{[^}]+\}\}$/.test(part)) { placeholders++; return '(.+?)'; }
+      return escapeRegex(part);
+    }).join('') + '$');
+    if (!placeholders) continue;
+    const match = trimmed.match(regex);
     if (!match) continue;
     let index = 1;
-    const translated = target.replace(/\{\{[^}]+\}\}/g, () => match[index++] ?? '');
-    return text.startsWith(' ') ? ' ' + translated : translated;
+    return whitespace + translated.replace(/\{\{[^}]+\}\}/g, () => match[index++] || '') + suffix;
   }
-  return null;
+  return original;
 };
 
+// WeakMaps mantem o ORIGINAL, permitindo trocar en -> fr -> es -> pt sem reload.
+// Textos substituidos pelo React sao reconhecidos como novo original.
+const originalTexts = new WeakMap();
+const originalAttributes = new WeakMap();
+const ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'aria-placeholder', 'alt'];
+const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'CODE', 'PRE', 'OPTION']);
+const skipNode = node => {
+  const el = node.parentElement;
+  return !el || SKIP.has(el.tagName) || el.closest('[contenteditable="true"],[data-i18n-skip="true"]');
+};
+function translateTextNode(node, language) {
+  if (skipNode(node) || !node.nodeValue?.trim()) return;
+  const remembered = originalTexts.get(node);
+  const original = remembered && node.nodeValue === remembered.last
+    ? remembered.original : node.nodeValue;
+  const next = translate(original, language);
+  if (next !== node.nodeValue) node.nodeValue = next;
+  originalTexts.set(node, { original, last: next });
+}
+function translateAttributes(el, language) {
+  if (el.closest('[contenteditable="true"],[data-i18n-skip="true"]')) return;
+  const remembered = originalAttributes.get(el) || {};
+  for (const name of ATTRIBUTES) {
+    const current = el.getAttribute(name);
+    if (current === null) continue;
+    const last = remembered[name];
+    const original = last && current === last.last ? last.original : current;
+    const next = translate(original, language);
+    if (next !== current) el.setAttribute(name, next);
+    remembered[name] = { original, last: next };
+  }
+  originalAttributes.set(el, remembered);
+}
 export const applyDomTranslations = () => {
   if (typeof document === 'undefined') return;
-  const root = document.getElementById('root');
-  if (!root) return;
-  const language = normalizeLanguage(i18n.language);
-  if (language === 'pt-BR') return;
-  const reverse = buildReverseDictionary(language);
-  if (!reverse.size) return;
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      const parent = node.parentElement;
-      if (!parent || !node.nodeValue?.trim()) return NodeFilter.FILTER_REJECT;
-      if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA'].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  const nodes = [];
-  let node;
-  while ((node = walker.nextNode())) nodes.push(node);
-  nodes.forEach(textNode => {
-    const translated = translateTemplate(textNode.nodeValue, reverse);
-    if (translated && translated !== textNode.nodeValue) textNode.nodeValue = translated;
-  });
-  root.querySelectorAll('[placeholder],[title],[aria-label],[aria-placeholder],[alt]').forEach(element => {
-    ['placeholder', 'title', 'aria-label', 'aria-placeholder', 'alt'].forEach(attribute => {
-      const value = element.getAttribute(attribute);
-      if (!value) return;
-      const translated = translateTemplate(value, reverse);
-      if (translated && translated !== value) element.setAttribute(attribute, translated);
-    });
-  });
+  const language = languageCode(i18n.resolvedLanguage || i18n.language);
+  // Portais PrimeReact (Dialog, Dropdown, Toast) ficam diretamente no body.
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const texts = [];
+  while (walker.nextNode()) texts.push(walker.currentNode);
+  for (const node of texts) translateTextNode(node, language);
+  for (const el of document.body.querySelectorAll('[placeholder],[title],[aria-label],[aria-placeholder],[alt]')) {
+    translateAttributes(el, language);
+  }
 };
-
 export function I18nDomBridge() {
   useEffect(() => {
     let frame = null;
@@ -95,19 +109,19 @@ export function I18nDomBridge() {
       if (frame !== null) return;
       frame = window.requestAnimationFrame(() => { frame = null; applyDomTranslations(); });
     };
-    const root = document.getElementById('root') || document.body;
     const observer = new MutationObserver(schedule);
-    observer.observe(root, { childList: true, subtree: true, characterData: true });
-    const onLanguageChanged = () => window.requestAnimationFrame(applyDomTranslations);
-    i18n.on('languageChanged', onLanguageChanged);
+    observer.observe(document.body, {
+      childList: true, subtree: true, characterData: true, attributes: true,
+      attributeFilter: ATTRIBUTES
+    });
+    i18n.on('languageChanged', schedule);
     schedule();
     return () => {
       observer.disconnect();
-      i18n.off('languageChanged', onLanguageChanged);
+      i18n.off('languageChanged', schedule);
       if (frame !== null) window.cancelAnimationFrame(frame);
     };
   }, []);
   return null;
-};
-
+}
 export default I18nDomBridge;

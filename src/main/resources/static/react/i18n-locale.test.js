@@ -56,6 +56,16 @@ if (source) {
   }
 }
 
+// Termos reutilizados nas telas legadas devem existir nos quatro idiomas.
+if (source) {
+  for (const language of languages) {
+    const legacy = locales[language];
+    const keys = Object.keys(source).filter(key => key.startsWith('legacyUi.'));
+    if (keys.length < 100) fail('legacyUi has too few labels');
+    if (!keys.every(key => legacy[key]?.trim())) fail(language + ' has missing UI terms');
+    else ok(language + ' has ' + keys.length + ' legacy UI translations');
+  }
+}
 const requiredTranslations = {
   'en-US': {
     'common.open': 'Open',
