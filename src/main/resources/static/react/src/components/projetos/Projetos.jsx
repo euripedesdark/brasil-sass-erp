@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'primereact/button';
@@ -16,7 +17,7 @@ import { Toast } from 'primereact/toast';
 import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/projetos';
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const Projetos = () => {
     const { t } = useTranslation();
@@ -203,7 +204,7 @@ export const Projetos = () => {
                     <div className='bc-form-col-6'><label className='bc-label'>Código *</label><InputText value={f.codigo || ''} onChange={(e) => setF({ ...f, codigo: e.target.value })} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Gerente</label><InputText value={f.gerente || ''} onChange={(e) => setF({ ...f, gerente: e.target.value })} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Nome *</label><InputText value={f.nome || ''} onChange={(e) => setF({ ...f, nome: e.target.value })} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Orçamento</label><InputNumber value={f.orcamentoTotal} onValueChange={(e) => setF({ ...f, orcamentoTotal: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Orçamento</label><InputNumber value={f.orcamentoTotal} onValueChange={(e) => setF({ ...f, orcamentoTotal: e.value })} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Início</label><Calendar value={f.dataInicio} onChange={(e) => setF({ ...f, dataInicio: e.target.value })} dateFormat={formatoData()} showIcon /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlg(false)} /><Button label='Salvar' icon='pi pi-check' onClick={salvar} /></div>
@@ -220,7 +221,7 @@ export const Projetos = () => {
             <Dialog visible={dlgMov} onHide={() => setDlgMov(false)} header='Lançar custo/receita' modal style={{ width: 'min(96vw, 480px)' }}>
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-6'><label className='bc-label'>Tipo</label><Dropdown value={fMov.tipo} options={['CUSTO','RECEITA'].map((t) => ({ label: t, value: t }))} onChange={(e) => setFMov({ ...fMov, tipo: e.value })} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={fMov.valor} onValueChange={(e) => setFMov({ ...fMov, valor: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={fMov.valor} onValueChange={(e) => setFMov({ ...fMov, valor: e.value })} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Descrição *</label><InputText value={fMov.descricao || ''} onChange={(e) => setFMov({ ...fMov, descricao: e.target.value })} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgMov(false)} /><Button label='Lançar' icon='pi pi-check' onClick={salvarMov} /></div>

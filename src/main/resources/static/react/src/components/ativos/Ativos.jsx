@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { useTranslation } from 'react-i18next';
 import {Card} from 'primereact/card';
 import {TabView, TabPanel} from 'primereact/tabview';
@@ -255,8 +256,8 @@ export default function Ativos() {
                 <div className="col-12 md:col-4"><label>{t('ativos.fDataAq')}</label><Calendar value={af.dataAquisicao} onChange={e => setAf({...af, dataAquisicao: e.value})} dateFormat={formatoData()} showIcon/></div>
                 <div className="col-12 md:col-4"><label>{t('ativos.fIniDep')}</label><Calendar value={af.dataInicioDepreciacao} onChange={e => setAf({...af, dataInicioDepreciacao: e.value})} dateFormat={formatoData()} showIcon/></div>
                 <div className="col-12 md:col-4"><label>{t('ativos.fGarantia')}</label><Calendar value={af.garantiaAte} onChange={e => setAf({...af, garantiaAte: e.value})} dateFormat={formatoData()} showIcon/></div>
-                {!af.id && <div className="col-12 md:col-4"><label>{t('ativos.fVlrAq')}</label><InputNumber value={af.valorAquisicao} onValueChange={e => setAf({...af, valorAquisicao: e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>}
-                <div className="col-12 md:col-4"><label>{t('ativos.fVlrResidual')}</label><InputNumber value={af.valorResidual} onValueChange={e => setAf({...af, valorResidual: e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
+                {!af.id && <div className="col-12 md:col-4"><label>{t('ativos.fVlrAq')}</label><InputNumber value={af.valorAquisicao} onValueChange={e => setAf({...af, valorAquisicao: e.value})} mode="currency" currency="BRL" locale={localeAtivo()}/></div>}
+                <div className="col-12 md:col-4"><label>{t('ativos.fVlrResidual')}</label><InputNumber value={af.valorResidual} onValueChange={e => setAf({...af, valorResidual: e.value})} mode="currency" currency="BRL" locale={localeAtivo()}/></div>
                 <div className="col-12 md:col-4"><label>{t('ativos.hVidaUtil')}</label><InputNumber value={af.vidaUtilMeses} onValueChange={e => setAf({...af, vidaUtilMeses: e.value})}/></div>
                 <div className="col-12 md:col-4"><label>{t('ativos.fMetodoVazio')}</label><Dropdown value={af.metodoDepreciacao} options={metodosOpts(t)} showClear onChange={e => setAf({...af, metodoDepreciacao: e.value})}/></div>
                 <div className="col-12 md:col-4"><label>{t('ativos.fUnContador')}</label><InputText value={af.unidadeContador || ''} placeholder={t('ativos.phUnContador')} onChange={e => setAf({...af, unidadeContador: e.target.value})}/></div>

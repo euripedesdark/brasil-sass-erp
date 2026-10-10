@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -12,7 +13,7 @@ import { Toast } from 'primereact/toast';
 import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/financeiro/renegociacoes';
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const Renegociacao = () => {
     const toast = useRef(null);
@@ -69,7 +70,7 @@ export const Renegociacao = () => {
                 {sel && (<p><strong>{sel.descricao}</strong> — saldo {fmt(sel.valorSaldo)}</p>)}
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-6'><label className='bc-label'>Novo vencimento *</label><Calendar value={novoVenc} onChange={(e) => setNovoVenc(e.value)} dateFormat={formatoData()} showIcon /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Acréscimo</label><InputNumber value={acrescimo} onValueChange={(e) => setAcrescimo(e.value)} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Acréscimo</label><InputNumber value={acrescimo} onValueChange={(e) => setAcrescimo(e.value)} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Observação</label><InputTextarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlg(false)} /><Button label='Confirmar' icon='pi pi-check' severity='success' onClick={confirmar} /></div>

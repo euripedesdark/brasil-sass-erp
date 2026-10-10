@@ -48,6 +48,38 @@ public class ReservaEstoqueController {
         return repository.findByEmpresaIdAndDeletedAtIsNullOrderByDataReservaDesc(user.getEmpresaId());
     }
 
+    /**
+     * Sugere de quais lotes reservar/separar a quantidade pedida, por FEFO (padrao)
+     * ou FIFO. Somente leitura: o chamador cria uma reserva por lote sugerido
+     * (POST /api/estoque/reservas com loteId), que continua travando e validando.
+     */
+    @GetMapping("/sugerir-lotes")
+    @PreAuthorize("hasAuthority('estoque:reserva:leitura')")
+    public Map<String, Object> sugerirLotes(@AuthenticationPrincipal AuthenticatedUser user,
+                                            @RequestParam Long depositoId,
+                                            @RequestParam Long produtoId,
+                                            @RequestParam BigDecimal quantidade,
+                                            @RequestParam(defaultValue = "FEFO") String estrategia) {
+        if (quantidade == null || quantidade.signum() <= 0)
+            throw new BusinessException("Quantidade deve ser maior que zero");
+        br.com.brasil_saas.estoque.service.LoteSelector.Estrategia est;
+        try { est = br.com.brasil_saas.estoque.service.LoteSelector.Estrategia.valueOf(estrategia.toUpperCase()); }
+        catch (IllegalArgumentException ex) { throw new BusinessException("Estrategia deve ser FEFO ou FIFO"); }
+
+        List<br.com.brasil_saas.estoque.service.LoteSelector.LoteDisponivel> lotes = new java.util.ArrayList<>();
+        for (LoteEstoque l : loteRepository.findByEmpresaIdAndProdutoIdAndDeletedAtIsNullOrderByDataValidadeAsc(user.getEmpresaId(), produtoId)) {
+            if (l.getDepositoId() != null && !l.getDepositoId().equals(depositoId)) continue;
+            BigDecimal reservado = repository.sumAtivasPorLote(user.getEmpresaId(), depositoId, produtoId, l.getId());
+            BigDecimal livre = (l.getQuantidade() == null ? BigDecimal.ZERO : l.getQuantidade())
+                    .subtract(reservado == null ? BigDecimal.ZERO : reservado);
+            lotes.add(new br.com.brasil_saas.estoque.service.LoteSelector.LoteDisponivel(
+                    l.getId(), l.getStatus(), l.getDataValidade(), l.getDataFabricacao(), livre));
+        }
+        var r = br.com.brasil_saas.estoque.service.LoteSelector.selecionar(lotes, quantidade, est, java.time.LocalDate.now());
+        return Map.of("estrategia", est.name(), "completo", r.completo(),
+                "faltante", r.faltante(), "alocacoes", r.alocacoes());
+    }
+
     @GetMapping("/picking-sugestoes")
     @PreAuthorize("hasAuthority('estoque:picking:leitura')")
     public List<Map<String,Object>> pickingSugestoes(@AuthenticationPrincipal AuthenticatedUser user,

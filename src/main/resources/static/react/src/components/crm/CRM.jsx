@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
 import { Button } from 'primereact/button';
@@ -19,7 +20,7 @@ import { formatoData } from '../shared/LocaleData.js';
 const BASE = '/api/crm';
 const ETAPAS = ['PROSPECCAO','QUALIFICACAO','PROPOSTA','NEGOCIACAO','FECHAMENTO'];
 const TIPOS_ATIV = ['LIGACAO','EMAIL','VISITA','TAREFA','REUNIAO'];
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const CRM = () => {
     const { t } = useTranslation();
@@ -174,7 +175,7 @@ export const CRM = () => {
                     <div className='bc-form-col-6'><label className='bc-label'>Empresa</label><InputText value={fLead.empresaNome || ''} onChange={(e) => setFLead({ ...fLead, empresaNome: e.target.value })} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Email</label><InputText value={fLead.email || ''} onChange={(e) => setFLead({ ...fLead, email: e.target.value })} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Telefone</label><InputText value={fLead.telefone || ''} onChange={(e) => setFLead({ ...fLead, telefone: e.target.value })} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Valor estimado</label><InputNumber value={fLead.valorEstimado} onValueChange={(e) => setFLead({ ...fLead, valorEstimado: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Valor estimado</label><InputNumber value={fLead.valorEstimado} onValueChange={(e) => setFLead({ ...fLead, valorEstimado: e.value })} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Probabilidade %</label><InputNumber value={fLead.probabilidade ?? 10} onValueChange={(e) => setFLead({ ...fLead, probabilidade: e.value })} suffix=' %' min={0} max={100} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Observação</label><InputTextarea rows={2} value={fLead.observacao || ''} onChange={(e) => setFLead({ ...fLead, observacao: e.target.value })} /></div>
                 </div>

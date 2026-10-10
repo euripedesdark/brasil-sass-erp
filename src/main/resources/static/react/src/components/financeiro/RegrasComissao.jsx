@@ -259,16 +259,16 @@ export const RegrasComissao = () => {
                                   onChange={(e) => setForm({ ...form, baseCalculo: e.value })} />)}
 
                     {campo('min', t('commissionRules.minSales'),
-                        <InputNumber id="min" value={form.faixaValorMin} mode="currency" currency="BRL" locale="pt-BR"
+                        <InputNumber id="min" value={form.faixaValorMin} mode="currency" currency="BRL" locale={localeAtivo()}
                                      onValueChange={(e) => setForm({ ...form, faixaValorMin: e.value ?? 0 })} />)}
 
                     {campo('max', t('commissionRules.maxSales'),
-                        <InputNumber id="max" value={form.faixaValorMax} mode="currency" currency="BRL" locale="pt-BR"
+                        <InputNumber id="max" value={form.faixaValorMax} mode="currency" currency="BRL" locale={localeAtivo()}
                                      placeholder={t('commissionRules.noCeiling')}
                                      onValueChange={(e) => setForm({ ...form, faixaValorMax: e.value ?? null })} />)}
 
                     {campo('meta', t('commissionRules.accumulatedTarget'),
-                        <InputNumber id="meta" value={form.metaValor} mode="currency" currency="BRL" locale="pt-BR"
+                        <InputNumber id="meta" value={form.metaValor} mode="currency" currency="BRL" locale={localeAtivo()}
                                      placeholder={t('commissionRules.optional')}
                                      onValueChange={(e) => setForm({ ...form, metaValor: e.value ?? null })} />)}
 

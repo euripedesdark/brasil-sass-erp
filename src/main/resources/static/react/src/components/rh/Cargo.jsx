@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { localeAtivo } from '../shared/LocaleData.js';
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
@@ -271,7 +272,7 @@ export const Cargo = () => {
                                 onChange={(e) => setNovoCargo({...novoCargo, salarioBase: e.value})}
                                 mode="currency"
                                 currency="BRL"
-                                locale="pt-BR"
+                                locale={localeAtivo()}
                                 placeholder="Salario base"
                             />
                         </div>
