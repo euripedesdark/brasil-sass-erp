@@ -31,6 +31,7 @@
     font-weight: 600;
     text-align: center;
     padding: 12px;
+    color: #eaf3ff;
 }
 
 .condicao-pagamento-enterprise-container .p-datatable .p-datatable-tbody > tr > td {
@@ -41,11 +42,13 @@
 
 .condicao-pagamento-enterprise-container .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
     background-color: rgba(15,34,60,.44);
+    color: #eaf3ff;
 }
 
 .condicao-pagamento-enterprise-container .p-datatable .p-datatable-tbody > tr:hover > td {
     background-color: rgba(37,65,96,.56);
     cursor: pointer;
+    color: #eaf3ff;
 }
 
 /* Acoes botoes */
