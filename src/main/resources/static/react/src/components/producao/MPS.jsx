@@ -6,9 +6,10 @@ import { DataTable } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/producao/mps';
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 3 });
 
 export const MPS = () => {
     const toast = useRef(null);

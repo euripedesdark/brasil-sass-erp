@@ -15,6 +15,7 @@ import { Message } from 'primereact/message';
 import ContaBancariaService from '../../services/ContaBancariaService';
 import ExtratoService from '../../services/ExtratoService';
 import './Extrato.css';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const TIPO_OPTS = [
     { label: 'Entrada', value: 'ENTRADA' },
@@ -151,7 +152,7 @@ export const Extrato = () => {
     const moeda = (v) =>
         (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    const dataBr = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : '');
+    const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 
     const contaOpts = contas.map((c) => ({
         label: `${c.banco} ${c.agencia}/${c.conta}${c.digito ? '-' + c.digito : ''}`,
@@ -302,7 +303,7 @@ export const Extrato = () => {
                         <Calendar
                             value={form.dataMovimento}
                             onChange={(e) => setForm({ ...form, dataMovimento: e.value })}
-                            dateFormat="dd/mm/yy"
+                            dateFormat={formatoData()}
                             showIcon
                         />
                     </div>

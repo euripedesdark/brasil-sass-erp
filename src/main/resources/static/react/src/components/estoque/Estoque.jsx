@@ -12,6 +12,7 @@ import EstoqueService from '../../services/EstoqueService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import './Estoque.css';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const Estoque = () => {
     const { user } = useAuth();
@@ -96,7 +97,7 @@ export const Estoque = () => {
     const qtdBody = (row) => {
         const q = Number(row.quantidade) || 0;
         const severity = q <= 0 ? 'danger' : q < 10 ? 'warning' : 'success';
-        return <Tag value={q.toLocaleString('pt-BR')} severity={severity} />;
+        return <Tag value={q.toLocaleString(localeAtivo())} severity={severity} />;
     };
 
     return (
@@ -141,7 +142,7 @@ export const Estoque = () => {
                         <strong>{t('inventory.product', { id: saldoConsulta.produtoId })}</strong>
                         {` ${t('inventory.quantity')}: `}
                         <Tag
-                            value={Number(saldoConsulta.quantidade || 0).toLocaleString('pt-BR')}
+                            value={Number(saldoConsulta.quantidade || 0).toLocaleString(localeAtivo())}
                             severity={
                                 Number(saldoConsulta.quantidade) <= 0 ? 'danger' : 'success'
                             }

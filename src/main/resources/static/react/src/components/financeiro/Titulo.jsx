@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import ApiConfig from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const temPermissao = (user, perm) =>
     Array.isArray(user?.authorities) && user.authorities.some(a => (a?.authority ?? a) === perm);
@@ -282,7 +283,7 @@ export const Titulo = () => {
         }
     };
 
-    const dataBr = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : '');
+    const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 
     const tipoBody = (row) => {
         const t = row.tipo;
@@ -479,7 +480,7 @@ export const Titulo = () => {
                         <Calendar
                             value={baixaForm.dataBaixa}
                             onChange={(e) => setBaixaForm({ ...baixaForm, dataBaixa: e.value })}
-                            dateFormat="dd/mm/yy"
+                            dateFormat={formatoData()}
                             showIcon
                         />
                     </div>
@@ -568,8 +569,8 @@ export const Titulo = () => {
                     )} style={{ width: '150px' }} />
                     <Column field="solicitanteNome" header="Solicitante" body={(r) => r.solicitanteNome || '—'} style={{ width: '150px' }} />
                     <Column field="aprovadorNome" header="Aprovador" body={(r) => r.aprovadorNome || '—'} style={{ width: '150px' }} />
-                    <Column field="dataSolicitacao" header="Solicitado em" body={(r) => (r.dataSolicitacao ? new Date(r.dataSolicitacao).toLocaleString('pt-BR') : '—')} style={{ width: '160px' }} />
-                    <Column field="dataAprovacao" header="Decidido em" body={(r) => (r.dataAprovacao ? new Date(r.dataAprovacao).toLocaleString('pt-BR') : r.dataRejeicao ? new Date(r.dataRejeicao).toLocaleString('pt-BR') : '—')} style={{ width: '160px' }} />
+                    <Column field="dataSolicitacao" header="Solicitado em" body={(r) => (r.dataSolicitacao ? new Date(r.dataSolicitacao).toLocaleString(localeAtivo()) : '—')} style={{ width: '160px' }} />
+                    <Column field="dataAprovacao" header="Decidido em" body={(r) => (r.dataAprovacao ? new Date(r.dataAprovacao).toLocaleString(localeAtivo()) : r.dataRejeicao ? new Date(r.dataRejeicao).toLocaleString(localeAtivo()) : '—')} style={{ width: '160px' }} />
                     <Column field="observacao" header="Observacao" body={(r) => r.observacao || '—'} />
                 </DataTable>
             </Dialog>

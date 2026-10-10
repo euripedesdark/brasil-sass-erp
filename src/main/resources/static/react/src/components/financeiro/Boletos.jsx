@@ -14,6 +14,7 @@ import { Message } from 'primereact/message';
 import { TabPanel, TabView } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/financeiro/boletos';
 
@@ -25,7 +26,7 @@ const BASE = '/api/financeiro/boletos';
 const rotuloBanco = (b) => `${b.nomeCurto || b.nome} (${b.compe})`;
 
 const money = (v) => `R$ ${Number(v ?? 0).toFixed(2)}`;
-const dataBr = (v) => (v ? new Date(v).toLocaleDateString('pt-BR') : '—');
+const dataBr = (v) => (v ? new Date(v).toLocaleDateString(localeAtivo()) : '—');
 
 /**
  * Boleto.

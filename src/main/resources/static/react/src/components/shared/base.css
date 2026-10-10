@@ -603,7 +603,11 @@ body .enterprise-sidebar .p-submenu-icon {
 }
 body .p-dialog .p-dialog-header,
 body .p-dialog .p-dialog-header .p-dialog-title {
-  color: #0f172a !important;
+  color: #ffffff !important;
+}
+body .p-dialog .p-dialog-header .p-dialog-header-icon,
+body .p-dialog .p-dialog-header .p-dialog-header-icons {
+  color: #ffffff !important;
 }
 
 /* Correcao global de contraste para DataTable/Card do PrimeReact sobre tema escuro.
@@ -622,3 +626,40 @@ body .p-dialog .p-dialog-header .p-dialog-title {
 .page-content .p-datatable .p-datatable-emptymessage > td { background: rgba(10,25,45,.55) !important; color: #a8c4e8 !important; text-align: center; }
 .page-content .p-paginator { background: transparent !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.18) !important; }
 .page-content .p-paginator .p-paginator-page, .page-content .p-paginator .p-paginator-prev, .page-content .p-paginator .p-paginator-next { color: #eaf3ff !important; }
+
+/* Cabecalhos de pagina (page-header) e titulos soltos: painel escuro proprio
+   para leitura sobre qualquer papel de parede configurado. */
+.page-content .page-header { background: rgba(13,30,55,.78) !important; border: 1px solid rgba(148,190,235,.22) !important; border-radius: 16px !important; padding: 1rem 1.25rem !important; margin-bottom: 1rem; }
+.page-content .page-header h1, .page-content .page-header h2 { color: #ffffff !important; margin: 0 0 .25rem; }
+.page-content .page-header p { color: #a8c4e8 !important; margin: 0; }
+.page-content h1, .page-content h2, .page-content h3 { color: #ffffff !important; }
+
+/* Fundos claros do PrimeReact sobre tema escuro: véu de loading, esqueletos,
+   mensagens, abas, barras e paineis. Regra: fundo escuro -> letra branca. */
+.page-content .p-datatable-loading-overlay { background: rgba(10,25,45,.72) !important; color: #eaf3ff !important; }
+.page-content .p-datatable-loading-overlay .p-datatable-loading-icon { color: #ffffff !important; }
+.page-content .p-skeleton { background: rgba(148,190,235,.28) !important; }
+.page-content .p-skeleton::after { background: linear-gradient(90deg, transparent, rgba(234,243,255,.25), transparent) !important; }
+.page-content .p-message { border-width: 1px !important; }
+.page-content .p-message.p-message-info { background: rgba(37,99,235,.28) !important; border-color: rgba(96,165,250,.5) !important; color: #dbeafe !important; }
+.page-content .p-message.p-message-success { background: rgba(22,163,74,.28) !important; border-color: rgba(74,222,128,.5) !important; color: #dcfce7 !important; }
+.page-content .p-message.p-message-warn { background: rgba(202,138,4,.30) !important; border-color: rgba(250,204,21,.5) !important; color: #fef9c3 !important; }
+.page-content .p-message.p-message-error { background: rgba(220,38,38,.30) !important; border-color: rgba(248,113,113,.5) !important; color: #fee2e2 !important; }
+.page-content .p-message .p-message-summary, .page-content .p-message .p-message-detail { color: inherit !important; }
+.page-content .p-message .p-message-icon { color: inherit !important; }
+.page-content .p-tabview .p-tabview-nav { background: transparent !important; border-color: rgba(148,190,235,.22) !important; }
+.page-content .p-tabview .p-tabview-nav li .p-tabview-nav-link { background: transparent !important; color: #a8c4e8 !important; border-color: rgba(148,190,235,.22) !important; }
+.page-content .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link { background: rgba(15,34,60,.85) !important; color: #ffffff !important; border-color: rgba(148,190,235,.4) !important; }
+.page-content .p-tabview .p-tabview-panels { background: rgba(13,30,55,.5) !important; color: #eaf3ff !important; }
+.page-content .p-toolbar { background: rgba(13,30,55,.78) !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.22) !important; }
+.page-content .p-panel .p-panel-header { background: rgba(15,34,60,.85) !important; color: #ffffff !important; border-color: rgba(148,190,235,.25) !important; }
+.page-content .p-panel .p-panel-content { background: rgba(13,30,55,.5) !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.22) !important; }
+.page-content .p-accordion .p-accordion-header .p-accordion-header-link { background: rgba(15,34,60,.85) !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.25) !important; }
+.page-content .p-accordion .p-accordion-content { background: rgba(13,30,55,.5) !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.22) !important; }
+.page-content .p-datatable .p-datatable-header, .page-content .p-datatable .p-datatable-footer { background: rgba(15,34,60,.85) !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.25) !important; }
+.page-content .p-datatable .p-datatable-wrapper { background: rgba(10,25,45,.55) !important; }
+.page-content .p-card .p-card-footer { color: #eaf3ff !important; }
+.page-content .p-divider .p-divider-content { background: rgba(15,34,60,.9) !important; color: #eaf3ff !important; }
+.page-content .p-chip { background: rgba(37,65,96,.7) !important; color: #eaf3ff !important; }
+.page-content .p-progressbar { background: rgba(148,190,235,.25) !important; }
+

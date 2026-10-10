@@ -13,6 +13,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/crm';
 const ETAPAS = ['PROSPECCAO','QUALIFICACAO','PROPOSTA','NEGOCIACAO','FECHAMENTO'];
@@ -127,7 +128,7 @@ export const CRM = () => {
             <Dialog visible={dlgAtiv} onHide={() => setDlgAtiv(false)} header='Nova atividade' modal style={{ width: 'min(96vw, 520px)' }}>
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-6'><label className='bc-label'>Tipo</label><Dropdown value={fAtiv.tipo || 'TAREFA'} options={TIPOS_ATIV.map((t) => ({ label: t, value: t }))} onChange={(e) => setFAtiv({ ...fAtiv, tipo: e.value })} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Agendada em</label><Calendar value={fAtiv.dataAgendada} onChange={(e) => setFAtiv({ ...fAtiv, dataAgendada: e.value })} dateFormat='dd/mm/yy' showTime showIcon /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Agendada em</label><Calendar value={fAtiv.dataAgendada} onChange={(e) => setFAtiv({ ...fAtiv, dataAgendada: e.value })} dateFormat={formatoData()} showTime showIcon /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Assunto *</label><InputText value={fAtiv.assunto || ''} onChange={(e) => setFAtiv({ ...fAtiv, assunto: e.target.value })} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Responsável</label><InputText value={fAtiv.responsavel || ''} onChange={(e) => setFAtiv({ ...fAtiv, responsavel: e.target.value })} /></div>
                 </div>

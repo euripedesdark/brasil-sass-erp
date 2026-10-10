@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import React,{useEffect,useState} from 'react';
 import axios from 'axios';
 import {Card} from 'primereact/card'; import {InputText} from 'primereact/inputtext'; import {InputNumber} from 'primereact/inputnumber'; import {Dropdown} from 'primereact/dropdown'; import {Button} from 'primereact/button'; import {DataTable} from 'primereact/datatable'; import {Column} from 'primereact/column'; import {Message} from 'primereact/message'; import {Tag} from 'primereact/tag';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const TIPOS=['PULMAO','PICKING','RECEBIMENTO','EXPEDICAO','AVARIA'];
 
@@ -62,7 +63,7 @@ export default function EnderecosEstoque(){
     // endereco com saldo nao pode sumir: a ocupacao ficaria sem referencia e
     // o saldo do produto deixaria de aparecer em qualquer consulta
     if(q>0){
-      setError(`O endereço ${r.codigo} tem ${q.toLocaleString('pt-BR')} em estoque. Esvazie antes de excluir.`);
+      setError(`O endereço ${r.codigo} tem ${q.toLocaleString(localeAtivo())} em estoque. Esvazie antes de excluir.`);
       return;
     }
     if(!window.confirm(`Excluir o endereço ${r.codigo}?`))return;
@@ -86,5 +87,5 @@ export default function EnderecosEstoque(){
       {editando&&<Button label="Cancelar" severity="secondary" text icon="pi pi-times" onClick={limpar}/>}
     </div>
   </div>{error&&<Message severity="error" text={error}/>}
-  <DataTable value={rows} className="mt-3" stripedRows paginator rows={10} dataKey="id"><Column field="codigo" header="Código"/><Column field="descricao" header="Descrição"/><Column header="Tipo" body={r=><Tag value={r.tipo||'—'}/>}/><Column field="capacidade" header="Capacidade"/><Column header="Ocupação" body={r=>{const q=total(r);const cap=Number(r.capacidade||0);return cap>0?`${q.toLocaleString("pt-BR")} / ${cap.toLocaleString("pt-BR")}`:q.toLocaleString("pt-BR")}}/><Column header="Situação" body={r=>cheio(r)?<Tag value="CHEIO" severity="danger"/>:<Tag value="LIVRE" severity="success"/>}/><Column header="" body={r=><div className="flex gap-1"><Button icon="pi pi-pencil" rounded text tooltip="Editar" onClick={()=>editar(r)}/><Button icon="pi pi-trash" rounded text severity="danger" tooltip="Excluir" onClick={()=>excluir(r)}/></div>}/></DataTable></Card>;
+  <DataTable value={rows} className="mt-3" stripedRows paginator rows={10} dataKey="id"><Column field="codigo" header="Código"/><Column field="descricao" header="Descrição"/><Column header="Tipo" body={r=><Tag value={r.tipo||'—'}/>}/><Column field="capacidade" header="Capacidade"/><Column header="Ocupação" body={r=>{const q=total(r);const cap=Number(r.capacidade||0);return cap>0?`${q.toLocaleString(localeAtivo())} / ${cap.toLocaleString(localeAtivo())}`:q.toLocaleString(localeAtivo())}}/><Column header="Situação" body={r=>cheio(r)?<Tag value="CHEIO" severity="danger"/>:<Tag value="LIVRE" severity="success"/>}/><Column header="" body={r=><div className="flex gap-1"><Button icon="pi pi-pencil" rounded text tooltip="Editar" onClick={()=>editar(r)}/><Button icon="pi pi-trash" rounded text severity="danger" tooltip="Excluir" onClick={()=>excluir(r)}/></div>}/></DataTable></Card>;
 }

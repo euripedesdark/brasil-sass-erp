@@ -10,6 +10,7 @@ import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
 import { LancamentoService } from '../services/LancamentoService';
+import { formatoData, localeAtivo } from './shared/LocaleData.js';
 
 export default function Financeiro() {
     const { t } = useTranslation();
@@ -168,7 +169,7 @@ export default function Financeiro() {
 
     const formatarData = (data) => {
         if (!data) return '';
-        return new Date(data).toLocaleDateString('pt-BR');
+        return new Date(data).toLocaleDateString(localeAtivo());
     };
 
     const statusTemplate = (rowData) => {
@@ -315,7 +316,7 @@ export default function Financeiro() {
                                     id="dataLan"
                                     value={lancamentoSelecionado?.dataLan}
                                     onChange={(e) => setLancamentoSelecionado({...lancamentoSelecionado, dataLan: e.value})}
-                                    dateFormat="dd/mm/yy"
+                                    dateFormat={formatoData()}
                                     showIcon
                                 />
                             </div>
@@ -327,7 +328,7 @@ export default function Financeiro() {
                                     id="dataVencimento"
                                     value={lancamentoSelecionado?.dataVencimento}
                                     onChange={(e) => setLancamentoSelecionado({...lancamentoSelecionado, dataVencimento: e.value})}
-                                    dateFormat="dd/mm/yy"
+                                    dateFormat={formatoData()}
                                     showIcon
                                 />
                             </div>

@@ -14,6 +14,7 @@ import { Tag } from 'primereact/tag';
 import RelatorioAgendadoService from '../../services/RelatorioAgendadoService';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const RelatoriosAgendados = () => {
     const { user } = useAuth();
@@ -164,7 +165,7 @@ export const RelatoriosAgendados = () => {
     const formatarData = (value) => {
         if (!value) return '-';
         try {
-            return new Date(value).toLocaleString('pt-BR');
+            return new Date(value).toLocaleString(localeAtivo());
         } catch {
             return value;
         }

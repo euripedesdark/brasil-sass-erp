@@ -9,6 +9,7 @@ import { InputNumber } from 'primereact/inputnumber';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Toast } from 'primereact/toast';
+import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/financeiro/renegociacoes';
 const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -67,7 +68,7 @@ export const Renegociacao = () => {
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Renegociar título' modal style={{ width: 'min(96vw, 480px)' }}>
                 {sel && (<p><strong>{sel.descricao}</strong> — saldo {fmt(sel.valorSaldo)}</p>)}
                 <div className='grid p-fluid'>
-                    <div className='bc-form-col-6'><label className='bc-label'>Novo vencimento *</label><Calendar value={novoVenc} onChange={(e) => setNovoVenc(e.value)} dateFormat='dd/mm/yy' showIcon /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Novo vencimento *</label><Calendar value={novoVenc} onChange={(e) => setNovoVenc(e.value)} dateFormat={formatoData()} showIcon /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Acréscimo</label><InputNumber value={acrescimo} onValueChange={(e) => setAcrescimo(e.value)} mode='currency' currency='BRL' locale='pt-BR' /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Observação</label><InputTextarea rows={2} value={obs} onChange={(e) => setObs(e.target.value)} /></div>
                 </div>

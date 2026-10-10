@@ -8,12 +8,13 @@ import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/vendas/devolucoes';
 const PEDIDOS = '/api/vendas/pedidos';
 const ATIVAS = ['SOLICITADA', 'APROVADA', 'RECEBIDA'];
 const num = (v) => Number(v ?? 0);
-const fmt = (v) => num(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 });
+const fmt = (v) => num(v).toLocaleString(localeAtivo(), { maximumFractionDigits: 3 });
 
 export const Devolucoes = () => {
     const toast = useRef(null);

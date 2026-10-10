@@ -12,6 +12,7 @@ import { InputText } from 'primereact/inputtext';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/projetos';
 const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -169,7 +170,7 @@ export const Projetos = () => {
                     <div className='bc-form-col-6'><label className='bc-label'>Gerente</label><InputText value={f.gerente || ''} onChange={(e) => setF({ ...f, gerente: e.target.value })} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Nome *</label><InputText value={f.nome || ''} onChange={(e) => setF({ ...f, nome: e.target.value })} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Orçamento</label><InputNumber value={f.orcamentoTotal} onValueChange={(e) => setF({ ...f, orcamentoTotal: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Início</label><Calendar value={f.dataInicio} onChange={(e) => setF({ ...f, dataInicio: e.target.value })} dateFormat='dd/mm/yy' showIcon /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Início</label><Calendar value={f.dataInicio} onChange={(e) => setF({ ...f, dataInicio: e.target.value })} dateFormat={formatoData()} showIcon /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlg(false)} /><Button label='Salvar' icon='pi pi-check' onClick={salvar} /></div>
             </Dialog>

@@ -12,6 +12,7 @@ import {Calendar} from 'primereact/calendar';
 import {Message} from 'primereact/message';
 import {Tag} from 'primereact/tag';
 import {api} from '../../services/ApiConfig';
+import { formatoData } from '../shared/LocaleData.js';
 
 const resources = [
  {key:'contratos',label:'Contratos',icon:'pi pi-file-edit'},
@@ -67,7 +68,7 @@ export default function EnterpriseOperations(){
   <Dialog header={'Novo '+resource.label} visible={dialog} style={{width:'min(720px,95vw)'}} onHide={()=>setDialog(false)}>
    <div className="grid">
     {Object.keys(fields).map(k=><div className="col-12 md:col-6" key={k}><label className="block mb-1">{fields[k]}</label>
-      {dateFields.includes(k)?<Calendar value={payload[k]?new Date(payload[k]):null} onChange={e=>setPayload({...payload,[k]:e.value?.toISOString().slice(0,10)})} dateFormat="dd/mm/yy" className="w-full"/>:
+      {dateFields.includes(k)?<Calendar value={payload[k]?new Date(payload[k]):null} onChange={e=>setPayload({...payload,[k]:e.value?.toISOString().slice(0,10)})} dateFormat={formatoData()} className="w-full"/>:
        k.includes('valor')||k.includes('quantidade')||k.includes('score')||k.includes('probabilidade')||k.includes('aliquota')||k==='reducao'?<InputNumber value={payload[k]} onValueChange={e=>setPayload({...payload,[k]:e.value})} className="w-full"/>:
        <InputText value={payload[k]??''} onChange={e=>setPayload({...payload,[k]:e.target.value})} className="w-full"/>}
     </div>)}

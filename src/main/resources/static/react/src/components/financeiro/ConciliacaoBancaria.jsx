@@ -13,9 +13,10 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import ContaBancariaService from '../../services/ContaBancariaService';
 import ConciliacaoService from '../../services/ConciliacaoService';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const iso = (d) => d ? new Date(d).toISOString().slice(0, 10) : null;
-const brDate = (d) => d ? new Date(d).toLocaleDateString('pt-BR') : '';
+const brDate = (d) => d ? new Date(d).toLocaleDateString(localeAtivo()) : '';
 const money = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function ConciliacaoBancaria() {
@@ -166,8 +167,8 @@ export default function ConciliacaoBancaria() {
             {erro && <Message severity="error" text={erro} className="w-full mb-3" />}
             <div className="p-fluid">
                 <div className="field"><label className="font-bold">Conta *</label><Dropdown value={form.contaBancariaId} options={contaOpts} onChange={e => setForm({ ...form, contaBancariaId: e.value })} filter /></div>
-                <div className="field"><label className="font-bold">Data inicial *</label><Calendar value={form.dataInicio} onChange={e => setForm({ ...form, dataInicio: e.value })} dateFormat="dd/mm/yy" showIcon /></div>
-                <div className="field"><label className="font-bold">Data final *</label><Calendar value={form.dataFim} onChange={e => setForm({ ...form, dataFim: e.value })} dateFormat="dd/mm/yy" showIcon /></div>
+                <div className="field"><label className="font-bold">Data inicial *</label><Calendar value={form.dataInicio} onChange={e => setForm({ ...form, dataInicio: e.value })} dateFormat={formatoData()} showIcon /></div>
+                <div className="field"><label className="font-bold">Data final *</label><Calendar value={form.dataFim} onChange={e => setForm({ ...form, dataFim: e.value })} dateFormat={formatoData()} showIcon /></div>
             </div>
         </Dialog>
     </div>;

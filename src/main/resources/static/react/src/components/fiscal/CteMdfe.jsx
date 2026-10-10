@@ -9,6 +9,7 @@ import { Toast } from 'primereact/toast';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dialog } from 'primereact/dialog';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const CteMdfe = () => {
     const toast=useRef(null);
@@ -55,7 +56,7 @@ export const CteMdfe = () => {
         {tipo==='mdfe'&&row.status==='AUTORIZADA'&&<Button icon='pi pi-check' rounded text severity='success' tooltip='Encerrar' onClick={()=>{setEvento({tipo,id:row.id,acao:'encerrar'});setMunicipio('');}}/>}
     </div>;
     const kv=o=>!o||typeof o!=='object'?String(o??'-'):Object.entries(o).map(([k,v])=><div key={k}><strong>{k}:</strong> {typeof v==='object'?JSON.stringify(v):String(v)}</div>);
-    const fmtData=v=>v?new Date(v).toLocaleString('pt-BR'):'-';
+    const fmtData=v=>v?new Date(v).toLocaleString(localeAtivo()):'-';
     return <div className='p-4'>
         <Toast ref={toast}/>
         <div className='flex justify-content-between align-items-center mb-3 flex-wrap gap-2'>

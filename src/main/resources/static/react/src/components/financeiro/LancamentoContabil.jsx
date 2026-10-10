@@ -16,6 +16,7 @@ import { Message } from 'primereact/message';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import './LancamentoContabil.css';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 export const LancamentoContabil = () => {
     const { t } = useTranslation();
@@ -138,7 +139,7 @@ export const LancamentoContabil = () => {
 
     const formatarData = (data) => {
         if (!data) return '';
-        return new Date(data).toLocaleDateString('pt-BR');
+        return new Date(data).toLocaleDateString(localeAtivo());
     };
 
     const tipoTemplate = (rowData) => {
@@ -474,7 +475,7 @@ export const LancamentoContabil = () => {
                             <Calendar
                                 value={novoLancamento.dataLancamento}
                                 onChange={(e) => setNovoLancamento({...novoLancamento, dataLancamento: e.value})}
-                                dateFormat="dd/mm/yy"
+                                dateFormat={formatoData()}
                                 showIcon
                             />
                         </div>

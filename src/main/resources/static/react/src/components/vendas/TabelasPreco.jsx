@@ -13,6 +13,7 @@ import { Toast } from 'primereact/toast';
 import { Tag } from 'primereact/tag';
 import axios from 'axios';
 import ProdutoService from '../../services/ProdutoService';
+import { formatoData } from '../shared/LocaleData.js';
 
 const emptyForm = () => ({ nome: '', codigo: '', descricao: '', moeda: 'BRL', vigenciaInicio: null, vigenciaFim: null, percentualDescontoMaximo: 0, itens: [] });
 const errorMessage = (err) => err?.response?.data?.errors?.[0]?.message || err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Operação não realizada';
@@ -86,7 +87,7 @@ export const TabelasPreco = () => {
                 <div className="col-12 md:col-2 field"><label>Código</label><InputText value={form.codigo} onChange={e => setForm({ ...form, codigo: e.target.value })} /></div>
                 <div className="col-12 md:col-2 field"><label>Moeda</label><InputText maxLength={3} value={form.moeda} onChange={e => setForm({ ...form, moeda: e.target.value.toUpperCase() })} /></div>
                 <div className="col-12 md:col-2 field"><label>Desconto máx.</label><InputNumber value={form.percentualDescontoMaximo} suffix=" %" min={0} max={100} onValueChange={e => setForm({ ...form, percentualDescontoMaximo: e.value || 0 })} /></div>
-                <div className="col-12 md:col-2 field"><label>Início</label><Calendar value={form.vigenciaInicio} onChange={e => setForm({ ...form, vigenciaInicio: e.value })} dateFormat="dd/mm/yy" showIcon /></div>
+                <div className="col-12 md:col-2 field"><label>Início</label><Calendar value={form.vigenciaInicio} onChange={e => setForm({ ...form, vigenciaInicio: e.value })} dateFormat={formatoData()} showIcon /></div>
                 <div className="col-12 field"><label>Descrição</label><InputText value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
             </div>
             <h4>Itens da tabela</h4>

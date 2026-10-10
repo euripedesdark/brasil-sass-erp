@@ -9,6 +9,7 @@ import { Message } from 'primereact/message';
 import { AutoComplete } from 'primereact/autocomplete';
 import { Dropdown } from 'primereact/dropdown';
 import { apiFetch } from '../../services/ApiConfig';
+import { formatoData } from '../shared/LocaleData.js';
 
 const fmtData = (d) => {
     if (!d) return '';
@@ -180,7 +181,7 @@ export default function Capacidade() {
                     <div className="col-12 md:col-3">
                         <label htmlFor="cap-inicio">Início desejado</label>
                         <Calendar inputId="cap-inicio" value={inicio} onChange={(e) => setInicio(e.value)}
-                                  dateFormat="dd/mm/yy" showIcon />
+                                  dateFormat={formatoData()} showIcon />
                     </div>
                     <div className="col-12 md:col-3">
                         <Button label="Simular" icon="pi pi-calendar" loading={loading}
@@ -251,11 +252,11 @@ export default function Capacidade() {
                     </div>
                     <div className="col-6 md:col-2">
                         <label htmlFor="cal-de">De</label>
-                        <Calendar inputId="cal-de" value={de} onChange={(e) => setDe(e.value)} dateFormat="dd/mm/yy" />
+                        <Calendar inputId="cal-de" value={de} onChange={(e) => setDe(e.value)} dateFormat={formatoData()} />
                     </div>
                     <div className="col-6 md:col-2">
                         <label htmlFor="cal-ate">Até</label>
-                        <Calendar inputId="cal-ate" value={ate} onChange={(e) => setAte(e.value)} dateFormat="dd/mm/yy" />
+                        <Calendar inputId="cal-ate" value={ate} onChange={(e) => setAte(e.value)} dateFormat={formatoData()} />
                     </div>
                     <div className="col-12 md:col-4">
                         <Button label="Ver calendário" icon="pi pi-table" onClick={carregarCalendario} />

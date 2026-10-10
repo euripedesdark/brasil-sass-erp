@@ -9,6 +9,7 @@ import { Toast } from 'primereact/toast';
 import { Tag } from 'primereact/tag';
 import EstoqueService from '../../services/EstoqueService';
 import { useAuth } from '../../contexts/AuthContext';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const MovimentacoesEstoque = () => {
         const { t } = useTranslation();
@@ -54,9 +55,9 @@ export const MovimentacoesEstoque = () => {
     };
 
     const dataBody = (row) =>
-        row.dataMovimento ? new Date(row.dataMovimento).toLocaleString('pt-BR') : '';
+        row.dataMovimento ? new Date(row.dataMovimento).toLocaleString(localeAtivo()) : '';
 
-    const qtdBody = (row) => Number(row.quantidade || 0).toLocaleString('pt-BR');
+    const qtdBody = (row) => Number(row.quantidade || 0).toLocaleString(localeAtivo());
 
     return (
         <div>
@@ -103,7 +104,7 @@ export const MovimentacoesEstoque = () => {
                     <Column
                         field="saldoApos"
                         header={t('estoque.movements.balanceAfter')}
-                        body={(r) => Number(r.saldoApos || 0).toLocaleString('pt-BR')}
+                        body={(r) => Number(r.saldoApos || 0).toLocaleString(localeAtivo())}
                         style={{ width: '110px' }}
                     />
                     <Column field="observacao" header={t('common.note')} />

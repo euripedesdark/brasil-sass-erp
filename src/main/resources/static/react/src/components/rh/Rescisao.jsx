@@ -10,6 +10,7 @@ import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { formatoData } from '../shared/LocaleData.js';
 
 const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const BASE = '/api/rh/rescisao';
@@ -144,7 +145,7 @@ export const Rescisao = () => {
                         </span>
                         <span>
                             <label className="bc-label">Desligamento</label>
-                            <Calendar value={data} onChange={(e) => setData(e.value)} dateFormat="dd/mm/yy" showIcon />
+                            <Calendar value={data} onChange={(e) => setData(e.value)} dateFormat={formatoData()} showIcon />
                         </span>
                         <span>
                             <label className="bc-label">Motivo</label>

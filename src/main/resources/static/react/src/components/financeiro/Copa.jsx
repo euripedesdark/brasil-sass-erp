@@ -7,6 +7,7 @@ import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Message } from 'primereact/message';
 import { TabPanel, TabView } from 'primereact/tabview';
+import { formatoData } from '../shared/LocaleData.js';
 
 const brl = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -48,11 +49,11 @@ export const Copa = () => {
                 <div className="flex flex-wrap gap-2 align-items-end mb-3">
                     <div>
                         <label className="bc-label">De</label>
-                        <Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat="dd/mm/yy" showIcon />
+                        <Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat={formatoData()} showIcon />
                     </div>
                     <div>
                         <label className="bc-label">Até</label>
-                        <Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat="dd/mm/yy" showIcon />
+                        <Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat={formatoData()} showIcon />
                     </div>
                     <Button label="Atualizar" icon="pi pi-refresh" onClick={carregar} loading={loading} />
                 </div>

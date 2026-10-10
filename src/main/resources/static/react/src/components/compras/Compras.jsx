@@ -20,6 +20,7 @@ import ProdutoService from '../../services/ProdutoService';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import './Compras.css';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const STATUS_INFO = {
     ABERTO: { key: 'legacyUi.comprasLegacy.stAberto', severity: 'info' },
@@ -128,7 +129,7 @@ export const Compras = () => {
 
     const totalItens = () => form.itens.reduce((acc, it) => acc + ((Number(it.quantidade) || 0) * (Number(it.valorUnitario) || 0) - (Number(it.valorDesconto) || 0)), 0);
     const moeda = v => (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const dataBr = d => d ? new Date(d).toLocaleDateString('pt-BR') : '';
+    const dataBr = d => d ? new Date(d).toLocaleDateString(localeAtivo()) : '';
 
     const salvar = async () => {
         setError('');
@@ -248,10 +249,10 @@ export const Compras = () => {
                     <Dropdown value={form.condicaoPagamentoId} options={condicoesPagamento} optionLabel="descricao" optionValue="id" onChange={e => setForm({ ...form, condicaoPagamentoId: e.value })} placeholder={t('legacyUi.comprasLegacy.selectTerm')} showClear disabled={somenteLeitura} />
                 </div>
                 <div className="col-12 md:col-4 field"><label className="font-bold">{t('legacyUi.comprasLegacy.issueDateLabel')}</label>
-                    <Calendar value={form.dataEmissao} onChange={e => setForm({ ...form, dataEmissao: e.value })} dateFormat="dd/mm/yy" showIcon disabled={somenteLeitura} />
+                    <Calendar value={form.dataEmissao} onChange={e => setForm({ ...form, dataEmissao: e.value })} dateFormat={formatoData()} showIcon disabled={somenteLeitura} />
                 </div>
                 <div className="col-12 md:col-4 field"><label className="font-bold">{t('legacyUi.comprasLegacy.deliveryForecast')}</label>
-                    <Calendar value={form.dataPrevisaoEntrega} onChange={e => setForm({ ...form, dataPrevisaoEntrega: e.value })} dateFormat="dd/mm/yy" showIcon disabled={somenteLeitura} />
+                    <Calendar value={form.dataPrevisaoEntrega} onChange={e => setForm({ ...form, dataPrevisaoEntrega: e.value })} dateFormat={formatoData()} showIcon disabled={somenteLeitura} />
                 </div>
                 <div className="col-12 field"><label className="font-bold">{t('legacyUi.comprasLegacy.note')}</label><InputText value={form.observacao} onChange={e => setForm({ ...form, observacao: e.target.value })} disabled={somenteLeitura} /></div>
             </div>

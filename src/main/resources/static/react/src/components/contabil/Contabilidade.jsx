@@ -11,10 +11,11 @@ import { InputNumber } from 'primereact/inputnumber';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/contabilidade';
 
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 2 });
 
 export const Contabilidade = () => {
     const toast = useRef(null);
@@ -164,8 +165,8 @@ const fechar = async () => {
                 <TabPanel header='Razão'>
                     <div className='flex gap-2 mb-3 flex-wrap'>
                         <Dropdown value={filtroConta} options={contas.map(c => ({ label: (c.codigo || '') + ' - ' + (c.descricao || c.nome || ''), value: c.id }))} onChange={(e) => setFiltroConta(e.value)} placeholder='Conta' filter style={{ minWidth: '16rem' }} />
-                        <Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat='dd/mm/yy' placeholder='De' showIcon />
-                        <Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat='dd/mm/yy' placeholder='Até' showIcon />
+                        <Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat={formatoData()} placeholder='De' showIcon />
+                        <Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat={formatoData()} placeholder='Até' showIcon />
                         <Button label='Buscar' icon='pi pi-search' onClick={buscarRazao} />
                     </div>
                     <DataTable value={razao} paginator rows={10} emptyMessage='Use os filtros.' responsiveLayout='scroll'>
@@ -178,8 +179,8 @@ const fechar = async () => {
                 </TabPanel>
                 <TabPanel header='Balancete'>
                     <div className='flex gap-2 mb-3 flex-wrap'>
-                        <Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat='dd/mm/yy' placeholder='De' showIcon />
-                        <Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat='dd/mm/yy' placeholder='Até' showIcon />
+                        <Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat={formatoData()} placeholder='De' showIcon />
+                        <Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat={formatoData()} placeholder='Até' showIcon />
                         <Button label='Buscar' icon='pi pi-search' onClick={buscarBalancete} />
                     </div>
                     <DataTable value={balancete} paginator rows={15} emptyMessage='Use os filtros.' responsiveLayout='scroll'>
@@ -239,7 +240,7 @@ const fechar = async () => {
             </TabView>
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Novo lançamento' modal style={{ width: 'min(96vw, 520px)' }}>
                 <div className='grid p-fluid'>
-                    <div className='bc-form-col-6'><label className='bc-label'>Data *</label><Calendar value={f.data} onChange={(e) => setF({ ...f, data: e.value })} dateFormat='dd/mm/yy' showIcon /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Data *</label><Calendar value={f.data} onChange={(e) => setF({ ...f, data: e.value })} dateFormat={formatoData()} showIcon /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Histórico *</label><InputText value={f.historico} onChange={(e) => setF({ ...f, historico: e.target.value })} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'>

@@ -16,6 +16,7 @@ import { ScrollPanel } from 'primereact/scrollpanel';
 import IaService from '../../services/IaService';
 import { useAuth } from '../../contexts/AuthContext';
 import './IA.css';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const IA = () => {
   const { t } = useTranslation();
@@ -259,7 +260,7 @@ export const IA = () => {
 
     const formatarData = (data) => {
         if (!data) return '';
-        return new Date(data).toLocaleString('pt-BR');
+        return new Date(data).toLocaleString(localeAtivo());
     };
 
     const tipoTemplate = (rowData) => {

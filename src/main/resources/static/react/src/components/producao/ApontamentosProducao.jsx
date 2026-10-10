@@ -14,6 +14,7 @@ import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { apiFetch } from '../../services/ApiConfig';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/producao/apontamentos';
 
@@ -38,8 +39,8 @@ const SEVERIDADE = {
 };
 
 const num = (v) => Number(v ?? 0);
-const money = (v) => Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const dataHora = (v) => (v ? new Date(v).toLocaleString('pt-BR') : '—');
+const money = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const dataHora = (v) => (v ? new Date(v).toLocaleString(localeAtivo()) : '—');
 
 const erroDe = (e, padrao) => {
     const d = e?.payload;

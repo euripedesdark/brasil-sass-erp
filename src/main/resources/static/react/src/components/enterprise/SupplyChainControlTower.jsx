@@ -23,9 +23,9 @@ export default function SupplyChainControlTower(){
    <Button label="Atualizar" icon="pi pi-refresh" onClick={load}/>
   </div></Card>
   <div className="bc-form-grid">
-   <Card title="Disponibilidade ATP/CTP"><DataTable value={atp} paginator rows={10} size="small"><Column field="produto_id" header="Produto"/><Column field="data" header="Data"/><Column field="estoque_disponivel" header="Estoque"/><Column field="reservas" header="Reservas"/><Column field="quantidade_atp" header="ATP"/><Column field="quantidade_ctp" header="CTP"/></DataTable></Card>
-   <Card title="Demanda / planejamento"><DataTable value={demanda} paginator rows={10} size="small"><Column field="produto_id" header="Produto"/><Column field="periodo" header="Período"/><Column field="tipo" header="Tipo"/><Column field="quantidade" header="Quantidade"/><Column field="confianca" header="Confiança"/></DataTable></Card>
-   <Card title="Rotas TMS"><DataTable value={rotas} paginator rows={10} size="small"><Column field="codigo" header="Código"/><Column field="origem" header="Origem"/><Column field="destino" header="Destino"/><Column field="distancia_km" header="Km"/><Column field="tempo_minutos" header="Minutos"/><Column field="custo_base" header="Base"/><Column field="pedagio" header="Pedágio"/></DataTable></Card>
+   <Card title="Disponibilidade ATP/CTP" className="bc-form-col-4"><DataTable value={atp} paginator rows={10} size="small"><Column field="produto_id" header="Produto"/><Column field="data" header="Data"/><Column field="estoque_disponivel" header="Estoque"/><Column field="reservas" header="Reservas"/><Column field="quantidade_atp" header="ATP"/><Column field="quantidade_ctp" header="CTP"/></DataTable></Card>
+   <Card title="Demanda / planejamento" className="bc-form-col-4"><DataTable value={demanda} paginator rows={10} size="small"><Column field="produto_id" header="Produto"/><Column field="periodo" header="Período"/><Column field="tipo" header="Tipo"/><Column field="quantidade" header="Quantidade"/><Column field="confianca" header="Confiança"/></DataTable></Card>
+   <Card title="Rotas TMS" className="bc-form-col-4"><DataTable value={rotas} paginator rows={10} size="small"><Column field="codigo" header="Código"/><Column field="origem" header="Origem"/><Column field="destino" header="Destino"/><Column field="distancia_km" header="Km"/><Column field="tempo_minutos" header="Minutos"/><Column field="custo_base" header="Base"/><Column field="pedagio" header="Pedágio"/></DataTable></Card>
   </div>
  </div>
 }

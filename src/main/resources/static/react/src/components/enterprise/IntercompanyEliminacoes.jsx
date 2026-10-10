@@ -5,6 +5,7 @@ import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const IntercompanyEliminacoes = () => {
     const toast = useRef(null);
@@ -21,7 +22,7 @@ export const IntercompanyEliminacoes = () => {
         try {
             return numero.toLocaleString('pt-BR', { style: 'currency', currency: (moeda || 'BRL').trim() });
         } catch {
-            return numero.toLocaleString('pt-BR') + ' ' + (moeda || '');
+            return numero.toLocaleString(localeAtivo()) + ' ' + (moeda || '');
         }
     };
     const carregar = async () => {

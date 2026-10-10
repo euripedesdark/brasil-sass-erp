@@ -9,6 +9,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/rh/ferias';
 export const Ferias = () => {
@@ -78,7 +79,7 @@ export const Ferias = () => {
             <Dialog header='Programar ferias' visible={dlg} onHide={() => setDlg(false)} style={{ width: '26rem' }}>
                 <div className='flex flex-column gap-3'>
                     <span><label className='bc-label'>Funcionario</label><Dropdown value={fFunc} options={funcs.map((f) => ({ label: f.pessoa?.nome || f.nome || ('#' + f.id), value: f.id }))} onChange={(e) => setFFunc(e.value)} placeholder='Escolha' filter className='w-full' /></span>
-                    <span><label className='bc-label'>Inicio</label><Calendar value={fIni} onChange={(e) => setFIni(e.value)} dateFormat='dd/mm/yy' showIcon className='w-full' /></span>
+                    <span><label className='bc-label'>Inicio</label><Calendar value={fIni} onChange={(e) => setFIni(e.value)} dateFormat={formatoData()} showIcon className='w-full' /></span>
                     <span><label className='bc-label'>Dias (10 a 30)</label><InputNumber value={fDias} onValueChange={(e) => setFDias(e.value ?? 30)} min={10} max={30} className='w-full' /></span>
                     <Button label='Salvar' icon='pi pi-check' onClick={programar} disabled={!fFunc || !fIni} />
                 </div>

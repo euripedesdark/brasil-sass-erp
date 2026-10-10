@@ -12,8 +12,9 @@ import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { RegrasComissao } from './RegrasComissao';
 import { TabPanel, TabView } from 'primereact/tabview';
 import { useAuth } from '../../contexts/AuthContext';
+import { localeAtivo } from '../shared/LocaleData.js';
 
-const moeda = (v) => `R$ ${Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+const moeda = (v) => `R$ ${Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 2 })}`;
 
 export const Comissoes = () => {
     const { t } = useTranslation();

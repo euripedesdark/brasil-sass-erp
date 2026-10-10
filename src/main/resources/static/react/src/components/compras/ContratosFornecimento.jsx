@@ -10,6 +10,7 @@ import { InputText } from 'primereact/inputtext';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { Calendar } from 'primereact/calendar';
+import { formatoData } from '../shared/LocaleData.js';
 
 const BASE = '/api/compras/contratos';
 
@@ -231,11 +232,11 @@ export const ContratosFornecimento = () => {
                         </div>
                         <div className="col-6">
                             <label className="block mb-1">Início *</label>
-                            <Calendar value={form.vigenciaInicio} onChange={(e) => setForm({ ...form, vigenciaInicio: e.value })} dateFormat="dd/mm/yy" className="w-full" />
+                            <Calendar value={form.vigenciaInicio} onChange={(e) => setForm({ ...form, vigenciaInicio: e.value })} dateFormat={formatoData()} className="w-full" />
                         </div>
                         <div className="col-6">
                             <label className="block mb-1">Fim *</label>
-                            <Calendar value={form.vigenciaFim} onChange={(e) => setForm({ ...form, vigenciaFim: e.value })} dateFormat="dd/mm/yy" className="w-full" />
+                            <Calendar value={form.vigenciaFim} onChange={(e) => setForm({ ...form, vigenciaFim: e.value })} dateFormat={formatoData()} className="w-full" />
                         </div>
                     </div>
                     <label className="block">Itens</label>

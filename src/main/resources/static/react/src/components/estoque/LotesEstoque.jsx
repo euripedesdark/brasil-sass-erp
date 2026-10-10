@@ -15,6 +15,7 @@ import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { AutoComplete } from 'primereact/autocomplete';
 import ProdutoService from '../../services/ProdutoService';
+import { formatoData } from '../shared/LocaleData.js';
 
 const msg = (e) =>
   e?.response?.data?.errors?.[0]?.message ||
@@ -284,11 +285,11 @@ export default function LotesEstoque() {
           </div>
           <div className="field col-12 md:col-2">
             <label>Fabricação</label>
-            <Calendar value={fabricacao} onChange={(e) => setFabricacao(e.value)} dateFormat="dd/mm/yy" />
+            <Calendar value={fabricacao} onChange={(e) => setFabricacao(e.value)} dateFormat={formatoData()} />
           </div>
           <div className="field col-12 md:col-2">
             <label>Validade</label>
-            <Calendar value={validade} onChange={(e) => setValidade(e.value)} dateFormat="dd/mm/yy" />
+            <Calendar value={validade} onChange={(e) => setValidade(e.value)} dateFormat={formatoData()} />
           </div>
           <div className="field col-12 md:col-2">
             <label>Status (filtro)</label>

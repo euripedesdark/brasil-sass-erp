@@ -12,6 +12,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const OP = '/api/financeiro/cobranca-op';
@@ -232,7 +233,7 @@ export const Cobranca = () => {
                     </div>
                     <div className="col-12">
                         <label>Data prometida *</label>
-                        <Calendar value={fProm.data} onChange={(e) => setFProm({ ...fProm, data: e.value })} dateFormat="dd/mm/yy" showIcon minDate={new Date()} />
+                        <Calendar value={fProm.data} onChange={(e) => setFProm({ ...fProm, data: e.value })} dateFormat={formatoData()} showIcon minDate={new Date()} />
                     </div>
                     <div className="col-12">
                         <label>Observação</label>
@@ -248,7 +249,7 @@ export const Cobranca = () => {
 
             <Dialog visible={dlgHist} onHide={() => setDlgHist(false)} header={`Histórico de ações — #${selTitulo?.tituloId || ''}`} modal style={{ width: 'min(640px, 96vw)' }}>
                 <DataTable value={histAcoes} emptyMessage="Sem ações" size="small">
-                    <Column field="createdAt" header="Data" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—'} />
+                    <Column field="createdAt" header="Data" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString(localeAtivo()) : '—'} />
                     <Column field="tipo" header="Tipo" />
                     <Column field="nivel" header="Nível" />
                     <Column field="observacao" header="Obs." />

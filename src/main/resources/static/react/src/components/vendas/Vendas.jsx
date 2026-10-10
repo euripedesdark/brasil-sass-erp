@@ -22,6 +22,7 @@ import ProdutoService from '../../services/ProdutoService';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import './Vendas.css';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 /** Status reais do backend: ABERTO | FATURADO | CANCELADO */
 const STATUS_LABEL = {
@@ -295,7 +296,7 @@ export const Vendas = () => {
 
     const statusBody = (row) => { const s = STATUS_LABEL[row.status] || { label: row.status, severity: 'secondary' }; return <Tag value={s.label} severity={s.severity} />; };
     const moeda = (v) => (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const dataBr = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : '');
+    const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 
     const acoes = (row) => (
         <div className="flex gap-1">
@@ -361,7 +362,7 @@ export const Vendas = () => {
                     </div>
                     <div className="col-12 md:col-3">
                         <label>Emissão</label>
-                        <Calendar value={form.dataEmissao} onChange={(e) => setForm({ ...form, dataEmissao: e.value })} dateFormat="dd/mm/yy" showIcon disabled={somenteLeitura} />
+                        <Calendar value={form.dataEmissao} onChange={(e) => setForm({ ...form, dataEmissao: e.value })} dateFormat={formatoData()} showIcon disabled={somenteLeitura} />
                     </div>
                 </div>
                 {!somenteLeitura && (
