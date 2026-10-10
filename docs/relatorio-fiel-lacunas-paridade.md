@@ -12,6 +12,8 @@ endpoint, stub ou só model. Entre colchetes o nível da evidência:
 [server] lido hoje no servidor, [tela] validado no navegador, [suite]
 coberto por teste, [estático] só inventário.
 
+> **Revalidação complementar em 2026-10-10 (código atual de main):** duas lacunas de Compras descritas abaixo já têm implementação e testes incorporados. Este relatório registra o retrato da auditoria original e não deve ser interpretado como backlog sem reconciliação. A alçada por valor está em `PedidoCompraServiceImpl`, com `/api/compras/pedidos/{id}/aprovar` e `/rejeitar`, e testes `PedidoAlcadaAprovacaoTest`. A tolerância parametrizável já está no motor `ConferenciaFaturaCompraServiceImpl.toleranciaCadastrada`, com `ToleranciaCadastradaTest`. **Esta verificação é estática** e não equivale a execução da suíte ou homologação em produção. A auditoria original abaixo foi preservada para rastreabilidade.
+
 ## Compras — quase completo
 Backend [server]: requisição, cotação/mapa, pedido, aprovação/rejeição de
 solicitação, recebimento total/parcial, devolução, conferência 3-way,
