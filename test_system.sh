@@ -25,13 +25,19 @@ else
     exit 1
 fi
 
-# Verificar se o PostgreSQL está rodando
-echo "Verificando PostgreSQL..."
-if pg_isready -h localhost -p 5432 &> /dev/null; then
+# Verificar se o PostgreSQL está rodando.
+# Sem -U, pg_isready usa o usuário do sistema operacional. Executado como
+# root, isso tenta a role "root" e pode gerar FATAL no log do PostgreSQL,
+# mesmo quando o servidor está saudável. Use um usuário explícito/configurável.
+PG_CHECK_USER="${BRASIL_SAAS_PGUSER:-sa}"
+PG_CHECK_DB="${BRASIL_SAAS_PGDATABASE:-brasil-saas}"
+echo "Verificando PostgreSQL (usuário: $PG_CHECK_USER, banco: $PG_CHECK_DB)..."
+if pg_isready -h localhost -p 5432 -U "$PG_CHECK_USER" -d "$PG_CHECK_DB" &> /dev/null; then
     echo "PostgreSQL está rodando"
 else
-    echo "Aviso: PostgreSQL não parece estar rodando"
+    echo "Aviso: PostgreSQL não parece estar rodando ou não aceita conexões"
     echo "Certifique-se de que o PostgreSQL está instalado e em execução"
+    echo "Configure BRASIL_SAAS_PGUSER/BRASIL_SAAS_PGDATABASE se necessário."
 fi
 
 # Verificar se o diretório do projeto existe
