@@ -71,7 +71,7 @@ export function createLegacyTranslator(locales) {
       }
       VARIABLE.lastIndex = 0;
     }
-    return { exact, templates };
+    return [code, { exact, templates }];
   }));
   return (text, requestedLanguage) => {
     if (!text || !text.trim()) return text;
