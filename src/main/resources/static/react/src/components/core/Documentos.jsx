@@ -11,6 +11,7 @@ import { InputText } from 'primereact/inputtext';
 import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/documentos';
 
@@ -41,7 +42,7 @@ const tamanho = (bytes) => {
     return `${(b / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const dataHora = (v) => (v ? new Date(v).toLocaleString('pt-BR') : '—');
+const dataHora = (v) => (v ? new Date(v).toLocaleString(localeAtivo()) : '—');
 
 const erroDe = (e, padrao) => {
     const d = e?.payload;

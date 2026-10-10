@@ -6,6 +6,7 @@ import { Card } from 'primereact/card';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Toast } from 'primereact/toast';
+import { formatoData } from '../shared/LocaleData.js';
 
 export const OEE = () => {
     const toast = useRef(null);
@@ -30,8 +31,8 @@ export const OEE = () => {
             <Toast ref={toast} />
             <div className='mb-3'><h2 className='m-0'>Eficiência Operacional</h2><span className='bc-muted'>Disponibilidade x performance x qualidade (OEE) por dia</span></div>
             <div className='flex gap-2 mb-3 flex-wrap align-items-end'>
-                <span><label className='bc-label'>De</label><Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat='dd/mm/yy' showIcon /></span>
-                <span><label className='bc-label'>Até</label><Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat='dd/mm/yy' showIcon /></span>
+                <span><label className='bc-label'>De</label><Calendar value={de} onChange={(e) => setDe(e.value)} dateFormat={formatoData()} showIcon /></span>
+                <span><label className='bc-label'>Até</label><Calendar value={ate} onChange={(e) => setAte(e.value)} dateFormat={formatoData()} showIcon /></span>
                 <Button label='Atualizar' icon='pi pi-refresh' onClick={carregar} />
             </div>
             <div className='grid mb-3'>

@@ -9,6 +9,7 @@ const QuickLinksCompras = () => (
 import { useTranslation } from 'react-i18next';
 import React, { useNavigate, useEffect, useState } from 'react';
 import {Card} from 'primereact/card';import {DataTable} from 'primereact/datatable';import {Column} from 'primereact/column';import {Button} from 'primereact/button';import {InputNumber} from 'primereact/inputnumber';import {InputText} from 'primereact/inputtext';import {Calendar} from 'primereact/calendar';import {Message} from 'primereact/message';import ComprasSupplyChainService from '../../services/ComprasSupplyChainService';import {useAuth} from '../../contexts/AuthContext';
+import { formatoData } from '../shared/LocaleData.js';
 
 export default function SupplyChainCompras(){
     const { t } = useTranslation();
@@ -26,7 +27,7 @@ const rejeitar=async(id)=>{try{setError('');await ComprasSupplyChainService.reje
    <div className="col-6"><label>Número</label><InputText value={form.numero} onChange={e=>setForm({...form,numero:e.target.value})}/></div>
    <div className="col-6"><label>Produto ID</label><InputNumber value={form.produtoId} onValueChange={e=>setForm({...form,produtoId:e.value})}/></div>
    <div className="col-6"><label>Quantidade</label><InputNumber value={form.quantidade} min={0.001} onValueChange={e=>setForm({...form,quantidade:e.value})}/></div>
-   <div className="col-6"><label>Necessidade</label><Calendar value={form.dataNecessidade} onChange={e=>setForm({...form,dataNecessidade:e.value})} dateFormat="dd/mm/yy" showIcon/></div>
+   <div className="col-6"><label>Necessidade</label><Calendar value={form.dataNecessidade} onChange={e=>setForm({...form,dataNecessidade:e.value})} dateFormat={formatoData()} showIcon/></div>
    <div className="col-12"><label>Observação</label><InputText value={form.observacao} onChange={e=>setForm({...form,observacao:e.target.value})}/></div>
    <div className="col-12"><Button label="Enviar para aprovação" icon="pi pi-send" onClick={criar}/></div>
   </div></Card></div>

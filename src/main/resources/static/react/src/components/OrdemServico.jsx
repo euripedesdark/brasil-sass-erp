@@ -11,6 +11,7 @@ import { InputNumber } from 'primereact/inputnumber';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { AutoComplete } from 'primereact/autocomplete';
 import ApiConfig, { apiFetch } from '../services/ApiConfig';
+import { formatoData } from './shared/LocaleData.js';
 export default function OrdemServico() {
     const { t, i18n } = useTranslation();
     const [osList, setOsList] = useState([]);
@@ -574,7 +575,7 @@ export default function OrdemServico() {
                                     id="dataMov"
                                     value={osSelecionada?.dataMov}
                                     onChange={(e) => setOsSelecionada({...osSelecionada, dataMov: e.value})}
-                                    dateFormat="dd/mm/yy"
+                                    dateFormat={formatoData()}
                                     showIcon
                                     required
                                 />

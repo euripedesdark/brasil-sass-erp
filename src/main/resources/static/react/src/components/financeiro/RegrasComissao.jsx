@@ -13,6 +13,7 @@ import { InputText } from 'primereact/inputtext';
 import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/financeiro/comissoes';
 
@@ -162,7 +163,7 @@ export const RegrasComissao = () => {
         });
     };
 
-    const money = (v) => `R$ ${Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const money = (v) => `R$ ${Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 2 })}`;
     const campo = (id, rotulo, children, w) => (
         <div className={w || 'col-12 md:col-6'}>
             <label className="bc-label" htmlFor={id}>{rotulo}</label>

@@ -169,7 +169,7 @@ export const ImagemRegistro = ({
                     outlined
                     loading={enviando}
                     disabled={enviando || !registroId}
-                    onClick={escoliar}
+                    onClick={escolher}
                 />
                 {temImagem && (
                     <Button

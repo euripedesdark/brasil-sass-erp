@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { NotificationService } from '../services/NotificationService';
 import { downloadAuthenticated } from '../services/downloadService';
 import { PrintButton } from './shared/PrintButton';
+import { formatoData, localeAtivo } from './shared/LocaleData.js';
 
 export const Relatorios = () => {
     const { user } = useAuth();
@@ -99,11 +100,11 @@ export const Relatorios = () => {
                     </div>
                     <div className="col-12 md:col-3 field">
                         <label className="font-bold mb-2 block">Data Início</label>
-                        <Calendar value={dataInicio} onChange={(e) => setDataInicio(e.value)} showIcon dateFormat="dd/mm/yy" />
+                        <Calendar value={dataInicio} onChange={(e) => setDataInicio(e.value)} showIcon dateFormat={formatoData()} />
                     </div>
                     <div className="col-12 md:col-3 field">
                         <label className="font-bold mb-2 block">Data Fim</label>
-                        <Calendar value={dataFim} onChange={(e) => setDataFim(e.value)} showIcon dateFormat="dd/mm/yy" />
+                        <Calendar value={dataFim} onChange={(e) => setDataFim(e.value)} showIcon dateFormat={formatoData()} />
                     </div>
                     <div className="col-12 md:col-2 field flex align-items-end">
                         <Button label="Gerar" icon="pi pi-sync" onClick={gerarRelatorio} loading={loading} className="p-button-success" />
@@ -179,7 +180,7 @@ const formatarValor = (chave, valor) => {
     const numerico = Number(valor);
     if (Number.isNaN(numerico)) return String(valor ?? '-');
     // Contagens de pedidos/notas sao inteiros, nao valores em reais
-    if (/quantidade/i.test(chave)) return numerico.toLocaleString('pt-BR');
+    if (/quantidade/i.test(chave)) return numerico.toLocaleString(localeAtivo());
     return numerico.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 

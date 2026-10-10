@@ -11,6 +11,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { Toast } from 'primereact/toast';
 import { Tag } from 'primereact/tag';
 import { CaixaService } from '../services/CaixaService';
+import { localeAtivo } from './shared/LocaleData.js';
 
 const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -208,7 +209,7 @@ export default function Caixa() {
 
             <Dialog visible={histDlg} style={{ width: 'min(720px, 96vw)' }} header={`Histórico — ${selectedCaixa?.nome || ''}`} modal onHide={() => setHistDlg(false)}>
                 <DataTable value={movs} emptyMessage="Sem movimentos" paginator rows={10} size="small">
-                    <Column field="createdAt" header="Data" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—'} />
+                    <Column field="createdAt" header="Data" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString(localeAtivo()) : '—'} />
                     <Column field="tipo" header="Tipo" body={(r) => <Tag value={r.tipo} severity={r.tipo === 'SANGRIA' ? 'warning' : 'success'} />} />
                     <Column field="valor" header="Valor" body={(r) => fmt(r.valor)} />
                     <Column field="saldoAnterior" header="Antes" body={(r) => fmt(r.saldoAnterior)} />

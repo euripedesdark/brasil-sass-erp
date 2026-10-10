@@ -10,9 +10,10 @@ import { InputText } from 'primereact/inputtext';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/wms';
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 3 });
 
 export const WMS = () => {
     const toast = useRef(null);

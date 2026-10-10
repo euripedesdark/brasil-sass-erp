@@ -12,6 +12,7 @@ import { confirmDialog } from 'primereact/confirmdialog';
 import { apiFetch } from '../../services/ApiConfig';
 import PedidoVendaService from '../../services/PedidoVendaService';
 import { useAuth } from '../../contexts/AuthContext';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/fiscal/nfe';
 
@@ -157,7 +158,7 @@ export function NFe() {
     };
 
     const pedidoOptions = pedidos.map(p => ({
-        label: `Pedido ${p.numero || p.id} — R$ ${Number(p.valorTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        label: `Pedido ${p.numero || p.id} — R$ ${Number(p.valorTotal || 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 2 })}`,
         value: p.id
     }));
 

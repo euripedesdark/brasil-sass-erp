@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import ApiConfig, { apiFetch } from '../services/ApiConfig';
 import './Dashboard.css';
+import { localeAtivo } from './shared/LocaleData.js';
 
 export const Dashboard = () => {
     const { t } = useTranslation();
@@ -73,8 +74,8 @@ export const Dashboard = () => {
         if (Number.isNaN(d.getTime())) return String(v);
         const hoje = new Date().toDateString() === d.toDateString();
         return hoje
-            ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-            : d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+            ? d.toLocaleTimeString(localeAtivo(), { hour: '2-digit', minute: '2-digit' })
+            : d.toLocaleString(localeAtivo(), { dateStyle: 'short', timeStyle: 'short' });
     };
 
     return (
@@ -112,7 +113,7 @@ export const Dashboard = () => {
                             <span className="dashboard-kpi-label">{ind.nome || ind.codigo}</span>
                             <span className="dashboard-kpi-value">
                                 {ind.valorAtual != null
-                                    ? Number(ind.valorAtual).toLocaleString('pt-BR')
+                                    ? Number(ind.valorAtual).toLocaleString(localeAtivo())
                                     : '—'}
                             </span>
                             {ind.unidade && (

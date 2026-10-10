@@ -9,6 +9,7 @@ import { Tag } from 'primereact/tag';
 import { Dialog } from 'primereact/dialog';
 import { InputTextarea } from 'primereact/inputtextarea';
 import ConferenciaCompraService from '../../services/ConferenciaCompraService';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export default function ConferenciaFaturasCompra() {
         const { t } = useTranslation();
@@ -76,7 +77,7 @@ export default function ConferenciaFaturasCompra() {
         catch(e){setError(e?.response?.data?.message||e?.response?.data?.errors?.[0]?.message||t('legacyUi.conferencia.approveFail'));}
         finally{setSalvandoExcecao(false);}
     };
-    const quantidade=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:4});
+    const quantidade=(v)=>v==null?'':Number(v).toLocaleString(localeAtivo(),{minimumFractionDigits:3,maximumFractionDigits:4});
     const dinheiro=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     return <Card title={t('legacyUi.conferencia.title')}>
         <div className="grid align-items-end mb-4">

@@ -9,6 +9,7 @@ import { Tag } from 'primereact/tag';
 import { Checkbox } from 'primereact/checkbox';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
+import { Toast } from 'primereact/toast';
 import { EntradaNotaService } from '../../services/EntradaNotaService';
 import { apiFetch } from '../../services/ApiConfig';
 import ApiConfig from '../../services/ApiConfig';

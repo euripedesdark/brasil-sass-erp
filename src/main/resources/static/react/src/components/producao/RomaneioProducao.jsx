@@ -13,6 +13,7 @@ import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import RomaneioProducaoService from '../../services/RomaneioProducaoService';
+import { formatoData } from '../shared/LocaleData.js';
 
 const novoItem = () => ({
     produtoId: null,
@@ -187,7 +188,7 @@ export const RomaneioProducao = ({ empresaId, ordens = [] }) => {
                         </div>
                         <div className="col-12 md:col-4 field">
                             <label className="font-bold">Data</label>
-                            <Calendar value={form.dataRomaneio} onChange={e => setForm({ ...form, dataRomaneio: e.value })} dateFormat="dd/mm/yy" showIcon />
+                            <Calendar value={form.dataRomaneio} onChange={e => setForm({ ...form, dataRomaneio: e.value })} dateFormat={formatoData()} showIcon />
                         </div>
                         <div className="col-12 md:col-6 field">
                             <label className="font-bold">Destino</label>

@@ -5,6 +5,7 @@ import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { Tag } from 'primereact/tag';
+import { localeAtivo } from './LocaleData.js';
 
 export const DocumentoFluxoDialog = ({ visible, onHide, tipo, id }) => {
     const [ligacoes, setLigacoes] = useState([]);
@@ -41,7 +42,7 @@ export const DocumentoFluxoDialog = ({ visible, onHide, tipo, id }) => {
                 <Column header="Para" body={(r) => (
                     <span>{r.destinoTipo} <Tag value={`#${r.destinoId}`} severity="success" /> {r.destinoNumero ? `(${r.destinoNumero})` : ''}</span>
                 )} />
-                <Column field="createdAt" header="Quando" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString('pt-BR') : '—'} style={{ width: '10rem' }} />
+                <Column field="createdAt" header="Quando" body={(r) => r.createdAt ? new Date(r.createdAt).toLocaleString(localeAtivo()) : '—'} style={{ width: '10rem' }} />
             </DataTable>
             <div className="flex justify-end mt-3">
                 <Button label="Fechar" text onClick={onHide} />

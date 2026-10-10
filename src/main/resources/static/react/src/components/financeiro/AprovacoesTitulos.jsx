@@ -9,6 +9,7 @@ import { Tag } from 'primereact/tag';
 import { Message } from 'primereact/message';
 import { useTranslation } from 'react-i18next';
 import TituloService from '../../services/TituloService';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 /**
  * Fila de aprovações de títulos financeiros.
@@ -86,7 +87,7 @@ export const AprovacoesTitulos = () => {
     const moeda = (v) =>
         (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    const dataBr = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : '');
+    const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 
     const tipoBody = (row) => {
         if (row.tipoTitulo === 'R') return <Tag value={t('finance.approvals.receivable')} severity="success" />;
@@ -151,7 +152,7 @@ export const AprovacoesTitulos = () => {
                     <Column field="dataVencimento" header={t('finance.approvals.dueDate')} body={(r) => dataBr(r.dataVencimento)} style={{ width: '110px' }} />
                     <Column field="nivel" header={t('finance.approvals.levelLabel')} body={nivelBody} style={{ width: '90px' }} />
                     <Column field="solicitanteNome" header={t('finance.approvals.requester')} body={solicitanteBody} style={{ width: '150px' }} />
-                    <Column field="dataSolicitacao" header={t('finance.approvals.requestedAt')} body={(r) => (r.dataSolicitacao ? new Date(r.dataSolicitacao).toLocaleString('pt-BR') : '—')} style={{ width: '150px' }} />
+                    <Column field="dataSolicitacao" header={t('finance.approvals.requestedAt')} body={(r) => (r.dataSolicitacao ? new Date(r.dataSolicitacao).toLocaleString(localeAtivo()) : '—')} style={{ width: '150px' }} />
                     <Column header={t('finance.approvals.observation')} body={obsBody} style={{ minWidth: '200px' }} />
                     <Column header={t('finance.approvals.decision')} body={acoes} style={{ width: '210px' }} />
                 </DataTable>

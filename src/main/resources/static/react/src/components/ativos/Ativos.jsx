@@ -13,6 +13,7 @@ import {Checkbox} from 'primereact/checkbox';
 import {Toast} from 'primereact/toast';
 import {Tag} from 'primereact/tag';
 import {api, opcional, brl, isoDate, periodoAtual} from './ativosApi';
+import { formatoData } from '../shared/LocaleData.js';
 
 const METODOS = [
     {label: 'Linear', value: 'LINEAR'},
@@ -150,7 +151,7 @@ export default function Ativos() {
             <div className="col-12 md:col-6"><label>{label}</label><InputNumber value={form[campo]} onValueChange={e => set({...form, [campo]: e.value})} {...props}/></div>;
         const texto = (campo, label) => <div className="col-12"><label>{label}</label><InputText value={form[campo] || ''} onChange={e => set({...form, [campo]: e.target.value})}/></div>;
         return <div className="grid p-fluid">
-            <div className="col-12 md:col-6"><label>Data</label><Calendar value={form.data} onChange={e => set({...form, data: e.value})} dateFormat="dd/mm/yy" showIcon/></div>
+            <div className="col-12 md:col-6"><label>Data</label><Calendar value={form.data} onChange={e => set({...form, data: e.value})} dateFormat={formatoData()} showIcon/></div>
             {tipo === 'adicao' && <>{num('valor', 'Valor')}{idField(form, set, 'contaContrapartidaId', 'Conta de contrapartida', contaOpts)}{texto('documento', 'Documento')}{texto('observacao', 'Observação')}</>}
             {(tipo === 'reavaliar' || tipo === 'impairment') && <>{num('valor', 'Valor')}{texto('observacao', 'Observação')}</>}
             {tipo === 'transferir' && <>{idField(form, set, 'centroCustoDestinoId', 'Centro de custo destino', centroOpts)}{texto('localizacaoDestino', 'Localização destino')}
@@ -248,9 +249,9 @@ export default function Ativos() {
                 <div className="col-12 md:col-6"><label>Modelo</label><InputText value={af.modelo || ''} onChange={e => setAf({...af, modelo: e.target.value})}/></div>
                 <div className="col-12 md:col-6"><label>Nota/documento de aquisição</label><InputText value={af.numeroDocumento || ''} onChange={e => setAf({...af, numeroDocumento: e.target.value})}/></div>
                 <div className="col-12 md:col-6"><label>Ativo superior (ID)</label><InputNumber value={af.ativoPaiId} onValueChange={e => setAf({...af, ativoPaiId: e.value})} useGrouping={false}/></div>
-                <div className="col-12 md:col-4"><label>Data de aquisição</label><Calendar value={af.dataAquisicao} onChange={e => setAf({...af, dataAquisicao: e.value})} dateFormat="dd/mm/yy" showIcon/></div>
-                <div className="col-12 md:col-4"><label>Início da depreciação</label><Calendar value={af.dataInicioDepreciacao} onChange={e => setAf({...af, dataInicioDepreciacao: e.value})} dateFormat="dd/mm/yy" showIcon/></div>
-                <div className="col-12 md:col-4"><label>Garantia até</label><Calendar value={af.garantiaAte} onChange={e => setAf({...af, garantiaAte: e.value})} dateFormat="dd/mm/yy" showIcon/></div>
+                <div className="col-12 md:col-4"><label>Data de aquisição</label><Calendar value={af.dataAquisicao} onChange={e => setAf({...af, dataAquisicao: e.value})} dateFormat={formatoData()} showIcon/></div>
+                <div className="col-12 md:col-4"><label>Início da depreciação</label><Calendar value={af.dataInicioDepreciacao} onChange={e => setAf({...af, dataInicioDepreciacao: e.value})} dateFormat={formatoData()} showIcon/></div>
+                <div className="col-12 md:col-4"><label>Garantia até</label><Calendar value={af.garantiaAte} onChange={e => setAf({...af, garantiaAte: e.value})} dateFormat={formatoData()} showIcon/></div>
                 {!af.id && <div className="col-12 md:col-4"><label>Valor de aquisição</label><InputNumber value={af.valorAquisicao} onValueChange={e => setAf({...af, valorAquisicao: e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>}
                 <div className="col-12 md:col-4"><label>Valor residual</label><InputNumber value={af.valorResidual} onValueChange={e => setAf({...af, valorResidual: e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
                 <div className="col-12 md:col-4"><label>Vida útil (meses)</label><InputNumber value={af.vidaUtilMeses} onValueChange={e => setAf({...af, vidaUtilMeses: e.value})}/></div>

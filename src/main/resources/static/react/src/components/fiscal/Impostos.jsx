@@ -9,6 +9,7 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import { localeAtivo } from '../shared/LocaleData.js';
 
 export const Impostos = () => {
     const { t } = useTranslation();
@@ -43,7 +44,7 @@ export const Impostos = () => {
     }, []);
 
     const aliquota = (row) =>
-        row.aliquotaPadrao == null ? '-' : `${Number(row.aliquotaPadrao).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}%`;
+        row.aliquotaPadrao == null ? '-' : `${Number(row.aliquotaPadrao).toLocaleString(localeAtivo(), { minimumFractionDigits: 2, maximumFractionDigits: 4 })}%`;
 
     const status = (row) => (
         <Tag value={row.ativo ? 'Ativo' : 'Inativo'} severity={row.ativo ? 'success' : 'danger'} />

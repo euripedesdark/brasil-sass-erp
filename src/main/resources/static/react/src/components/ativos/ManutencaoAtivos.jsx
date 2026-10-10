@@ -14,6 +14,7 @@ import {Checkbox} from 'primereact/checkbox';
 import {Toast} from 'primereact/toast';
 import {Tag} from 'primereact/tag';
 import {api, brl, isoDate} from './ativosApi';
+import { formatoData } from '../shared/LocaleData.js';
 
 const TIPOS_ORDEM = ['CORRETIVA', 'PREVENTIVA', 'PREDITIVA', 'INSPECAO', 'MELHORIA'];
 const PRIORIDADES = ['BAIXA', 'MEDIA', 'ALTA', 'URGENTE'];
@@ -78,7 +79,7 @@ export default function ManutencaoAtivos() {
     const setF = v => setDlg({...dlg, form: v});
     const campoAtivo = <div className="col-12 md:col-6"><label>Ativo / equipamento</label><Dropdown value={f.ativoId} options={ativoOpts} filter onChange={e => setF({...f, ativoId: e.value})} placeholder="Selecione"/></div>;
     const dd = (campo, label, opts) => <div className="col-12 md:col-3"><label>{label}</label><Dropdown value={f[campo]} options={opts} onChange={e => setF({...f, [campo]: e.value})}/></div>;
-    const data = (campo, label) => <div className="col-12 md:col-3"><label>{label}</label><Calendar value={f[campo]} onChange={e => setF({...f, [campo]: e.value})} dateFormat="dd/mm/yy" showIcon/></div>;
+    const data = (campo, label) => <div className="col-12 md:col-3"><label>{label}</label><Calendar value={f[campo]} onChange={e => setF({...f, [campo]: e.value})} dateFormat={formatoData()} showIcon/></div>;
     const num = (campo, label, props = {}) => <div className="col-12 md:col-3"><label>{label}</label><InputNumber value={f[campo]} onValueChange={e => setF({...f, [campo]: e.value})} {...props}/></div>;
     const txt = (campo, label, area) => <div className="col-12"><label>{label}</label>{area
         ? <InputTextarea rows={3} value={f[campo] || ''} onChange={e => setF({...f, [campo]: e.target.value})}/>
@@ -190,7 +191,7 @@ export default function ManutencaoAtivos() {
 
         <Dialog header={conclusao ? `Concluir ${conclusao.ordem.numero}` : ''} visible={!!conclusao} onHide={() => setConclusao(null)} modal style={{width: 'min(640px,95vw)'}}>
             {conclusao && <div className="grid p-fluid">
-                <div className="col-12 md:col-6"><label>Data de conclusão</label><Calendar value={conclusao.form.data} onChange={e => setConclusao({...conclusao, form: {...conclusao.form, data: e.value}})} dateFormat="dd/mm/yy" showIcon/></div>
+                <div className="col-12 md:col-6"><label>Data de conclusão</label><Calendar value={conclusao.form.data} onChange={e => setConclusao({...conclusao, form: {...conclusao.form, data: e.value}})} dateFormat={formatoData()} showIcon/></div>
                 <div className="col-12 md:col-6"><label>Horas de parada</label><InputNumber value={conclusao.form.horasParada} onValueChange={e => setConclusao({...conclusao, form: {...conclusao.form, horasParada: e.value}})} maxFractionDigits={2}/></div>
                 <div className="col-12"><label>Causa</label><InputText value={conclusao.form.causa || ''} onChange={e => setConclusao({...conclusao, form: {...conclusao.form, causa: e.target.value}})}/></div>
                 <div className="col-12"><label>Solução aplicada</label><InputTextarea rows={3} value={conclusao.form.solucao || ''} onChange={e => setConclusao({...conclusao, form: {...conclusao.form, solucao: e.target.value}})}/></div>

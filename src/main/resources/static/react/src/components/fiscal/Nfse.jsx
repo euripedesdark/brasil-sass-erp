@@ -15,6 +15,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
+import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const BASE = '/api/fiscal/nfse';
 
@@ -31,8 +32,8 @@ const TRIBUTACOES = [
 
 const ISO = (d) => (d ? d.toISOString().slice(0, 10) : null);
 const num = (v) => Number(v ?? 0);
-const money = (v) => Number(v ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const dataBr = (v) => (v ? new Date(v).toLocaleDateString('pt-BR') : '—');
+const money = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const dataBr = (v) => (v ? new Date(v).toLocaleDateString(localeAtivo()) : '—');
 
 const erroDe = (e, padrao) => {
     const d = e?.payload;
@@ -352,7 +353,7 @@ export const Nfse = () => {
                         className="p-datatable-sm"
                     >
                         <Column field="criadoEm" header="Quando" sortable
-                            body={(r) => new Date(r.criadoEm).toLocaleString('pt-BR')}
+                            body={(r) => new Date(r.criadoEm).toLocaleString(localeAtivo())}
                             style={{ width: '170px' }} />
                         <Column field="operacao" header="Operação"
                             style={{ width: '110px' }} />
@@ -554,7 +555,7 @@ export const Nfse = () => {
                                      onValueChange={(e) => setForm({ ...form, numeroRps: e.value })} />)}
 
                     {campo('dt', 'Data de emissão',
-                        <Calendar id="dt" value={form.dataEmissao} dateFormat="dd/mm/yy"
+                        <Calendar id="dt" value={form.dataEmissao} dateFormat={formatoData()}
                                   onChange={(e) => setForm({ ...form, dataEmissao: e.value })} />)}
 
                     {campo('disc', 'Discriminação dos serviços',

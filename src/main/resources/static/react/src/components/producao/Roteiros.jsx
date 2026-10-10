@@ -14,6 +14,7 @@ import { Toast } from 'primereact/toast';
 import { useRef } from 'react';
 import ProdutoService from '../../services/ProdutoService';
 import { apiFetch } from '../../services/ApiConfig';
+import { formatoData } from '../shared/LocaleData.js';
 
 const vazioRoteiro = () => ({ produtoId:null, produto:null, codigo:'', nome:'', versao:1, vigenciaInicio:null, vigenciaFim:null, ativo:true, observacao:'' });
 const vazioOperacao = () => ({ sequencia:1, codigo:'', nome:'', centroTrabalhoId:null, setupMinutos:0, maquinaMinutos:0, homemMinutos:0, instrucoes:'', ativo:true });
@@ -99,8 +100,8 @@ export default function Roteiros(){
     <div className="col-12 md:col-4 field"><label>Código *</label><InputText value={roteiro.codigo} onChange={e=>setRoteiro({...roteiro,codigo:e.target.value})}/></div>
     <div className="col-12 md:col-5 field"><label>Nome *</label><InputText value={roteiro.nome} onChange={e=>setRoteiro({...roteiro,nome:e.target.value})}/></div>
     <div className="col-12 md:col-3 field"><label>Versão</label><InputNumber value={roteiro.versao} min={1} onValueChange={e=>setRoteiro({...roteiro,versao:e.value})}/></div>
-    <div className="col-12 md:col-6 field"><label>Início da vigência</label><Calendar value={roteiro.vigenciaInicio} onChange={e=>setRoteiro({...roteiro,vigenciaInicio:e.value})} dateFormat="dd/mm/yy"/></div>
-    <div className="col-12 md:col-6 field"><label>Fim da vigência</label><Calendar value={roteiro.vigenciaFim} onChange={e=>setRoteiro({...roteiro,vigenciaFim:e.value})} dateFormat="dd/mm/yy"/></div>
+    <div className="col-12 md:col-6 field"><label>Início da vigência</label><Calendar value={roteiro.vigenciaInicio} onChange={e=>setRoteiro({...roteiro,vigenciaInicio:e.value})} dateFormat={formatoData()}/></div>
+    <div className="col-12 md:col-6 field"><label>Fim da vigência</label><Calendar value={roteiro.vigenciaFim} onChange={e=>setRoteiro({...roteiro,vigenciaFim:e.value})} dateFormat={formatoData()}/></div>
     <div className="col-12 field"><label>Observação</label><InputText value={roteiro.observacao||''} onChange={e=>setRoteiro({...roteiro,observacao:e.target.value})}/></div>
    </div>
   </Dialog>
