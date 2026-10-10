@@ -48,7 +48,7 @@ export default function ConferenciaFaturasCompra() {
         <Column field="valorUnitarioPedido" header={t('legacyUi.conferencia.order')}/>
         <Column field="valorUnitarioRecebido" header={t('legacyUi.conferencia.received')}/>
         <Column field="valorUnitarioFaturado" header={t('legacyUi.conferencia.billed')}/>
-        <Column field="status" header="Status" body={r=><Tag value={r.status} severity={r.status==='APROVADA'?'success':'danger'}/>}/>
+        <Column field="status" header={t('legacyUi.conferencia.status')} body={r=><Tag value={r.status} severity={r.status==='APROVADA'?'success':'danger'}/>}/>
         <Column field="divergencia" header={t('legacyUi.conferencia.divergence')}/>
     </DataTable>;
     const conferir=async()=>{
@@ -70,22 +70,22 @@ export default function ConferenciaFaturasCompra() {
     const abrirExcecao=(row)=>{setExcecao(row);setMotivo();setError();};
     const fecharExcecao=()=>{setExcecao(null);setMotivo();};
     const salvarExcecao=async()=>{
-        if(!excecao||motivo.trim().length<10){setError("Motivo com ao menos 10 caracteres.");return;}
+        if(!excecao||motivo.trim().length<10){setError(t('legacyUi.conferencia.reasonShort'));return;}
         setSalvandoExcecao(true);setError();
         try{await ConferenciaCompraService.aprovarExcepcional(excecao.id,motivo.trim());fecharExcecao();await carregar();}
-        catch(e){setError(e?.response?.data?.message||e?.response?.data?.errors?.[0]?.message||"Falha ao aprovar excecao.");}
+        catch(e){setError(e?.response?.data?.message||e?.response?.data?.errors?.[0]?.message||t('legacyUi.conferencia.approveFail'));}
         finally{setSalvandoExcecao(false);}
     };
     const quantidade=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:4});
     const dinheiro=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     return <Card title={t('legacyUi.conferencia.title')}>
         <div className="grid align-items-end mb-4">
-            <div className="col-12 md:col-2 field"><label>Pedido</label><InputNumber value={form.pedidoId} onValueChange={e=>setForm({...form,pedidoId:e.value})}/></div>
-            <div className="col-12 md:col-2 field"><label>Recebimento</label><InputNumber value={form.recebimentoId} onValueChange={e=>setForm({...form,recebimentoId:e.value})}/></div>
-            <div className="col-12 md:col-2 field"><label>NF-e</label><InputNumber value={form.nfeId} onValueChange={e=>setForm({...form,nfeId:e.value})}/></div>
-            <div className="col-12 md:col-2 field"><label>T\u00edtulo</label><InputNumber value={form.tituloId} onValueChange={e=>setForm({...form,tituloId:e.value})}/></div>
-            <div className="col-12 md:col-2 field"><label>Valor da fatura</label><InputNumber value={form.valorFatura} onValueChange={e=>setForm({...form,valorFatura:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
-            <div className="col-12 md:col-2 field"><label>Toler\u00e2ncia</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.orderLabel')}</label><InputNumber value={form.pedidoId} onValueChange={e=>setForm({...form,pedidoId:e.value})}/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.receiptLabel')}</label><InputNumber value={form.recebimentoId} onValueChange={e=>setForm({...form,recebimentoId:e.value})}/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.invoiceLabel')}</label><InputNumber value={form.nfeId} onValueChange={e=>setForm({...form,nfeId:e.value})}/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.titleLabel')}</label><InputNumber value={form.tituloId} onValueChange={e=>setForm({...form,tituloId:e.value})}/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.invoiceAmount')}</label><InputNumber value={form.valorFatura} onValueChange={e=>setForm({...form,valorFatura:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.tolerance')}</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
             <div className="col-12"><Button label={t('legacyUi.conferencia.run')} icon="pi pi-check-circle" onClick={conferir} loading={processando} disabled={!form.pedidoId || !form.recebimentoId || !form.nfeId || !(form.valorFatura>0) || form.tolerancia<0}/></div>
         </div>
         {error && <div className="p-error mb-3">{error}</div>}
@@ -97,27 +97,27 @@ export default function ConferenciaFaturasCompra() {
             <Column field="valorPedido" header={t('legacyUi.conferencia.order')}/>
             <Column field="valorRecebido" header={t('legacyUi.conferencia.received')}/>
             <Column field="valorFatura" header={t('legacyUi.conferencia.billed')}/>
-            <Column field="status" header="Status" body={r=><Tag value={r.status} severity={r.status==='APROVADA'?'success':'danger'}/>}/>
+            <Column field="status" header={t('legacyUi.conferencia.status')} body={r=><Tag value={r.status} severity={r.status==='APROVADA'?'success':'danger'}/>}/>
             <Column field="divergencia" header={t('legacyUi.conferencia.divergence')}/>
-            <Column header="Acoes" body={r=>r.status==="DIVERGENTE"?<Button label="Aprovar excecao" icon="pi pi-check" className="p-button-text p-button-sm p-button-warning" onClick={()=>abrirExcecao(r)}/>:null}/>
-            <Column header="Itens" body={r=><Button label="Itens" icon="pi pi-list" className="p-button-text p-button-sm" onClick={()=>abrirItens(r)}/>}/>
+            <Column header={t('legacyUi.conferencia.actions')} body={r=>r.status==="DIVERGENTE"?<Button label={t('legacyUi.conferencia.approveException')} icon="pi pi-check" className="p-button-text p-button-sm p-button-warning" onClick={()=>abrirExcecao(r)}/>:null}/>
+            <Column header={t('legacyUi.conferencia.items')} body={r=><Button label={t('legacyUi.conferencia.items')} icon="pi pi-list" className="p-button-text p-button-sm" onClick={()=>abrirItens(r)}/>}/>
         </DataTable>
-        <Dialog header="Itens conferidos" visible={detalhe!==null} style={{width:'75vw'}} onHide={fecharItens}>
-            <DataTable value={itens} paginator rows={10} stripedRows emptyMessage="Nenhum item conferido">
-                <Column field="numeroItem" header="Item"/>
-                <Column field="descricao" header="Descri\u00e7\u00e3o"/>
-                <Column header="Qtd. pedida" body={r=>quantidade(r.quantidadePedida)}/>
-                <Column header="Qtd. recebida" body={r=>quantidade(r.quantidadeRecebida)}/>
-                <Column header="Qtd. faturada" body={r=>quantidade(r.quantidadeFaturada)}/>
-                <Column header="Pre\u00e7o pedido" body={r=>dinheiro(r.valorUnitarioPedido)}/>
-                <Column header="Pre\u00e7o faturado" body={r=>dinheiro(r.valorUnitarioFaturado)}/>
-                <Column header="Situa\u00e7\u00e3o" body={r=><Tag value={r.conforme?'Conforme':r.tipoDivergencia} severity={r.conforme?'success':'danger'}/>}/>
-                <Column field="divergencia" header="Diverg\u00eancia"/>
+        <Dialog header={t('legacyUi.conferencia.itemsChecked')} visible={detalhe!==null} style={{width:'75vw'}} onHide={fecharItens}>
+            <DataTable value={itens} paginator rows={10} stripedRows emptyMessage={t('legacyUi.conferencia.noItemsChecked')}>
+                <Column field="numeroItem" header={t('legacyUi.conferencia.item')}/>
+                <Column field="descricao" header={t('legacyUi.conferencia.description')}/>
+                <Column header={t('legacyUi.conferencia.qtyOrdered')} body={r=>quantidade(r.quantidadePedida)}/>
+                <Column header={t('legacyUi.conferencia.qtyReceived')} body={r=>quantidade(r.quantidadeRecebida)}/>
+                <Column header={t('legacyUi.conferencia.qtyBilled')} body={r=>quantidade(r.quantidadeFaturada)}/>
+                <Column header={t('legacyUi.conferencia.priceOrdered')} body={r=>dinheiro(r.valorUnitarioPedido)}/>
+                <Column header={t('legacyUi.conferencia.priceBilled')} body={r=>dinheiro(r.valorUnitarioFaturado)}/>
+                <Column header={t('legacyUi.conferencia.situation')} body={r=><Tag value={r.conforme?'Conforme':r.tipoDivergencia} severity={r.conforme?'success':'danger'}/>}/>
+                <Column field="divergencia" header={t('legacyUi.conferencia.divergence')}/>
             </DataTable>
         </Dialog>
-        <Dialog header="Aprovacao excepcional" visible={excecao!==null} style={{width:"32rem"}} onHide={fecharExcecao}>
-            <div className="field"><label>Motivo (minimo 10 caracteres)</label><InputTextarea value={motivo} onChange={e=>setMotivo(e.target.value)} rows={4} className="w-full" /></div>
-            <div className="flex justify-content-end gap-2 mt-3"><Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={fecharExcecao}/><Button label="Aprovar" icon="pi pi-check" loading={salvandoExcecao} disabled={motivo.trim().length<10} onClick={salvarExcecao}/></div>
+        <Dialog header={t('legacyUi.conferencia.exceptionTitle')} visible={excecao!==null} style={{width:"32rem"}} onHide={fecharExcecao}>
+            <div className="field"><label>{t('legacyUi.conferencia.reasonMin')}</label><InputTextarea value={motivo} onChange={e=>setMotivo(e.target.value)} rows={4} className="w-full" /></div>
+            <div className="flex justify-content-end gap-2 mt-3"><Button label={t('legacyUi.conferencia.cancel')} icon="pi pi-times" className="p-button-text" onClick={fecharExcecao}/><Button label={t('legacyUi.conferencia.approve')} icon="pi pi-check" loading={salvandoExcecao} disabled={motivo.trim().length<10} onClick={salvarExcecao}/></div>
         </Dialog>
     </Card>;
 }

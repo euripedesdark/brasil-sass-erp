@@ -42,9 +42,9 @@ export const Copa = () => {
 
     return (
         <div className="p-3">
-            <Card title="CO-PA — Análise de rentabilidade">
+            <Card title="Análise de rentabilidade">
                 <Message severity="info" className="w-full mb-3"
-                    text="Paridade SAP CO-PA (lite). Custo estimado em 70% da receita até CMV real do estoque." />
+                    text="Custo estimado em 70% da receita até o CMV real do estoque." />
                 <div className="flex flex-wrap gap-2 align-items-end mb-3">
                     <div>
                         <label className="bc-label">De</label>
