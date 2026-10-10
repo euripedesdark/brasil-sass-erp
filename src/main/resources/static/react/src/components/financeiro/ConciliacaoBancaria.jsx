@@ -17,7 +17,7 @@ import { formatoData, localeAtivo } from '../shared/LocaleData.js';
 
 const iso = (d) => d ? new Date(d).toISOString().slice(0, 10) : null;
 const brDate = (d) => d ? new Date(d).toLocaleDateString(localeAtivo()) : '';
-const money = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (v) => Number(v || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export default function ConciliacaoBancaria() {
     const { t } = useTranslation();

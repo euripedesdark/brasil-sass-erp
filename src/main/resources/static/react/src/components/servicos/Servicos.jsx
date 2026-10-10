@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -108,7 +109,7 @@ export const Servicos = () => {
 
     const formatarMoeda = (valor) => {
         if (valor === null || valor === undefined) return 'R$ 0,00';
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return valor.toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     };
 
     const formatarDuracao = (valor, unidade) => {

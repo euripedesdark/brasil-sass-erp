@@ -78,7 +78,7 @@ export default function ConferenciaFaturasCompra() {
         finally{setSalvandoExcecao(false);}
     };
     const quantidade=(v)=>v==null?'':Number(v).toLocaleString(localeAtivo(),{minimumFractionDigits:3,maximumFractionDigits:4});
-    const dinheiro=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const dinheiro=(v)=>v==null?'':Number(v).toLocaleString(localeAtivo(),{style:'currency',currency:'BRL'});
     return <Card title={t('legacyUi.conferencia.title')}>
         <div className="grid align-items-end mb-4">
             <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.orderLabel')}</label><InputNumber value={form.pedidoId} onValueChange={e=>setForm({...form,pedidoId:e.value})}/></div>

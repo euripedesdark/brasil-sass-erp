@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { localeAtivo } from '../shared/LocaleData.js';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -45,7 +46,7 @@ const vazio = {
 const formatarMoeda = (v) =>
     v === null || v === undefined
         ? '-'
-        : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        : Number(v).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const CadastroProdutos = () => {
     const { t } = useTranslation();

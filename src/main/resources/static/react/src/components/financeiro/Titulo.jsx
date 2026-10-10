@@ -198,7 +198,7 @@ export const Titulo = () => {
     };
 
     const moeda = (v) =>
-        (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
     const abrirAprovacao = (row) => {
         setTituloAtual(row);
