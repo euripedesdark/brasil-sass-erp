@@ -60,6 +60,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     private final FuncionarioRepository funcionarioRepository;
     private final br.com.brasil_saas.financeiro.service.TituloService tituloService;
     private final DocumentoFluxoService documentoFluxoService;
+    private final br.com.brasil_saas.financeiro.service.ComissaoService comissaoService;
 
     @Override
     @Transactional
@@ -260,6 +261,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                     r.setStatus("LIBERADA");
                     reservaEstoqueRepository.save(r);
                 });
+        comissaoService.estornarPorPedido(empresaId, pedido.getId(), "Cancelamento do pedido " + pedido.getNumero());
         pedido.setStatus("CANCELADO");
         pedidoRepository.save(pedido);
     }
@@ -287,6 +289,124 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
             }
         }
         return new java.math.BigDecimal[]{limite, emAberto};
+    }
+
+    @Override
+    @Transactional
+    public PedidoVendaResponse faturarParcial(Long id, Long empresaId, Map<Long, BigDecimal> quantidades) {
+        PedidoVenda pedido = pedidoBloqueado(id, empresaId);
+        if ((!"ABERTO".equals(pedido.getStatus()) && !"PARCIAL".equals(pedido.getStatus()))
+                || !"PEDIDO".equalsIgnoreCase(pedido.getTipo())) {
+            throw new BusinessException("Somente pedidos ABERTOS ou PARCIAIS podem ser faturados parcialmente");
+        }
+        if (quantidades == null || quantidades.isEmpty())
+            throw new BusinessException("Informe ao menos uma quantidade para faturar");
+        BigDecimal valorFaturado = BigDecimal.ZERO;
+        Map<Long, BigDecimal> porProduto = new java.util.TreeMap<>();
+        for (ItemPedidoVenda item : pedido.getItens()) {
+            BigDecimal qtd = quantidades.get(item.getId());
+            if (qtd == null) continue;
+            BigDecimal fat = item.getQuantidadeFaturada() == null ? BigDecimal.ZERO : item.getQuantidadeFaturada();
+            BigDecimal restante = item.getQuantidade().subtract(fat);
+            if (qtd.signum() <= 0 || qtd.compareTo(restante) > 0)
+                throw new BusinessException("Quantidade invalida para faturar no item " + item.getNumeroItem()
+                        + ". Restante: " + restante);
+            BigDecimal proporcao = qtd.divide(item.getQuantidade(), 6, java.math.RoundingMode.HALF_UP);
+            BigDecimal bruto = item.getValorUnitario().multiply(qtd);
+            BigDecimal desc = (item.getValorDesconto() == null ? BigDecimal.ZERO : item.getValorDesconto()).multiply(proporcao);
+            valorFaturado = valorFaturado.add(bruto.subtract(desc));
+            item.setQuantidadeFaturada(fat.add(qtd));
+            if (item.getProdutoId() != null) porProduto.merge(item.getProdutoId(), qtd, BigDecimal::add);
+        }
+        if (valorFaturado.signum() <= 0) throw new BusinessException("Nenhuma quantidade nova foi faturada");
+        baixarEstoqueQuantidades(pedido, porProduto, false);
+
+        Titulo titulo = new Titulo();
+        titulo.setEmpresaId(pedido.getEmpresaId());
+        titulo.setTipo("R");
+        titulo.setNumeroDocumento(pedido.getNumero());
+        titulo.setDescricao("Venda parcial - Pedido " + pedido.getNumero());
+        Long pessoaId = clienteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(pedido.getClienteId(), pedido.getEmpresaId())
+                .map(c -> c.getPessoa() == null ? null : c.getPessoa().getId())
+                .orElseThrow(() -> new BusinessException("Cliente sem pessoa vinculada"));
+        titulo.setPessoaId(pessoaId);
+        titulo.setValorOriginal(valorFaturado);
+        titulo.setValorSaldo(valorFaturado);
+        titulo.setDataEmissao(LocalDate.now());
+        titulo.setDataVencimento(LocalDate.now().plusDays(30));
+        titulo.setStatus("ABERTO");
+        Titulo salvo = tituloRepository.save(titulo);
+        documentoFluxoService.ligar(empresaId, null,
+                "PEDIDO_VENDA", pedido.getId(), pedido.getNumero(),
+                "TITULO", salvo.getId(), salvo.getNumeroDocumento(), "FATURA_PARCIAL");
+        tituloService.gerarParcelas(pedido.getEmpresaId(), salvo.getId(), pedido.getCondicaoPagamentoId());
+
+        final BigDecimal totalFaturado = valorFaturado;
+        if (pedido.getVendedorId() != null) {
+            funcionarioRepository.findById(pedido.getVendedorId()).ifPresent(func -> {
+                if ("VENDEDOR".equals(func.getTipoColaborador())) {
+                    BigDecimal percentual = calcularPercentualComissao(pedido.getEmpresaId(), func.getId(), totalFaturado);
+                    Comissao comissao = new Comissao();
+                    comissao.setEmpresaId(pedido.getEmpresaId());
+                    comissao.setFuncionarioId(func.getId());
+                    comissao.setPedidoId(pedido.getId());
+                    comissao.setValorVenda(totalFaturado);
+                    comissao.setPercentual(percentual);
+                    comissao.setValorComissao(totalFaturado.multiply(percentual).divide(new BigDecimal("100")));
+                    comissao.setStatus("PENDENTE");
+                    comissaoRepository.save(comissao);
+                }
+            });
+        }
+
+        boolean completo = pedido.getItens().stream().allMatch(it -> {
+            BigDecimal fat = it.getQuantidadeFaturada() == null ? BigDecimal.ZERO : it.getQuantidadeFaturada();
+            return fat.compareTo(it.getQuantidade()) >= 0;
+        });
+        for (ItemPedidoVenda item : pedido.getItens()) {
+            if (item.getProdutoId() == null) continue;
+            BigDecimal fat = item.getQuantidadeFaturada() == null ? BigDecimal.ZERO : item.getQuantidadeFaturada();
+            if (fat.compareTo(item.getQuantidade()) >= 0) item.setCriadoEstoque(true);
+        }
+        pedido.setStatus(completo ? "FATURADO" : "PARCIAL");
+        return PedidoVendaResponse.from(pedidoRepository.save(pedido));
+    }
+
+    @Override
+    @Transactional
+    public java.util.Map<String, Object> vendaRapida(Long empresaId, PedidoVendaService.VendaRapidaRequest req) {
+        if (req.itens() == null || req.itens().isEmpty())
+            throw new BusinessException("Venda rapida precisa de ao menos um item");
+        if (req.valorRecebido() == null || req.valorRecebido().signum() <= 0)
+            throw new BusinessException("Informe o valor recebido");
+        var itensReq = new ArrayList<br.com.brasil_saas.vendas.dto.ItemPedidoVendaRequest>();
+        for (var it : req.itens()) {
+            if (it.quantidade() == null || it.quantidade().signum() <= 0)
+                throw new BusinessException("Quantidade invalida");
+            if (it.valorUnitario() == null || it.valorUnitario().signum() < 0)
+                throw new BusinessException("Valor unitario invalido");
+            itensReq.add(new br.com.brasil_saas.vendas.dto.ItemPedidoVendaRequest(
+                    null, it.produtoId(), null, it.descricao(), it.quantidade(),
+                    it.unidade() == null ? "UN" : it.unidade(), it.valorUnitario(), BigDecimal.ZERO));
+        }
+        var pedidoReq = new PedidoVendaRequest(empresaId, req.clienteId(), req.vendedorId(),
+                "PEDIDO", "ABERTO", LocalDate.now(), null, req.condicaoPagamentoId(), null,
+                null, "PDV", "PDV", "Venda rapida de balcao", null, null, itensReq);
+        PedidoVendaResponse criado = criar(pedidoReq);
+        PedidoVenda pedido = pedidoBloqueado(criado.id(), empresaId);
+        reservarEstoqueDoPedido(pedido);
+        faturar(criado.id(), empresaId, true);
+        pedido = pedidoBloqueado(criado.id(), empresaId);
+        if (req.valorRecebido().compareTo(pedido.getValorTotal()) < 0)
+            throw new BusinessException("Valor recebido insuficiente: total " + pedido.getValorTotal());
+        var baixa = tituloService.baixar(empresaId, pedido.getTituloId(),
+                new br.com.brasil_saas.financeiro.dto.FinanceiroDtos.BaixaRequest(
+                        null, req.contaBancariaId(), req.tipoPagamentoId(), LocalDate.now(),
+                        pedido.getValorTotal(), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "PDV"));
+        BigDecimal troco = req.valorRecebido().subtract(pedido.getValorTotal());
+        return Map.of("pedidoId", pedido.getId(), "tituloId", pedido.getTituloId(),
+                "total", pedido.getValorTotal(), "valorRecebido", req.valorRecebido(),
+                "troco", troco, "statusTitulo", baixa.statusTitulo());
     }
 
     private void validarCredito(PedidoVenda pedido) {
@@ -375,6 +495,10 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                 quantidades.merge(item.getProdutoId(), item.getQuantidade(), BigDecimal::add);
             }
         }
+        baixarEstoqueQuantidades(pedido, quantidades, true);
+    }
+
+    private void baixarEstoqueQuantidades(PedidoVenda pedido, Map<Long, BigDecimal> quantidades, boolean marcaCompleto) {
         var reservas = reservaEstoqueRepository.findByPedidoForUpdate(pedido.getEmpresaId(), pedido.getId());
         List<Alocacao> alocacoes = new ArrayList<>();
         for (var produto : quantidades.entrySet()) {
@@ -404,7 +528,9 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         alocacoes.sort(java.util.Comparator.comparing(Alocacao::depositoId).thenComparing(Alocacao::produtoId));
         for (Alocacao alocacao : alocacoes) baixarEstoque(pedido, alocacao);
         for (ItemPedidoVenda item : pedido.getItens()) {
-            if (item.getProdutoId() != null) item.setCriadoEstoque(true);
+            if (!marcaCompleto || item.getProdutoId() == null) continue;
+            BigDecimal fat = item.getQuantidadeFaturada() == null ? BigDecimal.ZERO : item.getQuantidadeFaturada();
+            if (fat.compareTo(item.getQuantidade()) >= 0) item.setCriadoEstoque(true);
         }
     }
 

@@ -26,4 +26,13 @@ public interface PedidoVendaService {
 
     void cancelar(Long id, Long empresaId);
     java.util.Map<String, Object> abrirPosVenda(Long id, Long empresaId, Long usuarioId, String motivo, String equipamento);
+    PedidoVendaResponse faturarParcial(Long id, Long empresaId, java.util.Map<Long, java.math.BigDecimal> quantidades);
+    java.util.Map<String, Object> vendaRapida(Long empresaId, VendaRapidaRequest request);
+
+    record VendaRapidaItem(Long produtoId, String descricao, java.math.BigDecimal quantidade,
+                           String unidade, java.math.BigDecimal valorUnitario) {}
+    record VendaRapidaRequest(Long clienteId, Long vendedorId, Long condicaoPagamentoId,
+                              Long contaBancariaId, Long tipoPagamentoId,
+                              java.math.BigDecimal valorRecebido,
+                              java.util.List<VendaRapidaItem> itens) {}
 }

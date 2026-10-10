@@ -37,4 +37,5 @@ public interface ComissaoService {
     RegraComissao atualizarRegra(Long id, RegraRequest request, Long empresaId);
 
     void excluirRegra(Long id, Long empresaId);
+    int estornarPorPedido(Long empresaId, Long pedidoId, String motivo);
 }

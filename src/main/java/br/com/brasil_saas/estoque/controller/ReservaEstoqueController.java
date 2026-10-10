@@ -62,6 +62,7 @@ public class ReservaEstoqueController {
                     item.put("enderecoId", x.getEnderecoId());
                     item.put("loteId", x.getLoteId());
                     item.put("quantidade", x.getQuantidade());
+                    item.put("validade", x.getValidade() == null ? null : x.getValidade().toString());
                     return item;
                 }).toList();
     }
@@ -141,6 +142,8 @@ public class ReservaEstoqueController {
             if (!request.produtoId().equals(lote.getProdutoId()) || !request.depositoId().equals(lote.getDepositoId()))
                 throw new BusinessException("Lote nao pertence ao produto/deposito informado");
             if (!"ATIVO".equals(lote.getStatus())) throw new BusinessException("Lote nao esta ATIVO");
+            if (lote.getDataValidade() != null && lote.getDataValidade().isBefore(java.time.LocalDate.now()))
+                throw new BusinessException("Lote vencido em " + lote.getDataValidade() + "; vencidos nao reservam");
             BigDecimal reservadoLote = repository.sumAtivasPorLote(user.getEmpresaId(), request.depositoId(), request.produtoId(), request.loteId());
             if (lote.getQuantidade().subtract(zero(reservadoLote)).add(propria).compareTo(request.quantidade()) < 0)
                 throw new BusinessException("Quantidade insuficiente no lote");

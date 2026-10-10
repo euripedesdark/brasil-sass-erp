@@ -11,6 +11,7 @@ import br.com.brasil_saas.compras.repository.ConferenciaFaturaCompraRepository;
 import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
+import br.com.brasil_saas.compras.repository.ToleranciaConferenciaRepository;
 import br.com.brasil_saas.compras.service.ConferenciaFaturaCompraService;
 import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
@@ -59,6 +60,24 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     static final String ITEM_NAO_PEDIDO = "ITEM_NAO_PEDIDO";
     static final String CONSUMO_ACUMULADO_EXCEDIDO = "CONSUMO_ACUMULADO_EXCEDIDO";
 
+    BigDecimal toleranciaCadastrada(Long empresaId, PedidoCompra pedido, BigDecimal valorPedido) {
+        var regras = toleranciaRepository.findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderById(empresaId);
+        if (regras == null || regras.isEmpty()) return BigDecimal.ZERO;
+        java.util.Set<Long> produtos = new java.util.HashSet<>();
+        if (pedido.getItens() != null) for (var it : pedido.getItens()) {
+            if (it.getProdutoId() != null) produtos.add(it.getProdutoId());
+        }
+        var regra = regras.stream()
+                .filter(r -> r.getProdutoId() != null && produtos.size() == 1 && produtos.contains(r.getProdutoId()))
+                .findFirst()
+                .orElseGet(() -> regras.stream().filter(r -> r.getProdutoId() == null).findFirst().orElse(null));
+        if (regra == null || regra.getLimite() == null) return BigDecimal.ZERO;
+        if ("PERCENTUAL".equals(regra.getTipo())) {
+            return nz(valorPedido).multiply(regra.getLimite()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        }
+        return regra.getLimite();
+    }
+
     private final ConferenciaFaturaCompraRepository repository;
     private final ConferenciaFaturaCompraItemRepository itemRepository;
     private final PedidoCompraRepository pedidoRepository;
@@ -68,6 +87,7 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
     private final NfeRepository nfeRepository;
     private final NfeItemRepository nfeItemRepository;
     private final DocumentoFluxoService documentoFluxoService;
+    private final ToleranciaConferenciaRepository toleranciaRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -143,7 +163,8 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         BigDecimal valorPedido = nz(pedido.getValorTotal());
         BigDecimal valorRecebido = nz(recebimento.getValorTotal());
         BigDecimal valorFatura = nz(request.valorFatura());
-        BigDecimal tolerancia = nz(request.tolerancia());
+        BigDecimal tolerancia = request.tolerancia() != null ? nz(request.tolerancia())
+                : toleranciaCadastrada(empresaId, pedido, valorPedido);
         BigDecimal limite = tolerancia.abs();
 
         // Rateio: um recebimento pode ser faturado por varias NFs, sem

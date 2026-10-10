@@ -57,6 +57,35 @@ public class ComissaoServiceImpl implements ComissaoService {
         return comissaoRepository.save(comissao);
     }
 
+    @Override
+    @Transactional
+    public int estornarPorPedido(Long empresaId, Long pedidoId, String motivo) {
+        var lista = comissaoRepository.findByEmpresaIdAndPedidoId(empresaId, pedidoId);
+        int n = 0;
+        for (Comissao c : lista) {
+            if ("ESTORNADA".equalsIgnoreCase(c.getStatus())) continue;
+            if ("PENDENTE".equalsIgnoreCase(c.getStatus())) {
+                c.setStatus("ESTORNADA");
+                comissaoRepository.save(c);
+                n++;
+            } else if ("PAGO".equalsIgnoreCase(c.getStatus())) {
+                Comissao ajuste = new Comissao();
+                ajuste.setEmpresaId(empresaId);
+                ajuste.setFuncionarioId(c.getFuncionarioId());
+                ajuste.setPedidoId(pedidoId);
+                ajuste.setValorVenda(c.getValorVenda());
+                ajuste.setPercentual(c.getPercentual());
+                ajuste.setValorComissao(c.getValorComissao() == null ? BigDecimal.ZERO : c.getValorComissao().negate());
+                ajuste.setStatus("PENDENTE");
+                comissaoRepository.save(ajuste);
+                c.setStatus("ESTORNADA");
+                comissaoRepository.save(c);
+                n++;
+            }
+        }
+        return n;
+    }
+
     // ------------------------------------------------------------------ regras
 
     @Override

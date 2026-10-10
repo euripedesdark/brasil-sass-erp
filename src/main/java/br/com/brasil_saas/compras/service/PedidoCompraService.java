@@ -13,4 +13,6 @@ public interface PedidoCompraService {
     void receber(Long id, Long empresaId);
     void receberParcial(Long id, Long empresaId, Map<Long, BigDecimal> quantidades);
     void cancelar(Long id, Long empresaId);
+    PedidoCompraResponse aprovar(Long id, Long empresaId, Long userId);
+    PedidoCompraResponse rejeitar(Long id, Long empresaId, Long userId, String motivo);
 }

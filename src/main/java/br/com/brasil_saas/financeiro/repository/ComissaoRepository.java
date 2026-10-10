@@ -28,6 +28,7 @@ public interface ComissaoRepository extends JpaRepository<Comissao, Long> {
     List<Comissao> findByEmpresaIdAndFuncionarioId(Long empresaId, Long funcionarioId);
 
     List<Comissao> findByEmpresaIdOrderByCreatedAtDesc(Long empresaId);
+    List<Comissao> findByEmpresaIdAndPedidoId(Long empresaId, Long pedidoId);
 
 
     @Query("""

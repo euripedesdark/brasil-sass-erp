@@ -10,6 +10,7 @@ import br.com.brasil_saas.compras.repository.PedidoCompraRepository;
 import br.com.brasil_saas.cadastro.repository.FornecedorRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
+import br.com.brasil_saas.compras.repository.AlcadaAprovacaoRepository;
 import br.com.brasil_saas.compras.service.PedidoCompraService;
 import br.com.brasil_saas.core.service.DocumentoFluxoService;
 import br.com.brasil_saas.estoque.model.MovimentacaoEstoque;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +45,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
     private final DepositoRepository depositoRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
     private final TituloRepository tituloRepository;
+    private final AlcadaAprovacaoRepository alcadaRepository;
     private final br.com.brasil_saas.financeiro.service.TituloService tituloService;
     private final DocumentoFluxoService documentoFluxoService;
 
@@ -93,6 +96,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         pedido.setValorDesconto(request.valorDesconto() != null ? request.valorDesconto() : BigDecimal.ZERO);
         pedido.setValorFrete(request.valorFrete() != null ? request.valorFrete() : BigDecimal.ZERO);
         pedido.setValorTotal(totalProdutos.subtract(pedido.getValorDesconto()).add(pedido.getValorFrete()));
+        pedido.setStatusAprovacao(exigeAprovacao(pedido.getEmpresaId(), pedido.getValorTotal()) ? "PENDENTE" : "APROVADO");
         return PedidoCompraResponse.from(pedidoRepository.save(pedido));
     }
 
@@ -120,6 +124,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         if (!"ABERTO".equals(pedido.getStatus())) {
             throw new BusinessException("Apenas pedidos ABERTOS podem ser recebidos");
         }
+        exigirAprovado(pedido);
 
         Map<Long, BigDecimal> recebidas = new java.util.HashMap<>();
         for (ItemPedidoCompra item : pedido.getItens()) {
@@ -155,6 +160,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         if ("CANCELADO".equals(pedido.getStatus()) || "RECEBIDO".equals(pedido.getStatus())) {
             throw new BusinessException("Pedido nao pode receber novas quantidades no status " + pedido.getStatus());
         }
+        exigirAprovado(pedido);
         if (quantidades == null || quantidades.isEmpty()) {
             throw new BusinessException("Informe ao menos uma quantidade de recebimento");
         }
@@ -214,6 +220,52 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         }
         pedido.setStatus("CANCELADO");
         pedidoRepository.save(pedido);
+    }
+
+    private boolean exigeAprovacao(Long empresaId, BigDecimal total) {
+        if (total == null) return false;
+        return alcadaRepository.findByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByValorLimiteAsc(empresaId)
+                .stream().findFirst()
+                .map(a -> total.compareTo(a.getValorLimite()) > 0)
+                .orElse(false);
+    }
+
+    private void exigirAprovado(PedidoCompra pedido) {
+        if ("REJEITADO".equals(pedido.getStatusAprovacao()))
+            throw new BusinessException("Pedido rejeitado na aprovacao nao pode ser recebido");
+        if ("PENDENTE".equals(pedido.getStatusAprovacao())
+                && exigeAprovacao(pedido.getEmpresaId(), pedido.getValorTotal()))
+            throw new BusinessException("Pedido acima da alcada aguarda aprovacao");
+    }
+
+    @Override
+    @Transactional
+    public PedidoCompraResponse aprovar(Long id, Long empresaId, Long userId) {
+        PedidoCompra pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
+        if (!"PENDENTE".equals(pedido.getStatusAprovacao()))
+            throw new BusinessException("Somente pedidos pendentes podem ser aprovados");
+        pedido.setStatusAprovacao("APROVADO");
+        pedido.setAprovadoPor(userId);
+        pedido.setAprovadoEm(LocalDateTime.now());
+        pedido.setMotivoRejeicao(null);
+        return PedidoCompraResponse.from(pedidoRepository.save(pedido));
+    }
+
+    @Override
+    @Transactional
+    public PedidoCompraResponse rejeitar(Long id, Long empresaId, Long userId, String motivo) {
+        PedidoCompra pedido = pedidoRepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pedido de compra nao encontrado"));
+        if (!"PENDENTE".equals(pedido.getStatusAprovacao()))
+            throw new BusinessException("Somente pedidos pendentes podem ser rejeitados");
+        if (motivo == null || motivo.trim().length() < 10)
+            throw new BusinessException("Motivo da rejeicao com ao menos 10 caracteres");
+        pedido.setStatusAprovacao("REJEITADO");
+        pedido.setAprovadoPor(userId);
+        pedido.setAprovadoEm(LocalDateTime.now());
+        pedido.setMotivoRejeicao(motivo.trim());
+        return PedidoCompraResponse.from(pedidoRepository.save(pedido));
     }
 
     private Titulo criarTituloCompra(PedidoCompra pedido) {

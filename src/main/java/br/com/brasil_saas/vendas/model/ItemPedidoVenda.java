@@ -50,4 +50,7 @@ public class ItemPedidoVenda extends AuditableEntity {
 
     @Column(name = "criado_estoque", nullable = false)
     private Boolean criadoEstoque = false;
+
+    @Column(name = "quantidade_faturada", precision = 15, scale = 3, nullable = false)
+    private BigDecimal quantidadeFaturada = BigDecimal.ZERO;
 }
