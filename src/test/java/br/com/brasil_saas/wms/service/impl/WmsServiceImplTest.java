@@ -100,4 +100,67 @@ class WmsServiceImplTest {
         assertSame(v, service.fecharVolume(2L, 3L));
         verify(volumes, never()).save(any());
     }
+    private WmsOnda ondaAberta() {
+        var o = new WmsOnda();
+        o.setId(5L); o.setEmpresaId(2L); o.setStatus("EM_SEPARACAO");
+        when(ondas.findByIdAndEmpresaIdAndDeletedAtIsNull(5L, 2L)).thenReturn(Optional.of(o));
+        return o;
+    }
+
+    private WmsOndaItem itemDeReserva(Long reservaId, String st) {
+        var i = new WmsOndaItem();
+        i.setOndaId(5L); i.setOrigemTipo("RESERVA"); i.setOrigemId(reservaId);
+        i.setProdutoId(6L); i.setStatus(st);
+        return i;
+    }
+
+    private br.com.brasil_saas.estoque.model.ReservaEstoque reserva(String st) {
+        var r = new br.com.brasil_saas.estoque.model.ReservaEstoque();
+        r.setId(21L); r.setEmpresaId(2L); r.setStatus(st);
+        return r;
+    }
+
+    @Test
+    void concluirConsomeReservasDaOnda() {
+        ondaAberta();
+        when(itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(5L, 2L))
+                .thenReturn(java.util.List.of(itemDeReserva(21L, "SEPARADO")));
+        when(reservas.findById(21L)).thenReturn(Optional.of(reserva("RESERVADA")));
+        when(ondas.save(any())).thenAnswer(i -> i.getArgument(0));
+        assertEquals("CONCLUIDA", service.concluir(2L, 5L).getStatus());
+        var captor = org.mockito.ArgumentCaptor.forClass(br.com.brasil_saas.estoque.model.ReservaEstoque.class);
+        verify(reservas).save(captor.capture());
+        assertEquals("CONSUMIDA", captor.getValue().getStatus());
+    }
+
+    @Test
+    void concluirIdempotenteNaoRetocaReservas() {
+        var o = ondaAberta(); o.setStatus("CONCLUIDA");
+        assertEquals("CONCLUIDA", service.concluir(2L, 5L).getStatus());
+        verifyNoInteractions(itens, reservas);
+        verify(ondas, never()).save(any());
+    }
+
+    @Test
+    void concluirPreservaReservaJaConsumida() {
+        ondaAberta();
+        when(itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(5L, 2L))
+                .thenReturn(java.util.List.of(itemDeReserva(21L, "SEPARADO")));
+        when(reservas.findById(21L)).thenReturn(Optional.of(reserva("CONSUMIDA")));
+        when(ondas.save(any())).thenAnswer(i -> i.getArgument(0));
+        service.concluir(2L, 5L);
+        var captor = org.mockito.ArgumentCaptor.forClass(br.com.brasil_saas.estoque.model.ReservaEstoque.class);
+        verify(reservas).save(captor.capture());
+        assertEquals("CONSUMIDA", captor.getValue().getStatus());
+    }
+
+    @Test
+    void concluirExigeItensSeparados() {
+        ondaAberta();
+        when(itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(5L, 2L))
+                .thenReturn(java.util.List.of(itemDeReserva(21L, "PARCIAL")));
+        assertThrows(ResponseStatusException.class, () -> service.concluir(2L, 5L));
+        verifyNoInteractions(reservas);
+        verify(ondas, never()).save(any());
+    }
 }
