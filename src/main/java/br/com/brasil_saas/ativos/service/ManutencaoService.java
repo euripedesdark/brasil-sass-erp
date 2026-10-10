@@ -3,6 +3,11 @@ package br.com.brasil_saas.ativos.service;
 import br.com.brasil_saas.ativos.model.*;
 import br.com.brasil_saas.ativos.repository.*;
 import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.estoque.model.MovimentacaoEstoque;
+import br.com.brasil_saas.estoque.model.SaldoEstoque;
+import br.com.brasil_saas.estoque.repository.DepositoRepository;
+import br.com.brasil_saas.estoque.repository.MovimentacaoEstoqueRepository;
+import br.com.brasil_saas.estoque.repository.SaldoEstoqueRepository;
 import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +46,9 @@ public class ManutencaoService {
     private final MedicaoAtivoRepository medicoes;
     private final ProdutoRepository produtos;
     private final FuncionarioRepository funcionarios;
+    private final SaldoEstoqueRepository saldoEstoqueRepository;
+    private final MovimentacaoEstoqueRepository movimentacaoRepository;
+    private final DepositoRepository depositoRepository;
 
     public record ConclusaoReq(LocalDate data, String causa, String solucao, BigDecimal horasParada, BigDecimal custoServico) {}
 
@@ -119,6 +127,7 @@ public class ManutencaoService {
         if (m.getDataInicio() == null) m.setDataInicio(m.getDataProgramada() != null && !m.getDataProgramada().isAfter(data) ? m.getDataProgramada() : data);
         zerarNulos(m);
         recalcularCusto(m);
+        baixarPecasEstoque(empresaId, m, data);
         Manutencao salva = ordens.save(m);
 
         if (m.getPlanoId() != null) planos.findById(m.getPlanoId()).filter(p -> empresaId.equals(p.getEmpresaId())).ifPresent(p -> {
@@ -134,6 +143,41 @@ public class ManutencaoService {
             notas.save(n);
         });
         return salva;
+    }
+
+
+    private void baixarPecasEstoque(Long empresaId, Manutencao m, LocalDate data) {
+        List<ManutencaoMaterial> mats = materiais.findAllByEmpresaIdAndManutencaoIdAndDeletedAtIsNullOrderById(empresaId, m.getId());
+        for (ManutencaoMaterial mat : mats) {
+            if (mat.getProdutoId() == null || mat.getQuantidade() == null || mat.getQuantidade().signum() <= 0) continue;
+            SaldoEstoque saldo = saldoEstoqueRepository.findByEmpresaIdAndProdutoIdForUpdate(empresaId, mat.getProdutoId())
+                    .orElseGet(() -> {
+                        SaldoEstoque novo = new SaldoEstoque();
+                        novo.setEmpresaId(empresaId);
+                        novo.setDepositoId(depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO")
+                                .orElseThrow(() -> new BusinessException("Deposito PADRAO nao encontrado para a empresa " + empresaId))
+                                .getId());
+                        novo.setProdutoId(mat.getProdutoId());
+                        novo.setQuantidade(BigDecimal.ZERO);
+                        return novo;
+                    });
+            BigDecimal atual = saldo.getQuantidade() == null ? BigDecimal.ZERO : saldo.getQuantidade();
+            if (atual.compareTo(mat.getQuantidade()) < 0)
+                throw new BusinessException("Estoque insuficiente para a peca " + mat.getDescricao() + ": saldo " + atual + ", necessario " + mat.getQuantidade());
+            saldo.setQuantidade(atual.subtract(mat.getQuantidade()));
+            saldoEstoqueRepository.save(saldo);
+            MovimentacaoEstoque mov = new MovimentacaoEstoque();
+            mov.setEmpresaId(empresaId);
+            mov.setProdutoId(mat.getProdutoId());
+            mov.setTipo("SAIDA");
+            mov.setOrigem("MANUTENCAO");
+            mov.setOrigemId(m.getId());
+            mov.setQuantidade(mat.getQuantidade());
+            mov.setSaldoApos(saldo.getQuantidade());
+            mov.setDataMovimento(data.atStartOfDay());
+            mov.setObservacao("Saida para ordem de manutencao " + m.getNumero());
+            movimentacaoRepository.save(mov);
+        }
     }
 
     @Transactional
