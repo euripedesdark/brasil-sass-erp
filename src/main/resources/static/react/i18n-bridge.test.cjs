@@ -18,7 +18,7 @@ const { pathToFileURL } = require('node:url');
   assert.equal(t('Cancelar','fr-FR'), 'Annuler');
   assert.equal(t('Cancelar','pt-BR'), 'Cancelar');
   assert.equal(t('  Cancelar  ','en-US'), '  Cancel  ');
-  assert.equal(t('Produto #ZX-9021','fr-FR'), 'Produit #ZX-9021'); // unknown data must remain intact
+  assert.equal(t('Registro interno desconhecido ZX-9021','fr-FR'), 'Registro interno desconhecido ZX-9021'); // unknown data must remain intact
   const testTranslator = createLegacyTranslator({
     'pt-BR': { test: 'Mostrando {{first}} a {{last}} de {{total}} pedidos' },
     'en-US': { test: 'Showing {{first}} to {{last}} of {{total}} orders' },
