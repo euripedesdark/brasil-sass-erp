@@ -74,7 +74,7 @@ else:
 
 # Always start from the trusted base branch; never execute PR code in this job.
 git("fetch", "--no-tags", "origin", base_ref)
-branch = f"agent/issue-{NUMBER}"
+branch = f"agent/issue-{NUMBER}-{os.environ.get(\"GITHUB_RUN_ID\", \"run\")}"
 git("checkout", "-B", branch, f"origin/{base_ref}")
 
 files = git("ls-files").splitlines()
@@ -161,7 +161,7 @@ if not paths:
 for left, right in paths:
     for path in (left, right):
         low = path.lower()
-        if path.startswith("/") or ".." in Path(path).parts or any(part in low for part in blocked_parts) or low in blocked_exact or low.startswith(".github/") or low.endswith((".yml", ".yaml", ".properties", ".pem", ".key", ".p12", ".pfx")):
+        if path.startswith("/") or ".." in Path(path).parts or any(part in low for part in blocked_parts) or low in blocked_exact or low.startswith(".github/") or low.endswith((".yml", ".yaml", ".properties", ".pem", ".key", ".p12", ".pfx")) or not low.endswith((".java", ".jsx", ".js", ".tsx", ".ts", ".py", ".sql", ".md", ".json", ".xml", ".css", ".html")):
             raise SystemExit(f"Patch bloqueado por política de caminho: {path}")
 patch_file = Path(os.environ["RUNNER_TEMP"]) / "agent.patch"
 patch_file.write_text(patch + "\n", encoding="utf-8")
