@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
@@ -53,7 +54,7 @@ export const Reinf = () => {
         if (v == null) return '—';
         const n = Number(v);
         if (Number.isNaN(n)) return String(v);
-        return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return n.toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     };
 
     const gerar = async () => {

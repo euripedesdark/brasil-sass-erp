@@ -213,7 +213,7 @@ export function NFe() {
             <DataTable value={pedidos} loading={!empresaId} paginator rows={10} size="small" emptyMessage="Nenhum pedido aberto disponível para NF-e.">
                 <Column field="numero" header="Pedido" />
                 <Column field="clienteId" header="Cliente" />
-                <Column field="valorTotal" header="Total" body={r => Number(r.valorTotal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+                <Column field="valorTotal" header="Total" body={r => Number(r.valorTotal || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })} />
                 <Column body={r => <Button icon="pi pi-send" text tooltip="Selecionar para emissão" onClick={() => setPedidoId(r.id)} />} />
             </DataTable>
         </Card>
@@ -227,7 +227,7 @@ export function NFe() {
                 <Column field="status" header="Status" />
                 <Column field="chaveAcesso" header="Chave" />
                 <Column field="valorTotal" header="Total"
-                    body={r => Number(r.valorTotal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+                    body={r => Number(r.valorTotal || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' })} />
                 <Column field="dataEmissao" header="Emissão" />
                 <Column body={r => <Button icon="pi pi-download" text tooltip="Baixar XML" disabled={!r.xml}
                     onClick={async () => {

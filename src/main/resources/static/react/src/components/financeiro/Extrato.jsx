@@ -150,7 +150,7 @@ export const Extrato = () => {
     };
 
     const moeda = (v) =>
-        (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
     const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 
@@ -321,7 +321,7 @@ export const Extrato = () => {
                             onValueChange={(e) => setForm({ ...form, valor: e.value })}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="col-6 field">

@@ -128,7 +128,7 @@ export const Compras = () => {
     const removerItem = index => setForm(prev => ({ ...prev, itens: prev.itens.filter((_, i) => i !== index).map((it, i) => ({ ...it, numeroItem: i + 1 })) }));
 
     const totalItens = () => form.itens.reduce((acc, it) => acc + ((Number(it.quantidade) || 0) * (Number(it.valorUnitario) || 0) - (Number(it.valorDesconto) || 0)), 0);
-    const moeda = v => (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const moeda = v => (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     const dataBr = d => d ? new Date(d).toLocaleDateString(localeAtivo()) : '';
 
     const salvar = async () => {
@@ -262,7 +262,7 @@ export const Compras = () => {
                     selectedItemTemplate={p => p ? `${p.nome || p.descricao} · ${p.codigo || p.id}` : ''} onChange={e => { const p = e.value; setItemAtual({ ...itemAtual, produtoId: p?.id || null, descricao: p?.nome || itemAtual.descricao, unidade: p?.unidadeSigla || itemAtual.unidade, valorUnitario: p?.precoCusto ?? itemAtual.valorUnitario }); }} placeholder={t('legacyUi.comprasLegacy.searchProduct')} /></div>
                 <div className="col-6 md:col-3 field"><label>{t('legacyUi.comprasLegacy.itemDesc')}</label><InputText value={itemAtual.descricao} onChange={e => setItemAtual({ ...itemAtual, descricao: e.target.value })} /></div>
                 <div className="col-4 md:col-2 field"><label>{t('legacyUi.comprasLegacy.qty')}</label><InputNumber value={itemAtual.quantidade} onValueChange={e => setItemAtual({ ...itemAtual, quantidade: e.value })} min={0.001} maxFractionDigits={3} /></div>
-                <div className="col-4 md:col-2 field"><label>{t('legacyUi.comprasLegacy.unitPrice')}</label><InputNumber value={itemAtual.valorUnitario} onValueChange={e => setItemAtual({ ...itemAtual, valorUnitario: e.value })} mode="currency" currency="BRL" locale="pt-BR" /></div>
+                <div className="col-4 md:col-2 field"><label>{t('legacyUi.comprasLegacy.unitPrice')}</label><InputNumber value={itemAtual.valorUnitario} onValueChange={e => setItemAtual({ ...itemAtual, valorUnitario: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} /></div>
                 <div className="col-4 md:col-2 field flex align-items-end"><Button label={t('legacyUi.comprasLegacy.addItem')} icon="pi pi-plus" onClick={adicionarItem} /></div>
             </div></>}
             <DataTable value={form.itens} emptyMessage={t('legacyUi.comprasLegacy.noItems')} size="small" className="mt-2">

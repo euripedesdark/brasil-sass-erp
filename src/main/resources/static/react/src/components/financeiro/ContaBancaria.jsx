@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -122,7 +123,7 @@ export const ContaBancaria = () => {
     };
 
     const moeda = (v) =>
-        (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
     return (
         <div>
@@ -256,7 +257,7 @@ export const ContaBancaria = () => {
                             onValueChange={(e) => setForm({ ...form, saldoInicial: e.value })}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                 </div>

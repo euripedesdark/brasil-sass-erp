@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { useTranslation } from 'react-i18next';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
@@ -33,7 +34,7 @@ export default function RecebimentosCompra() {
             <Column field="numero" header={t('legacyUi.recebimentos.receipt')} sortable />
             <Column field="pedidoId" header={t('legacyUi.recebimentos.order')} sortable />
             <Column field="dataRecebimento" header={t('legacyUi.recebimentos.date')} sortable />
-            <Column field="valorTotal" header={t('legacyUi.recebimentos.value')} body={r => Number(r.valorTotal || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})} />
+            <Column field="valorTotal" header={t('legacyUi.recebimentos.value')} body={r => Number(r.valorTotal || 0).toLocaleString(localeAtivo(),{style:'currency',currency:'BRL'})} />
             <Column field="status" header={t('legacyUi.recebimentos.status')} body={r => <Tag value={r.status} severity={r.status === 'RECEBIDO' ? 'success' : 'info'} />} />
             <Column header="" body={r => <Button icon="pi pi-eye" text onClick={() => abrir(r)} />} />
         </DataTable>

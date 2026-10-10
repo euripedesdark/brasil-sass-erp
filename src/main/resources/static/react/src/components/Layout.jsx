@@ -4,6 +4,7 @@ import { Button } from 'primereact/button';
 import { Avatar } from 'primereact/avatar';
 import { Divider } from 'primereact/divider';
 import { PanelMenu } from 'primereact/panelmenu';
+import { Dropdown } from 'primereact/dropdown';
 import { TieredMenu } from 'primereact/tieredmenu';
 import { Toast } from 'primereact/toast';
 import { ConfirmDialog } from 'primereact/confirmdialog';
@@ -14,6 +15,7 @@ import { ErrorBoundary } from './shared/ErrorBoundary';
 import RecentUpdates from './RecentUpdates';
 import { ExigeEmpresa } from './core/ExigeEmpresa';
 import { useTranslation } from 'react-i18next';
+import i18n, { supportedLanguages } from '../i18n';
 
 const STATIC_BG = '/images/tela-inicial.jpeg';
 
@@ -560,7 +562,19 @@ export const Layout = () => {
                         <div className="current-page-info">
                             <h2 className="page-title">{t('app.managementTitle')}</h2>
                         </div>
-                        <div className="header-actions"><RecentUpdates /></div>
+                        <div className="header-actions flex align-items-center gap-2">
+                            <Dropdown
+                                value={i18n.resolvedLanguage || i18n.language}
+                                options={supportedLanguages}
+                                optionLabel="label"
+                                optionValue="code"
+                                aria-label={t('login.language')}
+                                onChange={event => i18n.changeLanguage(event.value)}
+                                className="bc-language-selector"
+                                style={{ minWidth: '9rem' }}
+                            />
+                            <RecentUpdates />
+                        </div>
                     </div>
                 </header>
 

@@ -134,7 +134,7 @@ export const LancamentoContabil = () => {
 
     const formatarMoeda = (valor) => {
         if (valor === null || valor === undefined) return 'R$ 0,00';
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return valor.toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     };
 
     const formatarData = (data) => {
@@ -526,7 +526,7 @@ export const LancamentoContabil = () => {
                                 onValueChange={(e) => setNovaPartida({...novaPartida, valor: e.value})}
                                 mode="currency"
                                 currency="BRL"
-                                locale="pt-BR"
+                                locale={localeAtivo()}
                             />
                         </div>
                         <div className="col-12 md:col-4 field">

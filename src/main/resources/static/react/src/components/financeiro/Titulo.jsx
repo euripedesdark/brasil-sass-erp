@@ -198,7 +198,7 @@ export const Titulo = () => {
     };
 
     const moeda = (v) =>
-        (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
     const abrirAprovacao = (row) => {
         setTituloAtual(row);
@@ -472,7 +472,7 @@ export const Titulo = () => {
                             }
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="col-12 field">
@@ -493,7 +493,7 @@ export const Titulo = () => {
                             }
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="col-6 field">
@@ -505,7 +505,7 @@ export const Titulo = () => {
                             }
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="col-12 field"><label>Conta bancária</label><Dropdown value={baixaForm.contaBancariaId} options={contas} optionLabel="banco" optionValue="id" placeholder="Selecione a conta" showClear onChange={e => setBaixaForm({ ...baixaForm, contaBancariaId: e.value })} /></div>

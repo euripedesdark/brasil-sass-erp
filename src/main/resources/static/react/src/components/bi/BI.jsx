@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { localeAtivo } from '../shared/LocaleData.js';
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
@@ -264,7 +265,7 @@ export const BI = () => {
 
     const formatarMoeda = (valor) => {
         if (valor === null || valor === undefined) return 'R$ 0,00';
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return valor.toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     };
 
     const formatarPercentual = (valor) => {

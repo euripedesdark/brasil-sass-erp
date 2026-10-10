@@ -20,7 +20,7 @@ export const IntercompanyEliminacoes = () => {
     const formatarValor = (valor, moeda) => {
         const numero = Number(valor || 0);
         try {
-            return numero.toLocaleString('pt-BR', { style: 'currency', currency: (moeda || 'BRL').trim() });
+            return numero.toLocaleString(localeAtivo(), { style: 'currency', currency: (moeda || 'BRL').trim() });
         } catch {
             return numero.toLocaleString(localeAtivo()) + ' ' + (moeda || '');
         }
