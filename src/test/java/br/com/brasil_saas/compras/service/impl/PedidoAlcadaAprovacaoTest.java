@@ -36,7 +36,9 @@ class PedidoAlcadaAprovacaoTest {
                 mock(br.com.brasil_saas.financeiro.repository.TituloRepository.class),
                 alcadas,
                 mock(br.com.brasil_saas.financeiro.service.TituloService.class),
-                mock(br.com.brasil_saas.core.service.DocumentoFluxoService.class));
+                mock(br.com.brasil_saas.core.service.DocumentoFluxoService.class),
+                mock(br.com.brasil_saas.qualidade.repository.PlanoInspecaoRepository.class),
+                mock(br.com.brasil_saas.qualidade.repository.InspecaoRepository.class));
         when(pedidos.save(any())).thenAnswer(i -> i.getArgument(0));
     }
 
