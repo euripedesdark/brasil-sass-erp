@@ -33,10 +33,7 @@ jobs:
           workflow = Path(".github/workflows/openrouter-issue-agent.yml").read_text(encoding="utf-8")
           agent = Path(".github/agents/my-agent.agent.md").read_text(encoding="utf-8")
           setup = Path("docs/VSCODE-OPENROUTER-SETUP.md").read_text(encoding="utf-8")
-          required_script_markers = [
-              "subprocess.run", "blocked_parts", "openrouter/free",
-              "post_comment",
-          ]
+          required_script_markers = ["subprocess.run", "blocked_parts", "openrouter/free", "post_comment"]
           missing = [marker for marker in required_script_markers if marker not in script]
           if missing:
               raise SystemExit(f"Missing expected agent safety markers: {missing}")
@@ -46,7 +43,7 @@ jobs:
           for marker in ("target: vscode", "model: openrouter/free", "tools:"):
               if marker not in agent:
                   raise SystemExit(f"Missing expected VS Code agent field: {marker}")
-          for marker in ("api.openrouter.ai", "Custom Endpoint", "chat/completions"):
+          for marker in ("https://openrouter.ai/api/v1/chat/completions", "Custom Endpoint", "chat/completions"):
               if marker not in setup:
                   raise SystemExit(f"Missing expected OpenRouter setup detail: {marker}")
           print("Agent syntax, safety markers, VS Code profile and OpenRouter setup validated.")
