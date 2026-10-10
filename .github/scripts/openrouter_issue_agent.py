@@ -74,7 +74,8 @@ else:
 
 # Always start from the trusted base branch; never execute PR code in this job.
 git("fetch", "--no-tags", "origin", base_ref)
-branch = f"agent/issue-{NUMBER}-{os.environ.get(\"GITHUB_RUN_ID\", \"run\")}"
+run_id = os.environ.get("GITHUB_RUN_ID", "run")
+branch = f"agent/issue-{NUMBER}-{run_id}"
 git("checkout", "-B", branch, f"origin/{base_ref}")
 
 files = git("ls-files").splitlines()
