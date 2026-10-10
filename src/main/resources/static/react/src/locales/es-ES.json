@@ -2018,5 +2018,62 @@
     "hSemFalha": "Sin falla hace",
     "msgPrevCriadas": "{{n}} preventiva(s) creada(s)",
     "msgNadaGerar": "Nada que generar"
+  },
+  "erpExtensions": {
+    "campaigns": {
+      "campanhas": "Campañas",
+      "nova": "Nueva campaña",
+      "nome": "Nombre de campaña",
+      "descricao": "Descripción",
+      "orcamento": "Presupuesto",
+      "criar": "Crear campaña",
+      "detalhes": "Contactos y resultados",
+      "contatos": "Prospectos vinculados",
+      "vincular": "Vincular prospecto",
+      "lead": "Prospecto",
+      "ativar": "Activar",
+      "encerrar": "Cerrar campaña",
+      "resultado": "Resultado",
+      "contatado": "Contactado",
+      "respondeu": "Respondió",
+      "converteu": "Convertido",
+      "descartado": "Descartado",
+      "leads": "Total de prospectos",
+      "respostas": "Respuestas",
+      "conversoes": "Conversiones",
+      "fechar": "Cerrar",
+      "falha": "La operación falló",
+      "sucesso": "Operación realizada",
+      "vazio": "Sin campañas",
+      "status": "Estado",
+      "canal": "Canal",
+      "inicio": "Inicio",
+      "fim": "Fin",
+      "financeiro": "Costo realizado",
+      "selecionar": "Seleccione un prospecto"
+    },
+    "dependencies": {
+      "title": "Dependencias",
+      "pre": "Predecesora",
+      "post": "Sucesora",
+      "lag": "Espera (días)",
+      "add": "Añadir dependencia",
+      "remove": "Eliminar",
+      "empty": "Sin dependencias",
+      "blocked": "Etapa bloqueada por dependencia",
+      "failure": "No se pudo guardar",
+      "success": "Dependencia registrada",
+      "select": "Seleccione la etapa"
+    },
+    "delegation": {
+      "delegate": "Delegar",
+      "title": "Delegar tarea",
+      "user": "ID del usuario destinatario",
+      "confirm": "Confirmar delegación",
+      "success": "Tarea delegada",
+      "failure": "No se pudo delegar",
+      "original": "Responsable anterior",
+      "by": "Delegado por"
+    }
   }
 }

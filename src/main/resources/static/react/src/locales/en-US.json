@@ -2018,5 +2018,62 @@
     "hSemFalha": "Failure-free for",
     "msgPrevCriadas": "{{n}} preventive(s) created",
     "msgNadaGerar": "Nothing to generate"
+  },
+  "erpExtensions": {
+    "campaigns": {
+      "campanhas": "Campaigns",
+      "nova": "New campaign",
+      "nome": "Campaign name",
+      "descricao": "Description",
+      "orcamento": "Budget",
+      "criar": "Create campaign",
+      "detalhes": "Contacts and results",
+      "contatos": "Linked leads",
+      "vincular": "Link lead",
+      "lead": "Lead",
+      "ativar": "Activate",
+      "encerrar": "Close campaign",
+      "resultado": "Result",
+      "contatado": "Contacted",
+      "respondeu": "Responded",
+      "converteu": "Converted",
+      "descartado": "Discarded",
+      "leads": "Total leads",
+      "respostas": "Responses",
+      "conversoes": "Conversions",
+      "fechar": "Close",
+      "falha": "Operation failed",
+      "sucesso": "Operation completed",
+      "vazio": "No campaigns",
+      "status": "Status",
+      "canal": "Channel",
+      "inicio": "Start",
+      "fim": "End",
+      "financeiro": "Actual cost",
+      "selecionar": "Select a lead"
+    },
+    "dependencies": {
+      "title": "Dependencies",
+      "pre": "Predecessor",
+      "post": "Successor",
+      "lag": "Lag (days)",
+      "add": "Add dependency",
+      "remove": "Remove",
+      "empty": "No dependencies",
+      "blocked": "Stage blocked by dependency",
+      "failure": "Could not save dependency",
+      "success": "Dependency created",
+      "select": "Select stage"
+    },
+    "delegation": {
+      "delegate": "Delegate",
+      "title": "Delegate task",
+      "user": "Destination user ID",
+      "confirm": "Confirm delegation",
+      "success": "Task delegated",
+      "failure": "Could not delegate",
+      "original": "Previous assignee",
+      "by": "Delegated by"
+    }
   }
 }

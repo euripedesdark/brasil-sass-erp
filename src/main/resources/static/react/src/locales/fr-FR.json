@@ -2018,5 +2018,62 @@
     "hSemFalha": "Sans panne depuis",
     "msgPrevCriadas": "{{n}} préventif(s) créé(s)",
     "msgNadaGerar": "Rien à générer"
+  },
+  "erpExtensions": {
+    "campaigns": {
+      "campanhas": "Campagnes",
+      "nova": "Nouvelle campagne",
+      "nome": "Nom de campagne",
+      "descricao": "Description",
+      "orcamento": "Budget",
+      "criar": "Créer une campagne",
+      "detalhes": "Contacts et résultats",
+      "contatos": "Prospects liés",
+      "vincular": "Associer un prospect",
+      "lead": "Prospect",
+      "ativar": "Activer",
+      "encerrar": "Clore la campagne",
+      "resultado": "Résultat",
+      "contatado": "Contacté",
+      "respondeu": "A répondu",
+      "converteu": "Converti",
+      "descartado": "Écarté",
+      "leads": "Total prospects",
+      "respostas": "Réponses",
+      "conversoes": "Conversions",
+      "fechar": "Fermer",
+      "falha": "Opération échouée",
+      "sucesso": "Opération terminée",
+      "vazio": "Aucune campagne",
+      "status": "Statut",
+      "canal": "Canal",
+      "inicio": "Début",
+      "fim": "Fin",
+      "financeiro": "Coût réel",
+      "selecionar": "Sélectionnez un prospect"
+    },
+    "dependencies": {
+      "title": "Dépendances",
+      "pre": "Prédécesseur",
+      "post": "Successeur",
+      "lag": "Délai (jours)",
+      "add": "Ajouter une dépendance",
+      "remove": "Retirer",
+      "empty": "Aucune dépendance",
+      "blocked": "Étape bloquée par dépendance",
+      "failure": "Impossible d'enregistrer",
+      "success": "Dépendance enregistrée",
+      "select": "Sélectionner une étape"
+    },
+    "delegation": {
+      "delegate": "Déléguer",
+      "title": "Déléguer la tâche",
+      "user": "ID de l'utilisateur destinataire",
+      "confirm": "Confirmer",
+      "success": "Tâche déléguée",
+      "failure": "Impossible de déléguer",
+      "original": "Ancien responsable",
+      "by": "Délégué par"
+    }
   }
 }

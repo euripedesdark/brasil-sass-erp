@@ -2018,5 +2018,62 @@
     "hSemFalha": "Sem falha há",
     "msgPrevCriadas": "{{n}} preventiva(s) criada(s)",
     "msgNadaGerar": "Nada a gerar"
+  },
+  "erpExtensions": {
+    "campaigns": {
+      "campanhas": "Campanhas",
+      "nova": "Nova campanha",
+      "nome": "Nome da campanha",
+      "descricao": "Descrição",
+      "orcamento": "Orçamento",
+      "criar": "Criar campanha",
+      "detalhes": "Contatos e resultados",
+      "contatos": "Leads vinculados",
+      "vincular": "Vincular lead",
+      "lead": "Lead",
+      "ativar": "Ativar",
+      "encerrar": "Encerrar",
+      "resultado": "Resultado",
+      "contatado": "Contatado",
+      "respondeu": "Respondeu",
+      "converteu": "Convertido",
+      "descartado": "Descartado",
+      "leads": "Total de leads",
+      "respostas": "Respostas",
+      "conversoes": "Conversões",
+      "fechar": "Fechar",
+      "falha": "Operação não realizada",
+      "sucesso": "Operação concluída",
+      "vazio": "Nenhuma campanha",
+      "status": "Status",
+      "canal": "Canal",
+      "inicio": "Início",
+      "fim": "Fim",
+      "financeiro": "Custo realizado",
+      "selecionar": "Selecione um lead"
+    },
+    "dependencies": {
+      "title": "Dependências",
+      "pre": "Antecessora",
+      "post": "Sucessora",
+      "lag": "Espera (dias)",
+      "add": "Adicionar dependência",
+      "remove": "Remover",
+      "empty": "Sem dependências",
+      "blocked": "Etapa bloqueada por dependência",
+      "failure": "Não foi possível salvar dependência",
+      "success": "Dependência registrada",
+      "select": "Selecione a etapa"
+    },
+    "delegation": {
+      "delegate": "Delegar",
+      "title": "Delegar tarefa",
+      "user": "ID do usuário destino",
+      "confirm": "Confirmar delegação",
+      "success": "Tarefa delegada",
+      "failure": "Não foi possível delegar",
+      "original": "Responsável anterior",
+      "by": "Delegado por"
+    }
   }
 }
