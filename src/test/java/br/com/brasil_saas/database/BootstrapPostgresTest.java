@@ -34,7 +34,9 @@ class BootstrapPostgresTest {
         // Prepara apenas este cluster de teste sem alterar o checksum nem o historico SQL.
         try (var connection = DriverManager.getConnection(url, user, password);
              var statement = connection.createStatement()) {
-            statement.execute("DO $ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sa') THEN CREATE ROLE sa NOLOGIN; END IF; END $;");
+            try (var roles = statement.executeQuery("SELECT 1 FROM pg_roles WHERE rolname = 'sa'")) {
+                if (!roles.next()) statement.executeUpdate("CREATE ROLE sa NOLOGIN");
+            }
         }
         Flyway flyway = Flyway.configure().dataSource(url, user, password)
                 .schemas("brasil_saas").baselineOnMigrate(false)
