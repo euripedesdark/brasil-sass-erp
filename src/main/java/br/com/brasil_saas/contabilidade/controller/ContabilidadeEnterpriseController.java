@@ -1,4 +1,4 @@
-package br.com.brasil_saas.contabil.controller;
+package br.com.brasil_saas.contabilidade.controller;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
