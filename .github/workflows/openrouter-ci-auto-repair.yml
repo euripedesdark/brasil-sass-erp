@@ -38,7 +38,7 @@ jobs:
           ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
           persist-credentials: true
-          token: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          token: ${{ secrets.AGENT_GITHUB_TOKEN || github.token }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -48,7 +48,7 @@ jobs:
       - name: Verify agent secrets
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          AGENT_GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN || github.token }}
         run: |
           set -euo pipefail
           test -n "$OPENROUTER_API_KEY" || { echo "::error::OPENROUTER_API_KEY secret is missing."; exit 1; }
@@ -56,7 +56,7 @@ jobs:
 
       - name: Diagnose failed CI and propose repair PR
         env:
-          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN || github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
