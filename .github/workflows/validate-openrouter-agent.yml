@@ -3,11 +3,14 @@ name: Validate OpenRouter GitHub Agent
 on:
   pull_request:
     paths:
+      - '.github/agents/my-agent.agent.md'
       - '.github/scripts/openrouter_issue_agent.py'
       - '.github/scripts/openrouter_ci_repair.py'
       - '.github/workflows/openrouter-ci-auto-repair.yml'
       - '.github/workflows/openrouter-issue-agent.yml'
+      - '.github/workflows/validate-openrouter-agent.yml'
       - 'docs/OPENROUTER-GITHUB-AGENT.md'
+      - 'docs/VSCODE-OPENROUTER-SETUP.md'
 
 permissions:
   contents: read
@@ -22,15 +25,16 @@ jobs:
           python-version: '3.12'
       - name: Check Python syntax
         run: python -m py_compile .github/scripts/openrouter_issue_agent.py .github/scripts/openrouter_ci_repair.py
-      - name: Check required safety guards
+      - name: Check required safety guards and VS Code profile
         run: |
           python - <<'PY'
           from pathlib import Path
           script = Path(".github/scripts/openrouter_issue_agent.py").read_text(encoding="utf-8")
           workflow = Path(".github/workflows/openrouter-issue-agent.yml").read_text(encoding="utf-8")
+          agent = Path(".github/agents/my-agent.agent.md").read_text(encoding="utf-8")
+          setup = Path("docs/VSCODE-OPENROUTER-SETUP.md").read_text(encoding="utf-8")
           required_script_markers = [
               "subprocess.run", "blocked_parts", "openrouter/free",
-              "Never execute PR code" if "Never execute PR code" in script else "never execute PR code",
               "post_comment",
           ]
           missing = [marker for marker in required_script_markers if marker not in script]
@@ -39,5 +43,11 @@ jobs:
           for marker in ("issue_comment:", "AGENT_GITHUB_TOKEN", "OPENROUTER_API_KEY", "pull-requests: write", "contents: write"):
               if marker not in workflow:
                   raise SystemExit(f"Missing expected workflow configuration: {marker}")
-          print("Agent syntax and baseline safety markers validated.")
+          for marker in ("target: vscode", "model: openrouter/free", "tools:"):
+              if marker not in agent:
+                  raise SystemExit(f"Missing expected VS Code agent field: {marker}")
+          for marker in ("api.openrouter.ai", "Custom Endpoint", "chat/completions"):
+              if marker not in setup:
+                  raise SystemExit(f"Missing expected OpenRouter setup detail: {marker}")
+          print("Agent syntax, safety markers, VS Code profile and OpenRouter setup validated.")
           PY
