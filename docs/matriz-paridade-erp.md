@@ -341,6 +341,33 @@ Validacao: 2 casos novos (preco dentro da tolerancia aprova e grava o
 campo na linha; preco acima diverge com o tipo preservado). Suite
 completa: 375 testes, zero falhas, zero erros, JDK 21.
 
+## Entrega — apuracao do resultado do exercicio
+
+Branch codex/financeiro-ciclo-titulos. Sem migration, sem tela nova: painel na aba Fechamentos.
+
+- Antes, nao existia encerramento: receitas e despesas nunca eram zeradas
+  contra lucros acumulados.
+- Agora apurarResultado zera as contas de resultado (codigo 3, mesmo
+  criterio da DRE) contra a conta informada, em 31/12, com origem
+  ENCERRAMENTO. Exige jan-nov fechados e dezembro aberto (recebe o
+  lancamento), recusa exercicio futuro, conta de resultado como destino,
+  rascunho no ano, ausencia de movimento e reaplicacao.
+- Tela: exercicio, conta de lucros e botao Apurar com confirmacao; erros
+  voltam em toast sem gravar nada.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/contabilidade/service/ContabilidadeService.java
+    src/main/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeServiceImpl.java
+    src/main/java/br/com/brasil_saas/contabilidade/controller/ContabilidadeController.java
+    src/test/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeApuracaoTest.java
+    src/main/resources/static/react/src/components/contabil/Contabilidade.jsx
+    docs/matriz-paridade-erp.md
+
+Validacao: 7 casos novos (lucro, prejuizo, sem jan-nov, dezembro fechado,
+ja apurado, futuro e conta invalida, sem movimento). Suite: 382 testes.
+
+
 ## Entrega — aprovacao excepcional de divergencias com trilha
 
 Branch codex/conferencia-aprovacao-excepcional. Sem migration, sem tela nova, sem status novo.
@@ -386,6 +413,10 @@ Branch codex/conferencia-aprovacao-excepcional (mesmo bloco). Sem migration, sem
 - Venda e compra chamam o espelho na baixa de ajuste e na restituicao ou
   credito, registrando AJUSTE_CONTABIL por lancamento gerado.
 
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/contabilidade/service/ContabilidadeService.java
+    src/main/java/br/com/brasil_saas/contabilidade/service/impl/ContabilidadeServiceImpl.java
 Arquivos da entrega:
 
     src/main/java/br/com/brasil_saas/contabilidade/service/ContabilidadeService.java
@@ -450,3 +481,23 @@ Arquivos da entrega:
 
 Validacao: 3 casos novos (divide entre depositos, prioriza PADRAO sem
 dividir, sem estoque falha). Suite completa: 393 testes, zero falhas.
+
+## Entrega — erros de negocio com status proprio (contabil e compras)
+
+Branch codex/financeiro-ciclo-titulos. Sem migration.
+
+- Antes, GlobalExceptionHandler nao conhecia ResponseStatusException:
+  toda regra de negocio de contabilidade e compras voltava 500 com
+  Erro interno do servidor, e a tela nao mostrava o motivo real.
+- Agora o status da excecao e preservado (422 continua 422) e 5xx vira
+  400. Verificado ao vivo: apurar sem jan-nov fechados responde 422 com
+  Periodo 2025-01 precisa estar fechado, sem gravar nada.
+
+Arquivos da entrega:
+
+    src/main/java/br/com/brasil_saas/shared/exception/GlobalExceptionHandler.java
+    src/test/java/br/com/brasil_saas/shared/exception/GlobalExceptionHandlerTest.java
+    docs/matriz-paridade-erp.md
+
+Validacao: 3 casos novos e pagina de apuracao no navegador com toast de
+erro real. Suite completa: 403 testes, zero falhas, zero erros, JDK 21.
