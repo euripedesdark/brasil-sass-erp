@@ -60,10 +60,90 @@ jobs:
           jar tf "$JAR" | grep -q '^BOOT-INF/'
           sha256sum "$JAR"
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: brasil-saas-erp-${{ github.sha }}
-          path: target/brasil-saas-erp-1.0.0-SNAPSHOT.jar
-          if-no-files-found: error
-          retention-days: 7
+      - name: Deploy to the existing ERP service
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          SERVICE=brasil-saas-erp.service
+          HEALTH_URL=http://127.0.0.1:8080/actuator/health
+          NEW_JAR="$GITHUB_WORKSPACE/target/brasil-saas-erp-1.0.0-SNAPSHOT.jar"
+
+          sudo systemctl is-active --quiet "$SERVICE"
+          PID="$(sudo systemctl show --property=MainPID --value "$SERVICE")"
+          test "$PID" -gt 1
+          JAR_PATH="$(sudo python3 - "$PID" <<'PY'
+          import os, sys
+          args = open(f"/proc/{sys.argv[1]}/cmdline", "rb").read().decode().split("\0")
+          try:
+              i = args.index("-jar")
+              path = args[i + 1]
+          except (ValueError, IndexError):
+              raise SystemExit("Não foi possível identificar o JAR usado pelo serviço ativo.")
+          if not path.startswith("/"):
+              raise SystemExit(f"O caminho do JAR não é absoluto: {path}")
+          print(path)
+          PY
+          )"
+          test -f "$JAR_PATH" || { echo "::error::JAR ativo não encontrado: $JAR_PATH"; exit 1; }
+          test -s "$NEW_JAR"
+          jar tf "$NEW_JAR" | grep -q '^BOOT-INF/'
+
+          echo "Serviço existente: $SERVICE"
+          echo "JAR em uso: $JAR_PATH"
+          echo "Banco e configuração permanecem os do serviço atual."
+
+          BACKUP="$(mktemp /tmp/brasil-saas-erp-rollback.XXXXXX.jar)"
+          sudo cp -p "$JAR_PATH" "$BACKUP"
+          STAGED="$(sudo mktemp "${JAR_PATH}.new.XXXXXX")"
+          cleanup() { sudo rm -f "$STAGED" "$BACKUP"; }
+          trap cleanup EXIT
+
+          sudo install -o "$(stat -c '%U' "$JAR_PATH")" -g "$(stat -c '%G' "$JAR_PATH")" \
+            -m "$(stat -c '%a' "$JAR_PATH")" "$NEW_JAR" "$STAGED"
+          sudo mv -f "$STAGED" "$JAR_PATH"
+
+          rollback() {
+            echo "::error::A nova versão falhou; restaurando o JAR anterior no mesmo caminho."
+            sudo install -o "$(stat -c '%U' "$JAR_PATH")" -g "$(stat -c '%G' "$JAR_PATH")" \
+              -m "$(stat -c '%a' "$JAR_PATH")" "$BACKUP" "$JAR_PATH"
+            sudo systemctl restart "$SERVICE" || true
+            for _ in $(seq 1 60); do
+              if curl --fail --silent --max-time 3 "$HEALTH_URL" >/dev/null; then
+                echo "Versão anterior restaurada e saudável."
+                return 0
+              fi
+              sleep 5
+            done
+            echo "::error::A restauração automática não confirmou health check; consultar journalctl."
+            sudo journalctl -u "$SERVICE" -n 100 --no-pager || true
+            return 1
+          }
+
+          if ! sudo systemctl restart "$SERVICE"; then
+            rollback
+            exit 1
+          fi
+
+          READY=false
+          for _ in $(seq 1 60); do
+            if curl --fail --silent --max-time 3 "$HEALTH_URL" -o /tmp/brasil-saas-erp-health.json; then
+              if python3 -c 'import json; assert json.load(open("/tmp/brasil-saas-erp-health.json")).get("status") == "UP"'; then
+                READY=true
+                break
+              fi
+            fi
+            if ! sudo systemctl is-active --quiet "$SERVICE"; then
+              break
+            fi
+            sleep 5
+          done
+
+          if [ "$READY" != true ]; then
+            sudo journalctl -u "$SERVICE" -n 100 --no-pager || true
+            rollback
+            exit 1
+          fi
+
+          echo "Deploy concluído: serviço existente saudável na porta 8080."
+          sudo systemctl --no-pager --full status "$SERVICE"
