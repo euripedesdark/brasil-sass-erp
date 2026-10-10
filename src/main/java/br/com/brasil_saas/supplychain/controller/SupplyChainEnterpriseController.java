@@ -21,22 +21,30 @@ public class SupplyChainEnterpriseController {
    String fl=localId==null?"":" and deposito_id=?";
    Object[] pe=localId==null?new Object[]{e,produtoId}:new Object[]{e,produtoId,localId};
    java.math.BigDecimal est=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_saldo where empresa_id=? and produto_id=? and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
-   java.math.BigDecimal res=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_reserva where empresa_id=? and produto_id=? and status in ('ATIVA','RESERVADA') and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
+   // Status reais de reserva: RESERVADA e SEPARACAO (nao existe ATIVA).
+   java.math.BigDecimal res=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_reserva where empresa_id=? and produto_id=? and status in ('RESERVADA','SEPARACAO') and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
    // Entradas futuras: pedidos de compra em aberto com previsao de entrega (pedido nao tem deposito,
    // entao so entram quando o calculo e da empresa toda).
    List<AtpTemporalCalculator.Movimento> entradas=new ArrayList<>();
    if(localId==null){
     for(Map<String,Object> r:jdbc.queryForList("select p.data_previsao_entrega d, sum(i.quantidade-i.quantidade_recebida) q from brasil_saas.bc_com_pedido p join brasil_saas.bc_com_pedido_item i on i.pedido_id=p.id and i.deleted_at is null where p.empresa_id=? and i.produto_id=? and p.deleted_at is null and p.status in ('ABERTO','PARCIAL') and p.data_previsao_entrega is not null group by p.data_previsao_entrega having sum(i.quantidade-i.quantidade_recebida)>0",e,produtoId)){
-     entradas.add(new AtpTemporalCalculator.Movimento(((java.sql.Date)r.get("d")).toLocalDate(),(java.math.BigDecimal)r.get("q")));
+     Object dval=r.get("d");
+     java.time.LocalDate dataEnt;
+     if(dval instanceof java.sql.Date sd) dataEnt=sd.toLocalDate();
+     else if(dval instanceof java.time.LocalDate ld) dataEnt=ld;
+     else dataEnt=java.time.LocalDate.parse(dval.toString());
+     entradas.add(new AtpTemporalCalculator.Movimento(dataEnt,(java.math.BigDecimal)r.get("q")));
     }
    }
    java.math.BigDecimal disp=AtpTemporalCalculator.disponivelEm(dia,est,res,entradas,null);
    java.math.BigDecimal atp=AtpTemporalCalculator.prometivel(dia,est,res,entradas,null);
+   // local_id 0 = sentinela "empresa toda" (UNIQUE nao aceita NULL de forma util).
+   Long localPersist=localId==null?0L:localId;
    jdbc.update("""
 insert into brasil_saas.bc_sc_atp(empresa_id,produto_id,local_id,data,estoque_disponivel,reservas,quantidade_atp,quantidade_ctp)
    values(?,?,?,?,?,?,?,?) on conflict(empresa_id,produto_id,local_id,data) do update set estoque_disponivel=excluded.estoque_disponivel,reservas=excluded.reservas,quantidade_atp=excluded.quantidade_atp,quantidade_ctp=excluded.quantidade_ctp,calculado_em=now()""",
-   e,produtoId,localId,dia,est,res,atp,atp);
-   return Map.of("ok",true,"produtoId",produtoId,"data",data,"estoque",est,"reservas",res,"disponivelNaData",disp,"atp",atp,"ctp",atp);
+   e,produtoId,localPersist,dia,est,res,atp,atp);
+   return Map.of("ok",true,"produtoId",produtoId,"data",data,"localId",localPersist,"estoque",est,"reservas",res,"disponivelNaData",disp,"atp",atp,"ctp",atp);
  }
  @GetMapping("/atp") @PreAuthorize("hasAuthority('enterprise:leitura')") public List<Map<String,Object>> atps(@AuthenticationPrincipal AuthenticatedUser u,@RequestParam(required=false) Long produtoId){return produtoId==null?jdbc.queryForList("select * from brasil_saas.bc_sc_atp where empresa_id=? order by data desc",u.getEmpresaId()):jdbc.queryForList("select * from brasil_saas.bc_sc_atp where empresa_id=? and produto_id=? order by data desc",u.getEmpresaId(),produtoId);}
  @PostMapping("/planejamento") @PreAuthorize("hasAuthority('enterprise:escrita')") public Map<String,Object> planejamento(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object>b){jdbc.update("insert into brasil_saas.bc_sc_planejamento(empresa_id,codigo,periodo_inicio,periodo_fim,tipo,parametros) values(?,?,?,?,?,?::jsonb) on conflict(empresa_id,codigo) do update set periodo_inicio=excluded.periodo_inicio,periodo_fim=excluded.periodo_fim,tipo=excluded.tipo,parametros=excluded.parametros",u.getEmpresaId(),b.get("codigo"),b.get("periodoInicio"),b.get("periodoFim"),b.get("tipo"),b.getOrDefault("parametros","{}"));return Map.of("ok",true);}

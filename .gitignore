@@ -182,3 +182,6 @@ certs/[Help*
 CLAUDE.md
 AGENTS.md
 .cursorrules
+env.txt
+dump-producao-partes/
+dump-sanitizado-partes/
