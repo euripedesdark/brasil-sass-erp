@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - '.github/scripts/openrouter_issue_agent.py'
+      - '.github/scripts/openrouter_ci_repair.py'
+      - '.github/workflows/openrouter-ci-auto-repair.yml'
       - '.github/workflows/openrouter-issue-agent.yml'
       - 'docs/OPENROUTER-GITHUB-AGENT.md'
 
@@ -19,7 +21,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Check Python syntax
-        run: python -m py_compile .github/scripts/openrouter_issue_agent.py
+        run: python -m py_compile .github/scripts/openrouter_issue_agent.py .github/scripts/openrouter_ci_repair.py
       - name: Check required safety guards
         run: |
           python - <<'PY'
@@ -27,9 +29,9 @@ jobs:
           script = Path(".github/scripts/openrouter_issue_agent.py").read_text(encoding="utf-8")
           workflow = Path(".github/workflows/openrouter-issue-agent.yml").read_text(encoding="utf-8")
           required_script_markers = [
-              "git apply", "git apply", "blocked_parts", "openrouter/free",
+              "subprocess.run", "blocked_parts", "openrouter/free",
               "Never execute PR code" if "Never execute PR code" in script else "never execute PR code",
-              "git apply", "post_comment",
+              "post_comment",
           ]
           missing = [marker for marker in required_script_markers if marker not in script]
           if missing:

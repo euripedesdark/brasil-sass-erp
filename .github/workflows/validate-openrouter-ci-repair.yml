@@ -1,0 +1,35 @@
+name: Validate OpenRouter CI Repair Agent
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/openrouter_ci_repair.py'
+      - '.github/workflows/openrouter-ci-auto-repair.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile agent
+        run: python -m py_compile .github/scripts/openrouter_ci_repair.py
+      - name: Verify safety guards
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          script = Path(".github/scripts/openrouter_ci_repair.py").read_text()
+          workflow = Path(".github/workflows/openrouter-ci-auto-repair.yml").read_text()
+          for marker in ("git apply", "blocked_exact", "PR de fork", "openrouter/free"):
+              if marker not in script:
+                  raise SystemExit(f"Missing script safety marker: {marker}")
+          for marker in ("workflow_run:", "AGENT_GITHUB_TOKEN", "OPENROUTER_API_KEY", "pull-requests: write"):
+              if marker not in workflow:
+                  raise SystemExit(f"Missing workflow marker: {marker}")
+          print("CI repair agent syntax and safety markers validated.")
+          PY
