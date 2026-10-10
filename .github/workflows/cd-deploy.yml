@@ -60,71 +60,26 @@ jobs:
           jar tf "$JAR" | grep -q '^BOOT-INF/'
           sha256sum "$JAR"
 
-      - name: Deploy to the existing ERP service
+      - name: Request deployment through the dedicated deploy account
         if: github.ref == 'refs/heads/main'
         shell: bash
         run: |
           set -Eeuo pipefail
-          SERVICE=brasil-saas-erp.service
-          HEALTH_URL=http://127.0.0.1:8080/actuator/health
+          STAGING="/opt/brasil-saas-erp-deploy"
           NEW_JAR="$GITHUB_WORKSPACE/target/brasil-saas-erp-1.0.0-SNAPSHOT.jar"
+          HEALTH_URL="http://127.0.0.1:8080/actuator/health"
 
-          sudo systemctl is-active --quiet "$SERVICE"
-          PID="$(sudo systemctl show --property=MainPID --value "$SERVICE")"
-          test "$PID" -gt 1
-          JAR_PATH="$(sudo python3 - "$PID" <<'PY'
-          import os, sys
-          args = open(f"/proc/{sys.argv[1]}/cmdline", "rb").read().decode().split("\0")
-          try:
-              i = args.index("-jar")
-              path = args[i + 1]
-          except (ValueError, IndexError):
-              raise SystemExit("Não foi possível identificar o JAR usado pelo serviço ativo.")
-          if not path.startswith("/"):
-              raise SystemExit(f"O caminho do JAR não é absoluto: {path}")
-          print(path)
-          PY
-          )"
-          test -f "$JAR_PATH" || { echo "::error::JAR ativo não encontrado: $JAR_PATH"; exit 1; }
           test -s "$NEW_JAR"
           jar tf "$NEW_JAR" | grep -q '^BOOT-INF/'
+          test -d "$STAGING" || { echo "::error::Pasta de staging ausente: $STAGING"; exit 1; }
+          test -w "$STAGING" || { echo "::error::O runner não tem permissão de escrita em $STAGING. Configure a ACL para euripedes."; exit 1; }
 
-          echo "Serviço existente: $SERVICE"
-          echo "JAR em uso: $JAR_PATH"
-          echo "Banco e configuração permanecem os do serviço atual."
+          # O runner não usa sudo. O systemd.path detecta o marcador e aciona
+          # o serviço de deploy, executado como erp-deploy.
+          install -m 0640 "$NEW_JAR" "$STAGING/release.jar"
+          printf '%s\n' "$GITHUB_SHA" > "$STAGING/deploy.trigger"
 
-          BACKUP="$(mktemp /tmp/brasil-saas-erp-rollback.XXXXXX.jar)"
-          sudo cp -p "$JAR_PATH" "$BACKUP"
-          STAGED="$(sudo mktemp "${JAR_PATH}.new.XXXXXX")"
-          cleanup() { sudo rm -f "$STAGED" "$BACKUP"; }
-          trap cleanup EXIT
-
-          sudo install -o "$(stat -c '%U' "$JAR_PATH")" -g "$(stat -c '%G' "$JAR_PATH")" \
-            -m "$(stat -c '%a' "$JAR_PATH")" "$NEW_JAR" "$STAGED"
-          sudo mv -f "$STAGED" "$JAR_PATH"
-
-          rollback() {
-            echo "::error::A nova versão falhou; restaurando o JAR anterior no mesmo caminho."
-            sudo install -o "$(stat -c '%U' "$JAR_PATH")" -g "$(stat -c '%G' "$JAR_PATH")" \
-              -m "$(stat -c '%a' "$JAR_PATH")" "$BACKUP" "$JAR_PATH"
-            sudo systemctl restart "$SERVICE" || true
-            for _ in $(seq 1 60); do
-              if curl --fail --silent --max-time 3 "$HEALTH_URL" >/dev/null; then
-                echo "Versão anterior restaurada e saudável."
-                return 0
-              fi
-              sleep 5
-            done
-            echo "::error::A restauração automática não confirmou health check; consultar journalctl."
-            sudo journalctl -u "$SERVICE" -n 100 --no-pager || true
-            return 1
-          }
-
-          if ! sudo systemctl restart "$SERVICE"; then
-            rollback
-            exit 1
-          fi
-
+          echo "Solicitação de deploy enviada ao serviço dedicado."
           READY=false
           for _ in $(seq 1 60); do
             if curl --fail --silent --max-time 3 "$HEALTH_URL" -o /tmp/brasil-saas-erp-health.json; then
@@ -133,17 +88,11 @@ jobs:
                 break
               fi
             fi
-            if ! sudo systemctl is-active --quiet "$SERVICE"; then
-              break
-            fi
             sleep 5
           done
 
           if [ "$READY" != true ]; then
-            sudo journalctl -u "$SERVICE" -n 100 --no-pager || true
-            rollback
+            echo "::error::Health check não confirmou a aplicação como UP em até 5 minutos."
             exit 1
           fi
-
-          echo "Deploy concluído: serviço existente saudável na porta 8080."
-          sudo systemctl --no-pager --full status "$SERVICE"
+          echo "Health check OK na aplicação ERP existente."
