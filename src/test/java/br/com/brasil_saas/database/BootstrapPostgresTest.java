@@ -45,6 +45,16 @@ class BootstrapPostgresTest {
         assertTrue(flyway.migrate().migrationsExecuted >= 2);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
+        // V187 transfere ownership ao usuario sa, que nao e o login do teste.
+        // Em um banco descartavel, restituimos permissoes ao login desta suite
+        // para que a verificacao Hibernate (com INSERT + rollback) seja executavel.
+        try (var connection = DriverManager.getConnection(url, user, password);
+             var statement = connection.createStatement()) {
+            String testLogin = "\"" + user.replace("\"", "\"\"") + "\"";
+            statement.execute("GRANT USAGE, CREATE ON SCHEMA brasil_saas TO " + testLogin);
+            statement.execute("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA brasil_saas TO " + testLogin);
+            statement.execute("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA brasil_saas TO " + testLogin);
+        }
 
         var registry = new StandardServiceRegistryBuilder()
                 .applySetting("hibernate.connection.url", url)
