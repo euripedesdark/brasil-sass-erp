@@ -7,6 +7,7 @@ import { Button } from 'primereact/button';
 import { InputNumber } from 'primereact/inputnumber';
 import { Tag } from 'primereact/tag';
 import { Dialog } from 'primereact/dialog';
+import { InputTextarea } from 'primereact/inputtextarea';
 import ConferenciaCompraService from '../../services/ConferenciaCompraService';
 
 export default function ConferenciaFaturasCompra() {
@@ -17,6 +18,9 @@ export default function ConferenciaFaturasCompra() {
     const [detalhe,setDetalhe]=useState(null);
     const [itens,setItens]=useState([]);
     const [processando,setProcessando]=useState(false);
+    const [excecao,setExcecao]=useState(null);
+    const [motivo,setMotivo]=useState('');
+    const [salvandoExcecao,setSalvandoExcecao]=useState(false);
     const [expandedRows,setExpandedRows]=useState(null);
     const [itemRows,setItemRows]=useState({});
     const carregar=async()=>setRows((await ConferenciaCompraService.conferencias()).data||[]);
@@ -63,6 +67,15 @@ export default function ConferenciaFaturasCompra() {
         } catch(e){setError(e.response?.data?.message || t('legacyUi.conferencia.error'));}
     };
     const fecharItens=()=>{setDetalhe(null);setItens([]);};
+    const abrirExcecao=(row)=>{setExcecao(row);setMotivo();setError();};
+    const fecharExcecao=()=>{setExcecao(null);setMotivo();};
+    const salvarExcecao=async()=>{
+        if(!excecao||motivo.trim().length<10){setError("Motivo com ao menos 10 caracteres.");return;}
+        setSalvandoExcecao(true);setError();
+        try{await ConferenciaCompraService.aprovarExcepcional(excecao.id,motivo.trim());fecharExcecao();await carregar();}
+        catch(e){setError(e?.response?.data?.message||e?.response?.data?.errors?.[0]?.message||"Falha ao aprovar excecao.");}
+        finally{setSalvandoExcecao(false);}
+    };
     const quantidade=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:4});
     const dinheiro=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
     return <Card title={t('legacyUi.conferencia.title')}>
@@ -86,6 +99,7 @@ export default function ConferenciaFaturasCompra() {
             <Column field="valorFatura" header={t('legacyUi.conferencia.billed')}/>
             <Column field="status" header="Status" body={r=><Tag value={r.status} severity={r.status==='APROVADA'?'success':'danger'}/>}/>
             <Column field="divergencia" header={t('legacyUi.conferencia.divergence')}/>
+            <Column header="Acoes" body={r=>r.status==="DIVERGENTE"?<Button label="Aprovar excecao" icon="pi pi-check" className="p-button-text p-button-sm p-button-warning" onClick={()=>abrirExcecao(r)}/>:null}/>
             <Column header="Itens" body={r=><Button label="Itens" icon="pi pi-list" className="p-button-text p-button-sm" onClick={()=>abrirItens(r)}/>}/>
         </DataTable>
         <Dialog header="Itens conferidos" visible={detalhe!==null} style={{width:'75vw'}} onHide={fecharItens}>
@@ -100,6 +114,10 @@ export default function ConferenciaFaturasCompra() {
                 <Column header="Situa\u00e7\u00e3o" body={r=><Tag value={r.conforme?'Conforme':r.tipoDivergencia} severity={r.conforme?'success':'danger'}/>}/>
                 <Column field="divergencia" header="Diverg\u00eancia"/>
             </DataTable>
+        </Dialog>
+        <Dialog header="Aprovacao excepcional" visible={excecao!==null} style={{width:"32rem"}} onHide={fecharExcecao}>
+            <div className="field"><label>Motivo (minimo 10 caracteres)</label><InputTextarea value={motivo} onChange={e=>setMotivo(e.target.value)} rows={4} className="w-full" /></div>
+            <div className="flex justify-content-end gap-2 mt-3"><Button label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={fecharExcecao}/><Button label="Aprovar" icon="pi pi-check" loading={salvandoExcecao} disabled={motivo.trim().length<10} onClick={salvarExcecao}/></div>
         </Dialog>
     </Card>;
 }
