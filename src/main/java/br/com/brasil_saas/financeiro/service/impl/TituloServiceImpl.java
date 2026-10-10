@@ -11,6 +11,8 @@ import br.com.brasil_saas.compras.repository.RecebimentoCompraItemRepository;
 import br.com.brasil_saas.compras.repository.RecebimentoCompraRepository;
 import br.com.brasil_saas.fiscal.repository.NfeRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
+import br.com.brasil_saas.contabilidade.service.EventoContabilService;
+import org.springframework.beans.factory.annotation.Autowired;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,9 @@ public class TituloServiceImpl implements TituloService {
     private final RecebimentoCompraRepository recebimentoRepository;
     private final RecebimentoCompraItemRepository recebimentoItemRepository;
     private final NfeRepository nfeRepository;
+
+    @Autowired(required = false)
+    private EventoContabilService eventoContabil;
 
     @Override @Transactional(readOnly = true)
     public List<TituloResponse> listar(Long empresaId, String status) {
@@ -184,6 +189,16 @@ public class TituloServiceImpl implements TituloService {
         baixa.setValorMulta(multa);
         baixa.setObservacao(r.observacao());
         baixa = baixaRepository.save(baixa);
+
+        if (eventoContabil != null) {
+            try {
+                eventoContabil.contabilizar(empresaId, EventoContabilService.EVT_BAIXA_TITULO, "BAIXA", baixa.getId(),
+                        baixa.getDataBaixa(), baixa.getValorBaixa(),
+                        "Baixa titulo #" + tituloId + " baixa #" + baixa.getId());
+            } catch (org.springframework.web.server.ResponseStatusException ex) {
+                if (ex.getStatusCode().value() != 422) throw ex;
+            }
+        }
 
         titulo.setValorSaldo(titulo.getValorSaldo().subtract(reducao));
         if (titulo.getValorSaldo().compareTo(BigDecimal.ZERO) <= 0) {
