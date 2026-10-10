@@ -1,7 +1,14 @@
+server:
+  port: ${SERVER_PORT:8090}
+
 spring:
   data:
     mongodb:
       uri: ${MONGODB_URI}
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   datasource:
     url: ${DB_URL}?currentSchema=brasil_saas
     username: ${DB_USER}
@@ -10,15 +17,11 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}
-    username: ${RABBIT_USER:ALTERE_ME}
-    password: ${RABBIT_PASSWORD:ALTERE_ME}
+    username: ${RABBIT_USER}
+    password: ${RABBIT_PASSWORD}
 
 logging:
   level:
