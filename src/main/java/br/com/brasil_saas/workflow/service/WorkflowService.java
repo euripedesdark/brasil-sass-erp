@@ -12,5 +12,6 @@ public interface WorkflowService {
     List<WkfTask> pendentes(Long empresaId);
     java.util.Optional<WkfInstance> instanciaPara(Long empresaId, String entidadeTipo, Long entidadeId);
     WkfTask decidir(Long empresaId, Long userId, Long taskId, boolean aprovar, String comentario);
+    WkfTask delegar(Long empresaId,Long userId,Long taskId,Long destinoId);
     void inativarDefinition(Long empresaId, Long id);
 }

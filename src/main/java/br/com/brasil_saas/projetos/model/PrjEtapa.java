@@ -14,4 +14,5 @@ public class PrjEtapa extends TenantEntity {
     @Column(name="data_fim") private LocalDate dataFim;
     @Column(name="pct_concluido", nullable=false) private Integer pctConcluido = 0;
     @Column(nullable=false, length=20) private String status = "NAO_INICIADA";
+    @Column(name="concluida_em") private java.time.LocalDateTime concluidaEm;
 }

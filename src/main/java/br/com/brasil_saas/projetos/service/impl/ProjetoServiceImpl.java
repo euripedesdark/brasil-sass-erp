@@ -31,6 +31,7 @@ import java.util.*;
 public class ProjetoServiceImpl implements ProjetoService {
     private final PrjProjetoRepository projetos;
     private final PrjEtapaRepository etapas;
+    private final br.com.brasil_saas.projetos.service.ProjetoDependenciaService dependenciaService;
     private final PrjMovimentoRepository movimentos;
     private final PrjRiscoRepository riscos;
     private final PrjMudancaRepository mudancas;
@@ -79,6 +80,8 @@ public class ProjetoServiceImpl implements ProjetoService {
         PrjEtapa e = exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(etapaId, empresaId), "Etapa inexistente");
         if (e.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Etapa de outro projeto");
         int p = Math.min(100, Math.max(0, pct == null ? 0 : pct));
+        if(p>0) dependenciaService.validarAvanco(empresaId,projetoId,etapaId);
+        e.setConcluidaEm(p==100?(e.getConcluidaEm()==null?LocalDateTime.now():e.getConcluidaEm()):null);
         e.setPctConcluido(p);
         e.setStatus(p <= 0 ? "NAO_INICIADA" : p >= 100 ? "CONCLUIDA" : "EM_ANDAMENTO");
         return etapas.save(e);

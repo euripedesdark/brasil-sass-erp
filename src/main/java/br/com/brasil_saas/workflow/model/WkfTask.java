@@ -12,4 +12,7 @@ public class WkfTask extends TenantEntity {
     @Column(name="decidido_por") private Long decididoPor;
     @Column(columnDefinition="text") private String comentario;
     @Column(name="sla_limite") private LocalDateTime slaLimite;
+    @Column(name="responsavel_anterior",length=200) private String responsavelAnterior;
+    @Column(name="delegado_por") private Long delegadoPor;
+    @Column(name="delegado_em") private LocalDateTime delegadoEm;
 }
