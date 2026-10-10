@@ -80,19 +80,20 @@ jobs:
           printf '%s\n' "$GITHUB_SHA" > "$STAGING/deploy.trigger"
 
           echo "Solicitação de deploy enviada ao serviço dedicado."
-          READY=false
+          DEPLOYED=false
           for _ in $(seq 1 60); do
-            if curl --fail --silent --max-time 3 "$HEALTH_URL" -o /tmp/brasil-saas-erp-health.json; then
-              if python3 -c 'import json; assert json.load(open("/tmp/brasil-saas-erp-health.json")).get("status") == "UP"'; then
-                READY=true
-                break
-              fi
+            if [ -r "$STAGING/deploy.status" ] && [ "$(cat "$STAGING/deploy.status")" = "$GITHUB_SHA" ]; then
+              DEPLOYED=true
+              break
             fi
             sleep 5
           done
 
-          if [ "$READY" != true ]; then
-            echo "::error::Health check não confirmou a aplicação como UP em até 5 minutos."
+          if [ "$DEPLOYED" != true ]; then
+            echo "::error::O serviço dedicado não confirmou o deploy do commit $GITHUB_SHA em até 5 minutos."
             exit 1
           fi
-          echo "Health check OK na aplicação ERP existente."
+
+          curl --fail --silent --show-error --max-time 5 "$HEALTH_URL" -o /tmp/brasil-saas-erp-health.json
+          python3 -c 'import json; assert json.load(open("/tmp/brasil-saas-erp-health.json")).get("status") == "UP"'
+          echo "Deploy do commit $GITHUB_SHA confirmado; health check OK."
