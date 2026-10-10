@@ -30,6 +30,9 @@ export const fmtDataHora = (v, opts) => {
 };
 
 const PRIMEREACT_LOCALES = {
+    'en-US': {
+        firstDayOfWeek: 0, today: 'Today', clear: 'Clear', dateFormat: 'mm/dd/yy', weekHeader: 'Wk'
+    },
     'pt-BR': {
         firstDayOfWeek: 0,
         dayNames: ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'],
@@ -73,8 +76,6 @@ export const aplicarLocalePrime = () => {
     if (PRIMEREACT_LOCALES[loc]) {
         addLocale(loc, PRIMEREACT_LOCALES[loc]);
         locale(loc);
-    } else {
-        locale('en');
     }
 };
 

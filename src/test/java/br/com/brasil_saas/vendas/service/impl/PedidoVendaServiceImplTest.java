@@ -44,6 +44,7 @@ class PedidoVendaServiceImplTest {
     @Mock TituloRepository titulos;
     @Mock TituloService tituloService;
     @Mock DocumentoFluxoService fluxo;
+    @Mock br.com.brasil_saas.financeiro.service.ComissaoService comissaoService;
     @InjectMocks PedidoVendaServiceImpl service;
 
     private static PedidoVendaRequest novoPedido(String tipo, String status) {

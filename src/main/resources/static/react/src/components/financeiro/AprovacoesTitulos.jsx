@@ -85,7 +85,7 @@ export const AprovacoesTitulos = () => {
     };
 
     const moeda = (v) =>
-        (v == null ? 0 : Number(v)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        (v == null ? 0 : Number(v)).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
     const dataBr = (d) => (d ? new Date(d).toLocaleDateString(localeAtivo()) : '');
 

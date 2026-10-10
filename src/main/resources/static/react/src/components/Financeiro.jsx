@@ -164,7 +164,7 @@ export default function Financeiro() {
     };
 
     const formatarMoeda = (valor) => {
-        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        return valor.toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
     };
 
     const formatarData = (data) => {
@@ -342,7 +342,7 @@ export default function Financeiro() {
                             onChange={(e) => setLancamentoSelecionado({...lancamentoSelecionado, valorLancamento: e.value})}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="p-field">

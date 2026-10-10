@@ -78,15 +78,15 @@ export default function ConferenciaFaturasCompra() {
         finally{setSalvandoExcecao(false);}
     };
     const quantidade=(v)=>v==null?'':Number(v).toLocaleString(localeAtivo(),{minimumFractionDigits:3,maximumFractionDigits:4});
-    const dinheiro=(v)=>v==null?'':Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+    const dinheiro=(v)=>v==null?'':Number(v).toLocaleString(localeAtivo(),{style:'currency',currency:'BRL'});
     return <Card title={t('legacyUi.conferencia.title')}>
         <div className="grid align-items-end mb-4">
             <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.orderLabel')}</label><InputNumber value={form.pedidoId} onValueChange={e=>setForm({...form,pedidoId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.receiptLabel')}</label><InputNumber value={form.recebimentoId} onValueChange={e=>setForm({...form,recebimentoId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.invoiceLabel')}</label><InputNumber value={form.nfeId} onValueChange={e=>setForm({...form,nfeId:e.value})}/></div>
             <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.titleLabel')}</label><InputNumber value={form.tituloId} onValueChange={e=>setForm({...form,tituloId:e.value})}/></div>
-            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.invoiceAmount')}</label><InputNumber value={form.valorFatura} onValueChange={e=>setForm({...form,valorFatura:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
-            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.tolerance')}</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale="pt-BR"/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.invoiceAmount')}</label><InputNumber value={form.valorFatura} onValueChange={e=>setForm({...form,valorFatura:e.value})} mode="currency" currency="BRL" locale={localeAtivo()}/></div>
+            <div className="col-12 md:col-2 field"><label>{t('legacyUi.conferencia.tolerance')}</label><InputNumber value={form.tolerancia} onValueChange={e=>setForm({...form,tolerancia:e.value})} mode="currency" currency="BRL" locale={localeAtivo()}/></div>
             <div className="col-12"><Button label={t('legacyUi.conferencia.run')} icon="pi pi-check-circle" onClick={conferir} loading={processando} disabled={!form.pedidoId || !form.recebimentoId || !form.nfeId || !(form.valorFatura>0) || form.tolerancia<0}/></div>
         </div>
         {error && <div className="p-error mb-3">{error}</div>}

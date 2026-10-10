@@ -1,4 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import {Card} from 'primereact/card';
 import {TabView, TabPanel} from 'primereact/tabview';
 import {DataTable} from 'primereact/datatable';
@@ -24,7 +25,7 @@ const resources = [
  {key:'tributacao',label:'Cenários tributários',icon:'pi pi-calculator'}
 ];
 
-const money = v => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const money = v => Number(v || 0).toLocaleString(localeAtivo(),{style:'currency',currency:'BRL'});
 
 export default function EnterpriseOperations(){
  const [active,setActive]=useState(0), [rows,setRows]=useState([]), [loading,setLoading]=useState(false);

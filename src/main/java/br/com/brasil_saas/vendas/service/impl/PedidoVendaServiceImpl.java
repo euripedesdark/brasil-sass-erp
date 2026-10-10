@@ -527,10 +527,15 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         // A ordem comum de travas evita pedidos concorrentes bloqueando depositos em ordem inversa.
         alocacoes.sort(java.util.Comparator.comparing(Alocacao::depositoId).thenComparing(Alocacao::produtoId));
         for (Alocacao alocacao : alocacoes) baixarEstoque(pedido, alocacao);
-        for (ItemPedidoVenda item : pedido.getItens()) {
-            if (!marcaCompleto || item.getProdutoId() == null) continue;
-            BigDecimal fat = item.getQuantidadeFaturada() == null ? BigDecimal.ZERO : item.getQuantidadeFaturada();
-            if (fat.compareTo(item.getQuantidade()) >= 0) item.setCriadoEstoque(true);
+        // Em faturamento integral, a baixa fisica concluida precisa marcar os itens.
+        // quantidadeFaturada e preenchida pelo fluxo de notas parciais, nao pelo
+        // faturamento integral. Sem esta marca o mesmo item poderia baixar duas vezes.
+        if (marcaCompleto) {
+            for (ItemPedidoVenda item : pedido.getItens()) {
+                if (item.getProdutoId() != null && quantidades.containsKey(item.getProdutoId())) {
+                    item.setCriadoEstoque(true);
+                }
+            }
         }
     }
 

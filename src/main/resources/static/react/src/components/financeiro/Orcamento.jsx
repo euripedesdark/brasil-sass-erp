@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
@@ -10,7 +11,7 @@ import { TabView, TabPanel } from 'primereact/tabview';
 import { Toast } from 'primereact/toast';
 
 const BASE = '/api/financeiro/orcamentos';
-const fmt = (v) => Number(v ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v ?? 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const Orcamento = () => {
     const toast = useRef(null);
@@ -61,14 +62,14 @@ export const Orcamento = () => {
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Novo orçamento' modal style={{ width: 'min(96vw, 480px)' }}>
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-12'><label className='bc-label'>Conta</label><Dropdown value={f.contaId} options={contas.map((c) => ({ label: (c.codigo || '') + ' - ' + (c.descricao || c.nome || ''), value: c.id }))} onChange={(e) => setF({ ...f, contaId: e.value })} filter placeholder='Geral' showClear /></div>
-                    <div className='bc-form-col-12'><label className='bc-label'>Valor orçado *</label><InputNumber value={f.valor} onValueChange={(e) => setF({ ...f, valor: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-12'><label className='bc-label'>Valor orçado *</label><InputNumber value={f.valor} onValueChange={(e) => setF({ ...f, valor: e.value })} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlg(false)} /><Button label='Salvar' icon='pi pi-check' onClick={salvar} /></div>
             </Dialog>
             <Dialog visible={dlgReal} onHide={() => setDlgReal(false)} header='Lançar realizado' modal style={{ width: 'min(96vw, 420px)' }}>
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-6'><label className='bc-label'>Mês</label><InputNumber value={mes} onValueChange={(e) => setMes(e.value)} min={1} max={12} useGrouping={false} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={valor} onValueChange={(e) => setValor(e.value)} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={valor} onValueChange={(e) => setValor(e.value)} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                 </div>
                 <div className='flex justify-end gap-2 mt-3'><Button label='Cancelar' text severity='secondary' onClick={() => setDlgReal(false)} /><Button label='Lançar' icon='pi pi-check' onClick={lancar} /></div>
             </Dialog>

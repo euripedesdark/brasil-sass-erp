@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -36,7 +37,7 @@ export const Difal = () => {
         }
     };
 
-    const money = (v) => (v == null ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+    const money = (v) => (v == null ? '—' : Number(v).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' }));
 
     return (
         <div className="p-4">
@@ -45,7 +46,7 @@ export const Difal = () => {
             <p className="text-color-secondary">Calculadora EC 87/2015 — partilha 100% UF destino. Não substitui a apuração oficial.</p>
             <Card className="mb-3">
                 <div className="grid">
-                    <div className="col-6 md:col-3"><label className="block mb-1">Base</label><InputNumber value={base} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale="pt-BR" className="w-full" /></div>
+                    <div className="col-6 md:col-3"><label className="block mb-1">Base</label><InputNumber value={base} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full" /></div>
                     <div className="col-6 md:col-3"><label className="block mb-1">Alíq. interestadual %</label><InputNumber value={inter} onValueChange={(e) => setInter(e.value)} className="w-full" minFractionDigits={0} maxFractionDigits={2} /></div>
                     <div className="col-6 md:col-3"><label className="block mb-1">Alíq. interna destino %</label><InputNumber value={interna} onValueChange={(e) => setInterna(e.value)} className="w-full" /></div>
                     <div className="col-6 md:col-3"><label className="block mb-1">FCP %</label><InputNumber value={fcp} onValueChange={(e) => setFcp(e.value)} className="w-full" /></div>

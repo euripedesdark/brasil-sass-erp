@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiFetch } from '../../services/ApiConfig';
+import { useTranslation } from 'react-i18next';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
@@ -18,6 +19,7 @@ const BASE = '/api/workflow';
 const sev = (s) => s === 'APROVADA' || s === 'CONCLUIDA' ? 'success' : s === 'REJEITADA' ? 'danger' : s === 'PENDENTE' || s === 'EM_ANDAMENTO' ? 'warning' : 'info';
 
 export const Workflow = () => {
+    const { t } = useTranslation();
     const toast = useRef(null);
     const [defs, setDefs] = useState([]);
     const [insts, setInsts] = useState([]);
@@ -35,6 +37,9 @@ export const Workflow = () => {
     const [dlgTasks, setDlgTasks] = useState(false);
     const [instSel, setInstSel] = useState(null);
     const [tasks, setTasks] = useState([]);
+    const [dlgDelegar, setDlgDelegar] = useState(false);
+    const [taskDelegar, setTaskDelegar] = useState(null);
+    const [usuarioDestino, setUsuarioDestino] = useState(null);
 
     const carregar = useCallback(async () => {
         setLoading(true);
@@ -127,6 +132,20 @@ export const Workflow = () => {
         carregar();
     };
 
+
+    const delegarTarefa = async () => {
+        if (!taskDelegar || !usuarioDestino || usuarioDestino <= 0) return;
+        const r = await apiFetch(BASE + '/tasks/' + taskDelegar.id + '/delegar', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuarioId: Number(usuarioDestino) })
+        });
+        if (!r.ok) {
+            const j = await r.json().catch(() => null);
+            toast.current?.show({ severity: 'error', summary: t('common.error'), detail: j?.message || t('erpExtensions.delegation.failure'), life: 4000 });
+            return;
+        }
+        setDlgDelegar(false); setTaskDelegar(null); setUsuarioDestino(null); carregar();
+        toast.current?.show({ severity: 'success', summary: t('erpExtensions.delegation.success'), life: 3000 });
+    };
     return (
         <div className='p-4'>
             <Toast ref={toast} />
@@ -152,6 +171,7 @@ export const Workflow = () => {
                             <div className='flex gap-1'>
                                 <Button icon='pi pi-check' rounded text severity='success' tooltip='Aprovar' onClick={() => decidir(t.id, true)} />
                                 <Button icon='pi pi-times' rounded text severity='danger' tooltip='Rejeitar' onClick={() => decidir(t.id, false)} />
+                                <Button icon='pi pi-user-edit' rounded text tooltip={t('erpExtensions.delegation.delegate')} onClick={() => { setTaskDelegar(t); setUsuarioDestino(null); setDlgDelegar(true); }} />
                             </div>
                         )} style={{ width: '7rem' }} />
                     </DataTable>
@@ -234,11 +254,19 @@ export const Workflow = () => {
                 <DataTable value={tasks} size='small' emptyMessage='Nenhuma tarefa nesta instância.' responsiveLayout='scroll' dataKey='id'>
                     <Column field='stageId' header='Etapa' style={{ width: '5rem' }} />
                     <Column field='responsavel' header='Responsável' />
+                    <Column field='responsavelAnterior' header={t('erpExtensions.delegation.original')} />
+                    <Column field='delegadoPor' header={t('erpExtensions.delegation.by')} />
                     <Column header='Status' body={(r) => <Tag value={r.status} severity={sev(r.status)} />} style={{ width: '9rem' }} />
                     <Column field='slaLimite' header='SLA até' />
                     <Column field='decidedAt' header='Decidido em' />
                     <Column field='comentario' header='Comentário' />
                 </DataTable>
+            </Dialog>
+
+            <Dialog visible={dlgDelegar} onHide={() => setDlgDelegar(false)} header={t('erpExtensions.delegation.title')} modal style={{ width: 'min(96vw, 420px)' }}>
+                <div className='p-fluid'><label className='bc-label'>{t('erpExtensions.delegation.user')}</label>
+                    <InputNumber value={usuarioDestino} useGrouping={false} min={1} onValueChange={e => setUsuarioDestino(e.value)} /></div>
+                <div className='flex justify-content-end mt-3'><Button label={t('erpExtensions.delegation.confirm')} disabled={!usuarioDestino} onClick={delegarTarefa} /></div>
             </Dialog>
         </div>
     );

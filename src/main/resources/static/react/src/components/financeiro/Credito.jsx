@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { Dropdown } from 'primereact/dropdown';
@@ -7,7 +8,7 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { apiFetch } from '../../services/ApiConfig';
 
-const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmt = (v) => Number(v || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 const Credito = () => {
     const toast = useRef(null);
@@ -80,7 +81,7 @@ const Credito = () => {
                 <Card className='mt-3' title='Ajustar limite de crédito'>
                     <div className='flex gap-2 flex-wrap align-items-end'>
                         <span><label className='bc-label'>Novo limite (R$)</label>
-                            <InputNumber value={novoLimite} onValueChange={(e) => setNovoLimite(e.value)} mode='currency' currency='BRL' locale='pt-BR' min={0} /></span>
+                            <InputNumber value={novoLimite} onValueChange={(e) => setNovoLimite(e.value)} mode='currency' currency='BRL' locale={localeAtivo()} min={0} /></span>
                         <Button label='Salvar limite' icon='pi pi-check' severity='success' onClick={salvarLimite} loading={salvando} />
                     </div>
                 </Card>

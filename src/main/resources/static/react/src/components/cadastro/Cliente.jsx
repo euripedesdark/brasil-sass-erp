@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -396,7 +397,7 @@ export const Cliente = () => {
                                     onChange={(e) => setNovoCliente({...novoCliente, limiteCredito: e.value || 0})}
                                     mode="currency"
                                     currency="BRL"
-                                    locale="pt-BR"
+                                    locale={localeAtivo()}
                                     placeholder="0,00"
                                 />
                             </div>

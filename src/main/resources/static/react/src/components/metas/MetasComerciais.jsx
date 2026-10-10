@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -10,7 +11,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 
 const BASE = '/api/vendas/metas';
-const money = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const money = (v) => Number(v || 0).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' });
 
 export const MetasComerciais = () => {
     const toast = useRef(null);
@@ -52,7 +53,7 @@ export const MetasComerciais = () => {
                     <div className="col-6"><label>Ano</label><InputNumber value={form.ano} onValueChange={(e) => setForm({ ...form, ano: e.value })} /></div>
                     <div className="col-6"><label>Mês</label><InputNumber value={form.mes} onValueChange={(e) => setForm({ ...form, mes: e.value })} /></div>
                     <div className="col-12"><label>Canal</label><InputText value={form.canal} onChange={(e) => setForm({ ...form, canal: e.target.value })} /></div>
-                    <div className="col-12"><label>Valor meta</label><InputNumber value={form.valorMeta} onValueChange={(e) => setForm({ ...form, valorMeta: e.value })} mode="currency" currency="BRL" locale="pt-BR" /></div>
+                    <div className="col-12"><label>Valor meta</label><InputNumber value={form.valorMeta} onValueChange={(e) => setForm({ ...form, valorMeta: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} /></div>
                 </div>
                 <Button label="Salvar" className="mt-3" onClick={salvar} />
             </Dialog>

@@ -15,6 +15,7 @@ public class WorkflowController {
     private final WorkflowService svc;
     public record AbrirReq(String entidadeTipo, Long entidadeId, Long definitionId, String observacao) {}
     public record DecidirReq(Boolean aprovar, String comentario) {}
+    public record DelegarReq(Long usuarioId) {}
     @GetMapping("/definitions") @PreAuthorize("hasAuthority('workflow:leitura')")
     public List<WkfDefinition> definitions(@AuthenticationPrincipal AuthenticatedUser u) {
         return svc.definitions(u.getEmpresaId());
@@ -53,6 +54,8 @@ public class WorkflowController {
     public List<WkfTask> pendentes(@AuthenticationPrincipal AuthenticatedUser u) {
         return svc.pendentes(u.getEmpresaId());
     }
+    @PostMapping("/tasks/{id}/delegar") @PreAuthorize("hasAuthority('workflow:delegar')")
+    public WkfTask delegar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id,@RequestBody DelegarReq r){return svc.delegar(u.getEmpresaId(),u.getId(),id,r.usuarioId());}
     @PostMapping("/tasks/{id}/decidir") @PreAuthorize("hasAuthority('workflow:escrita')")
     public WkfTask decidir(@AuthenticationPrincipal AuthenticatedUser u, @PathVariable Long id, @RequestBody DecidirReq r) {
         return svc.decidir(u.getEmpresaId(), u.getId(), id, Boolean.TRUE.equals(r.aprovar()), r.comentario());

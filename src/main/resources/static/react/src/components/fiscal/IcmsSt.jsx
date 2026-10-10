@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { apiFetch } from '../../services/ApiConfig';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -14,7 +15,7 @@ export const IcmsSt = () => {
     const [red, setRed] = useState(0);
     const [res, setRes] = useState(null);
     const [busy, setBusy] = useState(false);
-    const money = (v) => (v == null ? '—' : Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }));
+    const money = (v) => (v == null ? '—' : Number(v).toLocaleString(localeAtivo(), { style: 'currency', currency: 'BRL' }));
 
     const calcular = async () => {
         if ([base, inter, interna, mva].some((v) => v == null || v < 0) || inter > 100 || interna > 100 || (red != null && (red < 0 || red > 100))) {
@@ -53,7 +54,7 @@ export const IcmsSt = () => {
             <p className="text-color-secondary">Substituição tributária por MVA. Validar protocolo ICMS / CEST da UF.</p>
             <Card className="mb-3">
                 <div className="grid">
-                    <div className="col-6 md:col-4"><label className="block mb-1">Base operação</label><InputNumber value={base} min={0} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale="pt-BR" className="w-full" /></div>
+                    <div className="col-6 md:col-4"><label className="block mb-1">Base operação</label><InputNumber value={base} min={0} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">Alíq inter %</label><InputNumber value={inter} min={0} max={100} onValueChange={(e) => setInter(e.value)} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">Alíq interna %</label><InputNumber value={interna} min={0} max={100} onValueChange={(e) => setInterna(e.value)} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">MVA %</label><InputNumber value={mva} min={0} onValueChange={(e) => setMva(e.value)} className="w-full" /></div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { localeAtivo } from '../shared/LocaleData.js';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -236,7 +237,7 @@ export const RH = () => {
                             onValueChange={(e) => setForm({...form, salario: e.value})}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="grid">
@@ -250,7 +251,7 @@ export const RH = () => {
                             <label className="font-bold mb-2 block">Valor/hora (R$)</label>
                             <InputNumber value={form.valorHora}
                                 onValueChange={(e) => setForm({...form, valorHora: e.value ?? 0})}
-                                mode="currency" currency="BRL" locale="pt-BR" />
+                                mode="currency" currency="BRL" locale={localeAtivo()} />
                         </div>
                     </div>
 

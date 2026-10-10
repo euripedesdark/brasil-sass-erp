@@ -104,6 +104,11 @@ jobs:
           npm ci
           cd $GITHUB_WORKSPACE
 
+      - name: Validate four frontend languages
+        run: |
+          cd $GITHUB_WORKSPACE/src/main/resources/static/react
+          npm run test:i18n
+
       - name: Build frontend
         run: |
           cd $GITHUB_WORKSPACE/src/main/resources/static/react

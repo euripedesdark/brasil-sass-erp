@@ -4,57 +4,55 @@ import ptBR from '../../locales/pt-BR.json';
 import enUS from '../../locales/en-US.json';
 import esES from '../../locales/es-ES.json';
 import frFR from '../../locales/fr-FR.json';
+import { createLegacyTranslator, normalizeUiLanguage } from '../../i18n/legacyText.mjs';
 
-// Compatibilidade para telas legadas ainda sem t(): usa as mesmas quatro
-// traducoes versionadas. Esta camada NAO chama APIs externas nem altera dados.
-const localeObjects = { 'pt-BR': ptBR, 'en-US': enUS, 'es-ES': esES, 'fr-FR': frFR };
-const flatten = (value, prefix = '', out = {}) => {
-  for (const [key, item] of Object.entries(value || {})) {
-    const path = prefix ? prefix + '.' + key : key;
-    if (item && typeof item === 'object' && !Array.isArray(item)) flatten(item, path, out);
-    else if (typeof item === 'string' && item.trim()) out[path] = item;
-  }
-  return out;
+const translate = createLegacyTranslator({
+  'pt-BR': ptBR, 'en-US': enUS, 'es-ES': esES, 'fr-FR': frFR
+});
+
+// WeakMaps keep the original Portuguese text even after language switching.
+// They do not retain detached DOM nodes or interfere with React's virtual DOM.
+const originalNodes = new WeakMap();
+const originalAttributes = new WeakMap();
+const ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'aria-placeholder', 'alt', 'data-pr-tooltip'];
+const EXCLUDED = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'CODE', 'PRE', 'KBD', 'SAMP']);
+
+const shouldSkip = element => {
+  if (!element) return true;
+  if (EXCLUDED.has(element.tagName)) return true;
+  return Boolean(element.closest('[translate="no"], [data-no-translate], [contenteditable="true"], code, pre, kbd, samp'));
 };
-const dictionaries = Object.fromEntries(
-  Object.entries(localeObjects).map(([lang, entries]) => [lang, flatten(entries)])
-);
-const languageCode = language => {
-  if (dictionaries[language]) return language;
-  return Object.keys(dictionaries).find(key => key.startsWith((language || '').split('-')[0] + '-')) || 'pt-BR';
+
+const applyText = (node, language) => {
+  if (!node.nodeValue?.trim() || shouldSkip(node.parentElement)) return;
+  const current = node.nodeValue;
+  let state = originalNodes.get(node);
+  if (!state || current !== state.applied) {
+    // If React re-rendered a genuinely new value, it becomes the source.
+    state = { source: current, applied: current };
+    originalNodes.set(node, state);
+  }
+  const next = translate(state.source, language);
+  if (current !== next) node.nodeValue = next;
+  state.applied = next;
 };
-const reverse = Object.fromEntries(Object.keys(dictionaries).map(lang => {
-  const entries = new Map();
-  for (const [key, original] of Object.entries(dictionaries['pt-BR'])) {
-    const translation = dictionaries[lang][key];
-    if (translation && original.trim() && translation !== original) entries.set(original.trim(), translation);
+
+const applyAttribute = (element, attribute, language) => {
+  if (!element.hasAttribute(attribute) || shouldSkip(element)) return;
+  const current = element.getAttribute(attribute);
+  let stateMap = originalAttributes.get(element);
+  if (!stateMap) {
+    stateMap = new Map();
+    originalAttributes.set(element, stateMap);
   }
-  return [lang, entries];
-}));
-const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const translate = (original, language) => {
-  if (language === 'pt-BR' || !original?.trim()) return original;
-  const dictionary = reverse[language];
-  const trimmed = original.trim();
-  const direct = dictionary.get(trimmed);
-  const whitespace = original.match(/^(\s*)/)[0];
-  const suffix = original.match(/(\s*)$/)[0];
-  if (direct) return whitespace + direct + suffix;
-  for (const [source, translated] of dictionary) {
-    if (!source.includes('{{')) continue;
-    const parts = source.split(/(\{\{[^}]+\}\})/g).filter(Boolean);
-    let placeholders = 0;
-    const regex = new RegExp('^' + parts.map(part => {
-      if (/^\{\{[^}]+\}\}$/.test(part)) { placeholders++; return '(.+?)'; }
-      return escapeRegex(part);
-    }).join('') + '$');
-    if (!placeholders) continue;
-    const match = trimmed.match(regex);
-    if (!match) continue;
-    let index = 1;
-    return whitespace + translated.replace(/\{\{[^}]+\}\}/g, () => match[index++] || '') + suffix;
+  let state = stateMap.get(attribute);
+  if (!state || current !== state.applied) {
+    state = { source: current, applied: current };
+    stateMap.set(attribute, state);
   }
-  return original;
+  const next = translate(state.source, language);
+  if (current !== next) element.setAttribute(attribute, next);
+  state.applied = next;
 };
 
 // WeakMaps mantem o ORIGINAL, permitindo trocar en -> fr -> es -> pt sem reload.
@@ -91,15 +89,23 @@ function translateAttributes(el, language) {
   originalAttributes.set(el, remembered);
 }
 export const applyDomTranslations = () => {
-  if (typeof document === 'undefined') return;
-  const language = languageCode(i18n.resolvedLanguage || i18n.language);
-  // Portais PrimeReact (Dialog, Dropdown, Toast) ficam diretamente no body.
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  const texts = [];
-  while (walker.nextNode()) texts.push(walker.currentNode);
-  for (const node of texts) translateTextNode(node, language);
-  for (const el of document.body.querySelectorAll('[placeholder],[title],[aria-label],[aria-placeholder],[alt]')) {
-    translateAttributes(el, language);
+  if (typeof document === 'undefined' || !document.body) return;
+  const language = normalizeUiLanguage(i18n.resolvedLanguage || i18n.language);
+  // PrimeReact dialogs, calendars and toasts may be portalled outside #root.
+  const root = document.body;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      return node.nodeValue?.trim() && !shouldSkip(node.parentElement)
+        ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  const nodes = [];
+  let node;
+  while ((node = walker.nextNode())) nodes.push(node);
+  for (const textNode of nodes) applyText(textNode, language);
+  const selector = ATTRIBUTES.map(name => '[' + name + ']').join(',');
+  for (const element of root.querySelectorAll(selector)) {
+    for (const attribute of ATTRIBUTES) applyAttribute(element, attribute, language);
   }
 };
 export function I18nDomBridge() {
@@ -107,11 +113,17 @@ export function I18nDomBridge() {
     let frame = null;
     const schedule = () => {
       if (frame !== null) return;
-      frame = window.requestAnimationFrame(() => { frame = null; applyDomTranslations(); });
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        applyDomTranslations();
+      });
     };
     const observer = new MutationObserver(schedule);
     observer.observe(document.body, {
-      childList: true, subtree: true, characterData: true, attributes: true,
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
       attributeFilter: ATTRIBUTES
     });
     i18n.on('languageChanged', schedule);
@@ -124,4 +136,5 @@ export function I18nDomBridge() {
   }, []);
   return null;
 }
+
 export default I18nDomBridge;
