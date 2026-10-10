@@ -10,7 +10,7 @@ Em uma issue ou pull request do repositório, um OWNER, MEMBER ou COLLABORATOR c
 /brasilcloud-agent Corrija o erro descrito aqui, adicione um teste e explique a causa raiz.
 ```
 
-O workflow usa `OPENROUTER_API_KEY`, `AGENT_GITHUB_TOKEN` (Settings → Secrets and variables → Actions) e a variável opcional `OPENROUTER_MODEL`. Sem a variável de modelo, usa `openrouter/free`. Crie um fine-grained PAT com acesso ao repositório e permissões Contents, Issues e Pull requests (read/write) para `AGENT_GITHUB_TOKEN`; ele permite que as PRs criadas pelo agente disparem a CI normal. Não use nem compartilhe a chave OpenRouter como token do GitHub.
+O workflow usa `OPENROUTER_API_KEY`, `AGENT_GITHUB_TOKEN` (Settings → Secrets and variables → Actions) e a variável opcional `OPENROUTER_MODEL`. Sem a variável de modelo, usa `openrouter/free`. Crie um fine-grained PAT com acesso ao repositório e permissões Contents, Issues e Pull requests (read/write), além de Actions (read) para `AGENT_GITHUB_TOKEN`; ele permite que as PRs criadas pelo agente disparem a CI normal. Não use nem compartilhe a chave OpenRouter como token do GitHub.
 
 O agente lê a solicitação e um conjunto limitado de arquivos da branch base, solicita uma proposta ao OpenRouter, valida os caminhos e o patch, cria uma branch `agent/issue-NUMERO-RUN_ID`, faz commit e abre uma PR. Não faz merge nem deploy. A CI normal da PR deve validar o resultado; uma pessoa deve revisar antes de aprovar.
 
