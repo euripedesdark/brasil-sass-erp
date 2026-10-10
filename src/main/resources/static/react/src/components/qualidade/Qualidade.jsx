@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Card } from 'primereact/card';
+import './Qualidade.css';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -156,7 +157,7 @@ export default function Qualidade() {
   );
 
   return (
-    <div className="p-3">
+    <div className="p-3 qualidade-enterprise-container">
       <Toast ref={toast} />
       <Card title="Gestão da Qualidade" subTitle="Planos → Inspeção → NC / CAPA">
         {error && <Message severity="error" text={error} className="mb-2" />}

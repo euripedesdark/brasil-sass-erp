@@ -66,6 +66,7 @@ import Sobre from './components/core/Sobre';
 import EnterpriseOperations from './components/enterprise/EnterpriseOperations';
 import SupplyChainEnterprise from './components/enterprise/SupplyChainEnterprise';
 import SupplyChainControlTower from './components/enterprise/SupplyChainControlTower';
+import { Plm } from './components/plm/Plm';
 import CorporateGovernance from './components/enterprise/CorporateGovernance';
 import RiskTransportEnterprise from './components/enterprise/RiskTransportEnterprise';
 import { TmsPlanejamento } from './components/enterprise/TmsPlanejamento';
@@ -196,6 +197,7 @@ function App() {
                     <Route path="gestao-empresarial" element={<EnterpriseOperations />} />
                     <Route path="supply-chain-enterprise" element={<SupplyChainEnterprise />} />
                     <Route path="supply-chain/control-tower" element={<SupplyChainControlTower />} />
+                    <Route path="plm/mudancas" element={<Plm />} />
                     <Route path="bi/control-tower" element={<Navigate to="/supply-chain/control-tower" replace />} />
                     <Route path="governanca-corporativa" element={<CorporateGovernance />} />
                     <Route path="riscos-tms-enterprise" element={<RiskTransportEnterprise />} />
