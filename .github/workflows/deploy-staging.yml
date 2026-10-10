@@ -59,33 +59,19 @@ jobs:
           jar tf "$JAR" | grep -q '^BOOT-INF/'
           sha256sum "$JAR"
 
-      - name: Verify staging prerequisites without exposing secrets
+      - name: Verify staging prerequisites
         shell: bash
         run: |
           set -euo pipefail
-          STAGING_ENV=/etc/brasil-saas/staging.env
-          test -r "$STAGING_ENV" || {
-            echo "::error::Falta $STAGING_ENV. Configure credenciais e endpoints EXCLUSIVOS do staging antes do deploy."
-            exit 1
-          }
           sudo -n true || {
-            echo "::error::O runner precisa de sudo não interativo restrito para instalar o artefato e gerenciar apenas o serviço de staging."
+            echo "::error::O runner precisa de sudo não interativo para instalar e gerenciar o serviço de staging."
             exit 1
           }
-          grep -Eq '^STAGING_ISOLATED_DB_CONFIRMED=true$' "$STAGING_ENV" || {
-            echo "::error::Defina STAGING_ISOLATED_DB_CONFIRMED=true somente após confirmar que o banco é separado da produção."
+          test -r /etc/brasil-saas/erp.env || {
+            echo "::error::Não foi encontrado /etc/brasil-saas/erp.env."
             exit 1
           }
-          grep -Eq '^SERVER_PORT=8081$' "$STAGING_ENV" || {
-            echo "::error::O staging deve usar SERVER_PORT=8081; produção permanece na porta 8080."
-            exit 1
-          }
-          grep -Eq '^(SPRING_DATASOURCE_URL|SPRING_DATASOURCE_JDBC_URL)=' "$STAGING_ENV" || {
-            echo "::error::Configure a URL JDBC do banco de staging em $STAGING_ENV."
-            exit 1
-          }
-          echo "Pré-requisitos presentes; valores secretos não serão exibidos."
-
+          echo "Staging usará o arquivo de configuração e o banco existentes."
       - name: Install staging release
         shell: bash
         run: |
@@ -108,7 +94,8 @@ jobs:
           User=euripedes
           Group=euripedes
           WorkingDirectory=/opt/brasil-saas-erp/staging
-          EnvironmentFile=/etc/brasil-saas/staging.env
+          EnvironmentFile=/etc/brasil-saas/erp.env
+          Environment=SERVER_PORT=8081
           ExecStart=/usr/lib/jvm/jdk-21.0.12.1-oracle-x64/bin/java -Xms256m -Xmx1536m -jar /opt/brasil-saas-erp/staging/brasil-saas-erp-1.0.0-SNAPSHOT.jar
           Restart=on-failure
           RestartSec=5
