@@ -57,7 +57,7 @@ export const Emprestimos = () => {
             <Dialog visible={dlg} onHide={() => setDlg(false)} header='Novo empréstimo' modal style={{ width: 'min(96vw, 500px)' }}>
                 <div className='grid p-fluid'>
                     <div className='bc-form-col-12'><label className='bc-label'>Instituição *</label><InputText value={f.instituicao || ''} onChange={(e) => setF({ ...f, instituicao: e.target.value })} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={f.valorTotal} onValueChange={(e) => setF({ ...f, valorTotal: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Valor *</label><InputNumber value={f.valorTotal} onValueChange={(e) => setF({ ...f, valorTotal: e.value })} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Juros % a.m.</label><InputNumber value={f.taxaJuros} onValueChange={(e) => setF({ ...f, taxaJuros: e.value })} suffix=' %' minFractionDigits={2} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Contratação *</label><Calendar value={f.dataContratacao} onChange={(e) => setF({ ...f, dataContratacao: e.target.value })} dateFormat={formatoData()} showIcon /></div>
                 </div>

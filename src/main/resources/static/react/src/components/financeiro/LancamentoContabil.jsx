@@ -526,7 +526,7 @@ export const LancamentoContabil = () => {
                                 onValueChange={(e) => setNovaPartida({...novaPartida, valor: e.value})}
                                 mode="currency"
                                 currency="BRL"
-                                locale="pt-BR"
+                                locale={localeAtivo()}
                             />
                         </div>
                         <div className="col-12 md:col-4 field">

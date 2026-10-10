@@ -229,7 +229,7 @@ export const ContratosFornecimento = () => {
                         </div>
                         <div className="col-6">
                             <label className="block mb-1">Valor limite</label>
-                            <InputNumber value={form.valorLimite} onValueChange={(e) => setForm({ ...form, valorLimite: e.value })} mode="currency" currency="BRL" locale="pt-BR" className="w-full" />
+                            <InputNumber value={form.valorLimite} onValueChange={(e) => setForm({ ...form, valorLimite: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full" />
                         </div>
                         <div className="col-6">
                             <label className="block mb-1">Início *</label>
@@ -260,7 +260,7 @@ export const ContratosFornecimento = () => {
                                     }} />
                             </div>
                             <div className="col-3">
-                                <InputNumber placeholder="Vlr unit" value={it.valorUnitario} mode="currency" currency="BRL" locale="pt-BR" className="w-full"
+                                <InputNumber placeholder="Vlr unit" value={it.valorUnitario} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full"
                                     onValueChange={(e) => {
                                         const itens = [...form.itens];
                                         itens[idx] = { ...itens[idx], valorUnitario: e.value };

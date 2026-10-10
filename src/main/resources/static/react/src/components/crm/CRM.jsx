@@ -114,7 +114,7 @@ export const CRM = () => {
                     <div className='bc-form-col-6'><label className='bc-label'>Empresa</label><InputText value={fLead.empresaNome || ''} onChange={(e) => setFLead({ ...fLead, empresaNome: e.target.value })} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Email</label><InputText value={fLead.email || ''} onChange={(e) => setFLead({ ...fLead, email: e.target.value })} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Telefone</label><InputText value={fLead.telefone || ''} onChange={(e) => setFLead({ ...fLead, telefone: e.target.value })} /></div>
-                    <div className='bc-form-col-6'><label className='bc-label'>Valor estimado</label><InputNumber value={fLead.valorEstimado} onValueChange={(e) => setFLead({ ...fLead, valorEstimado: e.value })} mode='currency' currency='BRL' locale='pt-BR' /></div>
+                    <div className='bc-form-col-6'><label className='bc-label'>Valor estimado</label><InputNumber value={fLead.valorEstimado} onValueChange={(e) => setFLead({ ...fLead, valorEstimado: e.value })} mode='currency' currency='BRL' locale={localeAtivo()} /></div>
                     <div className='bc-form-col-6'><label className='bc-label'>Probabilidade %</label><InputNumber value={fLead.probabilidade ?? 10} onValueChange={(e) => setFLead({ ...fLead, probabilidade: e.value })} suffix=' %' min={0} max={100} /></div>
                     <div className='bc-form-col-12'><label className='bc-label'>Observação</label><InputTextarea rows={2} value={fLead.observacao || ''} onChange={(e) => setFLead({ ...fLead, observacao: e.target.value })} /></div>
                 </div>
