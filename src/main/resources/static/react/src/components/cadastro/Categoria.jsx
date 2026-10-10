@@ -14,6 +14,7 @@ import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { desembrulharLista } from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
+import './Categoria.css';
 
 export const Categoria = () => {
     const { user } = useAuth();

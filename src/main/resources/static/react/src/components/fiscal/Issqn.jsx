@@ -8,6 +8,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { IssqnService } from '../../services/IssqnService';
+import './Issqn.css';
 
 export const Issqn = () => {
     const { t } = useTranslation();

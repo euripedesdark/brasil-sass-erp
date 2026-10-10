@@ -17,6 +17,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { FornecedorService } from '../../services/FornecedorService';
 import { desembrulharLista } from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
+import './Fornecedor.css';
 
 export const Fornecedor = () => {
     const { user } = useAuth();

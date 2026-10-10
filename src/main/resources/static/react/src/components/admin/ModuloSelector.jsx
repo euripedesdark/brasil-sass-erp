@@ -7,6 +7,7 @@ import { Checkbox } from 'primereact/checkbox';
 import { Tag } from 'primereact/tag';
 import { apiFetch } from '../../services/ApiConfig';
 import { useTranslation } from 'react-i18next';
+import './ModuloSelector.css';
 
 /**
  * Seletor de modulos por usuario.

@@ -9,6 +9,7 @@ import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { apiFetch } from '../../services/ApiConfig';
 import { ImagemRegistro } from '../shared/ImagemRegistro';
+import './FuncionarioFoto.css';
 
 /**
  * Foto do colaborador.

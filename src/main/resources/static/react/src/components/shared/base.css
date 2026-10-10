@@ -605,3 +605,20 @@ body .p-dialog .p-dialog-header,
 body .p-dialog .p-dialog-header .p-dialog-title {
   color: #0f172a !important;
 }
+
+/* Correcao global de contraste para DataTable/Card do PrimeReact sobre tema escuro.
+   As telas usam <Card> + <DataTable> sem wrapper enterprise, entao os CSS por
+   modulo nunca aplicavam e o tema claro padrao deixava letra branca sobre fundo
+   claro (ilegivel). Regras globais sob .page-content cobrem todas as telas. */
+.page-content .p-card { background: rgba(13,30,55,.78) !important; color: #eaf3ff !important; border: 1px solid rgba(148,190,235,.22) !important; }
+.page-content .p-card .p-card-title { color: #ffffff !important; }
+.page-content .p-card .p-card-subtitle { color: #a8c4e8 !important; }
+.page-content .p-card .p-card-content { color: #eaf3ff !important; }
+.page-content .p-datatable .p-datatable-thead > tr > th { background: rgba(15,34,60,.92) !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.25) !important; }
+.page-content .p-datatable .p-datatable-tbody > tr { background: rgba(10,25,45,.55) !important; color: #eaf3ff !important; }
+.page-content .p-datatable .p-datatable-tbody > tr > td { background: transparent !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.16) !important; }
+.page-content .p-datatable .p-datatable-tbody > tr:nth-child(even) { background: rgba(15,34,60,.55) !important; color: #eaf3ff !important; }
+.page-content .p-datatable .p-datatable-tbody > tr:hover { background: rgba(37,65,96,.6) !important; color: #ffffff !important; }
+.page-content .p-datatable .p-datatable-emptymessage > td { background: rgba(10,25,45,.55) !important; color: #a8c4e8 !important; text-align: center; }
+.page-content .p-paginator { background: transparent !important; color: #eaf3ff !important; border-color: rgba(148,190,235,.18) !important; }
+.page-content .p-paginator .p-paginator-page, .page-content .p-paginator .p-paginator-prev, .page-content .p-paginator .p-paginator-next { color: #eaf3ff !important; }

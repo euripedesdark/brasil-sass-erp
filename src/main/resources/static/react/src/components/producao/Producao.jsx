@@ -17,6 +17,7 @@ import { Divider } from 'primereact/divider';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import { RomaneioProducao } from './RomaneioProducao';
+import './Producao.css';
 
 export const Producao = () => {
     const { user } = useAuth();

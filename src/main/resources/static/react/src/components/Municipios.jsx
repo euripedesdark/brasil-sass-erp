@@ -8,6 +8,7 @@ import { Dialog } from 'primereact/dialog';
 import { Toast } from 'primereact/toast';
 import { Paginator } from 'primereact/paginator';
 import { MunicipioService } from '../services/MunicipioService';
+import './Municipios.css';
 
 export default function Municipios() {
     const { t } = useTranslation();

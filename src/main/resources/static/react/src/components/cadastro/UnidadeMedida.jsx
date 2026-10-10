@@ -13,6 +13,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import { useAuth } from '../../contexts/AuthContext';
 import { UnidadeMedidaService } from '../../services/UnidadeMedidaService';
+import './UnidadeMedida.css';
 
 export const UnidadeMedida = () => {
     const { t } = useTranslation();

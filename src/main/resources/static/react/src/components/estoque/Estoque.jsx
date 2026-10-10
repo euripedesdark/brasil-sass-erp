@@ -11,6 +11,7 @@ import { Tag } from 'primereact/tag';
 import EstoqueService from '../../services/EstoqueService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import './Estoque.css';
 
 export const Estoque = () => {
     const { user } = useAuth();

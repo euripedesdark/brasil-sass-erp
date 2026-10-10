@@ -9,6 +9,7 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { NcmService } from '../../services/NcmService';
+import './Ncm.css';
 
 export const Ncm = () => {
     const { t } = useTranslation();

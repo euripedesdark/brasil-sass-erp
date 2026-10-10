@@ -9,6 +9,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
 import { CfopService } from '../../services/CfopService';
+import './Cfop.css';
 
 export const Cfop = () => {
     const { t } = useTranslation();

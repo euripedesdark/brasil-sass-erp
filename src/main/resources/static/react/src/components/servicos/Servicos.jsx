@@ -14,6 +14,7 @@ import { Message } from 'primereact/message';
 import { InputTextarea } from 'primereact/inputtextarea';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import './Servicos.css';
 
 export const Servicos = () => {
     const { user } = useAuth();

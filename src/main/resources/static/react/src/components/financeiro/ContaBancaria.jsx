@@ -12,6 +12,7 @@ import { Tag } from 'primereact/tag';
 import { Message } from 'primereact/message';
 import ContaBancariaService from '../../services/ContaBancariaService';
 import { useTranslation } from 'react-i18next';
+import './ContaBancaria.css';
 
 const TIPO_OPTS = [
     { label: 'Corrente', value: 'CORRENTE' },

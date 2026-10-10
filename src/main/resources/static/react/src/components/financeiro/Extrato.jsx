@@ -14,6 +14,7 @@ import { Tag } from 'primereact/tag';
 import { Message } from 'primereact/message';
 import ContaBancariaService from '../../services/ContaBancariaService';
 import ExtratoService from '../../services/ExtratoService';
+import './Extrato.css';
 
 const TIPO_OPTS = [
     { label: 'Entrada', value: 'ENTRADA' },

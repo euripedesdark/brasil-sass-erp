@@ -13,6 +13,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
+import './TipoPagamento.css';
 
 export const TipoPagamento = () => {
     const { t } = useTranslation();

@@ -19,6 +19,7 @@ import FornecedorService from '../../services/FornecedorService';
 import ProdutoService from '../../services/ProdutoService';
 import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
+import './Compras.css';
 
 const STATUS_LABEL = {
     ABERTO: { label: 'Aberto', severity: 'info' },

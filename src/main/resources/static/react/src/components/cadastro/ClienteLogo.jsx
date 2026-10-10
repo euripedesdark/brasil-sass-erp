@@ -12,6 +12,7 @@ import { ProgressBar } from 'primereact/progressbar';
 import { useAuth } from '../../contexts/AuthContext';
 import { ClienteLogoService } from '../../services/ClienteLogoService';
 import { ClienteService } from '../../services/ClienteService';
+import './ClienteLogo.css';
 
 export const ClienteLogo = () => {
     const { t } = useTranslation();

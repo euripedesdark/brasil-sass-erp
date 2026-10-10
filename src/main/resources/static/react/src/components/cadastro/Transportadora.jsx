@@ -12,6 +12,7 @@ import { Message } from 'primereact/message';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { useAuth } from '../../contexts/AuthContext';
+import './Transportadora.css';
 
 const BASE = '/api/cadastro/transportadoras';
 

@@ -14,6 +14,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import { useAuth } from '../../contexts/AuthContext';
 import { CargoService } from '../../services/CargoService';
+import './Cargo.css';
 
 export const Cargo = () => {
   const { t } = useTranslation();
