@@ -7,5 +7,6 @@ export default {
     itensRecebimento: (id) => axios.get(`${BASE}/recebimentos/${id}/itens`),
     conferencias: () => axios.get(`${BASE}/conferencia-faturas`),
     itensConferencia: (id) => axios.get(`${BASE}/conferencia-faturas/${id}/itens`),
-    conferir: (payload) => axios.post(`${BASE}/conferencia-faturas`, payload)
+    conferir: (payload) => axios.post(`${BASE}/conferencia-faturas`, payload),
+    aprovarExcepcional: (id, motivo) => axios.post(`${BASE}/conferencia-faturas/` + id + `/aprovacao-excepcional`, { motivo })
 };
