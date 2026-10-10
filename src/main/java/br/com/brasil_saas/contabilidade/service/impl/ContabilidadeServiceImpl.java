@@ -274,6 +274,75 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         }
         return out;
     }
+    @Override @Transactional
+    public CtbLancamento apurarResultado(Long empresaId, Long userId, int exercicio, Long contaLucrosId) {
+        int anoAtual = LocalDate.now().getYear();
+        if (exercicio < 2000 || exercicio >= anoAtual) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Apuracao somente de exercicio encerrado");
+        }
+        var lucros = exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaLucrosId, empresaId), "Conta de lucros acumulados inexistente");
+        String codigoLucros = lucros.getCodigo() == null ? "" : lucros.getCodigo();
+        if (codigoLucros.startsWith("3")) {
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Conta de lucros acumulados nao pode ser de resultado");
+        }
+        for (int mes = 1; mes <= 11; mes++) {
+            String periodo = String.format("%04d-%02d", exercicio, mes);
+            boolean fechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
+                    .anyMatch(f -> periodo.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
+            if (!fechado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Periodo " + periodo + " precisa estar fechado");
+        }
+        String dezembro = String.format("%04d-12", exercicio);
+        boolean dezembroFechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
+                .anyMatch(f -> dezembro.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
+        if (dezembroFechado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Dezembro precisa estar aberto para receber a apuracao");
+        boolean jaApurado = lancamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNullOrderByDataDescIdDesc(empresaId, dezembro).stream()
+                .anyMatch(l -> "ENCERRAMENTO".equals(l.getOrigemTipo()) && !"ESTORNADO".equals(l.getStatus()));
+        if (jaApurado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Exercicio ja apurado");
+        boolean rascunhoNoAno = lancamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
+                .anyMatch(l -> "RASCUNHO".equals(l.getStatus()) && l.getPeriodo() != null && l.getPeriodo().startsWith(String.valueOf(exercicio)));
+        if (rascunhoNoAno) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Exercicio com lancamentos em rascunho");
+        Map<Long, BigDecimal> saldoPorConta = new LinkedHashMap<>();
+        for (int mes = 1; mes <= 12; mes++) {
+            LocalDate de = LocalDate.of(exercicio, mes, 1);
+            LocalDate ate = de.withDayOfMonth(de.lengthOfMonth());
+            for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate)) {
+                for (CtbPartida pt : partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(l.getId(), empresaId)) {
+                    String codigo = contas.findByIdAndEmpresaIdAndDeletedAtIsNull(pt.getContaId(), empresaId).map(c -> c.getCodigo() == null ? "" : c.getCodigo()).orElse("");
+                    if (!codigo.startsWith("3")) continue;
+                    BigDecimal liquido = (pt.getCredito() == null ? BigDecimal.ZERO : pt.getCredito()).subtract(pt.getDebito() == null ? BigDecimal.ZERO : pt.getDebito());
+                    saldoPorConta.merge(pt.getContaId(), liquido, BigDecimal::add);
+                }
+            }
+        }
+        saldoPorConta.entrySet().removeIf(e -> e.getValue().setScale(2, java.math.RoundingMode.HALF_UP).signum() == 0);
+        if (saldoPorConta.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem movimento de resultado no exercicio");
+        CtbLancamento l = new CtbLancamento();
+        l.setData(LocalDate.of(exercicio, 12, 31));
+        l.setPeriodo(dezembro);
+        exigirAberto(empresaId, l.getPeriodo());
+        l.setHistorico("Apuracao do resultado de " + exercicio);
+        l.setOrigemTipo("ENCERRAMENTO");
+        l.setStatus("RASCUNHO");
+        l = lancamentos.save(l);
+        for (var e : saldoPorConta.entrySet()) {
+            BigDecimal valor = e.getValue().setScale(2, java.math.RoundingMode.HALF_UP).abs();
+            boolean lucro = e.getValue().signum() > 0;
+            CtbPartida debito = new CtbPartida();
+            debito.setLancamentoId(l.getId());
+            debito.setContaId(lucro ? e.getKey() : contaLucrosId);
+            debito.setDebito(valor);
+            debito.setCredito(BigDecimal.ZERO);
+            partidas.save(debito);
+            CtbPartida credito = new CtbPartida();
+            credito.setLancamentoId(l.getId());
+            credito.setContaId(lucro ? contaLucrosId : e.getKey());
+            credito.setDebito(BigDecimal.ZERO);
+            credito.setCredito(valor);
+            partidas.save(credito);
+        }
+        return lancar(empresaId, l.getId());
+    }
+
 
     @Override @Transactional
     public ContabilidadeService.EspelhoContabil espelharAjusteDevolucao(Long empresaId, Long tituloOrigemId, Long tituloDestinoId, BigDecimal proporcao, String historico) {

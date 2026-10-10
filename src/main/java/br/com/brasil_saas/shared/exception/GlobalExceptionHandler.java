@@ -51,6 +51,23 @@ public class GlobalExceptionHandler {
      * servidor. O frontend nao consegue distinguir "nao tem esse registro" de
      * "o sistema quebrou", e mostra erro em vez de informacao vazia.
      */
+    /**
+     * Excecoes com status proprio (ResponseStatusException), usadas por
+     * modulos inteiros como contabilidade e compras. Sem este handler,
+     * caiam no generico e voltavam 500: toda regra de negocio desses
+     * modulos parecia erro do servidor, e a tela nao conseguia mostrar
+     * a mensagem certa (ex.: periodo precisa estar fechado).
+     */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> comStatusProprio(
+            org.springframework.web.server.ResponseStatusException ex, HttpServletRequest req) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
+        if (status == null || status.is5xxServerError()) status = HttpStatus.BAD_REQUEST;
+        String mensagem = ex.getReason() == null ? status.getReasonPhrase() : ex.getReason();
+        log.warn("Regra com status {}: {}", status.value(), mensagem);
+        return build(status, mensagem, "ERRO_NEGOCIO", req);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> recursoNaoEncontrado(ResourceNotFoundException ex,
                                                                   HttpServletRequest req) {
