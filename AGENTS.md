@@ -46,3 +46,9 @@ Revisar erros de código, prevenir regressões e melhorar CI/CD com alterações
 
 ## Conclusão obrigatória
 Informe causa-raiz, mudanças exatas, comandos executados/resultados, verificações não executadas e motivo, riscos restantes e link do PR/commit. Não diga “corrigido” sem evidência.
+
+## Operação após configurar o segredo
+- Em toda PR aberta, atualizada ou reaberta, confirme a execução do workflow `OpenRouter PR Review` na aba Actions.
+- A saída esperada da análise fica no resumo do job (`GITHUB_STEP_SUMMARY`); verifique se há findings, erro de autenticação, limite/crédito da API ou falha de rede.
+- Se o segredo `OPENROUTER_API_KEY` não estiver disponível no contexto do evento, não exponha credenciais: registre a ausência no resumo e corrija a configuração do repositório.
+- Não considere a simples existência do workflow como prova de que a IA foi executada. Só declare funcionamento após conferir um run concluído e a resposta da API.
