@@ -5,6 +5,7 @@ on:
     workflows:
       - CI - Build and Test
       - Brasil SaaS ERP CI/CD Pipeline
+      - CI - Database Migration Test
       - CI - Code Quality Checks
     types: [completed]
 
