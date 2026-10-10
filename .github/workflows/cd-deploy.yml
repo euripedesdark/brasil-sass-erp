@@ -77,6 +77,7 @@ jobs:
           # O runner não usa sudo. O systemd.path detecta o marcador e aciona
           # o serviço de deploy, executado como erp-deploy.
           install -m 0640 "$NEW_JAR" "$STAGING/release.jar"
+          setfacl -m u:erp-deploy:r-- "$STAGING/release.jar"
           printf '%s\n' "$GITHUB_SHA" > "$STAGING/deploy.trigger"
 
           echo "Solicitação de deploy enviada ao serviço dedicado."
