@@ -30,6 +30,12 @@ class BootstrapPostgresTest {
             rows.next();
             assertEquals(0, rows.getInt(1), "O teste exige banco vazio e nao altera bancos existentes");
         }
+        // O banco descartavel de CI nao tem a role operacional que a migration V187 usa.
+        // Prepara apenas este cluster de teste sem alterar o checksum nem o historico SQL.
+        try (var connection = DriverManager.getConnection(url, user, password);
+             var statement = connection.createStatement()) {
+            statement.execute("DO $ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sa') THEN CREATE ROLE sa NOLOGIN; END IF; END $;");
+        }
         Flyway flyway = Flyway.configure().dataSource(url, user, password)
                 .schemas("brasil_saas").baselineOnMigrate(false)
                 .configuration(Map.of("flyway.postgresql.transactional.lock", "false"))

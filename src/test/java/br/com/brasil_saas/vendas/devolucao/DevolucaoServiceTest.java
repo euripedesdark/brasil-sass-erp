@@ -41,6 +41,7 @@ class DevolucaoServiceTest {
     @Mock br.com.brasil_saas.financeiro.service.TituloService tituloService;
     @Mock br.com.brasil_saas.core.service.DocumentoFluxoService documentoFluxoService;
     @Mock br.com.brasil_saas.contabilidade.service.ContabilidadeService contabilidadeService;
+    @Mock br.com.brasil_saas.financeiro.service.ComissaoService comissaoService;
     @InjectMocks DevolucaoService service;
 
     void pedidoFaturadoComDezUnidades() {
