@@ -94,8 +94,8 @@ export const TabelasPreco = () => {
             <h4>Itens da tabela</h4>
             <div className="grid p-fluid align-items-end">
                 <div className="col-12 md:col-4 field"><label>Produto</label><AutoComplete value={produtoBusca} suggestions={produtoSugestoes} completeMethod={buscarProdutos} field="nome" itemTemplate={p => <div><strong>{p.nome}</strong><small className="ml-2 text-color-secondary">{p.codigo || p.id}</small></div>} onChange={e => { setProdutoBusca(e.value); setItem({ ...item, produtoId: e.value?.id || null }); }} placeholder="Nome ou código" /></div>
-                <div className="col-12 md:col-2 field"><label>Preço</label><InputNumber value={item.preco} mode="currency" currency={form.moeda || 'BRL'} locale="pt-BR" onValueChange={e => setItem({ ...item, preco: e.value || 0 })} /></div>
-                <div className="col-12 md:col-2 field"><label>Preço mínimo</label><InputNumber value={item.precoMinimo} mode="currency" currency={form.moeda || 'BRL'} locale="pt-BR" onValueChange={e => setItem({ ...item, precoMinimo: e.value })} /></div>
+                <div className="col-12 md:col-2 field"><label>Preço</label><InputNumber value={item.preco} mode="currency" currency={form.moeda || 'BRL'} locale={localeAtivo()} onValueChange={e => setItem({ ...item, preco: e.value || 0 })} /></div>
+                <div className="col-12 md:col-2 field"><label>Preço mínimo</label><InputNumber value={item.precoMinimo} mode="currency" currency={form.moeda || 'BRL'} locale={localeAtivo()} onValueChange={e => setItem({ ...item, precoMinimo: e.value })} /></div>
                 <div className="col-12 md:col-2 field"><label>Desc. máx.</label><InputNumber value={item.percentualDescontoMaximo} suffix=" %" min={0} max={100} onValueChange={e => setItem({ ...item, percentualDescontoMaximo: e.value || 0 })} /></div>
                 <div className="col-12 md:col-2 field"><Button label={t('legacyUi.vendasLegacy.add')} icon="pi pi-plus" onClick={adicionarItem} /></div>
             </div>

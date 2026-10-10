@@ -516,7 +516,7 @@ export const Pdv = () => {
               }}
               mode="currency"
               currency="BRL"
-              locale="pt-BR"
+              locale={localeAtivo()}
               disabled={descontoPedidoPct > 0}
               placeholder="R$ 0,00"
             />
@@ -636,7 +636,7 @@ export const Pdv = () => {
               onValueChange={(e) => setValorParcela(e.value)}
               mode="currency"
               currency="BRL"
-              locale="pt-BR"
+              locale={localeAtivo()}
               placeholder={brl(
                 pagamentos.length
                   ? pagamentos[pagamentos.length - 1].saldoRestante
@@ -689,7 +689,7 @@ export const Pdv = () => {
                 onValueChange={(e) => setValorDescontoItem(e.value)}
                 mode="currency"
                 currency="BRL"
-                locale="pt-BR"
+                locale={localeAtivo()}
                 inputStyle={{ width: '100%' }}
                 inputId="pdv-desconto-item"
                 aria-label="Valor do desconto da linha"

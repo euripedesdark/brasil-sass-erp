@@ -174,7 +174,7 @@ export default function Caixa() {
                     {!selectedCaixa?.id && (
                         <div className="field">
                             <label htmlFor="saldo">Saldo Inicial</label>
-                            <InputNumber id="saldo" value={selectedCaixa?.saldo} onValueChange={(e) => setSelectedCaixa({ ...selectedCaixa, saldo: e.value })} mode="currency" currency="BRL" locale="pt-BR" className="w-full" />
+                            <InputNumber id="saldo" value={selectedCaixa?.saldo} onValueChange={(e) => setSelectedCaixa({ ...selectedCaixa, saldo: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full" />
                         </div>
                     )}
                 </div>
@@ -193,7 +193,7 @@ export default function Caixa() {
                     </div>
                     <div className="col-12">
                         <label>Valor *</label>
-                        <InputNumber value={movForm.valor} onValueChange={(e) => setMovForm({ ...movForm, valor: e.value })} mode="currency" currency="BRL" locale="pt-BR" min={0.01} />
+                        <InputNumber value={movForm.valor} onValueChange={(e) => setMovForm({ ...movForm, valor: e.value })} mode="currency" currency="BRL" locale={localeAtivo()} min={0.01} />
                     </div>
                     <div className="col-12">
                         <label>Observação</label>

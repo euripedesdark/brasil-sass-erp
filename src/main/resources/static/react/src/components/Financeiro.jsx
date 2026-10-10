@@ -342,7 +342,7 @@ export default function Financeiro() {
                             onChange={(e) => setLancamentoSelecionado({...lancamentoSelecionado, valorLancamento: e.value})}
                             mode="currency"
                             currency="BRL"
-                            locale="pt-BR"
+                            locale={localeAtivo()}
                         />
                     </div>
                     <div className="p-field">

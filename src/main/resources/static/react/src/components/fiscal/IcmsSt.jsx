@@ -54,7 +54,7 @@ export const IcmsSt = () => {
             <p className="text-color-secondary">Substituição tributária por MVA. Validar protocolo ICMS / CEST da UF.</p>
             <Card className="mb-3">
                 <div className="grid">
-                    <div className="col-6 md:col-4"><label className="block mb-1">Base operação</label><InputNumber value={base} min={0} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale="pt-BR" className="w-full" /></div>
+                    <div className="col-6 md:col-4"><label className="block mb-1">Base operação</label><InputNumber value={base} min={0} onValueChange={(e) => setBase(e.value)} mode="currency" currency="BRL" locale={localeAtivo()} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">Alíq inter %</label><InputNumber value={inter} min={0} max={100} onValueChange={(e) => setInter(e.value)} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">Alíq interna %</label><InputNumber value={interna} min={0} max={100} onValueChange={(e) => setInterna(e.value)} className="w-full" /></div>
                     <div className="col-6 md:col-2"><label className="block mb-1">MVA %</label><InputNumber value={mva} min={0} onValueChange={(e) => setMva(e.value)} className="w-full" /></div>
