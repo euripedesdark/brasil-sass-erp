@@ -84,16 +84,31 @@ if [ "$SUMMARIZE_WAL" != "on" ]; then
   exit 1
 fi
 
+# Determine newest valid backup by the UTC timestamp recorded in metadata,
+# rather than sorting on the TYPE/name prefix (which misorders full/incremental).
 LATEST_FULL=""
 LATEST_BACKUP=""
-for meta in "$CATALOG_DIR"/full-*.meta; do
+LATEST_FULL_EPOCH=0
+LATEST_BACKUP_EPOCH=0
+for meta in "$CATALOG_DIR"/*.meta; do
   [ -f "$meta" ] || continue
   name="${meta##*/}"; name="${name%.meta}"
   [ -d "$BACKUP_ROOT/$name" ] || continue
-  LATEST_FULL="$name"
+  [ -s "$BACKUP_ROOT/$name/backup_manifest" ] || continue
+  created="$(sed -n 's/^CREATED_UTC=//p' "$meta")"
+  [ -n "$created" ] || continue
+  parsed="$(date -u -d "${created:0:8} ${created:9:2}:${created:11:2}:${created:13:2}" +%s 2>/dev/null || echo 0)"
+  [ "$parsed" -gt 0 ] || continue
+  type="$(sed -n 's/^TYPE=//p' "$meta")"
+  if [ "$type" = "full" ] && [ "$parsed" -gt "$LATEST_FULL_EPOCH" ]; then
+    LATEST_FULL="$name"
+    LATEST_FULL_EPOCH="$parsed"
+  fi
+  if [ "$parsed" -gt "$LATEST_BACKUP_EPOCH" ]; then
+    LATEST_BACKUP="$name"
+    LATEST_BACKUP_EPOCH="$parsed"
+  fi
 done
-LATEST_BACKUP="$(find "$CATALOG_DIR" -maxdepth 1 -type f -name '*.meta' -printf '%f\n' | sed 's/\.meta$//' | sort -t- -k2 | tail -n 1)"
-[ -n "$LATEST_BACKUP" ] && [ ! -d "$BACKUP_ROOT/$LATEST_BACKUP" ] && LATEST_BACKUP=""
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 FULL_AGE_SECONDS=0
@@ -141,17 +156,25 @@ else
   pg_basebackup "${COMMON_ARGS[@]}" --incremental="$PREVIOUS_MANIFEST" --label="$NAME"
   test -s "$TEMP/backup_manifest"
 
-  CHAIN=()
-  while IFS= read -r meta; do
-    [ -f "$meta" ] || continue
-    candidate="${meta##*/}"; candidate="${candidate%.meta}"
-    [ -d "$BACKUP_ROOT/$candidate" ] || continue
-    candidate_base="$(sed -n 's/^BASE_FULL=//p' "$meta")"
-    [ "$candidate_base" = "$BASE_FULL" ] && CHAIN+=("$BACKUP_ROOT/$candidate")
-  done < <(printf '%s\n' "$CATALOG_DIR"/*.meta | sort)
-  CHAIN+=("$TEMP")
-  [ "${#CHAIN[@]}" -ge 2 ] || { echo "Cadeia incremental incompleta; recusando publicação." >&2; exit 1; }
-  pg_combinebackup --dry-run --output="$BACKUP_ROOT/.combine-dry-run-unused" "${CHAIN[@]}"
+  # Validate the dependency graph from the previous backup back to the
+  # designated full base. Do not use a non-existent pg_combinebackup --dry-run
+  # option or combine/write a synthetic multi-GB cluster on every timer tick.
+  cursor="$PARENT"
+  declare -A SEEN=()
+  while [ "$cursor" != "$BASE_FULL" ]; do
+    [ -n "$cursor" ] || { echo "Cadeia incremental sem pai até a base completa." >&2; exit 1; }
+    [ -z "${SEEN[$cursor]:-}" ] || { echo "Ciclo detectado na cadeia incremental: $cursor" >&2; exit 1; }
+    SEEN["$cursor"]=1
+    parent_meta="$CATALOG_DIR/$cursor.meta"
+    [ -s "$parent_meta" ] || { echo "Metadados do pai ausentes: $parent_meta" >&2; exit 1; }
+    [ -s "$BACKUP_ROOT/$cursor/backup_manifest" ] || { echo "Manifesto do pai ausente: $BACKUP_ROOT/$cursor/backup_manifest" >&2; exit 1; }
+    parent_base="$(sed -n 's/^BASE_FULL=//p' "$parent_meta")"
+    [ "$parent_base" = "$BASE_FULL" ] || { echo "Pai pertence a outra base: $cursor" >&2; exit 1; }
+    cursor="$(sed -n 's/^PARENT=//p' "$parent_meta")"
+    [ "$cursor" != "NONE" ] || { echo "Cadeia terminou antes da base completa." >&2; exit 1; }
+  done
+  [ -s "$BACKUP_ROOT/$BASE_FULL/backup_manifest" ] || { echo "Manifesto da base completa ausente." >&2; exit 1; }
+  [ -s "$TEMP/backup_manifest" ] || { echo "Manifesto do incremental ausente." >&2; exit 1; }
 fi
 
 mv -- "$TEMP" "$FINAL"
