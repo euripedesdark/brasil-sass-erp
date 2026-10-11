@@ -1,0 +1,56 @@
+# Perfil de staging: isolado da produção por variáveis de ambiente.
+server:
+  port: ${SERVER_PORT:8081}
+  error:
+    include-message: never
+    include-binding-errors: never
+
+spring:
+  data:
+    mongodb:
+      uri: ${STAGING_MONGODB_URI}
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 1
+  datasource:
+    # STAGING_DB_URL deve apontar explicitamente para brasil-saas-staging.
+    url: ${STAGING_DB_URL}
+    username: ${STAGING_DB_USER}
+    password: ${STAGING_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: BrasilSaasStagingPool
+      maximum-pool-size: ${DB_POOL_MAX:5}
+      minimum-idle: ${DB_POOL_MIN:1}
+      connection-timeout: 15000
+  rabbitmq:
+    host: ${RABBIT_HOST:127.0.0.1}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER}
+    password: ${RABBIT_PASSWORD}
+    virtual-host: ${RABBIT_VHOST:/staging}
+  flyway:
+    validate-on-migrate: true
+
+logging:
+  level:
+    root: INFO
+    br.com.brasil_saas: INFO
+    org.hibernate.SQL: WARN
+
+app:
+  minio:
+    url: ${STAGING_MINIO_URL}
+    access-key: ${STAGING_MINIO_ACCESS_KEY}
+    secret-key: ${STAGING_MINIO_SECRET_KEY}
+    bucket: brasil-saas-staging
+  jwt:
+    secret: ${STAGING_JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:86400000}
+  ia:
+    provider: ${IA_PROVIDER:openai}
+    api-key: ${OPENAI_API_KEY:}
+    model: ${IA_MODEL:gpt-4o-mini}
+    embedding-model: ${IA_EMBEDDING_MODEL:text-embedding-3-small}
