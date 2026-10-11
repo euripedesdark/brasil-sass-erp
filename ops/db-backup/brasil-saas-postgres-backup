@@ -66,9 +66,9 @@ if [ -n "$DB_SSLKEY" ]; then export PGSSLKEY="$DB_SSLKEY"; fi
 
 SERVER_VERSION_NUM="$(psql -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -Atqc 'SHOW server_version_num')"
 SERVER_MAJOR="$((SERVER_VERSION_NUM / 10000))"
-BASEBACKUP_MAJOR="$(pg_basebackup --version | sed -E 's/.* ([0-9]+)\..*/\\1/')"
-VERIFY_MAJOR="$(pg_verifybackup --version | sed -E 's/.* ([0-9]+)\..*/\\1/')"
-COMBINE_MAJOR="$(pg_combinebackup --version | sed -E 's/.* ([0-9]+)\..*/\\1/')"
+BASEBACKUP_MAJOR="$(pg_basebackup --version | sed -E 's/.* ([0-9]+)\..*/\1/')"
+VERIFY_MAJOR="$(pg_verifybackup --version | sed -E 's/.* ([0-9]+)\..*/\1/')"
+COMBINE_MAJOR="$(pg_combinebackup --version | sed -E 's/.* ([0-9]+)\..*/\1/')"
 if [ "$SERVER_MAJOR" -lt 17 ]; then
   echo "Backup incremental nativo exige PostgreSQL 17+. Servidor detectado: $SERVER_MAJOR." >&2
   exit 1
@@ -91,12 +91,8 @@ for meta in "$CATALOG_DIR"/full-*.meta; do
   [ -d "$BACKUP_ROOT/$name" ] || continue
   LATEST_FULL="$name"
 done
-for meta in "$CATALOG_DIR"/*.meta; do
-  [ -f "$meta" ] || continue
-  name="${meta##*/}"; name="${name%.meta}"
-  [ -d "$BACKUP_ROOT/$name" ] || continue
-  LATEST_BACKUP="$name"
-done
+LATEST_BACKUP="$(find "$CATALOG_DIR" -maxdepth 1 -type f -name '*.meta' -printf '%f\n' | sed 's/\.meta$//' | sort -t- -k2 | tail -n 1)"
+[ -n "$LATEST_BACKUP" ] && [ ! -d "$BACKUP_ROOT/$LATEST_BACKUP" ] && LATEST_BACKUP=""
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 if [ -z "$LATEST_FULL" ] || [ -z "$LATEST_BACKUP" ] || [ "$(( $(date -u +%s) - $(stat -c %Y "$BACKUP_ROOT/$LATEST_FULL") ))" -ge "$((24 * 60 * 60))" ]; then
