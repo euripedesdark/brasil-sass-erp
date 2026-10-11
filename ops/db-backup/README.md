@@ -37,10 +37,10 @@ sudo install -o root -g root -m 0644 ops/db-backup/brasil-saas-postgres-backup.s
 sudo install -o root -g root -m 0644 ops/db-backup/brasil-saas-postgres-backup.timer /etc/systemd/system/brasil-saas-postgres-backup.timer
 sudo install -d -o root -g root -m 0700 /var/backups/brasil-saas-erp/postgresql
 sudo systemctl daemon-reload
-# Após validar as variáveis e permissões, habilitar o agendamento:
-sudo systemctl enable --now brasil-saas-postgres-backup.timer
-# A primeira execução manual é uma ação separada e deve ser aprovada após validar o impacto:
-# sudo systemctl start brasil-saas-postgres-backup.service
+# Não habilitar o timer nesta etapa.
+# Primeiro, executar uma cópia controlada após autorização explícita e validar o resultado/restauração.
+# Só depois de aprovar o teste, habilitar o agendamento:
+# sudo systemctl enable --now brasil-saas-postgres-backup.timer
 ```
 
 O script reutiliza DB_URL, DB_USER e DB_PASSWORD de /etc/brasil-saas/erp.env. BACKUP_PGUSER/BACKUP_PGPASSWORD são opcionais e só precisam ser definidos para substituir a seleção automática. Não colocar segredos no repositório ou na linha de comando.
@@ -73,5 +73,5 @@ A ordem e a compatibilidade da cadeia devem ser confirmadas pelos metadados ante
 - O backup completo lê o cluster inteiro e pode gerar I/O, tráfego local e uso de CPU; o incremental tende a transferir blocos alterados, mas também exige leitura e processamento de metadados/WAL summaries.
 - --max-rate=20M limita a taxa de transferência de dados, mas não garante ausência de impacto. --checkpoint=spread evita solicitar checkpoint rápido, à custa de possível maior duração.
 - A primeira execução será completa; não há backups incrementais até existir uma base válida.
-- O script falha com mensagem clara se a versão for anterior a 17, se os binários não corresponderem à versão principal, se summarize_wal estiver desligado ou se faltar a conta dedicada.
+- O script falha com mensagem clara se a versão for anterior a 17, se os binários não corresponderem à versão principal, se summarize_wal estiver desligado, ou se a autenticação/privilégios não permitirem a operação.
 - Manifestos e verificações de ferramenta não substituem um teste real de restauração. Ainda não foi feito teste de restore nem teste em servidor.
