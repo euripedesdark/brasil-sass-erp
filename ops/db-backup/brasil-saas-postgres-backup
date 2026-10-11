@@ -5,7 +5,7 @@ umask 077
 BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/brasil-saas-erp/postgresql}"
 CATALOG_DIR="$BACKUP_ROOT/catalog"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
-MAX_RATE="${BACKUP_MAX_RATE:-50M}"
+MAX_RATE="${BACKUP_MAX_RATE:-20M}"
 LOCK_FILE="${BACKUP_LOCK_FILE:-/run/lock/brasil-saas-postgres-backup.lock}"
 
 DB_URL="${DB_URL:-${SPRING_DATASOURCE_URL:-}}"
