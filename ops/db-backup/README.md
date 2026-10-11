@@ -21,7 +21,7 @@
 1. PostgreSQL 17 ou superior no servidor. Incrementais nativos não funcionam em versões anteriores.
 2. Binários de cliente pg_basebackup, pg_combinebackup e pg_verifybackup da mesma versão principal do servidor; também psql, python3 e flock.
 3. Configuração do servidor summarize_wal = on. O script verifica essa configuração e aborta sem criar backup se estiver desligada. A alteração da configuração do PostgreSQL não é feita automaticamente.
-4. Uma conta dedicada definida por BACKUP_PGUSER e BACKUP_PGPASSWORD, autorizada para replicação; pg_hba.conf deve permitir essa conexão e max_wal_senders deve ter capacidade disponível. A conta usada pelo ERP para SQL não é presumida como conta de replicação.
+4. Por padrão, o script tenta reutilizar DB_USER/DB_PASSWORD para replicação. Ele consulta os privilégios da conta; se ela não tiver REPLICATION/SUPERUSER, usa a role postgres pela regra local existente de replicação para 127.0.0.1. Isso evita criar usuário ou alterar pg_hba.conf, mas depende dessa regra local de trust continuar ativa. Se o ambiente mudar, configure BACKUP_PGUSER/BACKUP_PGPASSWORD explicitamente com uma conta já autorizada. O usuário de backup precisa de REPLICATION ou SUPERUSER e max_wal_senders deve ter capacidade disponível.
 5. DB_URL, DB_USER e DB_PASSWORD (ou variáveis SPRING_DATASOURCE_*) para consultar a versão e a configuração. A URL JDBC deve conter os parâmetros TLS se o servidor os exigir; o script transporta sslmode, sslrootcert, sslcert e sslkey para libpq.
 6. Espaço livre suficiente para pelo menos uma cópia completa adicional e para os incrementais. O backup fica no mesmo servidor/disco: protege de alguns incidentes lógicos, mas não de falha/perda do disco inteiro.
 
@@ -43,7 +43,7 @@ sudo systemctl enable --now brasil-saas-postgres-backup.timer
 # sudo systemctl start brasil-saas-postgres-backup.service
 ```
 
-Antes de iniciar o serviço, garantir que /etc/brasil-saas/erp.env contenha as variáveis de conexão SQL e as duas variáveis dedicadas de backup. Não colocar segredos no repositório ou na linha de comando.
+O script reutiliza DB_URL, DB_USER e DB_PASSWORD de /etc/brasil-saas/erp.env. BACKUP_PGUSER/BACKUP_PGPASSWORD são opcionais e só precisam ser definidos para substituir a seleção automática. Não colocar segredos no repositório ou na linha de comando.
 
 ## Verificação operacional
 
