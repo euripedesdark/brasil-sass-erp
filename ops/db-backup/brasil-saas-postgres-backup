@@ -170,13 +170,8 @@ if [ "$TYPE" = "full" ]; then
 else
   PREVIOUS_MANIFEST="$BACKUP_ROOT/$PARENT/backup_manifest"
   [ -s "$PREVIOUS_MANIFEST" ] || { echo "Manifesto de referência ausente: $PREVIOUS_MANIFEST" >&2; exit 1; }
-  echo "Iniciando backup INCREMENTAL nativo; base=$BASE_FULL; referência=$PARENT (limite: $MAX_RATE)."
-  pg_basebackup "${COMMON_ARGS[@]}" --incremental="$PREVIOUS_MANIFEST" --label="$NAME"
-  test -s "$TEMP/backup_manifest"
 
-  # Validate the dependency graph from the previous backup back to the
-  # designated full base. Do not use a non-existent pg_combinebackup --dry-run
-  # option or combine/write a synthetic multi-GB cluster on every timer tick.
+  # Valida toda a cadeia ANTES de iniciar a transferência do incremental.
   cursor="$PARENT"
   declare -A SEEN=()
   while [ "$cursor" != "$BASE_FULL" ]; do
@@ -192,7 +187,10 @@ else
     [ "$cursor" != "NONE" ] || { echo "Cadeia terminou antes da base completa." >&2; exit 1; }
   done
   [ -s "$BACKUP_ROOT/$BASE_FULL/backup_manifest" ] || { echo "Manifesto da base completa ausente." >&2; exit 1; }
-  [ -s "$TEMP/backup_manifest" ] || { echo "Manifesto do incremental ausente." >&2; exit 1; }
+
+  echo "Iniciando backup INCREMENTAL nativo; base=$BASE_FULL; referência=$PARENT (limite: $MAX_RATE)."
+  pg_basebackup "${COMMON_ARGS[@]}" --incremental="$PREVIOUS_MANIFEST" --label="$NAME"
+  test -s "$TEMP/backup_manifest"
 fi
 
 mv -- "$TEMP" "$FINAL"
