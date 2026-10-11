@@ -29,9 +29,12 @@ print(u.hostname or "127.0.0.1")
 print(u.port or 5432)
 print(unquote(u.path.lstrip("/")))
 print(q.get("sslmode", [""])[0])
+print(unquote(q.get("sslrootcert", [""])[0]))
+print(unquote(q.get("sslcert", [""])[0]))
+print(unquote(q.get("sslkey", [""])[0]))
 PY
 )
-if [ "${#DB_INFO[@]}" -lt 4 ]; then
+if [ "${#DB_INFO[@]}" -lt 7 ]; then
   echo "Não foi possível interpretar SPRING_DATASOURCE_URL" >&2
   exit 1
 fi
@@ -39,9 +42,15 @@ DB_HOST="${DB_INFO[0]}"
 DB_PORT="${DB_INFO[1]}"
 DB_NAME="${DB_INFO[2]}"
 DB_SSLMODE="${DB_INFO[3]}"
+DB_SSLROOTCERT="${DB_INFO[4]}"
+DB_SSLCERT="${DB_INFO[5]}"
+DB_SSLKEY="${DB_INFO[6]}"
 
 export PGPASSWORD="$DB_PASSWORD_VALUE"
 if [ -n "$DB_SSLMODE" ]; then export PGSSLMODE="$DB_SSLMODE"; fi
+if [ -n "$DB_SSLROOTCERT" ]; then export PGSSLROOTCERT="$DB_SSLROOTCERT"; fi
+if [ -n "$DB_SSLCERT" ]; then export PGSSLCERT="$DB_SSLCERT"; fi
+if [ -n "$DB_SSLKEY" ]; then export PGSSLKEY="$DB_SSLKEY"; fi
 
 install -d -o root -g root -m 0700 "$BACKUP_DIR"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
