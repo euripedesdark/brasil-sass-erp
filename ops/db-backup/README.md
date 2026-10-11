@@ -10,8 +10,8 @@
 - Destino: /var/backups/brasil-saas-erp/postgresql/, fora do repositório e da pasta da aplicação.
 - Cada diretório de backup contém o backup_manifest nativo com checksums CRC32C (menos custoso em CPU; o manifesto mantém seu próprio SHA-256). Um catálogo separado em catalog/*.meta registra tipo, base completa, pai, horário e versão.
 - Backup completo: validação por pg_verifybackup.
-- Incremental: validação de manifesto e da relação da cadeia por pg_combinebackup --dry-run. Isso não substitui a validação de integridade de todos os arquivos nem um teste real de restauração.
-- Retenção padrão de 14 dias por cadeia. Uma cadeia antiga só é removida quando sua base completa expirou e existe uma base completa mais nova; a cadeia mais recente é mantida. Não há limpeza de diretórios sem metadados.
+- Incremental: verifica a existência do manifesto atual e percorre os metadados PARENT até a base completa, recusando pais ausentes, bases divergentes e ciclos. Não executa pg_combinebackup em cada disparo, pois isso reconstruiria um backup sintético potencialmente grande e aumentaria I/O. A combinação e a restauração precisam ser testadas separadamente antes de produção.
+- Retenção padrão de 14 dias por cadeia. O script preserva a base completa mais recente e remove metadados/diretórios dos backups ligados a bases completas mais antigas que ultrapassaram a retenção. Antes de produção, o comportamento deve ser validado com uma matriz de cenários de retenção; não considerar a política validada até esse teste.
 - A taxa de transferência de dados é limitada por padrão a 20 MB/s (BACKUP_MAX_RATE=20M) para reduzir o impacto de I/O. Ajustável via ambiente.
 - Diretórios e manifestos/metadados são restritos a root (0700/0600). Um lock impede duas execuções simultâneas.
 - Não reinicia nem altera diretamente o serviço do ERP.
@@ -37,8 +37,10 @@ sudo install -o root -g root -m 0644 ops/db-backup/brasil-saas-postgres-backup.s
 sudo install -o root -g root -m 0644 ops/db-backup/brasil-saas-postgres-backup.timer /etc/systemd/system/brasil-saas-postgres-backup.timer
 sudo install -d -o root -g root -m 0700 /var/backups/brasil-saas-erp/postgresql
 sudo systemctl daemon-reload
+# Após validar as variáveis e permissões, habilitar o agendamento:
 sudo systemctl enable --now brasil-saas-postgres-backup.timer
-sudo systemctl start brasil-saas-postgres-backup.service
+# A primeira execução manual é uma ação separada e deve ser aprovada após validar o impacto:
+# sudo systemctl start brasil-saas-postgres-backup.service
 ```
 
 Antes de iniciar o serviço, garantir que /etc/brasil-saas/erp.env contenha as variáveis de conexão SQL e as duas variáveis dedicadas de backup. Não colocar segredos no repositório ou na linha de comando.
@@ -54,7 +56,7 @@ find /var/backups/brasil-saas-erp/postgresql -maxdepth 2 -type f -printf '%p %s 
 
 ## Recuperação da cadeia incremental
 
-Para reconstruir um backup, escolher a base completa e todos os incrementais dependentes até o ponto desejado, em ordem cronológica, e executar pg_combinebackup para produzir um diretório de backup completo sintético. Exemplo ilustrativo (substituir pelos nomes reais e incluir cada incremental intermediário):
+Para reconstruir um backup, seguir os vínculos PARENT do ponto desejado até a base completa, inverter a sequência para ficar base-primeiro e executar pg_combinebackup com a base e cada incremental intermediário na ordem correta para produzir um diretório de backup completo sintético. Exemplo ilustrativo (substituir pelos nomes reais e incluir cada incremental intermediário):
 
 ```bash
 sudo -u postgres pg_combinebackup \
@@ -64,12 +66,12 @@ sudo -u postgres pg_combinebackup \
 sudo -u postgres pg_verifybackup /var/backups/brasil-saas-erp/restore-synthetic
 ```
 
-O diretório sintético deve ser recuperado em um procedimento controlado, com permissões, configuração, tablespaces e WAL tratados conforme a documentação da versão do PostgreSQL. Não copiar o diretório recuperado sobre o cluster de produção em execução. O procedimento de recuperação deve ser testado em ambiente isolado antes de ser considerado validado.
+A ordem e a compatibilidade da cadeia devem ser confirmadas pelos metadados antes da combinação. O diretório sintético deve ser recuperado em um procedimento controlado, com permissões, configuração, tablespaces e WAL tratados conforme a documentação da versão do PostgreSQL. Não copiar o diretório recuperado sobre o cluster de produção em execução. O procedimento de recuperação deve ser testado em ambiente isolado antes de ser considerado validado.
 
 ## Impactos e limites
 
 - O backup completo lê o cluster inteiro e pode gerar I/O, tráfego local e uso de CPU; o incremental tende a transferir blocos alterados, mas também exige leitura e processamento de metadados/WAL summaries.
-- --max-rate=50M limita a taxa de transferência de dados, mas não garante ausência de impacto. --checkpoint=spread evita solicitar checkpoint rápido, à custa de possível maior duração.
+- --max-rate=20M limita a taxa de transferência de dados, mas não garante ausência de impacto. --checkpoint=spread evita solicitar checkpoint rápido, à custa de possível maior duração.
 - A primeira execução será completa; não há backups incrementais até existir uma base válida.
 - O script falha com mensagem clara se a versão for anterior a 17, se os binários não corresponderem à versão principal, se summarize_wal estiver desligado ou se faltar a conta dedicada.
 - Manifestos e verificações de ferramenta não substituem um teste real de restauração. Ainda não foi feito teste de restore nem teste em servidor.
