@@ -4,7 +4,7 @@
 
 ## Comportamento
 
-- A cada duas horas, o timer chama um único serviço systemd.
+- A cada duas horas, em UTC, o timer chama um único serviço systemd. O disparo de 00:00 UTC é reservado para o backup completo diário.
 - O script gera um backup completo de cluster se não houver uma base válida, no primeiro disparo do dia em 00:00 UTC, ou se a última base completa tiver 26 horas ou mais (recuperação após timer/servidor indisponível).
 - Entre bases completas, gera incrementais nativos com pg_basebackup --incremental, usando o manifesto do backup anterior como referência. Isso cria uma cadeia de dependências.
 - Destino: /var/backups/brasil-saas-erp/postgresql/, fora do repositório e da pasta da aplicação.
