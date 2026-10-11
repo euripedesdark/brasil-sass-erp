@@ -4,15 +4,18 @@ umask 077
 
 BACKUP_DIR="${BACKUP_DIR:-/var/backups/brasil-saas-erp}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
-: "${SPRING_DATASOURCE_URL:?SPRING_DATASOURCE_URL não definido em /etc/brasil-saas/erp.env}"
-: "${SPRING_DATASOURCE_USERNAME:?SPRING_DATASOURCE_USERNAME não definido em /etc/brasil-saas/erp.env}"
-: "${SPRING_DATASOURCE_PASSWORD:?SPRING_DATASOURCE_PASSWORD não definido em /etc/brasil-saas/erp.env}"
+DB_URL="${DB_URL:-${SPRING_DATASOURCE_URL:-}}"
+DB_USER="${DB_USER:-${SPRING_DATASOURCE_USERNAME:-}}"
+DB_PASSWORD_VALUE="${DB_PASSWORD:-${SPRING_DATASOURCE_PASSWORD:-}}"
+: "${DB_URL:?DB_URL (ou SPRING_DATASOURCE_URL) não definido em /etc/brasil-saas/erp.env}"
+: "${DB_USER:?DB_USER (ou SPRING_DATASOURCE_USERNAME) não definido em /etc/brasil-saas/erp.env}"
+: "${DB_PASSWORD_VALUE:?DB_PASSWORD (ou SPRING_DATASOURCE_PASSWORD) não definido em /etc/brasil-saas/erp.env}"
 
 command -v pg_dump >/dev/null || { echo "pg_dump não está instalado" >&2; exit 1; }
 command -v pg_restore >/dev/null || { echo "pg_restore não está instalado" >&2; exit 1; }
 
 # Converte a URL JDBC do Spring para parâmetros libpq sem expor senha na linha de comando.
-mapfile -t DB_INFO < <(python3 - "$SPRING_DATASOURCE_URL" <<'PY'
+mapfile -t DB_INFO < <(python3 - "$DB_URL" <<'PY'
 import sys
 from urllib.parse import urlparse, parse_qs, unquote
 raw = sys.argv[1]
@@ -37,7 +40,7 @@ DB_PORT="${DB_INFO[1]}"
 DB_NAME="${DB_INFO[2]}"
 DB_SSLMODE="${DB_INFO[3]}"
 
-export PGPASSWORD="$SPRING_DATASOURCE_PASSWORD"
+export PGPASSWORD="$DB_PASSWORD_VALUE"
 if [ -n "$DB_SSLMODE" ]; then export PGSSLMODE="$DB_SSLMODE"; fi
 
 install -d -o root -g root -m 0700 "$BACKUP_DIR"
@@ -47,7 +50,7 @@ TEMP="$BACKUP_DIR/.$(basename "$FINAL").partial"
 trap 'rm -f "$TEMP"' EXIT
 
 echo "Iniciando backup PostgreSQL: database=$DB_NAME host=$DB_HOST port=$DB_PORT"
-pg_dump --host="$DB_HOST" --port="$DB_PORT" --username="$SPRING_DATASOURCE_USERNAME" \
+pg_dump --host="$DB_HOST" --port="$DB_PORT" --username="$DB_USER" \
   --dbname="$DB_NAME" --format=custom --compress=6 --no-owner --no-acl --file="$TEMP"
 test -s "$TEMP"
 pg_restore --list "$TEMP" >/dev/null
