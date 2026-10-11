@@ -105,7 +105,7 @@ if [ -n "$LATEST_FULL" ] && [ -f "$CATALOG_DIR/$LATEST_FULL.meta" ]; then
     if [ "$FULL_EPOCH" -gt 0 ]; then FULL_AGE_SECONDS="$(( $(date -u +%s) - FULL_EPOCH ))"; fi
   fi
 fi
-if [ -z "$LATEST_FULL" ] || [ -z "$LATEST_BACKUP" ] || [ "$FULL_AGE_SECONDS" -ge "$((24 * 60 * 60))" ]; then
+if [ -z "$LATEST_FULL" ] || [ -z "$LATEST_BACKUP" ] || [ "$(date -u +%H)" = "00" ] || [ "$FULL_AGE_SECONDS" -ge "$((26 * 60 * 60))" ]; then
   TYPE="full"
   NAME="full-$STAMP"
   BASE_FULL="$NAME"
