@@ -8,7 +8,7 @@ server:
 spring:
   data:
     mongodb:
-      uri: ${MONGODB_URI}
+      uri: ${STAGING_MONGODB_URI}
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
