@@ -12,7 +12,7 @@
 - Backup completo: validação por pg_verifybackup.
 - Incremental: validação de manifesto e da relação da cadeia por pg_combinebackup --dry-run. Isso não substitui a validação de integridade de todos os arquivos nem um teste real de restauração.
 - Retenção padrão de 14 dias por cadeia. Uma cadeia antiga só é removida quando sua base completa expirou e existe uma base completa mais nova; a cadeia mais recente é mantida. Não há limpeza de diretórios sem metadados.
-- A taxa de transferência de dados é limitada por padrão a 50 MB/s (BACKUP_MAX_RATE=50M) para reduzir o impacto de I/O. Ajustável via ambiente.
+- A taxa de transferência de dados é limitada por padrão a 20 MB/s (BACKUP_MAX_RATE=20M) para reduzir o impacto de I/O. Ajustável via ambiente.
 - Diretórios e manifestos/metadados são restritos a root (0700/0600). Um lock impede duas execuções simultâneas.
 - Não reinicia nem altera diretamente o serviço do ERP.
 
