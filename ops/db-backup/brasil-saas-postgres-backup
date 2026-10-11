@@ -96,7 +96,16 @@ LATEST_BACKUP="$(find "$CATALOG_DIR" -maxdepth 1 -type f -name '*.meta' -printf 
 [ -n "$LATEST_BACKUP" ] && [ ! -d "$BACKUP_ROOT/$LATEST_BACKUP" ] && LATEST_BACKUP=""
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-if [ -z "$LATEST_FULL" ] || [ -z "$LATEST_BACKUP" ] || [ "$(( $(date -u +%s) - $(stat -c %Y "$BACKUP_ROOT/$LATEST_FULL") ))" -ge "$((24 * 60 * 60))" ]; then
+FULL_AGE_SECONDS=0
+if [ -n "$LATEST_FULL" ] && [ -f "$CATALOG_DIR/$LATEST_FULL.meta" ]; then
+  FULL_CREATED="$(sed -n 's/^CREATED_UTC=//p' "$CATALOG_DIR/$LATEST_FULL.meta")"
+  if [ -n "$FULL_CREATED" ]; then
+    FULL_DATE="$(printf '%s' "$FULL_CREATED" | sed -E 's/^([0-9]{8})T([0-9]{6})Z$/\1 \2/')"
+    FULL_EPOCH="$(date -u -d "$FULL_DATE" +%s 2>/dev/null || echo 0)"
+    if [ "$FULL_EPOCH" -gt 0 ]; then FULL_AGE_SECONDS="$(( $(date -u +%s) - FULL_EPOCH ))"; fi
+  fi
+fi
+if [ -z "$LATEST_FULL" ] || [ -z "$LATEST_BACKUP" ] || [ "$FULL_AGE_SECONDS" -ge "$((24 * 60 * 60))" ]; then
   TYPE="full"
   NAME="full-$STAMP"
   BASE_FULL="$NAME"
