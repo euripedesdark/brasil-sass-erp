@@ -2,7 +2,6 @@
 Description=Brasil SaaS ERP - STAGING (Spring Boot, port 8081)
 After=network-online.target postgresql.service mongod.service redis-server.service rabbitmq-server.service
 Wants=network-online.target
-Conflicts=brasil-saas-erp-staging-stop.service
 
 [Service]
 Type=simple
