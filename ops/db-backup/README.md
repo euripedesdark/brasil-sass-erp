@@ -5,7 +5,7 @@
 ## Comportamento
 
 - A cada duas horas, o timer chama um único serviço systemd.
-- O script gera um backup completo de cluster se não houver uma base válida ou se a última base completa tiver 24 horas ou mais.
+- O script gera um backup completo de cluster se não houver uma base válida, no primeiro disparo do dia em 00:00 UTC, ou se a última base completa tiver 26 horas ou mais (recuperação após timer/servidor indisponível).
 - Entre bases completas, gera incrementais nativos com pg_basebackup --incremental, usando o manifesto do backup anterior como referência. Isso cria uma cadeia de dependências.
 - Destino: /var/backups/brasil-saas-erp/postgresql/, fora do repositório e da pasta da aplicação.
 - Cada diretório de backup contém o backup_manifest nativo com checksums CRC32C (menos custoso em CPU; o manifesto mantém seu próprio SHA-256). Um catálogo separado em catalog/*.meta registra tipo, base completa, pai, horário e versão.
