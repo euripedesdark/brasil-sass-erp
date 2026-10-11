@@ -2,23 +2,23 @@
 set -Eeuo pipefail
 umask 077
 
-BACKUP_ROOT="\${BACKUP_ROOT:-/var/backups/brasil-saas-erp/postgresql}"
+BACKUP_ROOT="${BACKUP_ROOT:-/var/backups/brasil-saas-erp/postgresql}"
 CATALOG_DIR="$BACKUP_ROOT/catalog"
-RETENTION_DAYS="\${RETENTION_DAYS:-14}"
-MAX_RATE="\${BACKUP_MAX_RATE:-50M}"
-LOCK_FILE="\${BACKUP_LOCK_FILE:-/run/lock/brasil-saas-postgres-backup.lock}"
+RETENTION_DAYS="${RETENTION_DAYS:-14}"
+MAX_RATE="${BACKUP_MAX_RATE:-50M}"
+LOCK_FILE="${BACKUP_LOCK_FILE:-/run/lock/brasil-saas-postgres-backup.lock}"
 
-DB_URL="\${DB_URL:-\${SPRING_DATASOURCE_URL:-}}"
-DB_USER="\${DB_USER:-\${SPRING_DATASOURCE_USERNAME:-}}"
-DB_PASSWORD_VALUE="\${DB_PASSWORD:-\${SPRING_DATASOURCE_PASSWORD:-}}"
-BACKUP_PGUSER="\${BACKUP_PGUSER:-}"
-BACKUP_PGPASSWORD="\${BACKUP_PGPASSWORD:-}"
+DB_URL="${DB_URL:-${SPRING_DATASOURCE_URL:-}}"
+DB_USER="${DB_USER:-${SPRING_DATASOURCE_USERNAME:-}}"
+DB_PASSWORD_VALUE="${DB_PASSWORD:-${SPRING_DATASOURCE_PASSWORD:-}}"
+BACKUP_PGUSER="${BACKUP_PGUSER:-}"
+BACKUP_PGPASSWORD="${BACKUP_PGPASSWORD:-}"
 
-: "\${DB_URL:?DB_URL (ou SPRING_DATASOURCE_URL) não definido em /etc/brasil-saas/erp.env}"
-: "\${DB_USER:?DB_USER (ou SPRING_DATASOURCE_USERNAME) não definido em /etc/brasil-saas/erp.env}"
-: "\${DB_PASSWORD_VALUE:?DB_PASSWORD (ou SPRING_DATASOURCE_PASSWORD) não definido em /etc/brasil-saas/erp.env}"
-: "\${BACKUP_PGUSER:?BACKUP_PGUSER precisa ser uma conta PostgreSQL autorizada para replicação}"
-: "\${BACKUP_PGPASSWORD:?BACKUP_PGPASSWORD não definido em /etc/brasil-saas/erp.env}"
+: "${DB_URL:?DB_URL (ou SPRING_DATASOURCE_URL) não definido em /etc/brasil-saas/erp.env}"
+: "${DB_USER:?DB_USER (ou SPRING_DATASOURCE_USERNAME) não definido em /etc/brasil-saas/erp.env}"
+: "${DB_PASSWORD_VALUE:?DB_PASSWORD (ou SPRING_DATASOURCE_PASSWORD) não definido em /etc/brasil-saas/erp.env}"
+: "${BACKUP_PGUSER:?BACKUP_PGUSER precisa ser uma conta PostgreSQL autorizada para replicação}"
+: "${BACKUP_PGPASSWORD:?BACKUP_PGPASSWORD não definido em /etc/brasil-saas/erp.env}"
 
 for cmd in pg_basebackup pg_combinebackup pg_verifybackup psql python3 flock; do
   command -v "$cmd" >/dev/null || { echo "Ferramenta obrigatória ausente: $cmd" >&2; exit 1; }
@@ -46,17 +46,17 @@ for value in (u.hostname or "127.0.0.1", str(u.port or 5432),
     print(value)
 PY
 )
-if [ "\${#DB_INFO[@]}" -lt 7 ]; then
+if [ "${#DB_INFO[@]}" -lt 7 ]; then
   echo "Não foi possível interpretar DB_URL." >&2
   exit 1
 fi
-DB_HOST="\${DB_INFO[0]}"
-DB_PORT="\${DB_INFO[1]}"
-DB_NAME="\${DB_INFO[2]}"
-DB_SSLMODE="\${DB_INFO[3]}"
-DB_SSLROOTCERT="\${DB_INFO[4]}"
-DB_SSLCERT="\${DB_INFO[5]}"
-DB_SSLKEY="\${DB_INFO[6]}"
+DB_HOST="${DB_INFO[0]}"
+DB_PORT="${DB_INFO[1]}"
+DB_NAME="${DB_INFO[2]}"
+DB_SSLMODE="${DB_INFO[3]}"
+DB_SSLROOTCERT="${DB_INFO[4]}"
+DB_SSLCERT="${DB_INFO[5]}"
+DB_SSLKEY="${DB_INFO[6]}"
 
 export PGPASSWORD="$DB_PASSWORD_VALUE"
 if [ -n "$DB_SSLMODE" ]; then export PGSSLMODE="$DB_SSLMODE"; fi
@@ -66,9 +66,9 @@ if [ -n "$DB_SSLKEY" ]; then export PGSSLKEY="$DB_SSLKEY"; fi
 
 SERVER_VERSION_NUM="$(psql -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -Atqc 'SHOW server_version_num')"
 SERVER_MAJOR="$((SERVER_VERSION_NUM / 10000))"
-BASEBACKUP_MAJOR="$(pg_basebackup --version | sed -E 's/.* ([0-9]+)\\..*/\\1/')"
-VERIFY_MAJOR="$(pg_verifybackup --version | sed -E 's/.* ([0-9]+)\\..*/\\1/')"
-COMBINE_MAJOR="$(pg_combinebackup --version | sed -E 's/.* ([0-9]+)\\..*/\\1/')"
+BASEBACKUP_MAJOR="$(pg_basebackup --version | sed -E 's/.* ([0-9]+)\..*/\\1/')"
+VERIFY_MAJOR="$(pg_verifybackup --version | sed -E 's/.* ([0-9]+)\..*/\\1/')"
+COMBINE_MAJOR="$(pg_combinebackup --version | sed -E 's/.* ([0-9]+)\..*/\\1/')"
 if [ "$SERVER_MAJOR" -lt 17 ]; then
   echo "Backup incremental nativo exige PostgreSQL 17+. Servidor detectado: $SERVER_MAJOR." >&2
   exit 1
@@ -87,13 +87,13 @@ LATEST_FULL=""
 LATEST_BACKUP=""
 for meta in "$CATALOG_DIR"/full-*.meta; do
   [ -f "$meta" ] || continue
-  name="\${meta##*/}"; name="\${name%.meta}"
+  name="${meta##*/}"; name="${name%.meta}"
   [ -d "$BACKUP_ROOT/$name" ] || continue
   LATEST_FULL="$name"
 done
 for meta in "$CATALOG_DIR"/*.meta; do
   [ -f "$meta" ] || continue
-  name="\${meta##*/}"; name="\${name%.meta}"
+  name="${meta##*/}"; name="${name%.meta}"
   [ -d "$BACKUP_ROOT/$name" ] || continue
   LATEST_BACKUP="$name"
 done
@@ -125,27 +125,27 @@ export PGPASSWORD="$BACKUP_PGPASSWORD"
 
 if [ "$TYPE" = "full" ]; then
   echo "Iniciando backup COMPLETO do cluster PostgreSQL $SERVER_MAJOR (limite de transferência: $MAX_RATE)."
-  pg_basebackup "\${COMMON_ARGS[@]}" --label="$NAME"
+  pg_basebackup "${COMMON_ARGS[@]}" --label="$NAME"
   test -s "$TEMP/backup_manifest"
   pg_verifybackup "$TEMP"
 else
   PREVIOUS_MANIFEST="$BACKUP_ROOT/$PARENT/backup_manifest"
   [ -s "$PREVIOUS_MANIFEST" ] || { echo "Manifesto de referência ausente: $PREVIOUS_MANIFEST" >&2; exit 1; }
   echo "Iniciando backup INCREMENTAL nativo; base=$BASE_FULL; referência=$PARENT (limite: $MAX_RATE)."
-  pg_basebackup "\${COMMON_ARGS[@]}" --incremental="$PREVIOUS_MANIFEST" --label="$NAME"
+  pg_basebackup "${COMMON_ARGS[@]}" --incremental="$PREVIOUS_MANIFEST" --label="$NAME"
   test -s "$TEMP/backup_manifest"
 
   CHAIN=()
   while IFS= read -r meta; do
     [ -f "$meta" ] || continue
-    candidate="\${meta##*/}"; candidate="\${candidate%.meta}"
+    candidate="${meta##*/}"; candidate="${candidate%.meta}"
     [ -d "$BACKUP_ROOT/$candidate" ] || continue
     candidate_base="$(sed -n 's/^BASE_FULL=//p' "$meta")"
     [ "$candidate_base" = "$BASE_FULL" ] && CHAIN+=("$BACKUP_ROOT/$candidate")
-  done < <(printf '%s\\n' "$CATALOG_DIR"/*.meta | sort)
+  done < <(printf '%s\n' "$CATALOG_DIR"/*.meta | sort)
   CHAIN+=("$TEMP")
-  [ "\${#CHAIN[@]}" -ge 2 ] || { echo "Cadeia incremental incompleta; recusando publicação." >&2; exit 1; }
-  pg_combinebackup --dry-run --output="$BACKUP_ROOT/.combine-dry-run-unused" "\${CHAIN[@]}"
+  [ "${#CHAIN[@]}" -ge 2 ] || { echo "Cadeia incremental incompleta; recusando publicação." >&2; exit 1; }
+  pg_combinebackup --dry-run --output="$BACKUP_ROOT/.combine-dry-run-unused" "${CHAIN[@]}"
 fi
 
 mv -- "$TEMP" "$FINAL"
@@ -164,22 +164,22 @@ echo "Backup $TYPE concluído: $FINAL"
 echo "Manifesto: $FINAL/backup_manifest"
 echo "Catálogo: $META_FINAL"
 
-LATEST_FULL="$(find "$CATALOG_DIR" -maxdepth 1 -type f -name 'full-*.meta' -printf '%f\\n' | sed 's/\\.meta$//' | sort | tail -n 1)"
+LATEST_FULL="$(find "$CATALOG_DIR" -maxdepth 1 -type f -name 'full-*.meta' -printf '%f\n' | sed 's/\.meta$//' | sort | tail -n 1)"
 NOW="$(date -u +%s)"
 for meta in "$CATALOG_DIR"/full-*.meta; do
   [ -f "$meta" ] || continue
-  full="\${meta##*/}"; full="\${full%.meta}"
+  full="${meta##*/}"; full="${full%.meta}"
   [ "$full" = "$LATEST_FULL" ] && continue
   created="$(sed -n 's/^CREATED_UTC=//p' "$meta")"
   [ -n "$created" ] || continue
-  epoch="$(date -u -d "\${created:0:8} \${created:9:2}:\${created:11:2}:\${created:13:2}" +%s 2>/dev/null || echo "$NOW")"
+  epoch="$(date -u -d "${created:0:8} ${created:9:2}:${created:11:2}:${created:13:2}" +%s 2>/dev/null || echo "$NOW")"
   if [ "$((NOW - epoch))" -le "$((RETENTION_DAYS * 86400))" ]; then continue; fi
   echo "Expirando cadeia antiga com base em $full (retenção: $RETENTION_DAYS dias)."
   for chain_meta in "$CATALOG_DIR"/*.meta; do
     [ -f "$chain_meta" ] || continue
     chain_base="$(sed -n 's/^BASE_FULL=//p' "$chain_meta")"
     if [ "$chain_base" = "$full" ]; then
-      chain_name="\${chain_meta##*/}"; chain_name="\${chain_name%.meta}"
+      chain_name="${chain_meta##*/}"; chain_name="${chain_name%.meta}"
       rm -rf -- "$BACKUP_ROOT/$chain_name"
       rm -f -- "$chain_meta"
     fi
