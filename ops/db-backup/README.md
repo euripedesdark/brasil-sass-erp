@@ -32,4 +32,4 @@ journalctl -u brasil-saas-db-backup.service -n 80 --no-pager
 sudo ls -lh /var/backups/brasil-saas-erp/
 ```
 
-O serviço lê as variáveis `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD` de `/etc/brasil-saas/erp.env`. Confirme que esses nomes existem no arquivo antes de habilitar. O backup não altera nem reinicia o serviço do ERP.
+O serviço lê `DB_URL`, `DB_USER` e `DB_PASSWORD` do `/etc/brasil-saas/erp.env` (nomes usados pelo perfil de produção), aceitando também os nomes `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD`. A URL deve ser JDBC PostgreSQL e a conta precisa ter permissão de leitura para o dump. O backup não altera nem reinicia o serviço do ERP.
