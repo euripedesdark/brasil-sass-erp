@@ -865,7 +865,23 @@
     "label132": "Paid",
     "label133": "Overdue",
     "label134": "Processing...",
-    "label135": "Please wait..."
+    "label135": "Please wait...",
+    "vendasLegacy": {
+      "title": "Sales Orders",
+      "new": "New",
+      "empty": "No orders found",
+      "number": "Number",
+      "type": "Type",
+      "customer": "Customer",
+      "issueDate": "Issue Date",
+      "status": "Status",
+      "total": "Total"
+    },
+    "comprasLegacy": {
+      "title": "Purchase Orders",
+      "new": "New",
+      "empty": "No orders found"
+    }
   },
   "enterpriseOps": {
     "title": "Integration Hub",

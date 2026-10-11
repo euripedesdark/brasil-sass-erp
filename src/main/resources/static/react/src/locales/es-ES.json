@@ -865,7 +865,23 @@
     "label132": "Pagado",
     "label133": "Vencido",
     "label134": "Procesando...",
-    "label135": "Espere..."
+    "label135": "Espere...",
+    "vendasLegacy": {
+      "title": "Sales Orders",
+      "new": "New",
+      "empty": "No orders found",
+      "number": "Number",
+      "type": "Type",
+      "customer": "Customer",
+      "issueDate": "Issue Date",
+      "status": "Status",
+      "total": "Total"
+    },
+    "comprasLegacy": {
+      "title": "Purchase Orders",
+      "new": "New",
+      "empty": "No orders found"
+    }
   },
   "enterpriseOps": {
     "title": "Hub de Integraciones",

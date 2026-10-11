@@ -865,7 +865,23 @@
     "label132": "Payé",
     "label133": "En retard",
     "label134": "Traitement...",
-    "label135": "Veuillez patienter..."
+    "label135": "Veuillez patienter...",
+    "vendasLegacy": {
+      "title": "Sales Orders",
+      "new": "New",
+      "empty": "No orders found",
+      "number": "Number",
+      "type": "Type",
+      "customer": "Customer",
+      "issueDate": "Issue Date",
+      "status": "Status",
+      "total": "Total"
+    },
+    "comprasLegacy": {
+      "title": "Purchase Orders",
+      "new": "New",
+      "empty": "No orders found"
+    }
   },
   "enterpriseOps": {
     "title": "Hub d'intégrations",
