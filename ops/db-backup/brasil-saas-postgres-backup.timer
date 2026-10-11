@@ -2,7 +2,7 @@
 Description=Executa backup PostgreSQL completo diário e incremental a cada 2 horas
 
 [Timer]
-OnCalendar=*-*-* 00/2:00:00
+OnCalendar=*-*-* 00/2:00:00 UTC
 Persistent=true
 RandomizedDelaySec=2m
 Unit=brasil-saas-postgres-backup.service
