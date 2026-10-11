@@ -13,6 +13,7 @@ spring:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+      database: 1
   datasource:
     # STAGING_DB_URL deve apontar explicitamente para brasil-saas-staging.
     url: ${STAGING_DB_URL}
@@ -29,6 +30,7 @@ spring:
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER}
     password: ${RABBIT_PASSWORD}
+    virtual-host: ${RABBIT_VHOST:/staging}
   flyway:
     validate-on-migrate: true
 
