@@ -8,7 +8,7 @@
 - O script gera um backup completo de cluster se não houver uma base válida ou se a última base completa tiver 24 horas ou mais.
 - Entre bases completas, gera incrementais nativos com pg_basebackup --incremental, usando o manifesto do backup anterior como referência. Isso cria uma cadeia de dependências.
 - Destino: /var/backups/brasil-saas-erp/postgresql/, fora do repositório e da pasta da aplicação.
-- Cada diretório de backup contém o backup_manifest nativo com checksums SHA-256. Um catálogo separado em catalog/*.meta registra tipo, base completa, pai, horário e versão.
+- Cada diretório de backup contém o backup_manifest nativo com checksums CRC32C (menos custoso em CPU; o manifesto mantém seu próprio SHA-256). Um catálogo separado em catalog/*.meta registra tipo, base completa, pai, horário e versão.
 - Backup completo: validação por pg_verifybackup.
 - Incremental: validação de manifesto e da relação da cadeia por pg_combinebackup --dry-run. Isso não substitui a validação de integridade de todos os arquivos nem um teste real de restauração.
 - Retenção padrão de 14 dias por cadeia. Uma cadeia antiga só é removida quando sua base completa expirou e existe uma base completa mais nova; a cadeia mais recente é mantida. Não há limpeza de diretórios sem metadados.
