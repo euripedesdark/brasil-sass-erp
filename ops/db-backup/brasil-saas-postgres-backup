@@ -11,14 +11,15 @@ LOCK_FILE="${BACKUP_LOCK_FILE:-/run/lock/brasil-saas-postgres-backup.lock}"
 DB_URL="${DB_URL:-${SPRING_DATASOURCE_URL:-}}"
 DB_USER="${DB_USER:-${SPRING_DATASOURCE_USERNAME:-}}"
 DB_PASSWORD_VALUE="${DB_PASSWORD:-${SPRING_DATASOURCE_PASSWORD:-}}"
+# Por padrão, reutiliza DB_USER/DB_PASSWORD. Se essa conta não tiver
+# REPLICATION/SUPERUSER, usa postgres via a regra local de replicação já existente.
+# BACKUP_PGUSER/BACKUP_PGPASSWORD opcionais permitem substituir esse comportamento.
 BACKUP_PGUSER="${BACKUP_PGUSER:-}"
 BACKUP_PGPASSWORD="${BACKUP_PGPASSWORD:-}"
 
 : "${DB_URL:?DB_URL (ou SPRING_DATASOURCE_URL) não definido em /etc/brasil-saas/erp.env}"
 : "${DB_USER:?DB_USER (ou SPRING_DATASOURCE_USERNAME) não definido em /etc/brasil-saas/erp.env}"
 : "${DB_PASSWORD_VALUE:?DB_PASSWORD (ou SPRING_DATASOURCE_PASSWORD) não definido em /etc/brasil-saas/erp.env}"
-: "${BACKUP_PGUSER:?BACKUP_PGUSER precisa ser uma conta PostgreSQL autorizada para replicação}"
-: "${BACKUP_PGPASSWORD:?BACKUP_PGPASSWORD não definido em /etc/brasil-saas/erp.env}"
 
 for cmd in pg_basebackup pg_combinebackup pg_verifybackup psql python3 flock; do
   command -v "$cmd" >/dev/null || { echo "Ferramenta obrigatória ausente: $cmd" >&2; exit 1; }
@@ -82,6 +83,23 @@ SUMMARIZE_WAL="$(psql -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME"
 if [ "$SUMMARIZE_WAL" != "on" ]; then
   echo "summarize_wal não está habilitado. É requisito para incrementais nativos; nenhum backup foi iniciado." >&2
   exit 1
+fi
+
+# Descobre se a conta já usada pelo ERP pode fazer base backup. Se não puder e
+# nenhuma conta específica foi configurada, reutiliza a autenticação local
+# existente para a role postgres (regra host replication ... 127.0.0.1 trust).
+if [ -z "$BACKUP_PGUSER" ]; then
+  DB_USER_CAN_REPLICATE="$(psql -X -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -Atqc "SELECT (rolreplication OR rolsuper)::text FROM pg_roles WHERE rolname = current_user")"
+  if [ "$DB_USER_CAN_REPLICATE" = "true" ]; then
+    BACKUP_PGUSER="$DB_USER"
+    BACKUP_PGPASSWORD="$DB_PASSWORD_VALUE"
+  else
+    BACKUP_PGUSER="postgres"
+    BACKUP_PGPASSWORD=""
+    echo "A conta SQL do ERP não tem privilégio de replicação; usando postgres pela regra local de replicação já configurada (sem alterar pg_hba.conf)." >&2
+  fi
+elif [ -z "$BACKUP_PGPASSWORD" ] && [ "$BACKUP_PGUSER" = "$DB_USER" ]; then
+  BACKUP_PGPASSWORD="$DB_PASSWORD_VALUE"
 fi
 
 # Determine newest valid backup by the UTC timestamp recorded in metadata,
