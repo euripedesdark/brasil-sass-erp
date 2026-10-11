@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - staging
       - fix/self-hosted-runner-ci
   workflow_dispatch:
 
