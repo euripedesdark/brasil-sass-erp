@@ -10,7 +10,7 @@ Group=root
 EnvironmentFile=/etc/brasil-saas/erp.env
 Environment=BACKUP_ROOT=/var/backups/brasil-saas-erp/postgresql
 Environment=RETENTION_DAYS=14
-Environment=BACKUP_MAX_RATE=50M
+Environment=BACKUP_MAX_RATE=20M
 ExecStart=/usr/local/sbin/brasil-saas-postgres-backup
 UMask=0077
 Nice=10
