@@ -1,0 +1,47 @@
+name: ERP - readonly staging and production health
+on:
+  push:
+    branches: [staging]
+    paths:
+      - .github/workflows/incident-readonly-health.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: erp-readonly-health
+  cancel-in-progress: true
+jobs:
+  diagnose:
+    name: Inspect local services without changes
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Service and port health (no credentials, no mutations)
+        shell: bash
+        run: |
+          set -u
+          echo '### Systemd service states'
+          for svc in nginx brasil-saas-erp-staging brasil_saas-erp brasil-saas-erp; do
+            state=$(systemctl is-active "$svc" 2>/dev/null || true)
+            printf '%s: %s\n' "$svc" "${state:-not-found}"
+          done
+          echo '### Local TCP availability'
+          for port in 80 443 8080 8081; do
+            if (echo >/dev/tcp/127.0.0.1/"$port") >/dev/null 2>&1; then
+              echo "tcp $port: listening"
+            else
+              echo "tcp $port: closed"
+            fi
+          done
+          echo '### HTTP and health routes'
+          for entry in "prod_app|http://127.0.0.1:8080/actuator/health" "stage_app|http://127.0.0.1:8081/actuator/health" "proxy_login|http://127.0.0.1/login" "proxy_health|http://127.0.0.1/actuator/health"; do
+            name="${entry%%|*}"
+            url="${entry#*|}"
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 7 "$url" 2>/dev/null || true)
+            echo "$name: HTTP ${code:-000}"
+          done
+          echo '### Staging prerequisites (presence only)'
+          for file in /etc/brasil-saas/staging.env /opt/brasil-saas-erp/staging/app.jar; do
+            if test -s "$file"; then echo "$file: present"; else echo "$file: absent_or_inaccessible"; fi
+          done
+          echo '### Probe completed: no changes made'
