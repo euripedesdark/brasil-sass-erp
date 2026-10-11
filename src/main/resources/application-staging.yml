@@ -54,3 +54,15 @@ app:
     api-key: ${OPENAI_API_KEY:}
     model: ${IA_MODEL:gpt-4o-mini}
     embedding-model: ${IA_EMBEDDING_MODEL:text-embedding-3-small}
+
+# STAGING nao reutiliza endpoints de callback publicos nem IAM compartilhado.
+# Acesso direto apenas em localhost:8081 ate existir um host de staging definido.
+brasil-saas:
+  auth-service:
+    enabled: false
+  ad:
+    enabled: false
+
+stripe:
+  success-url: ${STAGING_STRIPE_SUCCESS_URL:http://localhost:8081/financeiro/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}}
+  cancel-url: ${STAGING_STRIPE_CANCEL_URL:http://localhost:8081/financeiro/stripe/cancelado}
