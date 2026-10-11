@@ -1,0 +1,18 @@
+[Unit]
+Description=Backup PostgreSQL nativo (completo diário e incremental a cada 2 horas) do Brasil SaaS ERP
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+EnvironmentFile=/etc/brasil-saas/erp.env
+Environment=BACKUP_ROOT=/var/backups/brasil-saas-erp/postgresql
+Environment=RETENTION_DAYS=14
+Environment=BACKUP_MAX_RATE=20M
+ExecStart=/usr/local/sbin/brasil-saas-postgres-backup
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
