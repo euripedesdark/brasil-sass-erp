@@ -24,7 +24,8 @@ for cmd in pg_basebackup pg_combinebackup pg_verifybackup psql python3 flock; do
   command -v "$cmd" >/dev/null || { echo "Ferramenta obrigatória ausente: $cmd" >&2; exit 1; }
 done
 
-install -d -o root -g root -m 0700 "$BACKUP_ROOT" "$CATALOG_DIR" "$(dirname "$LOCK_FILE")"
+install -d -o root -g root -m 0700 "$BACKUP_ROOT" "$CATALOG_DIR"
+test -d "$(dirname "$LOCK_FILE")" || { echo "Diretório do lock inexistente: $(dirname "$LOCK_FILE")" >&2; exit 1; }
 exec 9>"$LOCK_FILE"
 flock -n 9 || { echo "Já existe uma execução de backup; saindo sem iniciar outra." >&2; exit 0; }
 
@@ -116,7 +117,7 @@ trap cleanup EXIT
 rm -rf -- "$TEMP"
 mkdir -m 0700 "$TEMP"
 
-COMMON_ARGS=(--host="$DB_HOST" --port="$DB_PORT" --username="$BACKUP_PGUSER" --pgdata="$TEMP" --format=plain --wal-method=stream --manifest-checksums=SHA256 --max-rate="$MAX_RATE" --checkpoint=spread --no-password)
+COMMON_ARGS=(--host="$DB_HOST" --port="$DB_PORT" --username="$BACKUP_PGUSER" --pgdata="$TEMP" --format=plain --wal-method=stream --manifest-checksums=CRC32C --max-rate="$MAX_RATE" --checkpoint=spread --no-password)
 export PGPASSWORD="$BACKUP_PGPASSWORD"
 
 if [ "$TYPE" = "full" ]; then
